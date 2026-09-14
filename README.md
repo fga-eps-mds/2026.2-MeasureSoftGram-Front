@@ -76,7 +76,3 @@ Este projeto segue o [Código de Conduta](https://fga-eps-mds.github.io/MeasureS
 ## Licença
 
 Este projeto é distribuído sob a licença [GNU AGPL-3.0](./LICENSE).
-
-## Licença
-
-Este projeto é distribuído sob a licença [GNU AGPL-3.0](./LICENSE).
