@@ -20,7 +20,8 @@ jobs:
           python-version: '3.12'
 
       - name: Instalar dependências
-        run: pip install --only-binary :all: -r requirements.txt
+        run: |
+          pip install --only-binary :all: -r requirements.txt
 
       - name: Criar diretório
         run: mkdir analytics-raw-data
