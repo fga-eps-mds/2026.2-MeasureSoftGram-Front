@@ -116,6 +116,48 @@ class OrganizationQuery {
       return { type: 'error', error: error as AxiosError };
     }
   }
+
+  async getGitLabNamespaces(): Promise<Result<GitLabNamespace[]>> {
+    try {
+      const response = await api.get('/v1/accounts/gitlab-namespaces/');
+      const data = Array.isArray(response.data) ? response.data : (response.data?.results ?? response.data);
+      return { type: 'success', value: data as GitLabNamespace[] };
+    } catch (error) {
+      return { type: 'error', error: error as AxiosError };
+    }
+  }
+
+  async getGitLabProjects(
+    orgId: string,
+    namespaceId?: number | string,
+    kind?: string,
+    page?: number,
+    search?: string
+  ): Promise<Result<GitLabProject[]>> {
+    try {
+      const params: Record<string, any> = {};
+      if (namespaceId !== undefined && namespaceId !== null && namespaceId !== '') {
+        params.namespace_id = namespaceId;
+      }
+      if (kind) {
+        params.kind = kind;
+      }
+      if (page !== undefined && page !== null) {
+        params.page = page;
+      }
+      if (search !== undefined && search !== null && search !== '') {
+        params.search = search;
+      }
+      const response = await api.get(`/v1/organizations/${orgId}/gitlab-projects/`, { params });
+      const data = Array.isArray(response.data) ? response.data : (response.data?.results ?? response.data);
+      return { type: 'success', value: data as GitLabProject[] };
+    } catch (error) {
+      return { type: 'error', error: error as AxiosError };
+    }
+  }
+
+  getGitlabNamespaces = this.getGitLabNamespaces;
+  getGitlabProjects = this.getGitLabProjects;
 }
 
 export interface GitHubOrganization {
@@ -133,5 +175,23 @@ export interface GitHubRepo {
   url: string;
 }
 
+export interface GitLabNamespace {
+  id: number;
+  name: string;
+  full_path: string;
+  avatar_url: string;
+  description: string;
+  kind: 'user' | 'group';
+}
+
+export interface GitLabProject {
+  gitlab_project_id: number;
+  gitlab_path_with_namespace: string;
+  name: string;
+  description: string;
+  url: string;
+}
+
 export const organizationQuery = new OrganizationQuery();
 Object.freeze(organizationQuery);
+
