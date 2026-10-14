@@ -27,7 +27,7 @@ const isSameGithubOrg = (githubOrgName: string, dbOrg: Organization) => {
 };
 
 export function OrganizationProvider({ children }: Props) {
-  const { terms } = useProviderTerms();
+  const { terms, provider } = useProviderTerms();
   const { session } = useAuth();
   const [currentOrganizations, setCurrentOrganizations] = useState<Organization[]>([]);
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
@@ -97,7 +97,9 @@ export function OrganizationProvider({ children }: Props) {
         setHasFetched(true);
         setIsLoading(false);
   
-        syncGithubOrganizations(organizations);
+        if (provider !== 'gitlab') {
+          syncGithubOrganizations(organizations);
+        }
       } else {
         toast.error(`Erro ao carregar ${terms.organizations}.`);
         setHasFetched(true);
@@ -109,7 +111,7 @@ export function OrganizationProvider({ children }: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, [session, terms]);
+  }, [session, terms, provider]);
 
   useEffect(() => {
     if (session?.username) {
