@@ -783,13 +783,9 @@ describe('ReleaseInfo Component', () => {
 
     const nextButton = screen.getByText(/Next/i);
     fireEvent.click(nextButton);
+    fireEvent.click(nextButton);
 
-    await waitFor(async () => {
-      fireEvent.click(nextButton);
-      await waitFor(() => {
-        expect(screen.getByText(t('defineCharacteristics'))).toBeInTheDocument();
-      });
-    });
+    expect(await screen.findByText(t('defineCharacteristics'))).toBeInTheDocument();
   });
 
   const clickButtonAndWaitFor = async (buttonName: string, expectedText: string) => {
@@ -1298,13 +1294,12 @@ describe('ReleaseInfo Component', () => {
 
     const nextButton = screen.getByText(/Next/i);
 
-    await waitFor(async () => {
-      fireEvent.click(nextButton);
-      await waitFor(async () => {
-        fireEvent.click(nextButton);
-        fireEvent.click(screen.getByText(t('changeRefValues')));
-      });
-    });
+    fireEvent.click(nextButton);
+    fireEvent.click(nextButton);
+
+    const changeRefValuesSwitch = await screen.findByLabelText(t('changeRefValues'));
+    fireEvent.click(changeRefValuesSwitch);
+    expect(changeRefValuesSwitch).toBeChecked();
   });
 
   it('should test release date change', async () => {
@@ -1336,12 +1331,10 @@ describe('ReleaseInfo Component', () => {
     const nextButton = screen.getByText(/Next/i);
     fireEvent.click(nextButton);
 
-    await waitFor(async () => {
-      fireEvent.click(screen.getByTestId("confirmBtnClick"));
-      await waitFor(async () => {
-        expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
-      });
-    });
+    fireEvent.click(await screen.findByTestId("confirmBtnClick"));
+
+    await waitFor(() => expect(screen.queryByTestId("confirmBtnClick")).not.toBeInTheDocument());
+    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
   });
 
   it('should test return release date modal', async () => {
@@ -1372,12 +1365,10 @@ describe('ReleaseInfo Component', () => {
     const nextButton = screen.getByText(/Next/i);
     fireEvent.click(nextButton);
 
-    await waitFor(async () => {
-      fireEvent.click(screen.getByTestId("dismissBtnClick"));
-      await waitFor(async () => {
-        expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
-      });
-    });
+    fireEvent.click(await screen.findByTestId("dismissBtnClick"));
+
+    await waitFor(() => expect(screen.queryByTestId("dismissBtnClick")).not.toBeInTheDocument());
+    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
   });
 
   it('should test close release date modal', async () => {
@@ -1408,12 +1399,10 @@ describe('ReleaseInfo Component', () => {
     const nextButton = screen.getByText(/Next/i);
     fireEvent.click(nextButton);
 
-    await waitFor(async () => {
-      fireEvent.click(screen.getByTestId("iconCloseDateModal"));
-      await waitFor(async () => {
-        expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
-      });
-    });
+    fireEvent.click(await screen.findByTestId("iconCloseDateModal"));
+
+    await waitFor(() => expect(screen.queryByTestId("iconCloseDateModal")).not.toBeInTheDocument());
+    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
   });
 
   it('dispara as 5 buscas iniciais em paralelo', async () => {

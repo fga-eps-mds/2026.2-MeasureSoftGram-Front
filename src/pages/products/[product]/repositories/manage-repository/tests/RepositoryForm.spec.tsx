@@ -49,13 +49,11 @@ jest.mock('@contexts/RepositoryProvider', () => ({
 
 describe('RepositoryForm', () => {
   it('Renders correctly and allows input', async () => {
-    const { getByLabelText, getByText, debug } = render(
+    const { getByLabelText, getByText } = render(
       <RepositoryForm />
     );
 
-    const a = screen.getByTestId('repo-name-input')
-    debug()
-    console.log(a)
+    expect(screen.getByTestId('repo-name-input')).toBeInTheDocument();
 
     await waitFor(() => {
       // expect(a).toHaveValue('Test Repo');
