@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
       }
 
       if (response.type === 'error') {
-        removeAuthStorage();
+        void removeAuthStorage();
         toast.error(`Erro ao realizar login: ${response.error.message || 'Erro desconhecido'}`);
         return response;
       }
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
       }
 
       if (response.type === 'error') {
-        removeAuthStorage();
+        void removeAuthStorage();
         toast.error(`Erro ao realizar login: ${response.error.message || 'Erro desconhecido'}`);
         return response;
       }
@@ -190,7 +190,7 @@ useEffect(() => {
 
       // Passou de 2 horas -> Logout automático
       if (elapsed >= limitMs) {
-        logout();
+        void logout();
         warningShownRef.current = false;
         setIsWarningOpen(false);
         toast.warning('Sua sessão expirou por segurança (limite de 2h).');
@@ -219,14 +219,14 @@ useEffect(() => {
     // CA4: Tratamento de cancelamento do OAuth (ex: error=access_denied)
     if (error && !hasExecuted.current) {
       hasExecuted.current = true;
-      removeAuthStorage();
+      void removeAuthStorage();
       if (error === 'access_denied') {
         toast.info('Login cancelado');
       } else {
         toast.error('Erro na autorização do provedor.');
       }
       if (router?.pathname !== '/auth') {
-        router.push('/auth');
+        void router.push('/auth');
       }
       return;
     }
@@ -234,17 +234,17 @@ useEffect(() => {
     if (code && state && state.startsWith('/') && !hasRedirected.current) {
       hasRedirected.current = true;
       const separator = state.includes('?') ? '&' : '?';
-      router.push(`${state}${separator}code=${code}`);
+      void router.push(`${state}${separator}code=${code}`);
       return;
     }
 
     if (code && !token && !hasExecuted.current) {
       if (provider === 'github') {
         hasExecuted.current = true;
-        signInWithGithub(code as string);
+        void signInWithGithub(code as string);
       } else if (provider === 'gitlab') {
         hasExecuted.current = true;
-        signInWithGitlab(code as string);
+        void signInWithGitlab(code as string);
       }
     }
   }, [provider, token, signInWithGithub, signInWithGitlab, router, removeAuthStorage]);
@@ -252,7 +252,7 @@ useEffect(() => {
   useEffect(() => {
     setLoading('loading');
 
-    if (token) getUser();
+    if (token) void getUser();
     else setLoading('loaded');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -284,7 +284,7 @@ useEffect(() => {
         handleConfirmBtnClick={() => setIsWarningOpen(false)}
         handleDismissBtnClick={() => {
           setIsWarningOpen(false);
-          logout();
+          void logout();
         }}
       />
     </AuthContext.Provider>
