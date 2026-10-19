@@ -22,12 +22,14 @@ jest.mock('@services/product');
 jest.mock('@services/balanceMatrix');
 
 const dateErrorMsg = "Já existe uma release neste período"
+const mockPush = jest.fn();
 
 describe('ReleaseInfo Component', () => {
   beforeAll(() => {
     (useRouter as jest.Mock).mockReturnValue({
       isReady: true,
       query: { product: 'org-123-prod-456' },
+      push: mockPush,
     });
 
     (productQuery.getPreConfigEntitiesRelationship as jest.Mock).mockResolvedValue({
@@ -665,6 +667,10 @@ describe('ReleaseInfo Component', () => {
     await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
     await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
 
+    fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/products/org-123-prod-456/releases/'));
+    expect(productQuery.createProductRelease).toHaveBeenCalled();
   });
 
   it('should test error characteristic weight', async () => {
