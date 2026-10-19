@@ -105,9 +105,9 @@ describe('PlannedVsAccomplishedEqualizer', () => {
 
     expect(screen.getByTestId('vector-rd')).toHaveTextContent('Rd0.70equalizer.noData0.60');
     expect(screen.getByTestId('vector-status')).toHaveTextContent('equalizer.status.no-data');
-    expect(screen.queryByTestId('equalizer-marker-accomplished-maintainability')).not.toBeInTheDocument();
-    expect(screen.getByTestId('equalizer-marker-accomplished-security')).toBeInTheDocument();
-    expect(screen.getByTestId('equalizer-curve-accomplished').getAttribute('d')).toMatch(/^M/);
+    // a curva do realizado é interrompida na característica sem dado (dois trechos)
+    const accomplishedPath = screen.getByTestId('equalizer-curve-accomplished').getAttribute('d') ?? '';
+    expect(accomplishedPath.match(/M/g)).toHaveLength(2);
     spy.mockRestore();
   });
 
@@ -142,8 +142,16 @@ describe('helpers do equalizador', () => {
     { x: 250, top: 0, height: 200 },
   ];
 
-  it('liga os pontos de trilhos na mesma linha', () => {
-    expect(buildCurvePath([1, 0.5, 0], tracks)).toBe('M50.0 0.0 L150.0 100.0 L250.0 200.0');
+  it('liga os pontos de trilhos na mesma linha com uma curva suave', () => {
+    expect(buildCurvePath([1, 0.5, 0], tracks)).toBe(
+      'M50.0 0.0 C66.7 16.7 116.7 66.7 150.0 100.0 C183.3 133.3 233.3 183.3 250.0 200.0',
+    );
+  });
+
+  it('mantém a curva dentro da altura dos trilhos', () => {
+    const path = buildCurvePath([0.5, 1, 1], tracks);
+
+    expect(path).not.toMatch(/-/);
   });
 
   it('interrompe a curva onde não há valor e na quebra de linha do grid', () => {

@@ -31,10 +31,10 @@ export interface PlannedVsAccomplishedEqualizerProps {
   normDiff?: number | null;
 }
 
-/** Cores do IDV: Rp no azul do gradiente do equalizador, Rd no laranja usado nos gráficos do produto. */
+/** Cores do protótipo da US22.01: Rp em azul e Rd em laranja. */
 export const COLORS = {
-  planned: '#2DA1C8',
-  accomplished: '#DF8E16',
+  planned: '#1A47E8',
+  accomplished: '#F07B2E',
   primary: '#2B4D6F',
 };
 
@@ -66,31 +66,69 @@ export interface TrackGeometry {
   height: number;
 }
 
-/**
- * Gera o caminho de uma curva sobre os trilhos. A curva é interrompida onde não há valor
- * (característica sem dado) e na quebra de linha do grid (trilhos com topo diferente).
- */
-export function buildCurvePath(values: (number | null)[], tracks: TrackGeometry[]): string {
-  let path = '';
+interface CurvePoint {
+  x: number;
+  y: number;
+}
+
+const toPoint = (value: number, track: TrackGeometry): CurvePoint => ({
+  x: track.x,
+  y: track.top + (1 - Math.min(1, Math.max(0, value))) * track.height,
+});
+
+/** Agrupa os pontos em trechos contínuos: quebra onde não há valor e na mudança de linha do grid. */
+export function splitCurveRuns(values: (number | null)[], tracks: TrackGeometry[]): CurvePoint[][] {
+  const runs: CurvePoint[][] = [];
+  let current: CurvePoint[] = [];
   let previousTop: number | null = null;
 
   values.forEach((value, index) => {
     const track = tracks[index];
-    if (value === null || !track || track.height <= 0) {
-      previousTop = null;
-      return;
+    const sameRow = previousTop !== null && track && Math.abs(previousTop - track.top) < 1;
+    if (value === null || !track || track.height <= 0 || !sameRow) {
+      if (current.length) runs.push(current);
+      current = [];
     }
-    const y = track.top + (1 - Math.min(1, Math.max(0, value))) * track.height;
-    const command = previousTop !== null && Math.abs(previousTop - track.top) < 1 ? 'L' : 'M';
-    path += `${command}${track.x.toFixed(1)} ${y.toFixed(1)} `;
-    previousTop = track.top;
+    if (value !== null && track && track.height > 0) {
+      current.push(toPoint(value, track));
+      previousTop = track.top;
+    } else {
+      previousTop = null;
+    }
   });
+  if (current.length) runs.push(current);
 
-  return path.trim();
+  return runs;
 }
 
-const valueToY = (value: number, track: TrackGeometry) =>
-  track.top + (1 - Math.min(1, Math.max(0, value))) * track.height;
+const fmt = (n: number) => n.toFixed(1);
+
+/**
+ * Curva suave (Catmull-Rom convertida em Bézier cúbica) passando pelo valor de cada trilho,
+ * como no protótipo. Os pontos de controle ficam limitados à altura do trilho para a curva
+ * não "estourar" acima de 1 ou abaixo de 0.
+ */
+export function buildCurvePath(values: (number | null)[], tracks: TrackGeometry[]): string {
+  const minY = Math.min(...tracks.map((track) => track.top));
+  const maxY = Math.max(...tracks.map((track) => track.top + track.height));
+  const clampY = (y: number) => Math.min(maxY, Math.max(minY, y));
+
+  return splitCurveRuns(values, tracks)
+    .map((points) => {
+      let path = `M${fmt(points[0].x)} ${fmt(points[0].y)}`;
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const p0 = points[i - 1] ?? points[i];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[i + 2] ?? p2;
+        const c1 = { x: p1.x + (p2.x - p0.x) / 6, y: clampY(p1.y + (p2.y - p0.y) / 6) };
+        const c2 = { x: p2.x - (p3.x - p1.x) / 6, y: clampY(p2.y - (p3.y - p1.y) / 6) };
+        path += ` C${fmt(c1.x)} ${fmt(c1.y)} ${fmt(c2.x)} ${fmt(c2.y)} ${fmt(p2.x)} ${fmt(p2.y)}`;
+      }
+      return path;
+    })
+    .join(' ');
+}
 
 function LegendItem({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -189,12 +227,11 @@ export default function PlannedVsAccomplishedEqualizer({
       data-testid="equalizer-legend"
     >
       <LegendItem label={t('equalizer.legend.planned')}>
-        <line x1={1} y1={7} x2={27} y2={7} stroke={COLORS.planned} strokeWidth={2.5} />
+        <line x1={1} y1={7} x2={27} y2={7} stroke={COLORS.planned} strokeWidth={3} strokeLinecap="round" />
       </LegendItem>
       {hasAccomplished && (
         <LegendItem label={t('equalizer.legend.accomplished')}>
-          <line x1={1} y1={7} x2={27} y2={7} stroke={COLORS.accomplished} strokeWidth={2.5} strokeDasharray="5 3" />
-          <circle cx={14} cy={7} r={4} fill={COLORS.accomplished} stroke="#fff" strokeWidth={1.5} />
+          <line x1={1} y1={7} x2={27} y2={7} stroke={COLORS.accomplished} strokeWidth={3} strokeLinecap="round" />
         </LegendItem>
       )}
       <LegendItem label={t('equalizer.legend.cursor')}>
@@ -213,14 +250,14 @@ export default function PlannedVsAccomplishedEqualizer({
     zIndex,
   });
 
-  /** Curvas atrás dos trilhos: o cursor (Rp) continua visível por cima. */
+  /** Curvas do planejado e do realizado projetadas sobre os trilhos, como no protótipo. */
   const renderCurves = () => (
-    <svg style={svgStyle(0)} aria-hidden="true" data-testid="equalizer-curves">
+    <svg style={svgStyle(2)} aria-hidden="true" data-testid="equalizer-curves">
       <path
         d={buildCurvePath(comparisons.map((item) => item.rp), tracks)}
         fill="none"
         stroke={COLORS.planned}
-        strokeWidth={2.5}
+        strokeWidth={3}
         strokeLinejoin="round"
         strokeLinecap="round"
         data-testid="equalizer-curve-planned"
@@ -230,8 +267,7 @@ export default function PlannedVsAccomplishedEqualizer({
           d={buildCurvePath(comparisons.map((item) => item.rd), tracks)}
           fill="none"
           stroke={COLORS.accomplished}
-          strokeWidth={2.5}
-          strokeDasharray="6 4"
+          strokeWidth={3}
           strokeLinejoin="round"
           strokeLinecap="round"
           data-testid="equalizer-curve-accomplished"
@@ -240,31 +276,8 @@ export default function PlannedVsAccomplishedEqualizer({
     </svg>
   );
 
-  /** Marcadores do realizado na frente dos trilhos. */
-  const renderAccomplishedMarkers = () => (
-    <svg style={svgStyle(2)} aria-hidden="true">
-      {comparisons.map((item, index) => {
-        const track = tracks[index];
-        if (item.rd === null || !track || track.height <= 0) return null;
-        return (
-          <circle
-            key={`marker-${item.key}`}
-            cx={track.x}
-            cy={valueToY(item.rd, track)}
-            r={6}
-            fill={COLORS.accomplished}
-            stroke="#fff"
-            strokeWidth={2}
-            data-testid={`equalizer-marker-accomplished-${item.key}`}
-          />
-        );
-      })}
-    </svg>
-  );
-
   const renderTracks = () => (
     <Box position="relative" ref={containerRef}>
-      {renderCurves()}
       <Box
         display="grid"
         gridTemplateColumns={{
@@ -322,7 +335,7 @@ export default function PlannedVsAccomplishedEqualizer({
           </Tooltip>
         ))}
       </Box>
-      {hasAccomplished && renderAccomplishedMarkers()}
+      {renderCurves()}
     </Box>
   );
 
