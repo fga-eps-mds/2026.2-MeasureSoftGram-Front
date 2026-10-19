@@ -267,7 +267,10 @@ export default function PlannedVsAccomplishedEqualizer({
       {renderCurves()}
       <Box
         display="grid"
-        gridTemplateColumns={`repeat(${columns}, minmax(0, 1fr))`}
+        gridTemplateColumns={{
+          xs: 'repeat(auto-fit, minmax(104px, 1fr))',
+          md: `repeat(${columns}, minmax(0, 1fr))`,
+        }}
         gap={{ xs: 2, sm: 4, md: 6 }}
         justifyItems="center"
         alignItems="start"
@@ -339,7 +342,7 @@ export default function PlannedVsAccomplishedEqualizer({
   );
 
   const renderVectors = () => (
-    <TableContainer sx={{ mt: 5, overflowX: 'auto' }} data-testid="equalizer-vectors">
+    <TableContainer sx={{ mt: 5, overflowX: 'auto', contain: 'inline-size' }} data-testid="equalizer-vectors">
       <Table size="small" aria-label={t('view-values')}>
         <TableHead>
           <TableRow>

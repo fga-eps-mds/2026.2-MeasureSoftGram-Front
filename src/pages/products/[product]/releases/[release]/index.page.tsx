@@ -165,7 +165,8 @@ const Release: any = () => {
     <Container>
       <Grid container mt={0.1} spacing={4}>
         <Grid item xs={12} md={2} sx={{ height: { md: 520 } }}>
-          <Card sx={{ height: 'inherit' }}>
+          {/* contain: as abas roláveis não podem definir a largura mínima da página */}
+          <Card sx={{ height: 'inherit', contain: 'inline-size' }}>
             <Box sx={{ display: 'flex', height: 'inherit' }}>
               <Tabs
                 orientation={isDesktop ? 'vertical' : 'horizontal'}
