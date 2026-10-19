@@ -315,7 +315,14 @@ export default function PlannedVsAccomplishedEqualizer({
                   valueLabelDisplay="off"
                   tabIndex={-1}
                   data-testid={`equalizer-slider-${item.key}`}
-                  sx={{ minHeight: '15rem', pointerEvents: 'none' }}
+                  sx={{
+                    minHeight: '15rem',
+                    pointerEvents: 'none',
+                    // mesma espessura que o equalizador renderiza na tela de planejamento (trilho de 4px);
+                    // '&&' aumenta a especificidade para não depender da ordem do CSS do styled-components
+                    '&&': { width: 4 },
+                    '&& .MuiSlider-rail, && .MuiSlider-track': { width: 4 },
+                  }}
                 />
               </Grid>
               <Grid item display="flex" alignItems="center" justifyContent="center">
