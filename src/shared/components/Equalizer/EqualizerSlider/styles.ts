@@ -1,10 +1,12 @@
 import { Slider } from '@mui/material';
-import styled from 'styled-components';
+import { styled } from '@mui/material/styles';
 
 /**
- * Estilo do trilho do equalizador (tela de planejamento da release).
- * Exportado como objeto para que outros componentes apliquem exatamente o mesmo
- * visual via `sx`, sem depender da ordem de injeção do CSS do styled-components.
+ * Estilo do trilho do equalizador (planejamento da release e Planejado × Realizado).
+ *
+ * Usa o `styled` do MUI (emotion) e não o do styled-components: no build de produção
+ * o CSS do styled-components é injetado antes do CSS do MUI, e o padrão do Slider
+ * vertical (4px) sobrescrevia este estilo, deixando o trilho fino.
  */
 export const equalizerSliderStyles = {
   color: '#2B4D6F',

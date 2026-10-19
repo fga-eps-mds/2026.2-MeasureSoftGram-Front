@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Grid,
-  Slider,
   Stack,
   Table,
   TableBody,
@@ -17,7 +16,7 @@ import {
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
 import { Characteristic } from '@customTypes/product';
-import { equalizerSliderStyles } from '@components/Equalizer/EqualizerSlider/styles';
+import { StyledSlider } from '@components/Equalizer/EqualizerSlider/styles';
 import {
   CharacteristicComparison,
   ComparisonStatus,
@@ -295,7 +294,7 @@ export default function PlannedVsAccomplishedEqualizer({
               }}
             >
               <Grid item display="flex" justifyContent="center">
-                <Slider
+                <StyledSlider
                   ref={(element: HTMLSpanElement | null) => {
                     sliderRefs.current[index] = element;
                   }}
@@ -308,7 +307,7 @@ export default function PlannedVsAccomplishedEqualizer({
                   valueLabelDisplay="off"
                   tabIndex={-1}
                   data-testid={`equalizer-slider-${item.key}`}
-                  sx={{ ...equalizerSliderStyles, minHeight: '15rem', pointerEvents: 'none' }}
+                  sx={{ minHeight: '15rem', pointerEvents: 'none' }}
                 />
               </Grid>
               <Grid item display="flex" alignItems="center" justifyContent="center">
