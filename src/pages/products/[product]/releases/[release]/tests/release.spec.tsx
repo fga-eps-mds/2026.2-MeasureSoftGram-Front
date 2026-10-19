@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, waitFor, screen } from '@testing-library/react';
+import { render, waitFor, screen, fireEvent } from '@testing-library/react';
 import { productQuery } from '@services/product';
 import Release from '../index.page';
 
@@ -43,6 +43,37 @@ describe('Release', () => {
     expect(releaseTitle).toBeInTheDocument();
     expect(dataRelease).toHaveTextContent('01 de janeiro de 2022 - 01 de abril de 2022');
     expect(repositoryTabs).toHaveLength(2);
+  });
+
+  it('mantém o gráfico de linhas como padrão e alterna para o equalizador', async () => {
+    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({ data: mockedResponse });
+
+    render(<Release />);
+
+    await screen.findByTestId('release-view-toggle');
+    expect(screen.queryByTestId('equalizer-view')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('release-view-equalizer'));
+
+    expect(await screen.findByTestId('equalizer-view')).toBeInTheDocument();
+    expect(screen.getByTestId('planned-vs-accomplished-equalizer')).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^equalizer-track-/)).toHaveLength(plannedMock.length);
+
+    fireEvent.click(screen.getByTestId('release-view-lines'));
+
+    expect(screen.queryByTestId('equalizer-view')).not.toBeInTheDocument();
+  });
+
+  it('exibe apenas o planejado no equalizador quando a release não tem dados realizados', async () => {
+    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({
+      data: { ...mockedResponse, accomplished: [] },
+    });
+
+    render(<Release />);
+
+    fireEvent.click(await screen.findByTestId('release-view-equalizer'));
+
+    expect(await screen.findByTestId('equalizer-no-accomplished')).toBeInTheDocument();
   });
 });
 

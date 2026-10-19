@@ -3,16 +3,31 @@ import getLayout from '@components/Layout';
 import { productQuery } from '@services/product';
 import { grafanaService } from '@services/grafana';
 import { AccomplishedRepository, Characteristic, IReleases } from '@customTypes/product';
-import { Box, Card, CircularProgress, Container, Grid, Skeleton, Tab, Tabs, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  CircularProgress,
+  Container,
+  Grid,
+  Skeleton,
+  Tab,
+  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/router';
 import { useTranslation } from "react-i18next";
 import { formatDate } from '@utils/formatDate';
 import { getPathId } from '@utils/pathDestructer';
 import Head from 'next/head';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import PlannedVsAccomplishedEqualizer from '@components/PlannedVsAccomplishedEqualizer';
 
 const PLANEJADO_VS_REALIZADO_PANEL_ID = 8;
 const VISAO_GERAL_UID = '5904a9de-7f42-453c-9a93-1175d1fe6918';
+
+type ReleaseView = 'lines' | 'equalizer';
 
 const Release: any = () => {
   const router = useRouter();
@@ -30,6 +45,7 @@ const Release: any = () => {
   const [productRepos, setProductRepos] = useState<{ id: number; name: string }[]>([]);
   const [panelUrl, setPanelUrl] = useState<string | null>(null);
   const [panelLoading, setPanelLoading] = useState(false);
+  const [view, setView] = useState<ReleaseView>('lines');
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -78,6 +94,56 @@ const Release: any = () => {
     setSelectedValue(newValue);
   };
 
+  const handleViewChange = (event: React.MouseEvent<HTMLElement>, newView: ReleaseView | null) => {
+    if (newView) setView(newView);
+  };
+
+  const renderLinesView = () => (
+    <Box
+      sx={{
+        width: '100%',
+        height: '520px',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px solid #d0d7de',
+        borderRadius: '8px',
+      }}
+    >
+      {panelLoading && <CircularProgress />}
+      {!panelLoading && !panelUrl && (
+        <Typography color="text.secondary">{`Selecione um ${terms.repository}`}</Typography>
+      )}
+      {panelUrl && !panelLoading && (
+        <iframe
+          src={panelUrl}
+          title="Planejado vs Realizado"
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        />
+      )}
+    </Box>
+  );
+
+  const renderEqualizerView = () => (
+    <Box
+      data-testid="equalizer-view"
+      sx={{
+        width: '100%',
+        minHeight: '520px',
+        border: '1px solid #d0d7de',
+        borderRadius: '8px',
+        p: 3,
+      }}
+    >
+      <PlannedVsAccomplishedEqualizer
+        planned={planned ?? []}
+        accomplished={selectedRepository?.characteristics}
+        normDiff={selectedRepository?.norm_diff}
+      />
+    </Box>
+  );
+
   const renderContent = () => (
     <Container>
       <Grid container mt={0.1} spacing={4}>
@@ -112,30 +178,7 @@ const Release: any = () => {
         </Grid>
 
         <Grid item xs={10}>
-          <Box
-            sx={{
-              width: '100%',
-              height: '520px',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid #d0d7de',
-              borderRadius: '8px',
-            }}
-          >
-            {panelLoading && <CircularProgress />}
-            {!panelLoading && !panelUrl && (
-              <Typography color="text.secondary">{`Selecione um ${terms.repository}`}</Typography>
-            )}
-            {panelUrl && !panelLoading && (
-              <iframe
-                src={panelUrl}
-                title="Planejado vs Realizado"
-                style={{ width: '100%', height: '100%', border: 'none' }}
-              />
-            )}
-          </Box>
+          {view === 'lines' ? renderLinesView() : renderEqualizerView()}
         </Grid>
       </Grid>
     </Container>
@@ -175,6 +218,24 @@ const Release: any = () => {
               {formatDate(release.start_at)} - {formatDate(release.end_at)}
             </Typography>
           </Box>}
+          {!isLoading && (
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              color="primary"
+              value={view}
+              onChange={handleViewChange}
+              aria-label={t('view.label')}
+              data-testid="release-view-toggle"
+            >
+              <ToggleButton value="lines" data-testid="release-view-lines">
+                {t('view.lines')}
+              </ToggleButton>
+              <ToggleButton value="equalizer" data-testid="release-view-equalizer">
+                {t('view.equalizer')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          )}
         </Box>
         {isLoading ? renderSkeleton() : renderContent()}
       </Container>
