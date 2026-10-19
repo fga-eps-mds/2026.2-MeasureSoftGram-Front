@@ -83,9 +83,9 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
     setLoading('loaded');
   }, [removeAuthStorage, router, setSession]);
 
-  const signInWithGithub = useCallback(
-    async (code: string): Promise<Result<User>> => {
-      const response = await signInGithub(code);
+  const signInWithOAuth = useCallback(
+    async (signIn: typeof signInGithub, code: string): Promise<Result<User>> => {
+      const response = await signIn(code);
 
       if (response.type === 'success' && response?.value?.key) {
         setToken(response.value.key);
@@ -118,40 +118,9 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
     [removeAuthStorage, setToken]
   );
 
-  const signInWithGitlab = useCallback(
-    async (code: string): Promise<Result<User>> => {
-      const response = await signInGitlab(code);
+  const signInWithGithub = useCallback((code: string) => signInWithOAuth(signInGithub, code), [signInWithOAuth]);
 
-      if (response.type === 'success' && response?.value?.key) {
-        setToken(response.value.key);
-        localStorage.setItem('login_timestamp', Date.now().toString()); // MARCA O INÍCIO DA SESSÃO
-        toast.success('Login realizado com sucesso!');
-
-        return {
-          type: 'success',
-          value: {
-            key: response.value.key,
-            username: '',
-            first_name: '',
-            last_name: '',
-            email: '',
-            avatar_url: '',
-            repos_url: '',
-            organizations_url: ''
-          }
-        };
-      }
-
-      if (response.type === 'error') {
-        void removeAuthStorage();
-        toast.error(`Erro ao realizar login: ${response.error.message || 'Erro desconhecido'}`);
-        return response;
-      }
-
-      return { type: 'error', error: new Error('Erro desconhecido') };
-    },
-    [removeAuthStorage, setToken]
-  );
+  const signInWithGitlab = useCallback((code: string) => signInWithOAuth(signInGitlab, code), [signInWithOAuth]);
 
   const signInWithCredentials = useCallback(
     async (data: LoginFormData): Promise<Result<User>> => {
