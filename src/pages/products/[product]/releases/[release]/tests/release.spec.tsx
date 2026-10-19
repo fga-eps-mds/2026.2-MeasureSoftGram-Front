@@ -7,13 +7,6 @@ import Release from '../index.page';
 jest.mock('@services/product', () => ({
   productQuery: {
     getReleaseAnalysisDataByReleaseId: jest.fn(),
-    getAllRepositories: jest.fn().mockResolvedValue({ data: { results: [] } }),
-  }
-}));
-
-jest.mock('@services/grafana', () => ({
-  grafanaService: {
-    getDashboardUrl: jest.fn().mockResolvedValue({ data: { grafana_url: 'http://localhost:5000/d/test' } }),
   }
 }));
 
@@ -45,55 +38,36 @@ describe('Release', () => {
     expect(repositoryTabs).toHaveLength(2);
   });
 
-  it('mantém o gráfico de linhas como padrão e alterna para o equalizador', async () => {
+  it('exibe o equalizador Planejado × Realizado direto, sem o gráfico de linhas', async () => {
     (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({ data: mockedResponse });
 
     render(<Release />);
 
-    await screen.findByTestId('release-view-toggle');
-    expect(screen.queryByTestId('equalizer-view')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId('release-view-equalizer'));
-
-    expect(await screen.findByTestId('equalizer-view')).toBeInTheDocument();
-    expect(screen.getByTestId('planned-vs-accomplished-equalizer')).toBeInTheDocument();
+    expect(await screen.findByTestId('planned-vs-accomplished-equalizer')).toBeInTheDocument();
     expect(screen.getAllByTestId(/^equalizer-track-/)).toHaveLength(plannedMock.length);
-
-    fireEvent.click(screen.getByTestId('release-view-lines'));
-
-    expect(screen.queryByTestId('equalizer-view')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Planejado vs Realizado')).not.toBeInTheDocument();
   });
 
-  it('exibe apenas o planejado no equalizador quando a release não tem dados realizados', async () => {
+  it('troca os valores realizados ao selecionar outro repositório', async () => {
+    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({ data: mockedResponse });
+
+    render(<Release />);
+
+    expect(await screen.findByTestId('equalizer-norm-diff')).toHaveTextContent('0.21');
+
+    fireEvent.click(screen.getAllByTestId('repository-tab')[1]);
+
+    await waitFor(() => expect(screen.getByTestId('equalizer-norm-diff')).toHaveTextContent('0.30'));
+  });
+
+  it('exibe apenas o planejado quando a release não tem dados realizados', async () => {
     (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({
       data: { ...mockedResponse, accomplished: [] },
     });
 
     render(<Release />);
-
-    fireEvent.click(await screen.findByTestId('release-view-equalizer'));
 
     expect(await screen.findByTestId('equalizer-no-accomplished')).toBeInTheDocument();
-  });
-
-  it('informa que não há dados realizados em vez de pedir para selecionar um repositório', async () => {
-    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({
-      data: { ...mockedResponse, accomplished: [] },
-    });
-
-    render(<Release />);
-
-    expect(await screen.findByTestId('lines-empty-message')).toHaveTextContent('noAccomplishedData');
-  });
-
-  it('informa erro quando o repositório da análise não é encontrado no produto', async () => {
-    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({ data: mockedResponse });
-
-    render(<Release />);
-
-    await waitFor(() =>
-      expect(screen.getByTestId('lines-empty-message')).toHaveTextContent('panelLoadError'),
-    );
   });
 
   it('sai do carregamento e informa erro quando a análise da release falha', async () => {
@@ -101,11 +75,7 @@ describe('Release', () => {
 
     render(<Release />);
 
-    expect(await screen.findByTestId('lines-empty-message')).toHaveTextContent('panelLoadError');
-
-    fireEvent.click(screen.getByTestId('release-view-equalizer'));
-
-    expect(await screen.findByTestId('equalizer-load-error')).toBeInTheDocument();
+    expect(await screen.findByTestId('equalizer-load-error')).toHaveTextContent('loadError');
   });
 });
 

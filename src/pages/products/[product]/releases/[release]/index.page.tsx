@@ -1,41 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import getLayout from '@components/Layout';
 import { productQuery } from '@services/product';
-import { grafanaService } from '@services/grafana';
 import { AccomplishedRepository, Characteristic, IReleases } from '@customTypes/product';
-import {
-  Box,
-  Card,
-  CircularProgress,
-  Container,
-  Grid,
-  Skeleton,
-  Tab,
-  Tabs,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Box, Card, Container, Grid, Skeleton, Tab, Tabs, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useRouter } from 'next/router';
 import { useTranslation } from "react-i18next";
 import { formatDate } from '@utils/formatDate';
 import { getPathId } from '@utils/pathDestructer';
 import Head from 'next/head';
-import { useProviderTerms } from '@hooks/useProviderTerms';
 import PlannedVsAccomplishedEqualizer from '@components/PlannedVsAccomplishedEqualizer';
-
-const PLANEJADO_VS_REALIZADO_PANEL_ID = 8;
-const VISAO_GERAL_UID = '5904a9de-7f42-453c-9a93-1175d1fe6918';
-
-type ReleaseView = 'lines' | 'equalizer';
 
 const Release: any = () => {
   const router = useRouter();
   const routerParams: any = router.query;
   const { t } = useTranslation('release');
-  const { terms } = useProviderTerms();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -45,13 +23,7 @@ const Release: any = () => {
   const [selectedValue, setSelectedValue] = useState(0);
   const [selectedRepository, setSelectedRepository] = useState<AccomplishedRepository>();
   const [isLoading, setIsLoading] = useState(true);
-
-  const [productRepos, setProductRepos] = useState<{ id: number; name: string }[]>([]);
-  const [panelUrl, setPanelUrl] = useState<string | null>(null);
-  const [panelLoading, setPanelLoading] = useState(false);
-  const [panelError, setPanelError] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const [view, setView] = useState<ReleaseView>('lines');
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -62,15 +34,12 @@ const Release: any = () => {
     setIsLoading(true);
     setLoadError(false);
 
-    Promise.all([
-      productQuery.getReleaseAnalysisDataByReleaseId(organizationId, productId, releaseId),
-      productQuery.getAllRepositories(organizationId, productId),
-    ])
-      .then(([releaseRes, reposRes]) => {
+    productQuery
+      .getReleaseAnalysisDataByReleaseId(organizationId, productId, releaseId)
+      .then((releaseRes) => {
         setAccomplisedResults(releaseRes.data.accomplished ?? []);
         setPlanned(releaseRes.data.planned ?? []);
         setRelease(releaseRes.data.release);
-        setProductRepos(reposRes.data.results.map((r: any) => ({ id: r.id, name: r.name })));
       })
       .catch(() => setLoadError(true))
       .finally(() => setIsLoading(false));
@@ -80,76 +49,15 @@ const Release: any = () => {
     setSelectedRepository(accomplisedResults[selectedValue]);
   }, [selectedValue, accomplisedResults]);
 
-  useEffect(() => {
-    if (!selectedRepository) return;
-
-    const [, productId] = getPathId(routerParams.product as string);
-    const matched = productRepos.find((r) => r.name === selectedRepository.repository_name);
-
-    setPanelUrl(null);
-    setPanelError(!matched);
-    if (!matched) return;
-
-    setPanelLoading(true);
-
-    grafanaService
-      .getDashboardUrl(VISAO_GERAL_UID, Number(productId), matched.id)
-      .then((res) => {
-        setPanelUrl(`${res.data.grafana_url}&viewPanel=${PLANEJADO_VS_REALIZADO_PANEL_ID}`);
-        setPanelLoading(false);
-      })
-      .catch(() => {
-        setPanelError(true);
-        setPanelLoading(false);
-      });
-  }, [selectedRepository, productRepos, routerParams.product]);
-
   const handleSelectionChange = (event: React.SyntheticEvent, newValue: number) => {
     setSelectedValue(newValue);
   };
 
-  const handleViewChange = (event: React.MouseEvent<HTMLElement>, newView: ReleaseView | null) => {
-    if (newView) setView(newView);
-  };
-
-  const getEmptyPanelMessage = () => {
-    if (loadError || panelError) return t('panelLoadError');
-    if (accomplisedResults.length === 0) return t('noAccomplishedData');
-    return `Selecione um ${terms.repository}`;
-  };
-
-  const renderLinesView = () => (
-    <Box
-      sx={{
-        width: '100%',
-        height: '520px',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '1px solid #d0d7de',
-        borderRadius: '8px',
-      }}
-    >
-      {panelLoading && <CircularProgress />}
-      {!panelLoading && !panelUrl && (
-        <Typography color="text.secondary" data-testid="lines-empty-message">{getEmptyPanelMessage()}</Typography>
-      )}
-      {panelUrl && !panelLoading && (
-        <iframe
-          src={panelUrl}
-          title="Planejado vs Realizado"
-          style={{ width: '100%', height: '100%', border: 'none' }}
-        />
-      )}
-    </Box>
-  );
-
-  const renderEqualizerView = () => (
+  const renderEqualizer = () => (
     <Box data-testid="equalizer-view" sx={{ width: '100%', minWidth: 0 }}>
       {loadError ? (
         <Typography color="text.secondary" data-testid="equalizer-load-error">
-          {t('panelLoadError')}
+          {t('loadError')}
         </Typography>
       ) : (
         <PlannedVsAccomplishedEqualizer
@@ -196,7 +104,7 @@ const Release: any = () => {
         </Grid>
 
         <Grid item xs={12} md={10} sx={{ minWidth: 0 }}>
-          {view === 'lines' ? renderLinesView() : renderEqualizerView()}
+          {renderEqualizer()}
         </Grid>
       </Grid>
     </Container>
@@ -221,40 +129,20 @@ const Release: any = () => {
         <title>{release?.release_name || 'release'}</title>
       </Head>
       <Container>
-        <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
-          {release && <Box>
-            <Box display="flex" alignItems="center" flexWrap="wrap" columnGap="1rem">
-              <Typography fontSize={{ xs: '24px', md: '32px' }} fontWeight="400">
-                {t('title')}
-              </Typography>
-              <Typography data-testid='release-name' fontSize={{ xs: '24px', md: '32px' }} fontWeight="500" color="#33568E">
-                {release?.release_name}
-              </Typography>
-            </Box>
-            {t('release-interval')}
-            <Typography data-testid='data-release' fontSize="14px" fontWeight="300">
-              {formatDate(release.start_at)} - {formatDate(release.end_at)}
+        {release && <Box>
+          <Box display="flex" alignItems="center" flexWrap="wrap" columnGap="1rem">
+            <Typography fontSize={{ xs: '24px', md: '32px' }} fontWeight="400">
+              {t('title')}
             </Typography>
-          </Box>}
-          {!isLoading && (
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              color="primary"
-              value={view}
-              onChange={handleViewChange}
-              aria-label={t('view.label')}
-              data-testid="release-view-toggle"
-            >
-              <ToggleButton value="lines" data-testid="release-view-lines">
-                {t('view.lines')}
-              </ToggleButton>
-              <ToggleButton value="equalizer" data-testid="release-view-equalizer">
-                {t('view.equalizer')}
-              </ToggleButton>
-            </ToggleButtonGroup>
-          )}
-        </Box>
+            <Typography data-testid='release-name' fontSize={{ xs: '24px', md: '32px' }} fontWeight="500" color="#33568E">
+              {release?.release_name}
+            </Typography>
+          </Box>
+          {t('release-interval')}
+          <Typography data-testid='data-release' fontSize="14px" fontWeight="300">
+            {formatDate(release.start_at)} - {formatDate(release.end_at)}
+          </Typography>
+        </Box>}
         {isLoading ? renderSkeleton() : renderContent()}
       </Container>
     </>

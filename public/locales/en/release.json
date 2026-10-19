@@ -20,13 +20,7 @@
     "maintainability": "Maintainability",
     "flexibility": "Flexibility"
   },
-  "view": {
-    "label": "View",
-    "lines": "Lines",
-    "equalizer": "Equalizer"
-  },
-  "noAccomplishedData": "This release has no accomplished data yet.",
-  "panelLoadError": "Could not load the Planned × Accomplished chart.",
+  "loadError": "Could not load the Planned × Accomplished comparison for this release.",
   "equalizer": {
     "noPlanning": "This release has no planning. Plan the release to see the comparison between planned and accomplished.",
     "noAccomplished": "There is no accomplished data for this release yet. Only planned values are shown.",

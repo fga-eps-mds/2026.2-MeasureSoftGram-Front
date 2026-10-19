@@ -20,13 +20,7 @@
     "maintainability": "Manutenibilidade",
     "flexibility": "Portabilidade"
   },
-  "view": {
-    "label": "Visualização",
-    "lines": "Linhas",
-    "equalizer": "Equalizador"
-  },
-  "noAccomplishedData": "Esta release ainda não possui dados realizados.",
-  "panelLoadError": "Não foi possível carregar o gráfico Planejado × Realizado.",
+  "loadError": "Não foi possível carregar a comparação Planejado × Realizado desta release.",
   "equalizer": {
     "noPlanning": "Esta release não possui planejamento. Planeje a release para ver a comparação entre o planejado e o realizado.",
     "noAccomplished": "Ainda não há dados realizados para esta release. São exibidos apenas os valores planejados.",
