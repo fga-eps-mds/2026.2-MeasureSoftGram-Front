@@ -31,10 +31,10 @@ export interface PlannedVsAccomplishedEqualizerProps {
   normDiff?: number | null;
 }
 
-/** Cores do protótipo da US22.01: Rp em azul e Rd em laranja. */
+/** Mesmas cores do gráfico de linhas Planejado vs Realizado (painel do Grafana). */
 export const COLORS = {
-  planned: '#1A47E8',
-  accomplished: '#F07B2E',
+  planned: '#1F60C4',
+  accomplished: '#FF8C00',
   primary: '#2B4D6F',
 };
 
@@ -102,26 +102,19 @@ export function splitCurveRuns(values: (number | null)[], tracks: TrackGeometry[
 const fmt = (n: number) => n.toFixed(1);
 
 /**
- * Curva suave (Catmull-Rom convertida em Bézier cúbica) passando pelo valor de cada trilho,
- * como no protótipo. Os pontos de controle ficam limitados à altura do trilho para a curva
- * não "estourar" acima de 1 ou abaixo de 0.
+ * Curva suave como no protótipo: em cada trilho a tangente é horizontal e entre dois trilhos
+ * a linha faz um "S" (Bézier cúbica com os pontos de controle na metade do caminho).
+ * Assim a curva nunca passa acima de 1 nem abaixo de 0.
  */
 export function buildCurvePath(values: (number | null)[], tracks: TrackGeometry[]): string {
-  const minY = Math.min(...tracks.map((track) => track.top));
-  const maxY = Math.max(...tracks.map((track) => track.top + track.height));
-  const clampY = (y: number) => Math.min(maxY, Math.max(minY, y));
-
   return splitCurveRuns(values, tracks)
     .map((points) => {
       let path = `M${fmt(points[0].x)} ${fmt(points[0].y)}`;
       for (let i = 0; i < points.length - 1; i += 1) {
-        const p0 = points[i - 1] ?? points[i];
-        const p1 = points[i];
-        const p2 = points[i + 1];
-        const p3 = points[i + 2] ?? p2;
-        const c1 = { x: p1.x + (p2.x - p0.x) / 6, y: clampY(p1.y + (p2.y - p0.y) / 6) };
-        const c2 = { x: p2.x - (p3.x - p1.x) / 6, y: clampY(p2.y - (p3.y - p1.y) / 6) };
-        path += ` C${fmt(c1.x)} ${fmt(c1.y)} ${fmt(c2.x)} ${fmt(c2.y)} ${fmt(p2.x)} ${fmt(p2.y)}`;
+        const from = points[i];
+        const to = points[i + 1];
+        const midX = (from.x + to.x) / 2;
+        path += ` C${fmt(midX)} ${fmt(from.y)} ${fmt(midX)} ${fmt(to.y)} ${fmt(to.x)} ${fmt(to.y)}`;
       }
       return path;
     })

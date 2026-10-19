@@ -137,7 +137,7 @@ describe('helpers do equalizador', () => {
 
   it('liga os pontos de trilhos na mesma linha com uma curva suave', () => {
     expect(buildCurvePath([1, 0.5, 0], tracks)).toBe(
-      'M50.0 0.0 C66.7 16.7 116.7 66.7 150.0 100.0 C183.3 133.3 233.3 183.3 250.0 200.0',
+      'M50.0 0.0 C100.0 0.0 100.0 100.0 150.0 100.0 C200.0 100.0 200.0 200.0 250.0 200.0',
     );
   });
 
