@@ -148,8 +148,11 @@ describe('helpers do equalizador', () => {
   });
 
   it('interrompe a curva onde não há valor e na quebra de linha do grid', () => {
-    expect(buildCurvePath([1, null, 0], tracks)).toBe('M50.0 0.0 M250.0 200.0');
-    expect(buildCurvePath([1, 1], [tracks[0], { x: 50, top: 300, height: 200 }])).toBe('M50.0 0.0 M50.0 300.0');
+    // valores isolados viram um traço horizontal curto
+    expect(buildCurvePath([1, null, 0], tracks)).toBe('M38.0 0.0 L62.0 0.0 M238.0 200.0 L262.0 200.0');
+    expect(buildCurvePath([1, 1], [tracks[0], { x: 50, top: 300, height: 200 }])).toBe(
+      'M38.0 0.0 L62.0 0.0 M38.0 300.0 L62.0 300.0',
+    );
   });
 
   it('não desenha enquanto os trilhos não foram medidos', () => {

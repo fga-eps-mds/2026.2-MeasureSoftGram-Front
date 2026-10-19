@@ -104,11 +104,18 @@ const fmt = (n: number) => n.toFixed(1);
 /**
  * Curva suave como no protótipo: em cada trilho a tangente é horizontal e entre dois trilhos
  * a linha faz um "S" (Bézier cúbica com os pontos de controle na metade do caminho).
- * Assim a curva nunca passa acima de 1 nem abaixo de 0.
+ * Assim a curva nunca passa acima de 1 nem abaixo de 0. Um valor isolado (vizinhos sem dado)
+ * vira um traço horizontal curto, para continuar visível.
  */
+const ISOLATED_STROKE_HALF_WIDTH = 12;
+
 export function buildCurvePath(values: (number | null)[], tracks: TrackGeometry[]): string {
   return splitCurveRuns(values, tracks)
     .map((points) => {
+      if (points.length === 1) {
+        const [{ x, y }] = points;
+        return `M${fmt(x - ISOLATED_STROKE_HALF_WIDTH)} ${fmt(y)} L${fmt(x + ISOLATED_STROKE_HALF_WIDTH)} ${fmt(y)}`;
+      }
       let path = `M${fmt(points[0].x)} ${fmt(points[0].y)}`;
       for (let i = 0; i < points.length - 1; i += 1) {
         const from = points[i];
@@ -360,7 +367,7 @@ export default function PlannedVsAccomplishedEqualizer({
           <TableRow>
             <TableCell sx={cellSx} />
             {comparisons.map((item) => (
-              <TableCell key={`head-${item.key}`} align="center" sx={{ ...cellSx, fontWeight: 600 }}>
+              <TableCell key={`head-${item.key}`} align="center" sx={{ ...cellSx, whiteSpace: 'normal', fontWeight: 600 }}>
                 {characteristicLabel(item.key)}
               </TableCell>
             ))}
