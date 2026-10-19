@@ -45,6 +45,8 @@ const Release: any = () => {
   const [productRepos, setProductRepos] = useState<{ id: number; name: string }[]>([]);
   const [panelUrl, setPanelUrl] = useState<string | null>(null);
   const [panelLoading, setPanelLoading] = useState(false);
+  const [panelError, setPanelError] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [view, setView] = useState<ReleaseView>('lines');
 
   useEffect(() => {
@@ -54,17 +56,20 @@ const Release: any = () => {
     const releaseId = routerParams.release;
 
     setIsLoading(true);
+    setLoadError(false);
 
     Promise.all([
       productQuery.getReleaseAnalysisDataByReleaseId(organizationId, productId, releaseId),
       productQuery.getAllRepositories(organizationId, productId),
-    ]).then(([releaseRes, reposRes]) => {
-      setAccomplisedResults(releaseRes.data.accomplished);
-      setPlanned(releaseRes.data.planned);
-      setRelease(releaseRes.data.release);
-      setProductRepos(reposRes.data.results.map((r: any) => ({ id: r.id, name: r.name })));
-      setIsLoading(false);
-    });
+    ])
+      .then(([releaseRes, reposRes]) => {
+        setAccomplisedResults(releaseRes.data.accomplished ?? []);
+        setPlanned(releaseRes.data.planned ?? []);
+        setRelease(releaseRes.data.release);
+        setProductRepos(reposRes.data.results.map((r: any) => ({ id: r.id, name: r.name })));
+      })
+      .catch(() => setLoadError(true))
+      .finally(() => setIsLoading(false));
   }, [router.isReady, routerParams.product, routerParams.release]);
 
   useEffect(() => {
@@ -72,14 +77,16 @@ const Release: any = () => {
   }, [selectedValue, accomplisedResults]);
 
   useEffect(() => {
-    if (!selectedRepository || productRepos.length === 0) return;
+    if (!selectedRepository) return;
 
     const [, productId] = getPathId(routerParams.product as string);
     const matched = productRepos.find((r) => r.name === selectedRepository.repository_name);
+
+    setPanelUrl(null);
+    setPanelError(!matched);
     if (!matched) return;
 
     setPanelLoading(true);
-    setPanelUrl(null);
 
     grafanaService
       .getDashboardUrl(VISAO_GERAL_UID, Number(productId), matched.id)
@@ -87,7 +94,10 @@ const Release: any = () => {
         setPanelUrl(`${res.data.grafana_url}&viewPanel=${PLANEJADO_VS_REALIZADO_PANEL_ID}`);
         setPanelLoading(false);
       })
-      .catch(() => setPanelLoading(false));
+      .catch(() => {
+        setPanelError(true);
+        setPanelLoading(false);
+      });
   }, [selectedRepository, productRepos, routerParams.product]);
 
   const handleSelectionChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -96,6 +106,12 @@ const Release: any = () => {
 
   const handleViewChange = (event: React.MouseEvent<HTMLElement>, newView: ReleaseView | null) => {
     if (newView) setView(newView);
+  };
+
+  const getEmptyPanelMessage = () => {
+    if (loadError || panelError) return t('panelLoadError');
+    if (accomplisedResults.length === 0) return t('noAccomplishedData');
+    return `Selecione um ${terms.repository}`;
   };
 
   const renderLinesView = () => (
@@ -113,7 +129,7 @@ const Release: any = () => {
     >
       {panelLoading && <CircularProgress />}
       {!panelLoading && !panelUrl && (
-        <Typography color="text.secondary">{`Selecione um ${terms.repository}`}</Typography>
+        <Typography color="text.secondary" data-testid="lines-empty-message">{getEmptyPanelMessage()}</Typography>
       )}
       {panelUrl && !panelLoading && (
         <iframe
@@ -136,11 +152,17 @@ const Release: any = () => {
         p: 3,
       }}
     >
-      <PlannedVsAccomplishedEqualizer
-        planned={planned ?? []}
-        accomplished={selectedRepository?.characteristics}
-        normDiff={selectedRepository?.norm_diff}
-      />
+      {loadError ? (
+        <Typography color="text.secondary" data-testid="equalizer-load-error">
+          {t('panelLoadError')}
+        </Typography>
+      ) : (
+        <PlannedVsAccomplishedEqualizer
+          planned={planned ?? []}
+          accomplished={selectedRepository?.characteristics}
+          normDiff={selectedRepository?.norm_diff}
+        />
+      )}
     </Box>
   );
 

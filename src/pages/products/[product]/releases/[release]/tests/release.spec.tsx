@@ -75,6 +75,38 @@ describe('Release', () => {
 
     expect(await screen.findByTestId('equalizer-no-accomplished')).toBeInTheDocument();
   });
+
+  it('informa que não há dados realizados em vez de pedir para selecionar um repositório', async () => {
+    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({
+      data: { ...mockedResponse, accomplished: [] },
+    });
+
+    render(<Release />);
+
+    expect(await screen.findByTestId('lines-empty-message')).toHaveTextContent('noAccomplishedData');
+  });
+
+  it('informa erro quando o repositório da análise não é encontrado no produto', async () => {
+    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockResolvedValue({ data: mockedResponse });
+
+    render(<Release />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('lines-empty-message')).toHaveTextContent('panelLoadError'),
+    );
+  });
+
+  it('sai do carregamento e informa erro quando a análise da release falha', async () => {
+    (productQuery.getReleaseAnalysisDataByReleaseId as jest.Mock).mockRejectedValue(new Error('500'));
+
+    render(<Release />);
+
+    expect(await screen.findByTestId('lines-empty-message')).toHaveTextContent('panelLoadError');
+
+    fireEvent.click(screen.getByTestId('release-view-equalizer'));
+
+    expect(await screen.findByTestId('equalizer-load-error')).toBeInTheDocument();
+  });
 });
 
 
