@@ -1,7 +1,7 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import PlannedVsAccomplishedEqualizer, { buildCurvePath, getGridColumns } from '../PlannedVsAccomplishedEqualizer';
+import PlannedVsAccomplishedEqualizer, { buildCurvePath } from '../PlannedVsAccomplishedEqualizer';
 
 /** jsdom não calcula layout; simulamos trilhos de 240px lado a lado para as curvas e marcadores. */
 const mockTrackLayout = () =>
@@ -129,13 +129,6 @@ describe('PlannedVsAccomplishedEqualizer', () => {
 });
 
 describe('helpers do equalizador', () => {
-  it('distribui as colunas como na tela de planejamento (no máximo 6 por linha)', () => {
-    expect(getGridColumns(2)).toBe(2);
-    expect(getGridColumns(6)).toBe(6);
-    expect(getGridColumns(8)).toBe(4);
-    expect(getGridColumns(0)).toBe(1);
-  });
-
   const tracks = [
     { x: 50, top: 0, height: 200 },
     { x: 150, top: 0, height: 200 },

@@ -52,13 +52,11 @@ export const STATUS_SYMBOL: Record<ComparisonStatus, string> = {
   'no-data': '—',
 };
 
-/** Mesma regra de colunas da tela de planejamento: no máximo 6 por linha, distribuídas de forma simétrica. */
-const MAX_COLUMNS = 6;
-export const getGridColumns = (count: number) => {
-  if (count <= 0) return 1;
-  const rows = Math.ceil(count / MAX_COLUMNS);
-  return Math.ceil(count / rows);
-};
+/**
+ * Todos os trilhos ficam numa única linha, para as curvas serem contínuas (como no protótipo).
+ * Em telas estreitas o equalizador ganha rolagem horizontal própria, sem alargar a página.
+ */
+const MIN_COLUMN_WIDTH = 96;
 
 export interface TrackGeometry {
   x: number;
@@ -193,7 +191,6 @@ export default function PlannedVsAccomplishedEqualizer({
   }
 
   const hasAccomplished = accomplished !== undefined;
-  const columns = getGridColumns(comparisons.length);
 
   const statusLabel = (status: ComparisonStatus) => t(`equalizer.status.${status}`);
   const characteristicLabel = (key: string) => t(`characteristics.${key}`);
@@ -250,9 +247,9 @@ export default function PlannedVsAccomplishedEqualizer({
     zIndex,
   });
 
-  /** Curvas do planejado e do realizado projetadas sobre os trilhos, como no protótipo. */
-  const renderCurves = () => (
-    <svg style={svgStyle(2)} aria-hidden="true" data-testid="equalizer-curves">
+  /** Rp fica atrás dos trilhos, para o cursor (que marca o próprio Rp) aparecer por cima da linha. */
+  const renderPlannedCurve = () => (
+    <svg style={svgStyle(0)} aria-hidden="true" data-testid="equalizer-curves">
       <path
         d={buildCurvePath(comparisons.map((item) => item.rp), tracks)}
         fill="none"
@@ -262,29 +259,31 @@ export default function PlannedVsAccomplishedEqualizer({
         strokeLinecap="round"
         data-testid="equalizer-curve-planned"
       />
-      {hasAccomplished && (
-        <path
-          d={buildCurvePath(comparisons.map((item) => item.rd), tracks)}
-          fill="none"
-          stroke={COLORS.accomplished}
-          strokeWidth={3}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          data-testid="equalizer-curve-accomplished"
-        />
-      )}
+    </svg>
+  );
+
+  /** Rd fica na frente de tudo, para não ser cortado ao cruzar os trilhos. */
+  const renderAccomplishedCurve = () => (
+    <svg style={svgStyle(2)} aria-hidden="true">
+      <path
+        d={buildCurvePath(comparisons.map((item) => item.rd), tracks)}
+        fill="none"
+        stroke={COLORS.accomplished}
+        strokeWidth={3}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        data-testid="equalizer-curve-accomplished"
+      />
     </svg>
   );
 
   const renderTracks = () => (
-    <Box position="relative" ref={containerRef}>
+    <Box position="relative" ref={containerRef} minWidth={comparisons.length * MIN_COLUMN_WIDTH}>
+      {renderPlannedCurve()}
       <Box
         display="grid"
-        gridTemplateColumns={{
-          xs: 'repeat(auto-fit, minmax(104px, 1fr))',
-          md: `repeat(${columns}, minmax(0, 1fr))`,
-        }}
-        gap={{ xs: 2, sm: 4, md: 6 }}
+        gridTemplateColumns={`repeat(${comparisons.length}, minmax(0, 1fr))`}
+        gap={{ xs: 1, sm: 3, md: 6 }}
         justifyItems="center"
         alignItems="start"
         position="relative"
@@ -327,7 +326,7 @@ export default function PlannedVsAccomplishedEqualizer({
                 />
               </Grid>
               <Grid item display="flex" alignItems="center" justifyContent="center">
-                <Typography fontSize="14px" align="center">
+                <Typography fontSize={{ xs: '12px', md: '14px' }} align="center">
                   {characteristicLabel(item.key)}
                 </Typography>
               </Grid>
@@ -335,7 +334,7 @@ export default function PlannedVsAccomplishedEqualizer({
           </Tooltip>
         ))}
       </Box>
-      {renderCurves()}
+      {hasAccomplished && renderAccomplishedCurve()}
     </Box>
   );
 
@@ -404,7 +403,7 @@ export default function PlannedVsAccomplishedEqualizer({
       )}
       <Box sx={{ border: 1, borderRadius: 3, px: { xs: 2, sm: 3 }, py: { xs: 4, sm: 6 }, width: '100%' }}>
         {renderLegend()}
-        {renderTracks()}
+        <Box sx={{ overflowX: 'auto', contain: 'inline-size', pt: 1, pb: 1 }}>{renderTracks()}</Box>
         {renderVectors()}
         {renderNormDiff()}
       </Box>
