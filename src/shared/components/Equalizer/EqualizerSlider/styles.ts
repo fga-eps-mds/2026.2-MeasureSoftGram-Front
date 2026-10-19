@@ -1,7 +1,12 @@
 import { Slider } from '@mui/material';
 import styled from 'styled-components';
 
-export const StyledSlider = styled(Slider)({
+/**
+ * Estilo do trilho do equalizador (tela de planejamento da release).
+ * Exportado como objeto para que outros componentes apliquem exatamente o mesmo
+ * visual via `sx`, sem depender da ordem de injeção do CSS do styled-components.
+ */
+export const equalizerSliderStyles = {
   color: '#2B4D6F',
   width: 30,
   '& .MuiSlider-track': {
@@ -26,4 +31,6 @@ export const StyledSlider = styled(Slider)({
   '& .MuiSlider-valueLabel': {
     backgroundColor: '#2B4D6F'
   }
-});
+};
+
+export const StyledSlider = styled(Slider)(equalizerSliderStyles);

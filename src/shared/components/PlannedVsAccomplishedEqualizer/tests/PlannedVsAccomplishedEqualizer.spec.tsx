@@ -1,11 +1,25 @@
 import React from 'react';
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import PlannedVsAccomplishedEqualizer, {
-  TRACK_HEIGHT,
-  buildCurvePath,
-  getColumnWidth,
-} from '../PlannedVsAccomplishedEqualizer';
+import PlannedVsAccomplishedEqualizer, { buildCurvePath, getGridColumns } from '../PlannedVsAccomplishedEqualizer';
+
+/** jsdom não calcula layout; simulamos trilhos de 240px lado a lado para as curvas e marcadores. */
+const mockTrackLayout = () =>
+  jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function mockRect(this: HTMLElement) {
+    const isSlider = this.classList.contains('MuiSlider-root');
+    const index = isSlider ? Number(this.getAttribute('data-index') ?? 0) : 0;
+    return {
+      x: 0,
+      y: 0,
+      left: isSlider ? 100 + index * 150 : 0,
+      top: isSlider ? 20 : 0,
+      width: isSlider ? 30 : 600,
+      height: isSlider ? 240 : 400,
+      right: 0,
+      bottom: 0,
+      toJSON: () => ({}),
+    } as DOMRect;
+  });
 
 const planned = [
   { name: 'reliability', value: 0.7, diff: 0 },
@@ -81,6 +95,7 @@ describe('PlannedVsAccomplishedEqualizer', () => {
   });
 
   it('sinaliza característica sem valor realizado como sem dado, sem exibir zero', () => {
+    const spy = mockTrackLayout();
     render(
       <PlannedVsAccomplishedEqualizer
         planned={planned}
@@ -92,6 +107,8 @@ describe('PlannedVsAccomplishedEqualizer', () => {
     expect(screen.getByTestId('vector-status')).toHaveTextContent('equalizer.status.no-data');
     expect(screen.queryByTestId('equalizer-marker-accomplished-maintainability')).not.toBeInTheDocument();
     expect(screen.getByTestId('equalizer-marker-accomplished-security')).toBeInTheDocument();
+    expect(screen.getByTestId('equalizer-curve-accomplished').getAttribute('d')).toMatch(/^M/);
+    spy.mockRestore();
   });
 
   it('exibe apenas o planejado e avisa quando a release ainda não tem análise', () => {
@@ -112,16 +129,29 @@ describe('PlannedVsAccomplishedEqualizer', () => {
 });
 
 describe('helpers do equalizador', () => {
-  it('mantém colunas de largura fixa para poucas características', () => {
-    expect(getColumnWidth(2)).toBe(120);
-    expect(getColumnWidth(6)).toBe(120);
-    expect(getColumnWidth(8)).toBe(100);
+  it('distribui as colunas como na tela de planejamento (no máximo 6 por linha)', () => {
+    expect(getGridColumns(2)).toBe(2);
+    expect(getGridColumns(6)).toBe(6);
+    expect(getGridColumns(8)).toBe(4);
+    expect(getGridColumns(0)).toBe(1);
   });
 
-  it('interrompe a curva onde não há valor', () => {
-    const path = buildCurvePath([1, null, 0], 100);
+  const tracks = [
+    { x: 50, top: 0, height: 200 },
+    { x: 150, top: 0, height: 200 },
+    { x: 250, top: 0, height: 200 },
+  ];
 
-    expect(path).toBe(`M50 0 M250 ${TRACK_HEIGHT}`);
-    expect(buildCurvePath([0.5, 0.5], 100)).toBe(`M50 ${TRACK_HEIGHT / 2} L150 ${TRACK_HEIGHT / 2}`);
+  it('liga os pontos de trilhos na mesma linha', () => {
+    expect(buildCurvePath([1, 0.5, 0], tracks)).toBe('M50.0 0.0 L150.0 100.0 L250.0 200.0');
+  });
+
+  it('interrompe a curva onde não há valor e na quebra de linha do grid', () => {
+    expect(buildCurvePath([1, null, 0], tracks)).toBe('M50.0 0.0 M250.0 200.0');
+    expect(buildCurvePath([1, 1], [tracks[0], { x: 50, top: 300, height: 200 }])).toBe('M50.0 0.0 M50.0 300.0');
+  });
+
+  it('não desenha enquanto os trilhos não foram medidos', () => {
+    expect(buildCurvePath([0.5, 0.5], [])).toBe('');
   });
 });

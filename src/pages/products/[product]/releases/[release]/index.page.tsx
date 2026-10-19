@@ -15,6 +15,8 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { useRouter } from 'next/router';
 import { useTranslation } from "react-i18next";
@@ -34,6 +36,8 @@ const Release: any = () => {
   const routerParams: any = router.query;
   const { t } = useTranslation('release');
   const { terms } = useProviderTerms();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
   const [accomplisedResults, setAccomplisedResults] = useState<AccomplishedRepository[]>([]);
   const [planned, setPlanned] = useState<Characteristic[]>([]);
@@ -142,16 +146,7 @@ const Release: any = () => {
   );
 
   const renderEqualizerView = () => (
-    <Box
-      data-testid="equalizer-view"
-      sx={{
-        width: '100%',
-        minHeight: '520px',
-        border: '1px solid #d0d7de',
-        borderRadius: '8px',
-        p: 3,
-      }}
-    >
+    <Box data-testid="equalizer-view" sx={{ width: '100%', minWidth: 0 }}>
       {loadError ? (
         <Typography color="text.secondary" data-testid="equalizer-load-error">
           {t('panelLoadError')}
@@ -169,18 +164,18 @@ const Release: any = () => {
   const renderContent = () => (
     <Container>
       <Grid container mt={0.1} spacing={4}>
-        <Grid item xs={2} height={520}>
+        <Grid item xs={12} md={2} sx={{ height: { md: 520 } }}>
           <Card sx={{ height: 'inherit' }}>
             <Box sx={{ display: 'flex', height: 'inherit' }}>
               <Tabs
-                orientation='vertical'
+                orientation={isDesktop ? 'vertical' : 'horizontal'}
                 variant='scrollable'
                 scrollButtons
                 allowScrollButtonsMobile
                 value={selectedValue}
                 onChange={handleSelectionChange}
                 sx={{
-                  borderRight: 1, borderColor: 'divider', width: '100%',
+                  borderRight: { md: 1 }, borderColor: 'divider', width: '100%',
                   '& [aria-selected="true"]': {
                     backgroundColor: 'rgba(17, 61, 76, .03)',
                   },
@@ -199,7 +194,7 @@ const Release: any = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={10}>
+        <Grid item xs={12} md={10} sx={{ minWidth: 0 }}>
           {view === 'lines' ? renderLinesView() : renderEqualizerView()}
         </Grid>
       </Grid>
@@ -209,10 +204,10 @@ const Release: any = () => {
   const renderSkeleton = () => (
     <Container>
       <Grid container mt={0.1} spacing={4}>
-        <Grid item xs={2}>
+        <Grid item xs={12} md={2}>
           <Skeleton height={520} variant='rectangular' />
         </Grid>
-        <Grid item xs={10}>
+        <Grid item xs={12} md={10}>
           <Skeleton height={520} variant='rectangular' />
         </Grid>
       </Grid>
@@ -225,13 +220,13 @@ const Release: any = () => {
         <title>{release?.release_name || 'release'}</title>
       </Head>
       <Container>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
           {release && <Box>
-            <Box display="flex" alignItems="center" gap="1rem">
-              <Typography fontSize="32px" fontWeight="400">
+            <Box display="flex" alignItems="center" flexWrap="wrap" columnGap="1rem">
+              <Typography fontSize={{ xs: '24px', md: '32px' }} fontWeight="400">
                 {t('title')}
               </Typography>
-              <Typography data-testid='release-name' fontSize="32px" fontWeight="500" color="#33568E">
+              <Typography data-testid='release-name' fontSize={{ xs: '24px', md: '32px' }} fontWeight="500" color="#33568E">
                 {release?.release_name}
               </Typography>
             </Box>
