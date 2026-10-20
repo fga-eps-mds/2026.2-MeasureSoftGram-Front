@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import { Box, Button, Chip, Typography, Paper } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { ReleaseSelect } from '@components/ReleaseSelect';
+import ReleaseSelect from '@components/ReleaseSelect';
 
 interface Props {
   productPath?: string;
@@ -56,8 +56,7 @@ export const MetamodeloEmptyState: React.FC<Props> = ({ productPath }) => {
           />
           <ReleaseSelect
             releases={[]}
-            selectedReleaseId={null}
-            onReleaseChange={() => {}}
+            onChange={() => {}}
             disabled
           />
         </Box>

@@ -10,7 +10,8 @@ import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
 import { getPathId } from '@utils/pathDestructer';
 import { QualityModelNode } from '@customTypes/metamodel';
-import { ReleaseSelect, resolveCurrentRelease, ReleaseItem } from '@components/ReleaseSelect';
+import ReleaseSelect from '@components/ReleaseSelect';
+import { getCurrentRelease, toReleaseArray } from '@utils/releaseSelection';
 import { MetamodelTreeChart } from '@components/MetamodelTreeChart';
 import { MetamodeloEmptyState } from './components/MetamodeloEmptyState';
 import { MetamodeloErrorState } from './components/MetamodeloErrorState';
@@ -26,11 +27,8 @@ const MetamodeloDashboard: NextPageWithLayout = () => {
     organizationId && productId ? productQuery.getReleaseList(organizationId, productId) : null
   );
 
-  const releases: ReleaseItem[] = React.useMemo(() => {
-    if (Array.isArray(releaseData)) return releaseData;
-    if (Array.isArray(releaseData?.results)) return releaseData.results;
-    return [];
-  }, [releaseData]);
+  const releases = React.useMemo(() => toReleaseArray(releaseData), [releaseData]);
+  const currentRelease = React.useMemo(() => getCurrentRelease(releases), [releases]);
 
   const [selectedReleaseId, setSelectedReleaseId] = useState<number | null>(null);
   const [treeData, setTreeData] = useState<QualityModelNode | null>(null);
@@ -40,10 +38,9 @@ const MetamodeloDashboard: NextPageWithLayout = () => {
   // Seleciona por padrão a release atual quando a lista de releases carregar
   useEffect(() => {
     if (releases.length > 0 && selectedReleaseId === null) {
-      const current = resolveCurrentRelease(releases);
-      setSelectedReleaseId(current ? current.id : releases[0].id);
+      setSelectedReleaseId(currentRelease ? currentRelease.id : releases[0].id);
     }
-  }, [releases, selectedReleaseId]);
+  }, [releases, currentRelease, selectedReleaseId]);
 
   // Função para buscar a árvore da release selecionada
   const fetchTree = useCallback(async () => {
@@ -161,8 +158,9 @@ const MetamodeloDashboard: NextPageWithLayout = () => {
 
                 <ReleaseSelect
                   releases={releases}
-                  selectedReleaseId={selectedReleaseId}
-                  onReleaseChange={handleReleaseChange}
+                  value={selectedReleaseId ?? undefined}
+                  currentReleaseId={currentRelease?.id}
+                  onChange={handleReleaseChange}
                   disabled={isTreeLoading}
                 />
               </Box>
