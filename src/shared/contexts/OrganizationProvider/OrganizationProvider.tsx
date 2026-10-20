@@ -98,7 +98,7 @@ export function OrganizationProvider({ children }: Props) {
         setIsLoading(false);
 
         if (provider !== 'gitlab') {
-          syncGithubOrganizations(organizations);
+          void syncGithubOrganizations(organizations);
         }
       } else {
         toast.error(`Erro ao carregar ${terms.organizations}.`);
