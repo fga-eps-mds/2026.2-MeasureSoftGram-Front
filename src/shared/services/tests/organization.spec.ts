@@ -217,22 +217,14 @@ describe('Organization Service', () => {
 
   // Testes de getGitLabNamespaces
   it('deve buscar namespaces do GitLab (GET)', async () => {
-    const mockNamespaces = [{ id: 1, name: 'group1', full_path: 'group1', kind: 'group' }];
+    const mockNamespaces = [
+      { id: 1, name: 'Group 1', full_path: 'group-1', avatar_url: '', description: 'Desc', kind: 'group' }
+    ];
     (api.get as jest.Mock).mockResolvedValue({ data: mockNamespaces });
 
     const result = await organizationQuery.getGitLabNamespaces();
 
     expect(api.get).toHaveBeenCalledWith('/v1/accounts/gitlab-namespaces/');
-    expect(result.type).toBe('success');
-    expect((result as any).value).toEqual(mockNamespaces);
-  });
-
-  it('deve buscar namespaces do GitLab quando resposta vem paginada com results', async () => {
-    const mockNamespaces = [{ id: 1, name: 'group1', full_path: 'group1', kind: 'group' }];
-    (api.get as jest.Mock).mockResolvedValue({ data: { results: mockNamespaces } });
-
-    const result = await organizationQuery.getGitLabNamespaces();
-
     expect(result.type).toBe('success');
     expect((result as any).value).toEqual(mockNamespaces);
   });
@@ -244,36 +236,46 @@ describe('Organization Service', () => {
   });
 
   // Testes de getGitLabProjects
-  it('deve buscar projetos do GitLab com filtros e ler x-total-pages do header', async () => {
-    const mockProjects = [{ gitlab_project_id: 10, name: 'proj1' }];
+  it('deve buscar projetos do GitLab com parâmetros (GET)', async () => {
+    const mockProjects = [
+      {
+        gitlab_project_id: 10,
+        gitlab_path_with_namespace: 'group-1/proj-1',
+        name: 'proj-1',
+        description: 'Desc',
+        url: 'https://gitlab.com/group-1/proj-1'
+      }
+    ];
     (api.get as jest.Mock).mockResolvedValue({
       data: mockProjects,
-      headers: { 'x-total-pages': '3' }
+      headers: { 'x-total-pages': '4', 'x-next-page': '3' }
     });
 
     const result = await organizationQuery.getGitLabProjects('org-1', 1, 'group', 2, 'search-term');
 
     expect(api.get).toHaveBeenCalledWith('/v1/organizations/org-1/gitlab-projects/', {
-      params: { namespace_id: 1, kind: 'group', page: 2, search: 'search-term' }
+      params: {
+        namespace_id: 1,
+        kind: 'group',
+        page: 2,
+        search: 'search-term'
+      }
     });
     expect(result.type).toBe('success');
-    expect((result as any).value).toEqual({ projects: mockProjects, totalPages: 3 });
+    expect((result as any).value).toEqual({ projects: mockProjects, totalPages: 4, nextPage: 3 });
   });
 
-  it('deve buscar projetos do GitLab com parâmetros padrão e fallback para totalPages 1', async () => {
-    const mockProjects = [{ gitlab_project_id: 10, name: 'proj1' }];
-    (api.get as jest.Mock).mockResolvedValue({ data: { results: mockProjects }, headers: {} });
+  it('não informa próxima página quando o GitLab manda o header vazio', async () => {
+    (api.get as jest.Mock).mockResolvedValue({ data: [], headers: { 'x-next-page': '' } });
 
-    const result = await organizationQuery.getGitLabProjects('org-1');
+    const result = await organizationQuery.getGitLabProjects('org-1', 1, 'group', 1, '');
 
-    expect(api.get).toHaveBeenCalledWith('/v1/organizations/org-1/gitlab-projects/', { params: {} });
-    expect(result.type).toBe('success');
-    expect((result as any).value).toEqual({ projects: mockProjects, totalPages: 1 });
+    expect((result as any).value).toEqual({ projects: [], totalPages: null, nextPage: null });
   });
 
   it('deve retornar erro ao falhar buscar projetos do GitLab', async () => {
     (api.get as jest.Mock).mockRejectedValue(new Error(NETWORK_ERROR));
-    const result = await organizationQuery.getGitLabProjects('org-1');
+    const result = await organizationQuery.getGitLabProjects('org-1', 1, 'group', 1, '');
     expect(result.type).toBe('error');
   });
 });

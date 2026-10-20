@@ -15,6 +15,12 @@ export type ResultSuccess<T> = { type: 'success'; value: T };
 export type ResultError = { type: 'error'; error: Error | AxiosError };
 export type Result<T> = ResultSuccess<T> | ResultError;
 
+// O GitLab manda X-Next-Page vazio na última página e omite X-Total-Pages acima de 10 mil itens.
+const parsePageHeader = (value?: string): number | null => {
+  const page = Number(value);
+  return value && Number.isInteger(page) && page > 0 ? page : null;
+};
+
 class OrganizationQuery {
   async getAllOrganization(): Promise<Result<OrganizationFormData[]>> {
     try {
@@ -133,7 +139,7 @@ class OrganizationQuery {
     kind?: string,
     page?: number,
     search?: string
-  ): Promise<Result<GitLabProjectsResponse>> {
+  ): Promise<Result<GitLabProjectsPage>> {
     try {
       const params: Record<string, any> = {};
       if (namespaceId !== undefined && namespaceId !== null && namespaceId !== '') {
@@ -149,11 +155,15 @@ class OrganizationQuery {
         params.search = search;
       }
       const response = await api.get(`/v1/organizations/${orgId}/gitlab-projects/`, { params });
-      const rawData = response.data;
-      const data = Array.isArray(rawData) ? rawData : (rawData?.results ?? rawData ?? []);
-      const totalPagesHeader = response.headers?.['x-total-pages'] || response.headers?.['X-Total-Pages'];
-      const totalPages = totalPagesHeader ? Math.max(1, parseInt(totalPagesHeader, 10)) : 1;
-      return { type: 'success', value: { projects: data as GitLabProject[], totalPages } };
+      const data = Array.isArray(response.data) ? response.data : (response.data?.results ?? response.data);
+      return {
+        type: 'success',
+        value: {
+          projects: data as GitLabProject[],
+          totalPages: parsePageHeader(response.headers?.['x-total-pages']),
+          nextPage: parsePageHeader(response.headers?.['x-next-page'])
+        }
+      };
     } catch (error) {
       return { type: 'error', error: error as AxiosError };
     }
@@ -192,10 +202,12 @@ export interface GitLabProject {
   url: string;
 }
 
-export interface GitLabProjectsResponse {
+export interface GitLabProjectsPage {
   projects: GitLabProject[];
-  totalPages: number;
+  totalPages: number | null;
+  nextPage: number | null;
 }
 
 export const organizationQuery = new OrganizationQuery();
 Object.freeze(organizationQuery);
+

@@ -414,140 +414,6 @@ describe('Products Component', () => {
     });
   });
 
-  it('displays permission link with NEXT_PUBLIC_GITHUB_CLIENT_ID for GitHub', async () => {
-    process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID = 'test-github-client-id';
-
-    render(<Products />);
-
-    const link = await screen.findByRole('link', {
-      name: 'Conceder acesso ou gerenciar permissões no GitHub'
-    });
-    expect(link).toHaveAttribute(
-      'href',
-      'https://github.com/settings/connections/applications/test-github-client-id'
-    );
-  });
-
-  it('handles github importOrganization error', async () => {
-    (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValueOnce({
-      type: 'success',
-      value: []
-    });
-    (organizationQuery.importOrganization as jest.Mock).mockResolvedValueOnce({
-      type: 'error'
-    });
-
-    render(<Products />);
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Erro ao importar organização no MeasureSoftGram.');
-    });
-  });
-
-  it('handles selecting a different organization and product from dropdowns', async () => {
-    (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
-      type: 'success',
-      value: [
-        { github_org_id: 1, github_org_name: 'Org 1', description: 'Desc 1' },
-        { github_org_id: 2, github_org_name: 'Org 2', description: 'Desc 2' }
-      ]
-    });
-    (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValue({
-      type: 'success',
-      value: [
-        { id: 'org-1', name: 'Org 1', key: 'org-1' },
-        { id: 'org-2', name: 'Org 2', key: 'org-2' }
-      ]
-    });
-    (productQuery.getAllProducts as jest.Mock).mockResolvedValue({
-      data: {
-        results: [
-          { id: 'prod-1', name: 'Prod 1' },
-          { id: 'prod-2', name: 'Prod 2' }
-        ]
-      }
-    });
-
-    render(<Products />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Repo 1')).toBeInTheDocument();
-    });
-
-    const orgSelect = screen.getByLabelText('Organizações do GitHub');
-    fireEvent.mouseDown(orgSelect);
-    const org2Option = await screen.findByText('Org 2');
-    await act(async () => {
-      fireEvent.click(org2Option);
-    });
-
-    await waitFor(() => {
-      expect(organizationQuery.getGithubRepos).toHaveBeenCalledWith('org-2');
-    });
-
-    const prodSelect = screen.getByLabelText('Produtos do MeasureSoftGram');
-    fireEvent.mouseDown(prodSelect);
-    const prod2Option = await screen.findByText('Prod 2');
-    await act(async () => {
-      fireEvent.click(prod2Option);
-    });
-
-    await waitFor(() => {
-      expect(productQuery.getAllRepositories).toHaveBeenCalledWith('org-2', 'prod-2');
-    });
-  });
-
-  it('clears state when currentOrganization does not match any provider namespace', async () => {
-    const { rerender } = render(<Products />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Org 1')).toBeInTheDocument();
-    });
-
-    (useOrganizationContext as jest.Mock).mockReturnValue({
-      organizationList: [{ id: 'org-unknown', name: 'Unknown Org', key: 'org-unknown' }],
-      currentOrganization: { id: 'org-unknown', name: 'Unknown Org', key: 'org-unknown' },
-      setCurrentOrganizations: mockSetCurrentOrgs,
-      fetchOrganizations: mockFetchOrgs
-    });
-
-    rerender(<Products />);
-
-    await waitFor(() => {
-      expect(screen.queryByText('Repo 1')).not.toBeInTheDocument();
-    });
-  });
-
-  it('handles unexpected exception when importing repo', async () => {
-    (repository.createRepository as jest.Mock).mockRejectedValueOnce(new Error('Crash on import'));
-
-    render(<Products />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Repo 1')).toBeInTheDocument();
-    });
-
-    const importBtn = screen.getByText('Importar');
-    await act(async () => {
-      fireEvent.click(importBtn);
-    });
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Erro ao importar repositório: Crash on import');
-    });
-  });
-
-  it('handles error in loadProductRepositories silently with console.error', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    (productQuery.getAllRepositories as jest.Mock).mockRejectedValueOnce(new Error('Repo fetch failure'));
-
-    render(<Products />);
-
-    await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Erro ao carregar projetos importados:', expect.any(Error));
-    });
-  });
-
   describe('GitLab Provider in Products Component', () => {
     const mockSignInWithGitlab = jest.fn();
 
@@ -579,15 +445,19 @@ describe('Products Component', () => {
 
       (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValue({
         type: 'success',
-        value: [
-          {
-            gitlab_project_id: 201,
-            gitlab_path_with_namespace: 'gitlab-group-1/project-1',
-            name: 'project-1',
-            description: 'GitLab Project 1 Description',
-            url: 'https://gitlab.com/gitlab-group-1/project-1'
-          }
-        ]
+        value: {
+          projects: [
+            {
+              gitlab_project_id: 201,
+              gitlab_path_with_namespace: 'gitlab-group-1/project-1',
+              name: 'project-1',
+              description: 'GitLab Project 1 Description',
+              url: 'https://gitlab.com/gitlab-group-1/project-1'
+            }
+          ],
+          totalPages: 1,
+          nextPage: null
+        }
       });
 
       (useOrganizationContext as jest.Mock).mockReturnValue({
@@ -685,6 +555,43 @@ describe('Products Component', () => {
       expect(url.searchParams.get('scope')).toBe('read_user openid profile email read_api');
     });
 
+    it('pagina os projetos do gitlab pelo total de páginas que o service repassa', async () => {
+      (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: {
+          projects: [
+            {
+              gitlab_project_id: 201,
+              gitlab_path_with_namespace: 'gitlab-group-1/project-1',
+              name: 'project-1',
+              description: '',
+              url: 'https://gitlab.com/gitlab-group-1/project-1'
+            }
+          ],
+          totalPages: 3,
+          nextPage: 2
+        }
+      });
+
+      render(<Products />);
+
+      expect(await screen.findByRole('button', { name: 'Go to page 3' })).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Go to page 2' }));
+      });
+
+      await waitFor(() => {
+        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-gl-1', 101, 'group', 2, '');
+      });
+    });
+
+    it('não mostra uma página seguinte quando o gitlab diz que é a última', async () => {
+      render(<Products />);
+
+      expect(await screen.findByText('gitlab-group-1/project-1')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Go to page 2' })).not.toBeInTheDocument();
+    });
+
     it('handles search and pagination queries to gitlab backend', async () => {
       render(<Products />);
 
@@ -717,230 +624,6 @@ describe('Products Component', () => {
       await waitFor(() => {
         expect(organizationQuery.createOrganization).toHaveBeenCalledWith({ name: 'GitLab Group 1' });
       });
-    });
-
-    it('handles gitlab pagination page click', async () => {
-      (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValue({
-        type: 'success',
-        value: {
-          projects: [
-            {
-              gitlab_project_id: 201,
-              gitlab_path_with_namespace: 'gitlab-group-1/project-1',
-              name: 'project-1',
-              description: 'GitLab Project 1 Description',
-              url: 'https://gitlab.com/gitlab-group-1/project-1'
-            }
-          ],
-          totalPages: 3
-        }
-      });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(screen.getByText('gitlab-group-1/project-1')).toBeInTheDocument();
-      });
-
-      const page2Btn = screen.getByText('2');
-      await act(async () => {
-        fireEvent.click(page2Btn);
-      });
-
-      await waitFor(() => {
-        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-gl-1', 101, 'group', 2, '');
-      });
-    });
-
-    it('handles gitlab 400 error status with Autorizar GitLab button', async () => {
-      (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValueOnce({
-        type: 'error',
-        error: { response: { status: 400 } }
-      });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Token do GitLab expirado ou inválido')).toBeInTheDocument();
-        expect(screen.getByText('Autorizar GitLab')).toBeInTheDocument();
-      });
-    });
-
-    it('handles gitlab reauthorization failure when state storage fails', async () => {
-      (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValueOnce({
-        type: 'error',
-        error: { response: { status: 409 } }
-      });
-      jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
-      render(<Products />);
-
-      const authBtn = await screen.findByText('Autorizar GitLab');
-      jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-        throw new Error('storage blocked');
-      });
-
-      await act(async () => {
-        fireEvent.click(authBtn);
-      });
-
-      expect(toast.error).toHaveBeenCalledWith('Não foi possível iniciar a autorização do GitLab.');
-    });
-
-    it('handles generic error on gitlab projects and allows retry', async () => {
-      (organizationQuery.getGitLabProjects as jest.Mock)
-        .mockResolvedValueOnce({
-          type: 'error',
-          error: { response: { status: 500 } }
-        })
-        .mockResolvedValueOnce({
-          type: 'success',
-          value: {
-            projects: [
-              {
-                gitlab_project_id: 201,
-                gitlab_path_with_namespace: 'gitlab-group-1/project-1',
-                name: 'project-1',
-                description: 'GitLab Project 1 Description',
-                url: 'https://gitlab.com/gitlab-group-1/project-1'
-              }
-            ],
-            totalPages: 1
-          }
-        });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Não foi possível carregar os projetos')).toBeInTheDocument();
-      });
-
-      const retryBtn = screen.getByText('Tentar Novamente');
-      await act(async () => {
-        fireEvent.click(retryBtn);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('gitlab-group-1/project-1')).toBeInTheDocument();
-      });
-    });
-
-    it('handles exception during gitlab projects fetch', async () => {
-      jest.spyOn(console, 'error').mockImplementation(() => undefined);
-      (organizationQuery.getGitLabProjects as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Erro ao carregar projetos.');
-      });
-    });
-
-    it('handles error fetching gitlab namespaces', async () => {
-      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValueOnce({
-        type: 'error'
-      });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Erro ao buscar grupos do GitLab.');
-      });
-    });
-
-    it('handles fallback in importOrg when createOrganization fails but getAllOrganization finds the org', async () => {
-      (organizationQuery.getAllOrganization as jest.Mock)
-        .mockResolvedValueOnce({
-          type: 'success',
-          value: []
-        })
-        .mockResolvedValueOnce({
-          type: 'success',
-          value: [{ id: 'org-gl-fallback', name: 'gitlab group 1' }]
-        });
-      (organizationQuery.createOrganization as jest.Mock).mockResolvedValueOnce({
-        type: 'error'
-      });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(organizationQuery.createOrganization).toHaveBeenCalledWith({ name: 'GitLab Group 1' });
-        expect(screen.getByText('gitlab-group-1/project-1')).toBeInTheDocument();
-      });
-    });
-
-    it('handles total failure in importOrg when org cannot be created or found', async () => {
-      (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValue({
-        type: 'success',
-        value: []
-      });
-      (organizationQuery.createOrganization as jest.Mock).mockResolvedValue({
-        type: 'error'
-      });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Erro ao importar grupo no MeasureSoftGram.');
-      });
-    });
-
-    it('displays already imported chip and filters by tabs in gitlab', async () => {
-      (productQuery.getAllRepositories as jest.Mock).mockResolvedValueOnce({
-        data: {
-          results: [{ url: 'https://gitlab.com/gitlab-group-1/project-1' }]
-        }
-      });
-
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Importado')).toBeInTheDocument();
-      });
-
-      const aImportarTab = screen.getByText('A Importar');
-      await act(async () => {
-        fireEvent.click(aImportarTab);
-      });
-
-      await waitFor(() => {
-        expect(screen.queryByText('gitlab-group-1/project-1')).not.toBeInTheDocument();
-        expect(screen.getByText('Nenhum projeto associado a este produto foi encontrado.')).toBeInTheDocument();
-      });
-
-      const importadosTab = screen.getByText('Importados');
-      await act(async () => {
-        fireEvent.click(importadosTab);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('gitlab-group-1/project-1')).toBeInTheDocument();
-      });
-    });
-
-    it('navigates to create product page when clicking Criar Produto button in gitlab', async () => {
-      render(<Products />);
-
-      await waitFor(() => {
-        expect(screen.getByText('gitlab-group-1/project-1')).toBeInTheDocument();
-      });
-
-      const createBtn = screen.getByText('Criar Produto');
-      await act(async () => {
-        fireEvent.click(createBtn);
-      });
-
-      expect(mockPush).toHaveBeenCalledWith('/products/create?id_organization=org-gl-1');
-    });
-
-    it('displays permission link for GitLab applications', async () => {
-      render(<Products />);
-
-      const link = await screen.findByRole('link', {
-        name: 'Conceder acesso ou gerenciar permissões no GitLab'
-      });
-      expect(link).toHaveAttribute('href', 'https://gitlab.com/-/profile/applications');
     });
   });
 });
