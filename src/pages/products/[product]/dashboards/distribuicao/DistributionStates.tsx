@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button } from '@mui/material';
-import { SkeletonBlock } from '@components/DashboardCard';
+import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 
 /** Textos da tela 04 do protótipo. */
@@ -39,5 +39,17 @@ export function ChartSkeleton() {
         <SkeletonBlock key={height} width={40} height={height} />
       ))}
     </Box>
+  );
+}
+
+/** Cartão de falha ao carregar, com o botão de tentar de novo. */
+export function DistributionErrorCard({ onRetry }: { onRetry: () => void }) {
+  return (
+    <DashboardCard
+      title={DISTRIBUTION_ERROR_CARD_TITLE}
+      status="error"
+      errorTitle={DISTRIBUTION_ERROR_TITLE}
+      onRetry={onRetry}
+    />
   );
 }

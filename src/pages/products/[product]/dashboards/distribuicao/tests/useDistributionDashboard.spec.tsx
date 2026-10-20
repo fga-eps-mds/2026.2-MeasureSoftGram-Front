@@ -185,16 +185,48 @@ describe('useDistributionDashboard', () => {
 
   it('expõe os erros e tenta de novo cada busca', () => {
     mockRequests({ error: new Error('falhou') });
+    const mutateReleases = jest.fn();
+    const mutateRepositories = jest.fn();
+    const mutateDetail = jest.fn();
+    const mutateComparison = jest.fn();
+    const error = new Error('falhou');
+    (useRequest as jest.Mock).mockImplementation((request: Request) => {
+      if (!request) return { data: undefined, isLoading: false, mutate };
+      if (request.url.endsWith('/release/')) {
+        return { data: { results: releases }, isLoading: false, mutate: mutateReleases };
+      }
+      const { metric = 'complexity', release_id: releaseId = 2, repository_id: repositoryId } = request.params ?? {};
+      if (repositoryId) {
+        const data = distribution([withFiles(byId[repositoryId])], null, metric, releaseId);
+        return { data, isLoading: false, error, mutate: mutateDetail };
+      }
+      return {
+        data: distribution([action, front, service], null, metric, releaseId),
+        isLoading: false,
+        error,
+        mutate: mutateRepositories
+      };
+    });
+    (useRequests as jest.Mock).mockImplementation(() => ({
+      data: undefined,
+      isLoading: false,
+      error,
+      mutate: mutateComparison
+    }));
     const { result } = renderHook(() => useDistributionDashboard('1', '2'));
 
     expect(result.current.repositoriesError).toBeTruthy();
     expect(result.current.detailError).toBeTruthy();
+    expect(result.current.comparisonError).toBeTruthy();
 
     result.current.retryReleases();
+    expect(mutateReleases).toHaveBeenCalledTimes(1);
     result.current.retryRepositories();
+    expect(mutateRepositories).toHaveBeenCalledTimes(1);
     result.current.retryDetail();
+    expect(mutateDetail).toHaveBeenCalledTimes(1);
     result.current.retryComparison();
-
-    expect(mutate).toHaveBeenCalledTimes(4);
+    expect(mutateComparison).toHaveBeenCalledTimes(1);
+    expect(mutate).not.toHaveBeenCalled();
   });
 });

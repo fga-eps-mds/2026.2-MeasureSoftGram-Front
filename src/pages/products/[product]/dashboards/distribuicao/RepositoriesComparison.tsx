@@ -11,13 +11,7 @@ import {
 } from '@utils/formatDistributionCharts';
 import { getComparisonMissingDataMessage, MetricReference } from '@utils/metricDistribution';
 import DistributionChart from './DistributionChart';
-import {
-  ChartSkeleton,
-  CollectionGuideLink,
-  DISTRIBUTION_ERROR_CARD_TITLE,
-  DISTRIBUTION_ERROR_TITLE,
-  NO_FILE_DATA_BADGE
-} from './DistributionStates';
+import { ChartSkeleton, CollectionGuideLink, DistributionErrorCard, NO_FILE_DATA_BADGE } from './DistributionStates';
 
 interface RepositoriesComparisonProps {
   metric: FileMetricKey;
@@ -52,14 +46,7 @@ export default function RepositoriesComparison({
   const title = `${metric} por ${terms.repository} · ${releaseName}`;
 
   if (error) {
-    return (
-      <DashboardCard
-        title={DISTRIBUTION_ERROR_CARD_TITLE}
-        status="error"
-        errorTitle={DISTRIBUTION_ERROR_TITLE}
-        onRetry={onRetry}
-      />
-    );
+    return <DistributionErrorCard onRetry={onRetry} />;
   }
 
   // a lista já diz quais não têm dados; as respostas com os arquivos dizem o mesmo se a coleta mudou no meio

@@ -48,7 +48,7 @@ const TOOLTIP = {
   hideDelay: 300,
   extraCssText: 'max-width: 420px; white-space: normal; overflow-wrap: anywhere;'
 };
-// um outlier a menos de 1/36 do eixo do centro de um grupo entra nele: uns 14 px num gráfico de 600 px, mais que os
+// um outlier a menos de 1/36 do eixo do centro de um grupo entra nele: uns 17 px num gráfico de 600 px, mais que os
 // 13,5 px do ponto maior, então nenhum ponto fica escondido atrás de outro
 const OUTLIER_SPREAD = 36;
 

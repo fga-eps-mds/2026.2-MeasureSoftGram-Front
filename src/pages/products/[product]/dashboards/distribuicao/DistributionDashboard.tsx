@@ -25,7 +25,7 @@ import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { FILE_METRICS } from '@utils/metricDistribution';
 import { getPathId } from '@utils/pathDestructer';
 
-import { ChartSkeleton, DISTRIBUTION_ERROR_CARD_TITLE, DISTRIBUTION_ERROR_TITLE } from './DistributionStates';
+import { ChartSkeleton, DistributionErrorCard } from './DistributionStates';
 import RepositoriesComparison from './RepositoriesComparison';
 import RepositoryDistribution from './RepositoryDistribution';
 import { DistributionView, useDistributionDashboard } from './useDistributionDashboard';
@@ -91,17 +91,8 @@ const DistributionDashboard: NextPageWithLayout = () => {
     setView('single');
   };
 
-  const errorCard = (onRetry: () => void) => (
-    <DashboardCard
-      title={DISTRIBUTION_ERROR_CARD_TITLE}
-      status="error"
-      errorTitle={DISTRIBUTION_ERROR_TITLE}
-      onRetry={onRetry}
-    />
-  );
-
   const renderContent = () => {
-    if (releasesError) return errorCard(retryReleases);
+    if (releasesError) return <DistributionErrorCard onRetry={retryReleases} />;
 
     if (!isLoadingReleases && !hasReleases) {
       return (
@@ -125,10 +116,10 @@ const DistributionDashboard: NextPageWithLayout = () => {
       );
     }
 
-    if (repositoriesError) return errorCard(retryRepositories);
+    if (repositoriesError) return <DistributionErrorCard onRetry={retryRepositories} />;
 
     if (isLoadingRepositories || !release) {
-      // título estável enquanto a lista da release carrega, para o cartão não trocar de nome no meio
+      // enquanto a lista da release carrega, o título já nomeia a visão e a métrica (o final acrescenta o repositório ou a release)
       const loadingTitle =
         view === 'comparison' ? `${metric} por ${terms.repository}` : `Distribuição de ${metric} entre os arquivos`;
       return <DashboardCard title={loadingTitle} status="loading" loadingContent={<ChartSkeleton />} />;
@@ -176,7 +167,7 @@ const DistributionDashboard: NextPageWithLayout = () => {
   return (
     <>
       <Head>
-        <title>{CARD_TITLE}</title>
+        <title>{TITLE}</title>
       </Head>
 
       <Container maxWidth="xl">

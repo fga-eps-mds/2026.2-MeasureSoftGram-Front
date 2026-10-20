@@ -8,13 +8,7 @@ import { DISTRIBUTION_CHART_HEIGHT, formatDistributionChartOptions } from '@util
 import { getBoxplotStats, getFileMetric, getMissingDataMessage, MetricReference } from '@utils/metricDistribution';
 import DistributionChart from './DistributionChart';
 import DistributionSummary from './DistributionSummary';
-import {
-  ChartSkeleton,
-  CollectionGuideLink,
-  DISTRIBUTION_ERROR_CARD_TITLE,
-  DISTRIBUTION_ERROR_TITLE,
-  NO_FILE_DATA_BADGE
-} from './DistributionStates';
+import { ChartSkeleton, CollectionGuideLink, DistributionErrorCard, NO_FILE_DATA_BADGE } from './DistributionStates';
 
 interface RepositoryDistributionProps {
   metric: FileMetricKey;
@@ -65,14 +59,7 @@ export default function RepositoryDistribution({
   }
 
   if (error) {
-    return (
-      <DashboardCard
-        title={DISTRIBUTION_ERROR_CARD_TITLE}
-        status="error"
-        errorTitle={DISTRIBUTION_ERROR_TITLE}
-        onRetry={onRetry}
-      />
-    );
+    return <DistributionErrorCard onRetry={onRetry} />;
   }
 
   if (isLoading || !summary || !stats || !option) {
