@@ -10,6 +10,7 @@ import {
   ReleaseGoal
 } from '@customTypes/product';
 import { PreConfigData, PreConfigRoot, ReleaseInfoForm } from '@customTypes/preConfig';
+import { QualityModelNode } from '@customTypes/metamodel';
 
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import type { GetRequest } from '@hooks/useRequest';
@@ -157,6 +158,11 @@ class ProductQuery {
   async getReleaseAnalysisDataByReleaseId(organizationId: string, productId: string, releaseId: string) {
     const url = `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data`;
     return api.get<any>(url);
+  }
+
+  async getQualityModelTree(organizationId: string, productId: string, releaseId?: number) {
+    const url = `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`;
+    return api.get<QualityModelNode[]>(url, { params: releaseId ? { release_id: releaseId } : undefined });
   }
 
   getReleaseList(organizationId: string, productId: string, releaseId?: number): GetRequest {

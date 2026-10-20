@@ -312,6 +312,29 @@ describe('ProductQuery', () => {
     );
   });
 
+  it('Should call quality-model-tree endpoint without release_id', async () => {
+    const organizationId = '1';
+    const productId = '2';
+
+    await productQuery.getQualityModelTree(organizationId, productId);
+    expect(api.get).toHaveBeenCalledWith(
+      `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`,
+      { params: undefined }
+    );
+  });
+
+  it('Should call quality-model-tree endpoint with release_id', async () => {
+    const organizationId = '1';
+    const productId = '2';
+    const releaseId = 42;
+
+    await productQuery.getQualityModelTree(organizationId, productId, releaseId);
+    expect(api.get).toHaveBeenCalledWith(
+      `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`,
+      { params: { release_id: releaseId } }
+    );
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
