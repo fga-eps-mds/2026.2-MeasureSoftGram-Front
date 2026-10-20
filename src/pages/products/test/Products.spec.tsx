@@ -321,6 +321,7 @@ describe('Products Component', () => {
 
     afterEach(() => {
       window.location = originalLocation;
+      jest.restoreAllMocks();
     });
 
     it('volta para Produtos pelo fluxo com state e com os escopos do login', async () => {
@@ -343,6 +344,28 @@ describe('Products Component', () => {
       expect(url.searchParams.get('state')).toBe(stored.nonce);
       expect(url.searchParams.get('scope')).toBe('repo read:org user');
       expect(url.searchParams.has('redirect_uri')).toBe(true);
+    });
+
+    it('avisa e não sai do site quando não consegue guardar o state', async () => {
+      (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValueOnce({
+        type: 'success',
+        value: [{ id: 'org-1', name: 'Org 1', key: 'org-1', github_org_name: 'org-1' }]
+      });
+      (organizationQuery.getGithubRepos as jest.Mock).mockResolvedValueOnce({
+        type: 'error',
+        error: { response: { status: 409 } }
+      });
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      render(<Products />);
+      const button = await screen.findByText('Autorizar GitHub');
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('blocked');
+      });
+      fireEvent.click(button);
+
+      expect(window.location.assign).not.toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith('Não foi possível iniciar a autorização do GitHub.');
     });
   });
 
