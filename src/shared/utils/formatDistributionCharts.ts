@@ -372,7 +372,7 @@ function commonNamePrefix(names: string[]): string {
     let size = 0;
     while (size < prefix.length && prefix[size] === name[size]) size += 1;
     return prefix.slice(0, size);
-  });
+  }, names[0]);
   // o '.' fica de fora: em '2026.1-…' x '2026.2-…' ele cortaria dentro do semestre
   return common.slice(0, Math.max(common.lastIndexOf('-'), common.lastIndexOf('_')) + 1);
 }

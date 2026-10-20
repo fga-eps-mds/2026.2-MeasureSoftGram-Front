@@ -110,8 +110,8 @@ export function getBoxplotStats(summary: MetricDistributionSummary, files: Metri
   const { lower, upper } = getOutlierFences(summary);
   const isOutlier = (value: number) => value < lower || value > upper;
   const inliers = files.filter((file) => !isOutlier(file.value)).map((file) => file.value);
-  const minInlier = inliers.length ? inliers.reduce((min, value) => Math.min(min, value)) : summary.min;
-  const maxInlier = inliers.length ? inliers.reduce((max, value) => Math.max(max, value)) : summary.max;
+  const minInlier = inliers.length ? inliers.reduce((min, value) => Math.min(min, value), Infinity) : summary.min;
+  const maxInlier = inliers.length ? inliers.reduce((max, value) => Math.max(max, value), -Infinity) : summary.max;
 
   return {
     // com o quartil interpolado entre um outlier e um valor comum, o bigode pararia dentro da caixa: ele vai no
@@ -175,10 +175,7 @@ export function getBinWidth(kind: MetricKind, maxValue: number): number {
 export function buildHistogramBins(values: number[], kind: MetricKind): HistogramBin[] {
   if (!values.length) return [];
 
-  const maxValue = Math.max(
-    0,
-    values.reduce((max, value) => Math.max(max, value))
-  );
+  const maxValue = values.reduce((max, value) => Math.max(max, value), 0);
   const width = getBinWidth(kind, maxValue);
   const end =
     kind === 'percent'
