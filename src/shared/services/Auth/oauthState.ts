@@ -14,7 +14,7 @@ export const OAUTH_STATE_KEY = 'msgram_oauth_state';
 // Mesma validade do code emitido pelo GitHub.
 export const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const NONCE_BYTES = 16;
-const OAUTH_PROVIDERS: OAuthProvider[] = ['github', 'gitlab'];
+const OAUTH_PROVIDERS = new Set<OAuthProvider>(['github', 'gitlab']);
 
 // getRandomValues, e nao randomUUID, porque este nao existe fora de contexto seguro.
 const generateNonce = () =>
@@ -54,7 +54,7 @@ export const consumeOAuthState = (received: string | null): OAuthStateContext | 
   const stored = takeStoredState();
 
   if (!received || stored?.nonce !== received) return null;
-  if (Date.now() > stored.expiresAt || !OAUTH_PROVIDERS.includes(stored.provider)) return null;
+  if (Date.now() > stored.expiresAt || !OAUTH_PROVIDERS.has(stored.provider)) return null;
 
   return {
     provider: stored.provider,
