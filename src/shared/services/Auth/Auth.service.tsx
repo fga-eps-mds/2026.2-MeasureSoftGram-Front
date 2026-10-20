@@ -112,4 +112,5 @@ export const getLoginOrigin = (): string | null => {
 export const getGithubAuthUrlToRepositoriesPage = (pathName: string) => buildGithubAuthUrl(pathName);
 
 export const getGitlabAuthUrl = () =>
-  `https://gitlab.com/oauth/authorize?client_id=${process.env.GITLAB_CLIENT_ID}&redirect_uri=${process.env.LOGIN_REDIRECT_URL}&response_type=code&scope=read_user+openid+profile+email+read_api`;
+  `https://gitlab.com/oauth/authorize?client_id=${process.env.GITLAB_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_LOGIN_REDIRECT_URL || process.env.LOGIN_REDIRECT_URL}&response_type=code&scope=read_user+openid+profile+email+read_api`;
+
