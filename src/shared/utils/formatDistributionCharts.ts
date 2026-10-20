@@ -1,5 +1,5 @@
 import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
-import { FileMetricKey, MetricDistributionFile } from '@customTypes/product';
+import { FileMetricKey, MetricDistributionFile, MetricDistributionSummary } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
@@ -12,6 +12,7 @@ import {
   formatMetricValue,
   formatNumber,
   formatOutlierCount,
+  getBoxplotStats,
   getFileMetric,
   groupOutliers,
   MetricKind,
@@ -314,6 +315,166 @@ export function formatDistributionChartOptions({ metric, files, stats, reference
         tooltip: {
           formatter: ({ dataIndex }: { dataIndex: number }) =>
             formatOutlierTooltip(outlierGroups[dataIndex], metric, reference)
+        }
+      }
+    ]
+  };
+}
+
+/** Altura do gráfico de comparação, com o nome, o n e a mediana de cada repositório embaixo da caixa. */
+export const COMPARISON_CHART_HEIGHT = 440;
+
+export interface ComparisonRepository {
+  name: string;
+  summary: MetricDistributionSummary;
+  files: MetricDistributionFile[];
+}
+
+const MAX_CATEGORY_NAME = 18;
+
+// três linhas (nome, n e mediana): o n e a mediana não se sobrepõem nem com muitos arquivos. O nome perde o prefixo
+// comum e fica com até 18 caracteres (uns 128 px); com muitos repositórios de nome longo num gráfico estreito, ainda
+// pode encostar no vizinho, e o nome inteiro fica no tooltip
+const CATEGORY_RICH = {
+  name: { color: DASHBOARD_COLORS.text, fontSize: 13, fontWeight: 'bold', lineHeight: 20 },
+  meta: { color: DASHBOARD_COLORS.mutedText, fontSize: 11, lineHeight: 15 }
+};
+
+/** Prefixo comum a todos os nomes, até o último '-' ou '_' (ex.: '2026.2-MeasureSoftGram-'); vazio com menos de 2. */
+function commonNamePrefix(names: string[]): string {
+  if (names.length < 2) return '';
+  const common = names.reduce((prefix, name) => {
+    let size = 0;
+    while (size < prefix.length && prefix[size] === name[size]) size += 1;
+    return prefix.slice(0, size);
+  });
+  // o '.' fica de fora: em '2026.1-…' x '2026.2-…' ele cortaria dentro do semestre
+  return common.slice(0, Math.max(common.lastIndexOf('-'), common.lastIndexOf('_')) + 1);
+}
+
+/**
+ * Nome do repositório no eixo, sem o prefixo comum; se ainda for longo, perde o meio, porque o começo e o fim são o
+ * que diferencia os nomes. O nome inteiro fica no tooltip.
+ */
+function categoryName(name: string, prefix: string): string {
+  const clean = richText(name.slice(prefix.length) || name);
+  if (clean.length <= MAX_CATEGORY_NAME) return clean;
+  const head = Math.ceil((MAX_CATEGORY_NAME - 1) / 2);
+  return `${clean.slice(0, head)}…${clean.slice(head + 1 - MAX_CATEGORY_NAME)}`;
+}
+
+/** Percentual fica na escala de 0 a 100, a menos que algum valor passe disso. */
+export function getPercentAxisMax({ max }: { max: number }): number {
+  return Math.max(100, max);
+}
+
+/** Linhas tracejadas horizontais da comparação, com rótulos curtos na margem direita, fora das caixas (CA4). */
+function horizontalReferenceLines(reference: MetricReference | null, kind: MetricKind) {
+  if (!reference) return undefined;
+  const line = (value: number, text: string) => ({
+    yAxis: value,
+    label: { formatter: `${text} ${formatMetricValue(value, kind)}` }
+  });
+  return {
+    ...REFERENCE_LINE,
+    // dentro do grid, o rótulo opaco (z 5) cobriria a última caixa (z 2); em 'end', ele fica depois do fim da linha
+    label: { ...REFERENCE_LABEL, position: 'end' },
+    data: [line(reference.min_threshold, 'Mín.'), line(reference.max_threshold, 'Máx.')]
+  };
+}
+
+/** Um boxplot de Tukey por repositório na mesma métrica, com os outliers de cada um (CA6). */
+export function formatComparisonChartOptions(
+  metric: FileMetricKey,
+  repositories: ComparisonRepository[],
+  reference: MetricReference | null = null,
+  repositoryTerm = 'repositório'
+) {
+  const { kind } = getFileMetric(metric);
+  const formatValue = (value: number) => formatMetricValue(value, kind);
+  const boxes = repositories.map((repository) => ({
+    ...repository,
+    stats: getBoxplotStats(repository.summary, repository.files)
+  }));
+  const prefix = commonNamePrefix(boxes.map((box) => box.name));
+  // os outliers vêm em ordem crescente: o último é o maior valor da caixa
+  const dataMax = boxes.reduce(
+    (max, { stats }) => Math.max(max, stats.high, stats.outliers[stats.outliers.length - 1]?.value ?? stats.high),
+    1
+  );
+  const axisMax = kind === 'percent' ? getPercentAxisMax({ max: dataMax }) : dataMax;
+  // o eixo da comparação é vertical e mais baixo (uns 320 px): a tolerância do agrupamento dobra
+  const outliers = boxes.flatMap((box, index) =>
+    groupOutliers(box.stats.outliers, axisMax / (OUTLIER_SPREAD / 2)).map((group) => ({
+      group,
+      index,
+      repository: box.name
+    }))
+  );
+  const summaries = boxes.map((box) => `${box.name}: mediana ${formatValue(box.summary.median)}`).join('; ');
+
+  return {
+    animation: false,
+    aria: { enabled: true, label: { description: `Um boxplot de ${metric} por ${repositoryTerm}. ${summaries}.` } },
+    tooltip: TOOLTIP,
+    // com referência, a margem direita recebe os rótulos: "Máx. 100%" pede até uns 85 px com uma fonte larga
+    grid: { left: 64, right: reference ? 96 : 32, top: 40, bottom: 76 },
+    xAxis: {
+      type: 'category',
+      data: boxes.map((box) => box.name),
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
+      axisLabel: {
+        interval: 0,
+        formatter: (name: string, index: number) => {
+          const { count, median } = boxes[index].summary;
+          const label = categoryName(name, prefix);
+          const total = formatNumber(count);
+          // de 10 para cima, sem casa decimal: "mediana 87,2%" passa da faixa de cada repositório com 6 deles num
+          // gráfico estreito (uns 620 px). Abaixo de 10 a casa fica, senão 0,4% de duplicação viraria "mediana 0%".
+          // O valor exato fica no tooltip da caixa e na descrição para leitores de tela
+          const medianText = formatValue(Math.abs(median) >= 10 ? Math.round(median) : median);
+          return `{name|${label}}\n{meta|n = ${total}}\n{meta|mediana ${medianText}}`;
+        },
+        rich: CATEGORY_RICH
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: metric,
+      // embaixo, à esquerda, abaixo das três linhas de rótulo, como na tela 03
+      nameLocation: 'start',
+      nameGap: 60,
+      min: 0,
+      max: kind === 'percent' ? getPercentAxisMax : undefined,
+      nameTextStyle: AXIS_LABEL,
+      axisLabel: { ...AXIS_LABEL, formatter: formatValue },
+      splitLine: SPLIT_LINE
+    },
+    series: [
+      {
+        id: 'boxplot',
+        type: 'boxplot',
+        // sem layout: com o eixo x de categoria o ECharts deixa as caixas em pé, lado a lado
+        boxWidth: [16, 48],
+        itemStyle: { color: DISTRIBUTION_COLORS.boxFill, borderColor: DISTRIBUTION_COLORS.box, borderWidth: 1.5 },
+        data: boxes.map(({ stats }) => [stats.low, stats.q1, stats.median, stats.q3, stats.high]),
+        tooltip: {
+          formatter: ({ dataIndex }: { dataIndex: number }) =>
+            formatBoxTooltip(boxes[dataIndex].stats, kind, boxes[dataIndex].name)
+        },
+        markLine: horizontalReferenceLines(reference, kind)
+      },
+      {
+        id: 'outliers',
+        type: 'scatter',
+        ...OUTLIER_STYLE,
+        symbolSize: outlierSymbolSize(outliers.map(({ group }) => group)),
+        // [índice do repositório no eixo x, valor]
+        data: outliers.map(({ group, index }) => [index, group.value]),
+        tooltip: {
+          formatter: ({ dataIndex }: { dataIndex: number }) =>
+            formatOutlierTooltip(outliers[dataIndex].group, metric, reference, outliers[dataIndex].repository)
         }
       }
     ]

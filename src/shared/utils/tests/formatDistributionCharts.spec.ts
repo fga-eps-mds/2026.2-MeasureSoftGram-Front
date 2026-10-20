@@ -1,7 +1,9 @@
 import { MetricDistributionSummary } from '@customTypes/product';
 import {
   DISTRIBUTION_COLORS,
+  formatComparisonChartOptions,
   formatDistributionChartOptions,
+  getPercentAxisMax,
   outlierSymbolSize,
   renderHistogramBar
 } from '../formatDistributionCharts';
@@ -273,5 +275,143 @@ describe('renderHistogramBar', () => {
       style: { fill: DISTRIBUTION_COLORS.bar },
       emphasis: { style: { fill: DISTRIBUTION_COLORS.barHover } }
     });
+  });
+});
+
+describe('formatComparisonChartOptions', () => {
+  const repositories = [
+    { name: 'service', summary, files },
+    { name: 'core', summary: { ...summary, count: 138, median: 4 }, files: files.slice(0, 8) }
+  ];
+  const options = formatComparisonChartOptions('complexity', repositories);
+
+  it('arredonda a mediana do rótulo de 10 para cima, para caber com muitos repositórios num gráfico estreito', () => {
+    const coverage = formatComparisonChartOptions('coverage', [
+      { name: 'service', summary: { ...summary, median: 87.6 }, files }
+    ]);
+
+    expect(coverage.xAxis.axisLabel.formatter('service', 0)).toBe('{name|service}\n{meta|n = 9}\n{meta|mediana 88%}');
+    expect(coverage.aria.label.description).toContain('service: mediana 87,6%');
+  });
+
+  it('mantém a casa decimal da mediana abaixo de 10, para não esconder valores pequenos', () => {
+    const duplication = formatComparisonChartOptions('duplicated_lines_density', [
+      { name: 'service', summary: { ...summary, median: 0.44 }, files }
+    ]);
+
+    expect(duplication.xAxis.axisLabel.formatter('service', 0)).toBe(
+      '{name|service}\n{meta|n = 9}\n{meta|mediana 0,4%}'
+    );
+  });
+
+  it('desenha um boxplot por repositório, com o nome, o n e a mediana embaixo (CA6)', () => {
+    expect(options.xAxis.data).toEqual(['service', 'core']);
+    expect(options.xAxis.axisLabel.formatter('core', 1)).toBe('{name|core}\n{meta|n = 138}\n{meta|mediana 4}');
+    expect(options.yAxis).toMatchObject({ name: 'complexity', nameLocation: 'start' });
+    expect(options.series[0]).toMatchObject({
+      id: 'boxplot',
+      type: 'boxplot',
+      data: [
+        [1, 3, 5, 7, 8],
+        [1, 3, 4, 7, 8]
+      ]
+    });
+  });
+
+  it('põe os outliers na coluna do repositório e mostra o arquivo no tooltip', () => {
+    const tooltip = options.series[1].tooltip.formatter({ dataIndex: 0 });
+
+    expect(options.series[1]).toMatchObject({ id: 'outliers', type: 'scatter', data: [[0, 30]] });
+    expect(tooltip).toContain('service');
+    expect(tooltip).toContain('<strong>src/f30.py</strong>');
+  });
+
+  it('junta os outliers do mesmo valor em cada repositório', () => {
+    const tied = formatComparisonChartOptions('complexity', [
+      { name: 'service', summary, files: [...files, { path: 'src/g30.py', value: 30 }] }
+    ]);
+
+    expect(tied.series[1].data).toEqual([[0, 30]]);
+    expect(tied.series[1].tooltip.formatter({ dataIndex: 0 })).toContain('2 outliers');
+  });
+
+  it('mostra a caixa do repositório no tooltip do boxplot', () => {
+    expect(options.series[0].tooltip.formatter({ dataIndex: 1 })).toContain('<strong>core</strong>');
+  });
+
+  it('mantém os percentuais na escala de 0 a 100', () => {
+    expect(formatComparisonChartOptions('coverage', repositories).yAxis.max).toBe(getPercentAxisMax);
+    expect(getPercentAxisMax({ max: 87 })).toBe(100);
+    expect(getPercentAxisMax({ max: 120 })).toBe(120);
+    expect(options.yAxis.max).toBeUndefined();
+  });
+
+  it('tira dos rótulos o prefixo comum aos repositórios; o nome inteiro fica no tooltip', () => {
+    const msg = formatComparisonChartOptions('complexity', [
+      { name: '2026.2-MeasureSoftGram-Service', summary, files },
+      { name: '2026.2-MeasureSoftGram-Front', summary, files }
+    ]);
+
+    expect(msg.xAxis.axisLabel.formatter('2026.2-MeasureSoftGram-Service', 0)).toBe(
+      '{name|Service}\n{meta|n = 9}\n{meta|mediana 5}'
+    );
+    expect(msg.xAxis.axisLabel.formatter('2026.2-MeasureSoftGram-Front', 1)).toBe(
+      '{name|Front}\n{meta|n = 9}\n{meta|mediana 5}'
+    );
+    expect(msg.series[0].tooltip.formatter({ dataIndex: 0 })).toContain(
+      '<strong>2026.2-MeasureSoftGram-Service</strong>'
+    );
+  });
+
+  it('encurta pelo meio o nome que continua longo e tira as chaves do rótulo', () => {
+    const long = formatComparisonChartOptions('complexity', [
+      { name: '2026.2-MeasureSoftGram-Service', summary, files }
+    ]);
+    const sameEnd = formatComparisonChartOptions('complexity', [
+      { name: 'acme-payments-gateway-service-backend', summary, files },
+      { name: 'acme-orders-gateway-service-backend', summary, files }
+    ]);
+
+    expect(long.xAxis.axisLabel.formatter('2026.2-MeasureSoftGram-Service', 0)).toBe(
+      '{name|2026.2-Me…-Service}\n{meta|n = 9}\n{meta|mediana 5}'
+    );
+    expect(sameEnd.xAxis.axisLabel.formatter('acme-payments-gateway-service-backend', 0)).toContain(
+      '{name|payments-…-backend}'
+    );
+    expect(sameEnd.xAxis.axisLabel.formatter('acme-orders-gateway-service-backend', 1)).toContain(
+      '{name|orders-ga…-backend}'
+    );
+    expect(options.xAxis.axisLabel.formatter('a{b}', 0)).toBe('{name|ab}\n{meta|n = 9}\n{meta|mediana 5}');
+  });
+
+  it('desenha as linhas de referência na comparação (CA4)', () => {
+    const coverageReference = getMetricReference('coverage', {
+      measure: 'test_coverage',
+      min_threshold: 60,
+      max_threshold: 100
+    });
+    const coverage = formatComparisonChartOptions('coverage', repositories, coverageReference);
+
+    expect(coverage.series[0].markLine).toMatchObject({
+      lineStyle: { type: 'dashed' },
+      label: { position: 'end' },
+      data: [
+        { yAxis: 60, label: { formatter: 'Mín. 60%' } },
+        { yAxis: 100, label: { formatter: 'Máx. 100%' } }
+      ]
+    });
+    expect(coverage.grid.right).toBe(96);
+    expect(coverage.series[1].tooltip.formatter({ dataIndex: 0 })).toContain('Abaixo do mínimo de referência (60%)');
+    expect(options.series[0].markLine).toBeUndefined();
+    expect(options.grid.right).toBe(32);
+  });
+
+  it('descreve o gráfico para leitores de tela, com o termo do provedor', () => {
+    expect(options.aria.label.description).toBe(
+      'Um boxplot de complexity por repositório. service: mediana 5; core: mediana 4.'
+    );
+    expect(formatComparisonChartOptions('complexity', repositories, null, 'projeto').aria.label.description).toContain(
+      'por projeto.'
+    );
   });
 });
