@@ -13,6 +13,8 @@ import { MetamodelNodeModal } from './MetamodelNodeModal';
 
 const ReactEcharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
+const MODAL_WIDTH = 360;
+
 export interface MetamodelTreeChartProps {
   treeData: QualityModelNode | null;
   onPerformanceMeasured?: (durationMs: number) => void;
@@ -25,7 +27,9 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
   height = '720px',
 }) => {
   const echartsRef = useRef<any>(null);
+  const chartAreaRef = useRef<HTMLDivElement>(null);
   const [isAllExpanded, setIsAllExpanded] = useState(false);
+  const [renderMs, setRenderMs] = useState<number | undefined>();
   const [selectedNode, setSelectedNode] = useState<EnrichedQualityModelNode | null>(null);
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
 
@@ -60,9 +64,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
             const lastMeasure = measures[measures.length - 1];
             if (lastMeasure) {
               const duration = Math.round(lastMeasure.duration);
-              // Log no console conforme acordado
-              // eslint-disable-next-line no-console
-              console.log(`[Metamodelo] Renderizado em: ${duration} ms`);
+              setRenderMs(duration);
               if (onPerformanceMeasured) {
                 onPerformanceMeasured(duration);
               }
@@ -91,18 +93,19 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
     return buildEChartsTreeOption(enrichedTree);
   }, [enrichedTree]);
 
+  // Clicar em qualquer nó abre o card com a descrição (CA3), perto do nó e dentro da área do gráfico.
   const handleNodeClick = (params: any) => {
-    if (params && params.data) {
-      const data = params.data as EnrichedQualityModelNode;
-      // Ao clicar em uma medida ou nó com detalhes, abre o card detalhado
-      if (data.type === 'measure' || data.type === 'subcharacteristic' || data.type === 'characteristic') {
-        setSelectedNode(data);
-        if (params.event && params.event.event) {
-          const domEvent = params.event.event;
-          setModalPosition({ x: domEvent.clientX, y: domEvent.clientY });
-        }
-      }
+    if (!params?.data) return;
+    setSelectedNode(params.data as EnrichedQualityModelNode);
+
+    const { offsetX, offsetY } = params.event ?? {};
+    if (typeof offsetX !== 'number' || typeof offsetY !== 'number') {
+      setModalPosition(null);
+      return;
     }
+    const areaWidth = chartAreaRef.current?.clientWidth ?? 0;
+    const x = areaWidth ? Math.max(10, Math.min(offsetX + 20, areaWidth - MODAL_WIDTH - 10)) : offsetX + 20;
+    setModalPosition({ x, y: Math.max(10, offsetY - 40) });
   };
 
   const onEvents = useMemo(
@@ -218,6 +221,9 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
 
       {/* Área da árvore ECharts */}
       <Box
+        ref={chartAreaRef}
+        data-testid="metamodel-chart-area"
+        data-render-ms={renderMs}
         sx={{
           width: '100%',
           height,
@@ -234,16 +240,16 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
           onEvents={onEvents}
           style={{ width: '100%', height: '100%' }}
         />
-      </Box>
 
-      {/* Modal/Card detalhado flutuante quando o usuário clica no nó */}
-      {selectedNode && (
-        <MetamodelNodeModal
-          node={selectedNode}
-          position={modalPosition}
-          onClose={() => setSelectedNode(null)}
-        />
-      )}
+        {/* Card detalhado do nó clicado, posicionado em relação à área do gráfico */}
+        {selectedNode && (
+          <MetamodelNodeModal
+            node={selectedNode}
+            position={modalPosition}
+            onClose={() => setSelectedNode(null)}
+          />
+        )}
+      </Box>
     </Box>
   );
 };

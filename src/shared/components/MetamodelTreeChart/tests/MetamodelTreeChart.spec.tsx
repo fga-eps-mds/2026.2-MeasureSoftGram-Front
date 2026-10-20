@@ -33,11 +33,35 @@ jest.mock('next/dynamic', () => () => {
                 max_threshold: 10,
                 children: [{ key: 'complexity', name: 'complexity' }],
               },
-              event: { event: { clientX: 100, clientY: 200 } },
+              event: { offsetX: 100, offsetY: 200 },
             })
           }
         >
           Click Measure
+        </button>
+        <button
+          type="button"
+          data-testid="mock-root-click"
+          onClick={() =>
+            onEvents?.click?.({
+              data: { type: 'tsqmi', name: 'TSQMI', description: 'Nota final do produto', weight: 100, children: [] },
+              event: {},
+            })
+          }
+        >
+          Click Root
+        </button>
+        <button
+          type="button"
+          data-testid="mock-metric-click"
+          onClick={() =>
+            onEvents?.click?.({
+              data: { type: 'metric', name: 'ncloc', description: 'Linhas de código', weight: null, children: [] },
+              event: { offsetX: 10, offsetY: 10 },
+            })
+          }
+        >
+          Click Metric
         </button>
       </div>
     );
@@ -121,6 +145,27 @@ describe('<MetamodelTreeChart />', () => {
     expect(screen.queryByText('Densidade de arquivos não complexos')).not.toBeInTheDocument();
   });
 
+  it('mostra a descrição ao clicar no TSQMI e numa métrica, sem peso no TSQMI (CA3)', () => {
+    render(<MetamodelTreeChart treeData={sampleTree} />);
+
+    fireEvent.click(screen.getByTestId('mock-root-click'));
+    expect(screen.getByText('Nota final do produto')).toBeInTheDocument();
+    expect(screen.queryByText('100%')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('mock-metric-click'));
+    expect(screen.getByText('Linhas de código')).toBeInTheDocument();
+  });
+
+  it('posiciona o card perto do nó clicado, dentro da área do gráfico', () => {
+    render(<MetamodelTreeChart treeData={sampleTree} />);
+
+    fireEvent.click(screen.getByTestId('mock-node-click'));
+
+    const card = screen.getByText('Densidade de arquivos não complexos').closest('.MuiCard-root') as HTMLElement;
+    expect(screen.getByTestId('metamodel-chart-area')).toContainElement(card);
+    expect(card).toHaveStyle({ left: '120px', top: '160px' });
+  });
+
   it('executa medição de performance no evento finished (CA8)', () => {
     const onPerf = jest.fn();
     const markMock = jest.fn();
@@ -141,7 +186,6 @@ describe('<MetamodelTreeChart />', () => {
         getEntriesByName: getEntriesByNameMock,
       },
     });
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
 
     render(<MetamodelTreeChart treeData={sampleTree} onPerformanceMeasured={onPerf} />);
     expect(markMock).toHaveBeenCalledWith('metamodelo-render-start');
@@ -155,13 +199,12 @@ describe('<MetamodelTreeChart />', () => {
       'metamodelo-render-end'
     );
     expect(onPerf).toHaveBeenCalledWith(42);
+    expect(screen.getByTestId('metamodel-chart-area')).toHaveAttribute('data-render-ms', '42');
     expect(clearMarksMock).toHaveBeenCalledWith('metamodelo-render-start');
     expect(clearMarksMock).toHaveBeenCalledWith('metamodelo-render-end');
 
     const toggleButton = screen.getByRole('button', { name: 'Expandir tudo' });
     fireEvent.click(toggleButton);
     expect(markMock).toHaveBeenCalledTimes(3);
-
-    consoleSpy.mockRestore();
   });
 });

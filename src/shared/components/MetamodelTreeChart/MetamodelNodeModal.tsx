@@ -38,8 +38,8 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
       onClick={onClose}
       sx={{
         position: 'absolute',
-        top: position?.y !== undefined ? Math.max(10, position.y - 40) : '20%',
-        left: position?.x !== undefined ? Math.min(window.innerWidth - 380, position.x + 20) : '40%',
+        top: position ? position.y : '20%',
+        left: position ? position.x : '40%',
         maxWidth: 360,
         width: '100%',
         zIndex: 1300,
@@ -78,7 +78,8 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
         <Divider sx={{ my: 1 }} />
 
         <Box display="flex" flexDirection="column" gap={0.75}>
-          {node.weight !== null && node.weight !== undefined && (
+          {/* o TSQMI é a raiz e não tem peso (CA3) */}
+          {node.type !== 'tsqmi' && node.weight !== null && node.weight !== undefined && (
             <Box display="flex" justifyContent="space-between" fontSize="12px">
               <Typography variant="caption" color="#64748B">
                 {node.parentWeightLabel || 'Peso'}:

@@ -5,6 +5,7 @@ import {
   formatThresholdSummary,
   buildEChartsTreeOption,
   METAMODEL_COLORS,
+  formatWeightLabel,
 } from '../formatMetamodelTree';
 
 describe('formatMetamodelTree utilities', () => {
@@ -133,7 +134,7 @@ describe('formatMetamodelTree utilities', () => {
     expect(formatThresholdSummary(null, null)).toBe('');
   });
 
-  it('buildEChartsTreeOption deve retornar opções configuradas com series-tree e tooltip', () => {
+  it('buildEChartsTreeOption deve retornar opções configuradas com series-tree', () => {
     const counts = countMetricOccurrences(sampleTree);
     const enriched = enrichTreeNodes(sampleTree, counts);
     const options: any = buildEChartsTreeOption(enriched);
@@ -141,15 +142,18 @@ describe('formatMetamodelTree utilities', () => {
     expect(options.series).toHaveLength(1);
     expect(options.series[0].type).toBe('tree');
     expect(options.series[0].orient).toBe('LR');
-    expect(options.tooltip).toBeDefined();
+    // a descrição fica no card do clique, sem tooltip ao passar o mouse
+    expect(options.tooltip).toEqual({ show: false });
 
     // Testa formatação de labels
     const formatter = options.series[0].label.formatter;
     const tsqmiLabel = formatter({ data: enriched });
     expect(tsqmiLabel).toContain('tsqmiCard');
+    expect(tsqmiLabel).not.toContain('%');
 
     const charLabel = formatter({ data: enriched.children[0] });
     expect(charLabel).toContain('Maintainability');
+    expect(charLabel).toContain('· 50%');
 
     const subcharLabel = formatter({ data: enriched.children[0].children[0], isExpand: false });
     expect(subcharLabel).toContain('Modifiability');
@@ -167,22 +171,14 @@ describe('formatMetamodelTree utilities', () => {
     expect(metricLabel).toContain('também em outra medida');
   });
 
-  it('tooltip formatter deve gerar HTML estruturado com informações completas (CA3)', () => {
-    const counts = countMetricOccurrences(sampleTree);
-    const enriched = enrichTreeNodes(sampleTree, counts);
-    const options: any = buildEChartsTreeOption(enriched);
+  it('não mostra 0% quando o nó não tem peso na configuração', () => {
+    const enriched = enrichTreeNodes(sampleTree, countMetricOccurrences(sampleTree));
+    const { formatter } = (buildEChartsTreeOption(enriched) as any).series[0].label;
+    const measure = { ...enriched.children[0].children[0].children[0], weight: null };
 
-    const tooltipFormatter = options.tooltip.formatter;
-    const measureData = enriched.children[0].children[0].children[0];
-    const tooltipHtml = tooltipFormatter({ data: measureData });
-
-    expect(tooltipHtml).toContain('Densidade de arquivos não complexos');
-    expect(tooltipHtml).toContain('Valor de referência mínimo:');
-    expect(tooltipHtml).toContain('0');
-    expect(tooltipHtml).toContain('Valor de referência máximo:');
-    expect(tooltipHtml).toContain('10');
-    expect(tooltipHtml).toContain('Métricas usadas:');
-    expect(tooltipHtml).toContain('ncloc, complexity');
+    expect(formatter({ data: measure })).not.toContain('%');
+    expect(formatWeightLabel(null, 'weight')).toBe('');
+    expect(formatWeightLabel(25, 'weight')).toBe('  {weight|· 25%}');
   });
 
   it('buildEChartsTreeOption deve retornar objeto vazio para nó raiz nulo', () => {

@@ -312,27 +312,17 @@ describe('ProductQuery', () => {
     );
   });
 
-  it('Should call quality-model-tree endpoint without release_id', async () => {
-    const organizationId = '1';
-    const productId = '2';
-
-    await productQuery.getQualityModelTree(organizationId, productId);
-    expect(api.get).toHaveBeenCalledWith(
-      `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`,
-      { params: undefined }
-    );
+  it('Should build the quality-model-tree request of a release', () => {
+    expect(productQuery.getQualityModelTreeConfig('1', '2', 42)).toEqual({
+      url: '/v1/organizations/1/products/2/quality-model-tree/',
+      method: 'get',
+      params: { release_id: 42 }
+    });
   });
 
-  it('Should call quality-model-tree endpoint with release_id', async () => {
-    const organizationId = '1';
-    const productId = '2';
-    const releaseId = 42;
-
-    await productQuery.getQualityModelTree(organizationId, productId, releaseId);
-    expect(api.get).toHaveBeenCalledWith(
-      `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`,
-      { params: { release_id: releaseId } }
-    );
+  it('Should not request the quality-model-tree without a release', () => {
+    expect(productQuery.getQualityModelTreeConfig('1', '2')).toBeNull();
+    expect(productQuery.getQualityModelTreeConfig('', '2', 42)).toBeNull();
   });
 
   afterEach(() => {

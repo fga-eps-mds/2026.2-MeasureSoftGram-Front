@@ -102,127 +102,22 @@ export function formatThresholdSummary(min?: number | null, max?: number | null)
   return '';
 }
 
+/** Peso no rótulo do nó; sem peso na configuração, o rótulo fica sem ele em vez de mostrar 0%. */
+export function formatWeightLabel(weight: number | null | undefined, style: string): string {
+  return weight === null || weight === undefined ? '' : `  {${style}|· ${weight}%}`;
+}
+
 /**
  * Cria a estrutura de opções do ECharts para o gráfico series-tree.
  */
-export function buildEChartsTreeOption(
-  rootNode: EnrichedQualityModelNode | null,
-  onNodeClickDetails?: (node: EnrichedQualityModelNode) => void
-) {
+export function buildEChartsTreeOption(rootNode: EnrichedQualityModelNode | null) {
   if (!rootNode) {
     return {};
   }
 
   return {
-    tooltip: {
-      trigger: 'item',
-      triggerOn: 'mousemove',
-      enterable: true,
-      backgroundColor: 'transparent',
-      borderColor: 'transparent',
-      borderWidth: 0,
-      padding: 0,
-      extraCssText: 'box-shadow: none; z-index: 1000;',
-      formatter: (params: any) => {
-        const data = params.data as EnrichedQualityModelNode;
-        if (!data) return '';
-
-        const typeLabels: Record<string, string> = {
-          tsqmi: 'Índice de Qualidade',
-          characteristic: 'Característica',
-          subcharacteristic: 'Subcaracterística',
-          measure: 'Medida',
-          metric: 'Métrica',
-        };
-
-        const typeColors: Record<string, string> = {
-          tsqmi: METAMODEL_COLORS.tsqmi,
-          characteristic: METAMODEL_COLORS.characteristic,
-          subcharacteristic: METAMODEL_COLORS.subcharacteristic,
-          measure: METAMODEL_COLORS.measure,
-          metric: METAMODEL_COLORS.metric,
-        };
-
-        const typeLabel = typeLabels[data.type] || data.type;
-        const typeColor = typeColors[data.type] || '#333';
-        const path = data.parentPath ? `${typeLabel} · ${data.parentPath}` : typeLabel;
-
-        const weightRow =
-          data.weight !== null && data.weight !== undefined
-            ? `<div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px;">
-                 <span style="color: #64748B;">${data.parentWeightLabel || 'Peso'}:</span>
-                 <strong style="color: #1E293B; margin-left: 12px;">${data.weight}%</strong>
-               </div>`
-            : '';
-
-        const minThresholdRow =
-          data.type === 'measure' && data.min_threshold !== null && data.min_threshold !== undefined
-            ? `<div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px;">
-                 <span style="color: #64748B;">Valor de referência mínimo:</span>
-                 <strong style="color: #1E293B; margin-left: 12px;">${data.min_threshold}</strong>
-               </div>`
-            : '';
-
-        const maxThresholdRow =
-          data.type === 'measure' && data.max_threshold !== null && data.max_threshold !== undefined
-            ? `<div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px;">
-                 <span style="color: #64748B;">Valor de referência máximo:</span>
-                 <strong style="color: #1E293B; margin-left: 12px;">${data.max_threshold}</strong>
-               </div>`
-            : '';
-
-        const metricsUsedRow =
-          data.type === 'measure' && data.children && data.children.length > 0
-            ? `<div style="display: flex; flex-direction: column; margin-top: 6px; font-size: 12px;">
-                 <span style="color: #64748B;">Métricas usadas:</span>
-                 <span style="color: #1E293B; font-weight: 600; margin-top: 2px;">
-                   ${data.children.map((c) => c.name || c.key).join(', ')}
-                 </span>
-               </div>`
-            : '';
-
-        const sharedNotice = data.isSharedMetric
-          ? `<div style="margin-top: 6px; font-size: 11px; color: ${METAMODEL_COLORS.metric}; font-weight: 500;">
-               ▲ Métrica também utilizada em outras medidas
-             </div>`
-          : '';
-
-        return `
-          <div style="
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            padding: 14px 16px;
-            max-width: 340px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            text-align: left;
-            pointer-events: auto;
-          ">
-            <div style="font-size: 14px; font-weight: 700; color: #0F172A; margin-bottom: 2px;">
-              ${data.name}
-            </div>
-            <div style="font-size: 11px; font-weight: 600; color: ${typeColor}; margin-bottom: 8px;">
-              ${path}
-            </div>
-            ${
-              data.description
-                ? `<div style="font-size: 12px; color: #475569; line-height: 1.45; margin-bottom: 10px; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">
-                     ${data.description}
-                   </div>`
-                : ''
-            }
-            <div style="display: flex; flex-direction: column;">
-              ${weightRow}
-              ${minThresholdRow}
-              ${maxThresholdRow}
-              ${metricsUsedRow}
-              ${sharedNotice}
-            </div>
-          </div>
-        `;
-      },
-    },
+    // a descrição aparece no card do clique (CA3), e não num tooltip ao passar o mouse
+    tooltip: { show: false },
     series: [
       {
         type: 'tree',
@@ -260,7 +155,7 @@ export function buildEChartsTreeOption(
             }
 
             if (node.type === 'characteristic') {
-              return `{charCard|{charBullet|●}  {charName|${node.name}}  {weight|· ${node.weight ?? 0}%}}`;
+              return `{charCard|{charBullet|●}  {charName|${node.name}}${formatWeightLabel(node.weight, 'weight')}}`;
             }
 
             if (node.type === 'subcharacteristic') {
@@ -271,13 +166,13 @@ export function buildEChartsTreeOption(
                 ? `{subBadge|+ ${numChildren} ${numChildren === 1 ? 'medida' : 'medidas'}}`
                 : `{subBadgeClose|−}`;
 
-              return `{subCard|{subSquare|■}  {subName|${node.name}}  {weight|· ${node.weight ?? 0}%}  ${badge}}`;
+              return `{subCard|{subSquare|■}  {subName|${node.name}}${formatWeightLabel(node.weight, 'weight')}  ${badge}}`;
             }
 
             if (node.type === 'measure') {
               const ref = formatThresholdSummary(node.min_threshold, node.max_threshold);
               const refLine = ref ? `\n{measureRef|Ref. por arquivo: ${ref}}` : '';
-              return `{measureCard|{measureDiamond|◆}  {measureName|${node.name}}  {weightOrange|· ${node.weight ?? 0}%}${refLine}}`;
+              return `{measureCard|{measureDiamond|◆}  {measureName|${node.name}}${formatWeightLabel(node.weight, 'weightOrange')}${refLine}}`;
             }
 
             if (node.type === 'metric') {

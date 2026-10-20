@@ -1,9 +1,8 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import MetamodeloDashboard from '../MetamodeloDashboard';
-import { productQuery } from '@services/product';
 
 const mockPush = jest.fn();
 
@@ -22,13 +21,6 @@ jest.mock('@hooks/useRequest', () => ({
   useRequest: (req: any) => mockUseRequest(req),
 }));
 
-jest.mock('@services/product', () => ({
-  productQuery: {
-    getReleaseList: jest.fn(),
-    getQualityModelTree: jest.fn(),
-  },
-}));
-
 jest.mock('@components/MetamodelTreeChart', () => ({
   MetamodelTreeChart: ({ treeData }: any) => (
     <div data-testid="metamodel-tree-chart">
@@ -37,118 +29,112 @@ jest.mock('@components/MetamodelTreeChart', () => ({
   ),
 }));
 
+const releases = [
+  { id: 10, release_name: 'Release 1', start_at: '2026-01-01T00:00:00-03:00', end_at: '2026-02-01T00:00:00-03:00' },
+  { id: 20, release_name: 'Release 2', start_at: '2026-02-02T00:00:00-03:00', end_at: '2026-12-31T00:00:00-03:00' },
+];
+
+const tree = [
+  { id: null, type: 'tsqmi', key: 'tsqmi', name: 'TSQMI', description: 'Nota final', weight: 100, children: [] },
+];
+
+const mutate = jest.fn();
+
+type Response = { data?: unknown; isLoading?: boolean; error?: Error };
+
+function mockRequests({ releaseList = { data: releases }, qualityTree = { data: tree } }: {
+  releaseList?: Response;
+  qualityTree?: Response;
+} = {}) {
+  mockUseRequest.mockImplementation((request: { url: string } | null) => {
+    if (!request) return { data: undefined, isLoading: false, mutate };
+    const response = request.url.endsWith('/release/') ? releaseList : qualityTree;
+    return { isLoading: false, mutate, ...response };
+  });
+}
+
+function treeRequests() {
+  return mockUseRequest.mock.calls.map(([request]) => request).filter((request) => request?.url.includes('quality-model-tree'));
+}
+
 describe('<MetamodeloDashboard />', () => {
-  const mockReleases = [
-    { id: 10, release_name: 'Release 1', start_at: '2026-01-01', end_at: '2026-02-01' },
-    { id: 20, release_name: 'Release 2', start_at: '2026-02-02', end_at: '2026-12-31' },
-  ];
-
-  const mockTreeResponse = [
-    {
-      id: null,
-      type: 'tsqmi',
-      key: 'tsqmi',
-      name: 'TSQMI',
-      description: 'Nota final',
-      weight: 100,
-      children: [],
-    },
-  ];
-
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers().setSystemTime(new Date('2026-03-15T12:00:00-03:00'));
+    mockRequests();
   });
 
-  it('exibe indicador de carregamento enquanto as releases estão carregando', () => {
-    mockUseRequest.mockReturnValue({ data: null, isLoading: true });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('mostra o carregamento enquanto as releases chegam', () => {
+    mockRequests({ releaseList: { data: undefined, isLoading: true } });
 
     render(<MetamodeloDashboard />);
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('Carregando o modelo de qualidade da release…')).toBeInTheDocument();
+    expect(screen.queryByTestId('metamodel-tree-chart')).not.toBeInTheDocument();
   });
 
-  it('exibe estado vazio quando o produto não possui releases cadastradas (CA7)', () => {
-    mockUseRequest.mockReturnValue({ data: [], isLoading: false });
+  it('orienta a planejar uma release quando o produto não tem nenhuma (CA7)', () => {
+    mockRequests({ releaseList: { data: [] } });
 
     render(<MetamodeloDashboard />);
 
-    expect(
-      screen.getByText('Este produto ainda não tem uma release configurada')
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Planejar release' })).toBeInTheDocument();
-  });
-
-  it('redireciona para /create ao clicar em "Planejar release" no estado vazio', () => {
-    mockUseRequest.mockReturnValue({ data: [], isLoading: false });
-
-    render(<MetamodeloDashboard />);
-
-    const planButton = screen.getByRole('button', { name: 'Planejar release' });
-    fireEvent.click(planButton);
-
+    expect(screen.getByText('Este produto ainda não tem uma release configurada')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Planejar release' }));
     expect(mockPush).toHaveBeenCalledWith('/products/1-5-MeasureSoftGram/releases/create');
   });
 
-  it('carrega a árvore da release atual por padrão e exibe o gráfico (CA2)', async () => {
-    mockUseRequest.mockReturnValue({ data: mockReleases, isLoading: false });
-    (productQuery.getQualityModelTree as jest.Mock).mockResolvedValue({
-      data: mockTreeResponse,
-    });
-
+  it('abre na release atual e mostra a árvore dela (CA2)', () => {
     render(<MetamodeloDashboard />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('metamodel-tree-chart')).toBeInTheDocument();
-      expect(productQuery.getQualityModelTree).toHaveBeenCalledWith('1', '5', 20);
+    expect(screen.getByRole('combobox', { name: 'Release' }).textContent).toBe('Release 2 (atual)');
+    expect(treeRequests().at(-1)).toEqual({
+      url: '/v1/organizations/1/products/5/quality-model-tree/',
+      method: 'get',
+      params: { release_id: 20 },
     });
-
-    expect(screen.getByText('TSQMI')).toBeInTheDocument();
+    expect(within(screen.getByTestId('metamodel-tree-chart')).getByText('TSQMI')).toBeInTheDocument();
   });
 
-  it('permite trocar a release e busca a nova árvore sem recarregar a página (CA5)', async () => {
-    mockUseRequest.mockReturnValue({ data: mockReleases, isLoading: false });
-    (productQuery.getQualityModelTree as jest.Mock).mockResolvedValue({
-      data: mockTreeResponse,
-    });
-
+  it('troca a release e busca a árvore dela, sem recarregar a página (CA5)', () => {
     render(<MetamodeloDashboard />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('metamodel-tree-chart')).toBeInTheDocument();
-    });
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Release' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Release 1' }));
 
-    const select = screen.getByRole('combobox');
-    fireEvent.mouseDown(select);
-
-    const option1 = screen.getByText('Release 1');
-    fireEvent.click(option1);
-
-    await waitFor(() => {
-      expect(productQuery.getQualityModelTree).toHaveBeenCalledWith('1', '5', 10);
-      expect(screen.getByTestId('metamodel-tree-chart')).toBeInTheDocument();
-    });
+    expect(treeRequests().at(-1)?.params).toEqual({ release_id: 10 });
+    expect(screen.getByRole('combobox', { name: 'Release' }).textContent).toBe('Release 1');
   });
 
-  it('exibe estado de erro com botão "Tentar novamente" quando a API falha (CA7)', async () => {
-    mockUseRequest.mockReturnValue({ data: mockReleases, isLoading: false });
-    (productQuery.getQualityModelTree as jest.Mock).mockRejectedValue(new Error('Erro de rede'));
+  it('avisa quando a release não tem modelo de qualidade configurado', () => {
+    mockRequests({ qualityTree: { data: [] } });
 
     render(<MetamodeloDashboard />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Não foi possível carregar o metamodelo')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Esta release não tem um modelo de qualidade configurado')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Planejar release' })).not.toBeInTheDocument();
+  });
 
-    const retryButton = screen.getByRole('button', { name: 'Tentar novamente' });
-    expect(retryButton).toBeInTheDocument();
+  it('mostra o erro sem detalhes técnicos e tenta de novo (CA7)', () => {
+    mockRequests({ qualityTree: { error: new Error('Request failed with status code 500') } });
 
-    (productQuery.getQualityModelTree as jest.Mock).mockResolvedValueOnce({
-      data: mockTreeResponse,
-    });
-    fireEvent.click(retryButton);
+    render(<MetamodeloDashboard />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('metamodel-tree-chart')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Não foi possível carregar este gráfico')).toBeInTheDocument();
+    expect(screen.queryByText(/500/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+    expect(mutate).toHaveBeenCalledTimes(2);
+  });
+
+  it('mostra o erro quando a lista de releases falha, em vez de dizer que não há release', () => {
+    mockRequests({ releaseList: { error: new Error('falhou') } });
+
+    render(<MetamodeloDashboard />);
+
+    expect(screen.getByText('Não foi possível carregar este gráfico')).toBeInTheDocument();
+    expect(screen.queryByText('Este produto ainda não tem uma release configurada')).not.toBeInTheDocument();
   });
 });
