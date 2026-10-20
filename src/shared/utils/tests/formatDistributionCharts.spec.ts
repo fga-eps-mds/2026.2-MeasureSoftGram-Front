@@ -59,6 +59,56 @@ describe('formatDistributionChartOptions', () => {
     expect('formatter' in axisLabel && axisLabel.formatter(1284)).toBe('1.284');
   });
 
+  it('marca o eixo x a cada 2 faixas do histograma, nos dois gráficos', () => {
+    // faixas de 2 (máximo 30): marcas de 4 em 4
+    expect(options.xAxis.map((axis) => axis.interval)).toEqual([4, 4]);
+
+    // complexity com máximo 87: faixas de 5, eixo até 90, marcas 0, 10, ..., 90
+    const wide = [5, 12, 18, 22, 87].map((value) => ({ path: `src/c${value}.py`, value }));
+    const wideStats = getBoxplotStats({ ...percentSummary, max: 87 }, wide);
+    const complexity = formatDistributionChartOptions({
+      metric: 'complexity',
+      files: wide,
+      stats: wideStats,
+      reference: null
+    });
+    expect(complexity.xAxis.map((axis) => [axis.max, axis.interval])).toEqual([
+      [90, 10],
+      [90, 10]
+    ]);
+
+    // percentual: faixas de 5, eixo 0 a 100, marcas 0, 10, ..., 100
+    const coverage = formatDistributionChartOptions({
+      metric: 'comment_lines_density',
+      files: percentFiles,
+      stats: percentStats,
+      reference: null
+    });
+    expect(coverage.xAxis.map((axis) => [axis.max, axis.interval])).toEqual([
+      [100, 10],
+      [100, 10]
+    ]);
+  });
+
+  it('só reserva espaço para os rótulos da referência quando há referência', () => {
+    const withReference = formatDistributionChartOptions({
+      metric: 'comment_lines_density',
+      files: percentFiles,
+      stats: percentStats,
+      reference: commentsReference
+    });
+    expect(withReference.grid.map((grid) => [grid.top, grid.height])).toEqual([
+      [64, 200],
+      [284, 44]
+    ]);
+    expect(options.grid[0].top).toBeLessThan(32);
+    // o histograma ocupa o espaço que sobrou, sem encostar no boxplot
+    expect(options.grid.map((grid) => [grid.top, grid.height])).toEqual([
+      [16, 248],
+      [284, 44]
+    ]);
+  });
+
   it('manda cada faixa como [início, fim, arquivos] para o histograma', () => {
     const [histogram] = options.series;
 

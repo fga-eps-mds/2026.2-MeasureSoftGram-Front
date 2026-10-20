@@ -12,6 +12,7 @@ import {
   formatMetricValue,
   formatNumber,
   formatOutlierCount,
+  getBinWidth,
   getBoxplotStats,
   getFileMetric,
   groupOutliers,
@@ -233,7 +234,9 @@ export function formatDistributionChartOptions({ metric, files, stats, reference
   );
   // o eixo é o das faixas, do zero até o fim da última; sem arquivos, vai até o bigode de cima
   const axisMax = bins.length ? bins[bins.length - 1].end : Math.max(1, stats.high);
-  const sharedXAxis = { type: 'value', min: 0, max: axisMax, splitLine: { show: false } };
+  // como no protótipo, uma marca a cada 2 faixas do histograma (faixas de 5: 0, 10, 20…)
+  const tickInterval = 2 * getBinWidth(kind, Math.max(0, ...files.map((file) => file.value)));
+  const sharedXAxis = { type: 'value', min: 0, max: axisMax, interval: tickInterval, splitLine: { show: false } };
   const formatValue = (value: number) => formatMetricValue(value, kind);
   const outlierGroups = groupOutliers(stats.outliers, axisMax / OUTLIER_SPREAD);
   const fileCount = formatFileCount(files.length);
@@ -251,8 +254,9 @@ export function formatDistributionChartOptions({ metric, files, stats, reference
       }
     },
     tooltip: TOOLTIP,
+    // sem referência não há rótulos no topo: o histograma sobe e ocupa o espaço, e o boxplot não muda de lugar
     grid: [
-      { ...GRID_SIDES, top: 64, height: 200 },
+      reference ? { ...GRID_SIDES, top: 64, height: 200 } : { ...GRID_SIDES, top: 16, height: 248 },
       { ...GRID_SIDES, top: 284, height: 44 }
     ],
     xAxis: [
