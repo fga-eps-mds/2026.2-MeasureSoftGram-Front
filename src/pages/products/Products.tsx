@@ -278,16 +278,20 @@ const Products: NextPageWithLayout = () => {
         searchTerm
       );
       if (res.type === 'success') {
-        const mappedRepos: UnifiedRepoItem[] = res.value.map(p => ({
+        const { projects, totalPages, nextPage } = res.value;
+        const mappedRepos: UnifiedRepoItem[] = projects.map(p => ({
           ...p,
           github_repo_id: p.gitlab_project_id,
           github_full_name: p.gitlab_path_with_namespace
         }));
         setGitHubRepos(mappedRepos);
-        if (res.value.length < itemsPerPage) {
-          setGitlabTotalPages(targetPage);
+        // A paginação vem dos headers do GitLab, que o service repassa; a página dele tem 50 itens.
+        if (totalPages) {
+          setGitlabTotalPages(totalPages);
+        } else if (nextPage) {
+          setGitlabTotalPages(prev => Math.max(prev, nextPage));
         } else {
-          setGitlabTotalPages(prev => Math.max(prev, targetPage + 1));
+          setGitlabTotalPages(targetPage);
         }
       } else {
         const status = res.error?.response?.status;
@@ -556,7 +560,7 @@ const Products: NextPageWithLayout = () => {
                   href={
                     provider === 'gitlab'
                       ? 'https://gitlab.com/-/profile/applications'
-                      : `https://github.com/settings/connections/applications/${process.env.GITHUB_CLIENT_ID}`
+                      : `https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`
                   }
                   target="_blank"
                   rel="noopener noreferrer"

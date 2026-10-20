@@ -15,6 +15,12 @@ export type ResultSuccess<T> = { type: 'success'; value: T };
 export type ResultError = { type: 'error'; error: Error | AxiosError };
 export type Result<T> = ResultSuccess<T> | ResultError;
 
+// O GitLab manda X-Next-Page vazio na última página e omite X-Total-Pages acima de 10 mil itens.
+const parsePageHeader = (value?: string): number | null => {
+  const page = Number(value);
+  return value && Number.isInteger(page) && page > 0 ? page : null;
+};
+
 class OrganizationQuery {
   async getAllOrganization(): Promise<Result<OrganizationFormData[]>> {
     try {
@@ -133,7 +139,7 @@ class OrganizationQuery {
     kind?: string,
     page?: number,
     search?: string
-  ): Promise<Result<GitLabProject[]>> {
+  ): Promise<Result<GitLabProjectsPage>> {
     try {
       const params: Record<string, any> = {};
       if (namespaceId !== undefined && namespaceId !== null && namespaceId !== '') {
@@ -150,14 +156,18 @@ class OrganizationQuery {
       }
       const response = await api.get(`/v1/organizations/${orgId}/gitlab-projects/`, { params });
       const data = Array.isArray(response.data) ? response.data : (response.data?.results ?? response.data);
-      return { type: 'success', value: data as GitLabProject[] };
+      return {
+        type: 'success',
+        value: {
+          projects: data as GitLabProject[],
+          totalPages: parsePageHeader(response.headers?.['x-total-pages']),
+          nextPage: parsePageHeader(response.headers?.['x-next-page'])
+        }
+      };
     } catch (error) {
       return { type: 'error', error: error as AxiosError };
     }
   }
-
-  getGitlabNamespaces = this.getGitLabNamespaces;
-  getGitlabProjects = this.getGitLabProjects;
 }
 
 export interface GitHubOrganization {
@@ -190,6 +200,12 @@ export interface GitLabProject {
   name: string;
   description: string;
   url: string;
+}
+
+export interface GitLabProjectsPage {
+  projects: GitLabProject[];
+  totalPages: number | null;
+  nextPage: number | null;
 }
 
 export const organizationQuery = new OrganizationQuery();

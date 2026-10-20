@@ -246,7 +246,10 @@ describe('Organization Service', () => {
         url: 'https://gitlab.com/group-1/proj-1'
       }
     ];
-    (api.get as jest.Mock).mockResolvedValue({ data: mockProjects });
+    (api.get as jest.Mock).mockResolvedValue({
+      data: mockProjects,
+      headers: { 'x-total-pages': '4', 'x-next-page': '3' }
+    });
 
     const result = await organizationQuery.getGitLabProjects('org-1', 1, 'group', 2, 'search-term');
 
@@ -259,7 +262,15 @@ describe('Organization Service', () => {
       }
     });
     expect(result.type).toBe('success');
-    expect((result as any).value).toEqual(mockProjects);
+    expect((result as any).value).toEqual({ projects: mockProjects, totalPages: 4, nextPage: 3 });
+  });
+
+  it('não informa próxima página quando o GitLab manda o header vazio', async () => {
+    (api.get as jest.Mock).mockResolvedValue({ data: [], headers: { 'x-next-page': '' } });
+
+    const result = await organizationQuery.getGitLabProjects('org-1', 1, 'group', 1, '');
+
+    expect((result as any).value).toEqual({ projects: [], totalPages: null, nextPage: null });
   });
 
   it('deve retornar erro ao falhar buscar projetos do GitLab', async () => {

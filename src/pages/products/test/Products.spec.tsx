@@ -445,15 +445,19 @@ describe('Products Component', () => {
 
       (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValue({
         type: 'success',
-        value: [
-          {
-            gitlab_project_id: 201,
-            gitlab_path_with_namespace: 'gitlab-group-1/project-1',
-            name: 'project-1',
-            description: 'GitLab Project 1 Description',
-            url: 'https://gitlab.com/gitlab-group-1/project-1'
-          }
-        ]
+        value: {
+          projects: [
+            {
+              gitlab_project_id: 201,
+              gitlab_path_with_namespace: 'gitlab-group-1/project-1',
+              name: 'project-1',
+              description: 'GitLab Project 1 Description',
+              url: 'https://gitlab.com/gitlab-group-1/project-1'
+            }
+          ],
+          totalPages: 1,
+          nextPage: null
+        }
       });
 
       (useOrganizationContext as jest.Mock).mockReturnValue({
@@ -549,6 +553,43 @@ describe('Products Component', () => {
       expect(url.origin + url.pathname).toBe('https://gitlab.com/oauth/authorize');
       expect(url.searchParams.get('state')).toBe(stored.nonce);
       expect(url.searchParams.get('scope')).toBe('read_user openid profile email read_api');
+    });
+
+    it('pagina os projetos do gitlab pelo total de páginas que o service repassa', async () => {
+      (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: {
+          projects: [
+            {
+              gitlab_project_id: 201,
+              gitlab_path_with_namespace: 'gitlab-group-1/project-1',
+              name: 'project-1',
+              description: '',
+              url: 'https://gitlab.com/gitlab-group-1/project-1'
+            }
+          ],
+          totalPages: 3,
+          nextPage: 2
+        }
+      });
+
+      render(<Products />);
+
+      expect(await screen.findByRole('button', { name: 'Go to page 3' })).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Go to page 2' }));
+      });
+
+      await waitFor(() => {
+        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-gl-1', 101, 'group', 2, '');
+      });
+    });
+
+    it('não mostra uma página seguinte quando o gitlab diz que é a última', async () => {
+      render(<Products />);
+
+      expect(await screen.findByText('gitlab-group-1/project-1')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Go to page 2' })).not.toBeInTheDocument();
     });
 
     it('handles search and pagination queries to gitlab backend', async () => {
