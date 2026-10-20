@@ -111,14 +111,46 @@ const Products: NextPageWithLayout = () => {
   const lastLoadedProductIdRef = useRef<string>('');
   const prevGitlabQueryRef = useRef({ page: 1, search: '', orgName: '', orgDbId: '' });
 
-  // eslint-disable-next-line sonarjs/cognitive-complexity
+  const resolveTargetOrg = async (): Promise<any> => {
+    if (currentOrganization) return currentOrganization;
+    const savedOrgId = localStorage.getItem('selectedOrgId');
+    if (!savedOrgId) return null;
+    try {
+      const parsedId = JSON.parse(savedOrgId);
+      const foundInList = organizationList.find(o => String(o.id) === String(parsedId));
+      if (foundInList) return foundInList;
+      const orgRes = await organizationQuery.getOrganizationById(parsedId);
+      if (orgRes.type === 'success') {
+        return orgRes.value;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  };
+
+  const resolveDefaultOrgName = async (namespaces: ProviderNamespaceItem[]): Promise<string> => {
+    if (namespaces.length === 0) return '';
+    const targetOrg = await resolveTargetOrg();
+    if (targetOrg) {
+      const matchGo = namespaces.find(go =>
+        isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
+      );
+      if (matchGo) {
+        return matchGo.name;
+      }
+    }
+    return namespaces[0].name;
+  };
+
   const loadProviderNamespaces = async () => {
     setLoadingOrgs(true);
     try {
+      let namespaces: ProviderNamespaceItem[] | null = null;
       if (provider === 'gitlab') {
         const res = await organizationQuery.getGitLabNamespaces();
         if (res.type === 'success') {
-          const namespaces: ProviderNamespaceItem[] = res.value.map(ns => ({
+          namespaces = res.value.map(ns => ({
             id: ns.id,
             name: ns.name,
             full_path: ns.full_path,
@@ -128,48 +160,13 @@ const Products: NextPageWithLayout = () => {
             github_org_id: ns.id,
             github_org_name: ns.name
           }));
-          setProviderNamespaces(namespaces);
-          if (namespaces.length > 0) {
-            let targetOrg = currentOrganization;
-            if (!targetOrg) {
-              const savedOrgId = localStorage.getItem('selectedOrgId');
-              if (savedOrgId) {
-                const parsedId = JSON.parse(savedOrgId);
-                targetOrg = organizationList.find(o => String(o.id) === String(parsedId)) || null;
-                if (!targetOrg) {
-                  try {
-                    const orgRes = await organizationQuery.getOrganizationById(parsedId);
-                    if (orgRes.type === 'success') {
-                      targetOrg = orgRes.value as any;
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }
-              }
-            }
-
-            let defaultName = '';
-            if (targetOrg) {
-              const matchGo = namespaces.find(go =>
-                isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
-              );
-              if (matchGo) {
-                defaultName = matchGo.name;
-              }
-            } else {
-              defaultName = namespaces[0].name;
-            }
-
-            setSelectedOrgName(defaultName);
-          }
         } else {
           toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
         }
       } else {
         const res = await organizationQuery.getGithubOrganizations();
         if (res.type === 'success') {
-          const orgs: ProviderNamespaceItem[] = res.value.map(go => ({
+          namespaces = res.value.map(go => ({
             id: go.github_org_id,
             name: go.github_org_name,
             description: go.description,
@@ -177,43 +174,16 @@ const Products: NextPageWithLayout = () => {
             github_org_id: go.github_org_id,
             github_org_name: go.github_org_name
           }));
-          setProviderNamespaces(orgs);
-          if (orgs.length > 0) {
-            let targetOrg = currentOrganization;
-            if (!targetOrg) {
-              const savedOrgId = localStorage.getItem('selectedOrgId');
-              if (savedOrgId) {
-                const parsedId = JSON.parse(savedOrgId);
-                targetOrg = organizationList.find(o => String(o.id) === String(parsedId)) || null;
-                if (!targetOrg) {
-                  try {
-                    const orgRes = await organizationQuery.getOrganizationById(parsedId);
-                    if (orgRes.type === 'success') {
-                      targetOrg = orgRes.value as any;
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }
-              }
-            }
-
-            let defaultName = '';
-            if (targetOrg) {
-              const matchGo = orgs.find(go =>
-                isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
-              );
-              if (matchGo) {
-                defaultName = matchGo.name;
-              }
-            } else {
-              defaultName = orgs[0].name;
-            }
-
-            setSelectedOrgName(defaultName);
-          }
         } else {
           toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
+        }
+      }
+
+      if (namespaces) {
+        setProviderNamespaces(namespaces);
+        if (namespaces.length > 0) {
+          const defaultName = await resolveDefaultOrgName(namespaces);
+          setSelectedOrgName(defaultName);
         }
       }
     } catch (error) {
