@@ -206,7 +206,7 @@ const Products: NextPageWithLayout = () => {
     if (provider === 'gitlab') {
       const createRes = await organizationQuery.createOrganization({ name: orgName });
       if (createRes.type === 'success' && createRes.value?.id) {
-        await fetchOrganizations();
+        fetchOrganizations();
         return String(createRes.value.id);
       }
       const res = await organizationQuery.getAllOrganization();
@@ -218,7 +218,7 @@ const Products: NextPageWithLayout = () => {
     }
     const importResult = await organizationQuery.importOrganization(orgName);
     if (importResult.type === 'success' && importResult.value.id) {
-      await fetchOrganizations(); // Removido o 'true'
+      fetchOrganizations(); // Removido o 'true'
       return importResult.value.id;
     }
     return '';
@@ -278,20 +278,18 @@ const Products: NextPageWithLayout = () => {
         searchTerm
       );
       if (res.type === 'success') {
-        const mappedRepos: UnifiedRepoItem[] = res.value.map(p => ({
+        const projects = Array.isArray(res.value) ? res.value : (res.value?.projects ?? []);
+        const totalPages = Array.isArray(res.value) ? 1 : (res.value?.totalPages ?? 1);
+        const mappedRepos: UnifiedRepoItem[] = projects.map(p => ({
           ...p,
           github_repo_id: p.gitlab_project_id,
           github_full_name: p.gitlab_path_with_namespace
         }));
         setGitHubRepos(mappedRepos);
-        if (res.value.length < itemsPerPage) {
-          setGitlabTotalPages(targetPage);
-        } else {
-          setGitlabTotalPages(prev => Math.max(prev, targetPage + 1));
-        }
+        setGitlabTotalPages(totalPages);
       } else {
         const status = res.error?.response?.status;
-        if (status === 409) {
+        if (status === 409 || status === 400) {
           setRepoFetchError('409');
           toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
         } else {
@@ -389,11 +387,12 @@ const Products: NextPageWithLayout = () => {
     }
   };
 
-  // Volta para esta tela pelo callback do OAuth, que valida o state e renova o token.
   const handleReauthorize = () => {
     try {
       const state = createOAuthState(provider === 'gitlab' ? 'gitlab' : 'github', '/products');
-      window.location.assign(provider === 'gitlab' ? getGitlabAuthUrl(state) : getGithubReauthorizeUrl(state));
+      const authUrl =
+        provider === 'gitlab' ? getGitlabAuthUrl(state) : getGithubReauthorizeUrl(state);
+      window.location.assign(authUrl);
     } catch (error) {
       console.error(error);
       toast.error(`Não foi possível iniciar a autorização do ${terms.providerName}.`);
@@ -556,7 +555,7 @@ const Products: NextPageWithLayout = () => {
                   href={
                     provider === 'gitlab'
                       ? 'https://gitlab.com/-/profile/applications'
-                      : `https://github.com/settings/connections/applications/${process.env.GITHUB_CLIENT_ID}`
+                      : `https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`
                   }
                   target="_blank"
                   rel="noopener noreferrer"
@@ -678,7 +677,7 @@ const Products: NextPageWithLayout = () => {
                       <Typography variant="h6" color="error" gutterBottom>
                         {`Não foi possível carregar os ${terms.repositories}`}
                       </Typography>
-                      <Button variant="outlined" color="primary" onClick={() => void handleSelectOrganization(selectedOrgName)}>
+                      <Button variant="outlined" color="primary" onClick={() => handleSelectOrganization(selectedOrgName)}>
                         Tentar Novamente
                       </Button>
                     </Box>
@@ -733,7 +732,7 @@ const Products: NextPageWithLayout = () => {
                                   variant="contained"
                                   color="primary"
                                   startIcon={<AddCircle />}
-                                  onClick={() => void handleImport(repo)}
+                                  onClick={() => handleImport(repo)}
                                   sx={{
                                     textTransform: 'none',
                                     fontWeight: 'bold',
