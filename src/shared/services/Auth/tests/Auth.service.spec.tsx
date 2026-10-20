@@ -281,6 +281,15 @@ describe('Auth Service', () => {
     it('should send the OAuth state', () => {
       expect(new URL(getGitlabAuthUrl('nonce-789')).searchParams.get('state')).toBe('nonce-789');
     });
+
+    it('should send an empty redirect_uri and client_id when they are not configured', () => {
+      delete process.env.NEXT_PUBLIC_LOGIN_REDIRECT_URL;
+      delete process.env.GITLAB_CLIENT_ID;
+      const url = new URL(getGitlabAuthUrl('nonce-789'));
+
+      expect(url.searchParams.get('redirect_uri')).toBe('');
+      expect(url.searchParams.get('client_id')).toBe('');
+    });
   });
 
   // ... Fim dos testes
