@@ -276,6 +276,17 @@ describe('AuthContext', () => {
       expect(sessionStorage.getItem(OAUTH_STATE_KEY)).toBeNull();
     });
 
+    it('deve exibir erro do provedor e voltar a /auth quando a autorização falhar', async () => {
+      setCallbackUrl(`?error=server_error&state=${createOAuthState('github')}`);
+
+      renderProvider();
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/auth');
+      });
+      expect(toast.error).toHaveBeenCalledWith('Erro na autorização do provedor.');
+    });
+
     it('deve manter a sessão e voltar à página de origem quando a reautorização for cancelada', async () => {
       (getUserInfo as jest.Mock).mockResolvedValue({
         type: 'success',
