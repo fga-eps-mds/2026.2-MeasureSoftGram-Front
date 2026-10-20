@@ -133,7 +133,7 @@ class OrganizationQuery {
     kind?: string,
     page?: number,
     search?: string
-  ): Promise<Result<GitLabProject[]>> {
+  ): Promise<Result<GitLabProjectsResponse>> {
     try {
       const params: Record<string, any> = {};
       if (namespaceId !== undefined && namespaceId !== null && namespaceId !== '') {
@@ -149,15 +149,15 @@ class OrganizationQuery {
         params.search = search;
       }
       const response = await api.get(`/v1/organizations/${orgId}/gitlab-projects/`, { params });
-      const data = Array.isArray(response.data) ? response.data : (response.data?.results ?? response.data);
-      return { type: 'success', value: data as GitLabProject[] };
+      const rawData = response.data;
+      const data = Array.isArray(rawData) ? rawData : (rawData?.results ?? rawData ?? []);
+      const totalPagesHeader = response.headers?.['x-total-pages'] || response.headers?.['X-Total-Pages'];
+      const totalPages = totalPagesHeader ? Math.max(1, parseInt(totalPagesHeader, 10)) : 1;
+      return { type: 'success', value: { projects: data as GitLabProject[], totalPages } };
     } catch (error) {
       return { type: 'error', error: error as AxiosError };
     }
   }
-
-  getGitlabNamespaces = this.getGitLabNamespaces;
-  getGitlabProjects = this.getGitLabProjects;
 }
 
 export interface GitHubOrganization {
@@ -192,6 +192,10 @@ export interface GitLabProject {
   url: string;
 }
 
+export interface GitLabProjectsResponse {
+  projects: GitLabProject[];
+  totalPages: number;
+}
+
 export const organizationQuery = new OrganizationQuery();
 Object.freeze(organizationQuery);
-
