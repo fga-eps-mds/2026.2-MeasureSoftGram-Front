@@ -154,6 +154,23 @@ export function formatOutlierTooltip(
   return lines.join('<br/>');
 }
 
+// quantos caminhos de outliers entram na descrição acessível; o resto vira "e mais N"
+const MAX_DESCRIBED_OUTLIERS = 10;
+
+/**
+ * Caminhos e valores dos outliers em texto puro para a descrição para leitores de tela (CA5), do mais distante da
+ * mediana ao mais próximo, até 10 arquivos; o que passar disso vira "e mais N". Vazio sem outliers.
+ */
+function describeOutlierFiles(outliers: MetricDistributionFile[], median: number, kind: MetricKind): string {
+  const byDistance = [...outliers].sort((a, b) => Math.abs(b.value - median) - Math.abs(a.value - median));
+  const listed = byDistance
+    .slice(0, MAX_DESCRIBED_OUTLIERS)
+    .map((file) => `${file.path} (${formatMetricValue(file.value, kind)})`)
+    .join(', ');
+  const rest = byDistance.length - MAX_DESCRIBED_OUTLIERS;
+  return rest > 0 ? `${listed} e mais ${rest}` : listed;
+}
+
 /** Rótulo da linha de referência; o do máximo traz a medida na segunda linha, como no protótipo. */
 function referenceLabel(reference: MetricReference, kind: MetricKind, bound: 'min' | 'max'): string {
   if (bound === 'min') return `Mín. de referência = ${formatMetricValue(reference.min_threshold, kind)}`;
@@ -222,12 +239,16 @@ export function formatDistributionChartOptions({ metric, files, stats, reference
   const fileCount = formatFileCount(files.length);
   const median = formatValue(stats.median);
   const outlierCount = formatOutlierCount(stats.outliers.length);
+  const outlierFiles = describeOutlierFiles(stats.outliers, stats.median, kind);
+  const outlierSentence = outlierFiles ? ` Outliers: ${outlierFiles}.` : '';
 
   return {
     animation: false,
     aria: {
       enabled: true,
-      label: { description: `Histograma e boxplot de ${metric}: ${fileCount}, mediana ${median}, ${outlierCount}.` }
+      label: {
+        description: `Histograma e boxplot de ${metric}: ${fileCount}, mediana ${median}, ${outlierCount}.${outlierSentence}`
+      }
     },
     tooltip: TOOLTIP,
     grid: [
@@ -411,7 +432,13 @@ export function formatComparisonChartOptions(
       repository: box.name
     }))
   );
-  const summaries = boxes.map((box) => `${box.name}: mediana ${formatValue(box.summary.median)}`).join('; ');
+  const summaries = boxes
+    .map((box) => {
+      const outlierFiles = describeOutlierFiles(box.stats.outliers, box.stats.median, kind);
+      const outlierText = outlierFiles ? `, outliers: ${outlierFiles}` : '';
+      return `${box.name}: mediana ${formatValue(box.summary.median)}${outlierText}`;
+    })
+    .join('; ');
 
   return {
     animation: false,

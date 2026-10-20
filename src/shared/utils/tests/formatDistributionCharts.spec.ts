@@ -238,8 +238,25 @@ describe('formatDistributionChartOptions', () => {
   it('descreve o gráfico para leitores de tela', () => {
     expect(options.aria).toEqual({
       enabled: true,
-      label: { description: 'Histograma e boxplot de complexity: 9 arquivos, mediana 5, 1 outlier.' }
+      label: {
+        description: 'Histograma e boxplot de complexity: 9 arquivos, mediana 5, 1 outlier. Outliers: src/f30.py (30).'
+      }
     });
+  });
+
+  it('lista na descrição até 10 outliers, do mais distante da mediana, e conta os demais', () => {
+    const many = Array.from({ length: 13 }, (_, index) => ({ path: `src/m${index}.py`, value: 20 + index }));
+    const crowded = getBoxplotStats(summary, [...files.slice(0, 8), ...many]);
+    const { description } = formatDistributionChartOptions({
+      metric: 'complexity',
+      files,
+      stats: crowded,
+      reference: null
+    }).aria.label;
+
+    expect(description).toContain('13 outliers. Outliers: src/m12.py (32), src/m11.py (31),');
+    expect(description).toContain('src/m3.py (23) e mais 3.');
+    expect(description).not.toContain('src/m2.py');
   });
 });
 
@@ -406,9 +423,9 @@ describe('formatComparisonChartOptions', () => {
     expect(options.grid.right).toBe(32);
   });
 
-  it('descreve o gráfico para leitores de tela, com o termo do provedor', () => {
+  it('descreve o gráfico para leitores de tela, com o termo do provedor e os outliers de quem os tem', () => {
     expect(options.aria.label.description).toBe(
-      'Um boxplot de complexity por repositório. service: mediana 5; core: mediana 4.'
+      'Um boxplot de complexity por repositório. service: mediana 5, outliers: src/f30.py (30); core: mediana 4.'
     );
     expect(formatComparisonChartOptions('complexity', repositories, null, 'projeto').aria.label.description).toContain(
       'por projeto.'
