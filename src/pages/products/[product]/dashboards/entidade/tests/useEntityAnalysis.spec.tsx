@@ -5,8 +5,9 @@ import { useEntityAnalysis } from '../useEntityAnalysis';
 jest.mock('@hooks/useRequest', () => ({ useRequest: jest.fn() }));
 
 const releases = [
-  { id: 20, release_name: 'v2.0' },
-  { id: 10, release_name: 'v1.0' },
+  { id: 30, release_name: 'v3.0', start_at: '2026-05-01T00:00:00-03:00', end_at: '2026-05-31T00:00:00-03:00' },
+  { id: 20, release_name: 'v2.0', start_at: '2026-04-01T00:00:00-03:00', end_at: '2026-04-30T00:00:00-03:00' },
+  { id: 10, release_name: 'v1.0', start_at: '2026-03-01T00:00:00-03:00', end_at: '2026-03-31T00:00:00-03:00' },
 ];
 const catalog = {
   characteristic: [
@@ -30,14 +31,20 @@ function mockRequests({ releaseData = releases as unknown, error }: { releaseDat
 
 describe('useEntityAnalysis', () => {
   beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-04-15T12:00:00-03:00'));
     mutate.mockClear();
     mockRequests();
   });
 
-  it('começa pela release mais recente e pela primeira entidade do nível', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('começa pela release atual e pela primeira entidade do nível', () => {
     const { result } = renderHook(() => useEntityAnalysis('1', '2'));
 
     expect(result.current.releaseId).toBe(20);
+    expect(result.current.currentReleaseId).toBe(20);
     expect(result.current.entityKey).toBe('reliability');
     expect((useRequest as jest.Mock).mock.calls.at(-1)[0]).toEqual({
       url: '/v1/organizations/1/products/2/entity-analysis/',
@@ -51,7 +58,17 @@ describe('useEntityAnalysis', () => {
 
     const { result } = renderHook(() => useEntityAnalysis('1', '2'));
 
-    expect(result.current.releases).toHaveLength(2);
+    expect(result.current.releases).toHaveLength(3);
+  });
+
+  it('troca de release e volta para a atual se a escolhida não for do produto', () => {
+    const { result } = renderHook(() => useEntityAnalysis('1', '2'));
+
+    act(() => result.current.setReleaseId(10));
+    expect(result.current.releaseId).toBe(10);
+
+    act(() => result.current.setReleaseId(99));
+    expect(result.current.releaseId).toBe(20);
   });
 
   it('troca a entidade quando o nível muda', () => {

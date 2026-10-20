@@ -65,6 +65,7 @@ const analysis: EntityAnalysis = {
 const hookState = (overrides = {}) => ({
   releases: [{ id: 10, release_name: 'v1.0', start_at: '2026-03-01', end_at: '2026-03-31' }],
   releaseId: 10,
+  currentReleaseId: 10,
   setReleaseId: jest.fn(),
   level: 'characteristic',
   setLevel: jest.fn(),
@@ -94,7 +95,7 @@ describe('<EntityAnalysisDashboard />', () => {
   it('mostra os seletores de release, nível e entidade', () => {
     render(<EntityAnalysisDashboard />);
 
-    expect(screen.getByRole('combobox', { name: 'Release' }).textContent).toBe('v1.0');
+    expect(screen.getByRole('combobox', { name: 'Release' }).textContent).toBe('v1.0 (atual)');
     expect(screen.getByRole('combobox', { name: 'Nível' }).textContent).toBe('Característica');
     expect(screen.getByRole('combobox', { name: 'Entidade' }).textContent).toBe('Maintainability');
   });

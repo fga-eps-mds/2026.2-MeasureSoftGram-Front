@@ -2,15 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
 import { EntityAnalysis, EntityAnalysisCatalog, EntityLevel, IReleases, ReleasesPaginated } from '@customTypes/product';
-
-function toReleaseArray(data?: IReleases[] | ReleasesPaginated): IReleases[] {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.results)) return data!.results!;
-  return [];
-}
+import { getCurrentRelease, toReleaseArray } from '@utils/releaseSelection';
 
 export function useEntityAnalysis(organizationId: string, productId: string) {
-  const [releaseId, setReleaseId] = useState<number | undefined>();
+  const [selectedReleaseId, setReleaseId] = useState<number | undefined>();
   const [level, setLevel] = useState<EntityLevel>('characteristic');
   const [entityKey, setEntityKey] = useState<string | undefined>();
 
@@ -18,13 +13,9 @@ export function useEntityAnalysis(organizationId: string, productId: string) {
     productQuery.getReleaseList(organizationId, productId)
   );
   const releases = useMemo(() => toReleaseArray(releasesRequest.data), [releasesRequest.data]);
-
-  // as releases chegam da mais recente para a mais antiga: começa pela mais recente
-  useEffect(() => {
-    if (releases.length && !releases.some((release) => release.id === releaseId)) {
-      setReleaseId(releases[0].id);
-    }
-  }, [releases, releaseId]);
+  const currentRelease = useMemo(() => getCurrentRelease(releases), [releases]);
+  // abre na release atual, como os outros dashboards; a escolha só vale se a release for deste produto
+  const releaseId = (releases.find((release) => release.id === selectedReleaseId) ?? currentRelease)?.id;
 
   const entitiesRequest = useRequest<EntityAnalysisCatalog>(
     productQuery.getEntityAnalysisEntities(organizationId, productId, releaseId)
@@ -53,6 +44,7 @@ export function useEntityAnalysis(organizationId: string, productId: string) {
   return {
     releases,
     releaseId,
+    currentReleaseId: currentRelease?.id,
     setReleaseId,
     level,
     setLevel,

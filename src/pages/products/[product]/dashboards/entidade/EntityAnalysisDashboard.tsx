@@ -19,6 +19,7 @@ import {
 
 import { NextPageWithLayout } from '@pages/_app.next';
 import getLayout from '@components/Layout';
+import ReleaseSelect from '@components/ReleaseSelect';
 import useRequireAuth from '@hooks/useRequireAuth';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { getPathId } from '@utils/pathDestructer';
@@ -40,6 +41,7 @@ const EntityAnalysisDashboard: NextPageWithLayout = () => {
   const {
     releases,
     releaseId,
+    currentReleaseId,
     setReleaseId,
     level,
     setLevel,
@@ -152,21 +154,13 @@ const EntityAnalysisDashboard: NextPageWithLayout = () => {
 
           {releases.length > 0 && (
             <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
-              <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel id="entity-analysis-release">Release</InputLabel>
-                <Select
-                  labelId="entity-analysis-release"
-                  label="Release"
-                  value={releaseId ?? ''}
-                  onChange={(event) => setReleaseId(Number(event.target.value))}
-                >
-                  {releases.map((release) => (
-                    <MenuItem key={release.id} value={release.id}>
-                      {release.release_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <ReleaseSelect
+                releases={releases}
+                value={releaseId}
+                currentReleaseId={currentReleaseId}
+                onChange={setReleaseId}
+                disabled={isLoadingReleases}
+              />
 
               <FormControl size="small" sx={{ minWidth: 200 }}>
                 <InputLabel id="entity-analysis-level">Nível</InputLabel>
