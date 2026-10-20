@@ -231,7 +231,7 @@ const OverviewDashboard: NextPageWithLayout = () => {
           onRetry={retrySummary}
         />
 
-        <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap="24px" alignItems="start">
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap="24px">
           <DashboardCard
             title={`TSQMI por ${terms.repository}`}
             status={tsqmiStatus}
@@ -261,7 +261,7 @@ const OverviewDashboard: NextPageWithLayout = () => {
                 label={terms.Repository}
                 value={radarRepository?.id ?? ''}
                 onChange={(event) => setSelectedRepositoryId(Number(event.target.value))}
-                sx={{ width: 170 }}
+                sx={{ width: 220 }}
                 SelectProps={{ MenuProps: { disableScrollLock: true } }}
               >
                 {repositories.map((repository) => (

@@ -140,7 +140,8 @@ export function formatRadarOptions(
     tooltip: { trigger: 'item' },
     radar: {
       indicator: characteristics.map((characteristic) => ({ name: characteristic.name, max: 1 })),
-      radius: '62%',
+      center: ['50%', '54%'],
+      radius: '72%',
       splitNumber: 4,
       axisName: { color: DASHBOARD_COLORS.text, fontSize: 11 },
       splitLine: SPLIT_LINE,
@@ -159,6 +160,10 @@ export function formatRadarOptions(
           color: DASHBOARD_COLORS.primary,
           fontSize: 11,
           fontWeight: 'bold',
+          distance: 6,
+          // contorno branco para o valor continuar legível sobre as linhas do radar
+          textBorderColor: '#FFFFFF',
+          textBorderWidth: 2,
           formatter: ({ value }: { value: number | string }) => (typeof value === 'number' ? formatDecimal(value) : '')
         },
         data: [{ name: repository.name, value: values }]
