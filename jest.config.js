@@ -44,7 +44,7 @@ const customJestConfig = {
 
   // Localmente o Jest abria um worker por núcleo menos um, e cada worker carrega MUI, ECharts e o app: numa máquina
   // de 16 núcleos a suíte passava de 11 GB de RAM. No CI (poucos núcleos) fica o padrão.
-  maxWorkers: process.env.CI ? undefined : '25%',
+  ...(process.env.CI ? {} : { maxWorkers: '25%' }),
   // a memória de cada worker crescia a cada arquivo de teste; passado o limite, o worker é reiniciado
   workerIdleMemoryLimit: '768MB',
   // formato de snapshot do Jest 28, para não regravar os snapshots existentes na troca para o Jest 29
