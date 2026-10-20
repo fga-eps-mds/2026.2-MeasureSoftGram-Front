@@ -1,0 +1,277 @@
+import { MetricDistributionSummary } from '@customTypes/product';
+import {
+  DISTRIBUTION_COLORS,
+  formatDistributionChartOptions,
+  outlierSymbolSize,
+  renderHistogramBar
+} from '../formatDistributionCharts';
+import { formatNumber, getBoxplotStats, getMetricReference } from '../metricDistribution';
+
+// q1, mediana e q3 de [1..8, 30] pelo método inclusive, como o Service calcula
+const summary: MetricDistributionSummary = {
+  count: 9,
+  min: 1,
+  q1: 3,
+  median: 5,
+  q3: 7,
+  max: 30,
+  mean: 7.33,
+  std_dev: 8.3
+};
+const files = [1, 2, 3, 4, 5, 6, 7, 8, 30].map((value) => ({ path: `src/f${value}.py`, value }));
+const stats = getBoxplotStats(summary, files);
+
+// comment_lines_density de 5 arquivos: q1 12, mediana 18 e q3 22, então 87 é outlier
+const percentSummary: MetricDistributionSummary = {
+  count: 5,
+  min: 5,
+  q1: 12,
+  median: 18,
+  q3: 22,
+  max: 87,
+  mean: 28.8,
+  std_dev: 29.9
+};
+const percentFiles = [5, 12, 18, 22, 87].map((value) => ({ path: `src/p${value}.py`, value }));
+const percentStats = getBoxplotStats(percentSummary, percentFiles);
+const commentsReference = getMetricReference('comment_lines_density', {
+  measure: 'commented_file_density',
+  min_threshold: 10,
+  max_threshold: 30
+});
+
+describe('formatDistributionChartOptions', () => {
+  const options = formatDistributionChartOptions({ metric: 'complexity', files, stats, reference: null });
+
+  it('desenha o histograma e o boxplot no mesmo eixo x, a partir do zero (CA3)', () => {
+    expect(options.xAxis.map((axis) => [axis.gridIndex, axis.min, axis.max])).toEqual([
+      [0, 0, 32],
+      [1, 0, 32]
+    ]);
+    expect(options.grid.map((grid) => [grid.left, grid.right])).toEqual([
+      [64, 32],
+      [64, 32]
+    ]);
+    expect(options.xAxis[1]).toHaveProperty('name', 'complexity (complexidade ciclomática do arquivo)');
+    const { axisLabel } = options.xAxis[1];
+    expect('formatter' in axisLabel && axisLabel.formatter(1284)).toBe('1.284');
+  });
+
+  it('manda cada faixa como [início, fim, arquivos] para o histograma', () => {
+    const [histogram] = options.series;
+
+    expect(options.yAxis[0]).toMatchObject({ name: 'Arquivos', nameLocation: 'start', minInterval: 1 });
+    // contagem em pt-BR, como no resumo: sem o formatter, o ECharts escreve "1,000"
+    const countLabel = options.yAxis[0].axisLabel as { formatter: typeof formatNumber };
+    expect(countLabel.formatter(1000)).toBe('1.000');
+    expect(histogram).toMatchObject({ id: 'histogram', type: 'custom', encode: { x: [0, 1], y: 2 } });
+    expect(histogram.data.slice(0, 2)).toEqual([
+      [0, 2, 1],
+      [2, 4, 2]
+    ]);
+    expect(histogram.tooltip.formatter({ dataIndex: 1 })).toBe('2 a 3<br/><strong>2 arquivos</strong>');
+  });
+
+  it('deita o boxplot de Tukey numa linha só e põe os outliers nela', () => {
+    const [, boxplot, outliers] = options.series;
+
+    expect(options.yAxis[1]).toMatchObject({ type: 'category', data: ['Boxplot'], axisLabel: { margin: 14 } });
+    expect(boxplot).toMatchObject({ id: 'boxplot', type: 'boxplot', data: [[1, 3, 5, 7, 8]] });
+    expect(outliers).toMatchObject({ id: 'outliers', type: 'scatter', data: [[30, 0]] });
+    expect(outliers).toHaveProperty('symbolSize');
+  });
+
+  it('mostra a caixa e os bigodes no tooltip do boxplot', () => {
+    expect(options.series[1].tooltip.formatter({ dataIndex: 0 })).toBe(
+      '<strong>Boxplot</strong><br/>Bigode superior: 8<br/>3º quartil: 7<br/>Mediana: 5<br/>1º quartil: 3<br/>' +
+        'Bigode inferior: 1'
+    );
+  });
+
+  it('abre o tooltip ao passar o mouse ou clicar e deixa o mouse entrar nele (CA5)', () => {
+    expect(options.tooltip).toMatchObject({
+      trigger: 'item',
+      triggerOn: 'mousemove|click',
+      enterable: true,
+      confine: true,
+      hideDelay: 300
+    });
+  });
+
+  it('limita a largura do tooltip e quebra caminhos longos, sem rolar a página', () => {
+    expect(options.tooltip.extraCssText).toContain('max-width: 420px');
+    expect(options.tooltip.extraCssText).toContain('white-space: normal');
+    expect(options.tooltip.extraCssText).toContain('overflow-wrap: anywhere');
+  });
+
+  it('mostra o caminho e o valor do outlier no tooltip, com o HTML escapado', () => {
+    const tricky = getBoxplotStats(summary, [...files.slice(0, 8), { path: 'src/<script>.py', value: 30 }]);
+    const { series } = formatDistributionChartOptions({ metric: 'complexity', files, stats: tricky, reference: null });
+    const tooltip = series[2].tooltip.formatter({ dataIndex: 0 });
+
+    expect(tooltip).toContain('Outlier');
+    expect(tooltip).toContain('<strong>src/&#60;script&#62;.py</strong>');
+    expect(tooltip).toContain('complexity: 30');
+    expect(tooltip).not.toContain('<script>');
+  });
+
+  it('junta os outliers do mesmo valor num ponto e lista todos os arquivos no tooltip (CA5)', () => {
+    const tied = getBoxplotStats(summary, [...files, { path: 'src/g30.py', value: 30 }]);
+    const { series } = formatDistributionChartOptions({ metric: 'complexity', files, stats: tied, reference: null });
+    const tooltip = series[2].tooltip.formatter({ dataIndex: 0 });
+
+    expect(series[2].data).toEqual([[30, 0]]);
+    expect(tooltip).toContain('2 outliers');
+    expect(tooltip).toContain('<strong>src/f30.py</strong>');
+    expect(tooltip).toContain('<strong>src/g30.py</strong>');
+  });
+
+  it('não corta a lista de arquivos de um ponto com muitos outliers', () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({ path: `src/m${index}.py`, value: 30 }));
+    const crowded = getBoxplotStats(summary, [...files.slice(0, 8), ...many]);
+    const { series } = formatDistributionChartOptions({ metric: 'complexity', files, stats: crowded, reference: null });
+    const tooltip = series[2].tooltip.formatter({ dataIndex: 0 });
+
+    expect(tooltip).toContain('12 outliers');
+    expect(tooltip.match(/<strong>/g)).toHaveLength(12);
+    expect(tooltip).toContain('overflow-y:auto');
+  });
+
+  it('junta outliers muito próximos e mostra o valor de cada arquivo', () => {
+    const close = getBoxplotStats(summary, [...files, { path: 'src/h30.py', value: 30.4 }]);
+    const { series } = formatDistributionChartOptions({ metric: 'complexity', files, stats: close, reference: null });
+    const tooltip = series[2].tooltip.formatter({ dataIndex: 0 });
+
+    expect(series[2].data).toEqual([[30.2, 0]]);
+    expect(tooltip).toContain('<strong>src/h30.py</strong>: 30,4');
+    expect(tooltip).toContain('complexity: 30 a 30,4');
+  });
+
+  it('mostra a posição de cada arquivo quando o ponto atravessa um limite de referência', () => {
+    // q1 90 e q3 98: a cerca de baixo fica em 78, e 59,5 e 60,5 viram um ponto só, dos dois lados do mínimo de 60%
+    const coverageSummary: MetricDistributionSummary = {
+      count: 10,
+      min: 59.5,
+      q1: 90,
+      median: 95,
+      q3: 98,
+      max: 100,
+      mean: 88.8,
+      std_dev: 14.2
+    };
+    const crossing = [59.5, 60.5, 90, 92, 95, 96, 97, 98, 99, 100].map((value) => ({
+      path: `src/c${value}.py`,
+      value
+    }));
+    const { series } = formatDistributionChartOptions({
+      metric: 'coverage',
+      files: crossing,
+      stats: getBoxplotStats(coverageSummary, crossing),
+      reference: getMetricReference('coverage', { measure: 'test_coverage', min_threshold: 60, max_threshold: 100 })
+    });
+    const tooltip = series[2].tooltip.formatter({ dataIndex: 0 });
+
+    expect(series[2].data).toEqual([[60, 0]]);
+    expect(tooltip).toContain('<strong>src/c59.5.py</strong>: 59,5% · Abaixo do mínimo de referência (60%)');
+    expect(tooltip).toContain('<strong>src/c60.5.py</strong>: 60,5% · Dentro da faixa de referência');
+  });
+
+  it('não desenha linha de referência sem faixa', () => {
+    expect(options.series[0].markLine).toBeUndefined();
+    expect(options.series[1].markLine).toBeUndefined();
+  });
+
+  it('desenha o mínimo e o máximo de referência tracejados nos dois gráficos (CA4)', () => {
+    const percent = formatDistributionChartOptions({
+      metric: 'comment_lines_density',
+      files: percentFiles,
+      stats: percentStats,
+      reference: commentsReference
+    });
+    const [histogram, boxplot, outliers] = percent.series;
+
+    expect(percent.xAxis[0].max).toBe(100);
+    expect(histogram.markLine).toMatchObject({
+      silent: true,
+      symbol: 'none',
+      lineStyle: { type: 'dashed' },
+      label: { position: 'end', rich: { value: { fontWeight: 'bold' }, measure: { fontSize: 10 } } }
+    });
+    expect(histogram.markLine?.data).toEqual([
+      { xAxis: 10, label: { formatter: 'Mín. de referência = 10%', align: 'left', distance: [0, 6] } },
+      {
+        xAxis: 30,
+        label: {
+          formatter: '{value|Máx. de referência = 30%}\n{measure|medida: Densidade de arquivos comentados}',
+          align: 'left',
+          distance: [0, 30]
+        }
+      }
+    ]);
+    expect(boxplot.markLine).toMatchObject({ label: { show: false }, data: [{ xAxis: 10 }, { xAxis: 30 }] });
+    expect(outliers.tooltip.formatter({ dataIndex: 0 })).toContain('Acima do máximo de referência (30%)');
+  });
+
+  it('alinha o rótulo à direita quando a linha fica na metade direita do eixo', () => {
+    const coverage = formatDistributionChartOptions({
+      metric: 'coverage',
+      files: percentFiles,
+      stats: percentStats,
+      reference: getMetricReference('coverage', { measure: 'test_coverage', min_threshold: 60, max_threshold: 100 })
+    });
+
+    expect(coverage.series[0].markLine?.data).toMatchObject([
+      { label: { align: 'right' } },
+      { label: { align: 'right' } }
+    ]);
+  });
+
+  it('sem arquivos, leva o eixo até o bigode de cima', () => {
+    const empty = formatDistributionChartOptions({ metric: 'complexity', files: [], stats, reference: null });
+
+    expect(empty.xAxis[0].max).toBe(8);
+    expect(empty.series[0].data).toEqual([]);
+  });
+
+  it('descreve o gráfico para leitores de tela', () => {
+    expect(options.aria).toEqual({
+      enabled: true,
+      label: { description: 'Histograma e boxplot de complexity: 9 arquivos, mediana 5, 1 outlier.' }
+    });
+  });
+});
+
+describe('outlierSymbolSize', () => {
+  it('aumenta o ponto que junta mais de um arquivo', () => {
+    const symbolSize = outlierSymbolSize([
+      { value: 30, files: [{ path: 'src/a.py', value: 30 }] },
+      {
+        value: 40,
+        files: [
+          { path: 'src/b.py', value: 40 },
+          { path: 'src/c.py', value: 40 }
+        ]
+      }
+    ]);
+
+    expect(symbolSize(null, { dataIndex: 0 })).toBe(9);
+    expect(symbolSize(null, { dataIndex: 1 })).toBe(12);
+  });
+});
+
+describe('renderHistogramBar', () => {
+  it('desenha um retângulo do início ao fim da faixa, do zero até a contagem', () => {
+    const values = [10, 20, 4];
+    const api = {
+      value: (dimension: number) => values[dimension],
+      coord: ([x, y]: number[]) => [x * 10, 200 - y * 10]
+    };
+
+    expect(renderHistogramBar({} as never, api as never)).toEqual({
+      type: 'rect',
+      shape: { x: 101, y: 160, width: 98, height: 40 },
+      style: { fill: DISTRIBUTION_COLORS.bar },
+      emphasis: { style: { fill: DISTRIBUTION_COLORS.barHover } }
+    });
+  });
+});
