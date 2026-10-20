@@ -237,7 +237,7 @@ const Products: NextPageWithLayout = () => {
     if (provider === 'gitlab') {
       const createRes = await organizationQuery.createOrganization({ name: orgName });
       if (createRes.type === 'success' && createRes.value?.id) {
-        fetchOrganizations();
+        await fetchOrganizations();
         return String(createRes.value.id);
       }
       const res = await organizationQuery.getAllOrganization();
@@ -249,7 +249,7 @@ const Products: NextPageWithLayout = () => {
     }
     const importResult = await organizationQuery.importOrganization(orgName);
     if (importResult.type === 'success' && importResult.value.id) {
-      fetchOrganizations(); // Removido o 'true'
+      await fetchOrganizations(); // Removido o 'true'
       return importResult.value.id;
     }
     return '';
@@ -421,7 +421,7 @@ const Products: NextPageWithLayout = () => {
   };
 
   useEffect(() => {
-    loadProviderNamespaces();
+    void loadProviderNamespaces();
   }, [provider]);
 
   useEffect(() => {
@@ -434,7 +434,7 @@ const Products: NextPageWithLayout = () => {
           if (res.type === 'success') {
             toast.success(`${terms.Organizations} do ${terms.providerName} ${provider === 'gitlab' ? 'vinculados' : 'vinculadas'} com sucesso!`);
             await loadProviderNamespaces();
-            fetchOrganizations(); // Removido o 'true'
+            await fetchOrganizations(); // Removido o 'true'
           } else {
             toast.error(`Erro ao vincular ${terms.organizations} do ${terms.providerName}.`);
           }
@@ -475,7 +475,7 @@ const Products: NextPageWithLayout = () => {
 
     const timer = setTimeout(() => {
       prevGitlabQueryRef.current = { page, search, orgName: selectedOrgName, orgDbId: selectedOrgDbId };
-      loadGitLabProjectsForOrg(selectedOrgDbId, currentNs, page, search);
+      void loadGitLabProjectsForOrg(selectedOrgDbId, currentNs, page, search);
     }, delay);
 
     return () => clearTimeout(timer);
@@ -731,7 +731,7 @@ const Products: NextPageWithLayout = () => {
                       <Typography variant="h6" color="error" gutterBottom>
                         {`Não foi possível carregar os ${terms.repositories}`}
                       </Typography>
-                      <Button variant="outlined" color="primary" onClick={() => handleSelectOrganization(selectedOrgName)}>
+                      <Button variant="outlined" color="primary" onClick={() => void handleSelectOrganization(selectedOrgName)}>
                         Tentar Novamente
                       </Button>
                     </Box>
@@ -786,7 +786,7 @@ const Products: NextPageWithLayout = () => {
                                   variant="contained"
                                   color="primary"
                                   startIcon={<AddCircle />}
-                                  onClick={() => handleImport(repo)}
+                                  onClick={() => void handleImport(repo)}
                                   sx={{
                                     textTransform: 'none',
                                     fontWeight: 'bold',
