@@ -471,12 +471,14 @@ describe('Products Component', () => {
     render(<Products />);
 
     await waitFor(() => {
-      expect(screen.getByText('Org 1')).toBeInTheDocument();
+      expect(screen.getByText('Repo 1')).toBeInTheDocument();
     });
 
     const orgSelect = screen.getByLabelText('Organizações do GitHub');
+    fireEvent.mouseDown(orgSelect);
+    const org2Option = await screen.findByText('Org 2');
     await act(async () => {
-      fireEvent.change(orgSelect, { target: { value: 'Org 2' } });
+      fireEvent.click(org2Option);
     });
 
     await waitFor(() => {
@@ -484,8 +486,10 @@ describe('Products Component', () => {
     });
 
     const prodSelect = screen.getByLabelText('Produtos do MeasureSoftGram');
+    fireEvent.mouseDown(prodSelect);
+    const prod2Option = await screen.findByText('Prod 2');
     await act(async () => {
-      fireEvent.change(prodSelect, { target: { value: 'prod-2' } });
+      fireEvent.click(prod2Option);
     });
 
     await waitFor(() => {
@@ -919,7 +923,7 @@ describe('Products Component', () => {
       render(<Products />);
 
       await waitFor(() => {
-        expect(screen.getByText('Criar Produto')).toBeInTheDocument();
+        expect(screen.getByText('gitlab-group-1/project-1')).toBeInTheDocument();
       });
 
       const createBtn = screen.getByText('Criar Produto');
