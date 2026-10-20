@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
-const withTM = require('next-transpile-modules')(['@mui/x-charts'])
-const nextConfig = withTM(
-  {
+const nextConfig = {
   reactStrictMode: false,
   swcMinify: true,
   compiler: {
@@ -37,9 +35,6 @@ const nextConfig = withTM(
       '@mui/lab': {
         transform: '@mui/lab/{{member}}',
       },
-      '@mui/x-charts': {
-        transform: '@mui/x-charts/{{member}}',
-      },
       '@mui/icons-material': {
         transform: '@mui/icons-material/{{member}}',
       },
@@ -50,7 +45,6 @@ const nextConfig = withTM(
     maxInactiveAge: 60 * 60 * 1000,
     pagesBufferLength: 20,
   },
-}
-)
+};
 
 module.exports = nextConfig;
