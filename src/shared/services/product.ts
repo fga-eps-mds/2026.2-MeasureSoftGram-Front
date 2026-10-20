@@ -7,7 +7,9 @@ import {
   LatestValues,
   Product,
   RepositoriesLatestTsqmi,
-  ReleaseGoal
+  ReleaseGoal,
+  EntityLevel,
+  FileMetricKey
 } from '@customTypes/product';
 import { PreConfigData, PreConfigRoot, ReleaseInfoForm } from '@customTypes/preConfig';
 
@@ -159,6 +161,37 @@ class ProductQuery {
     return api.get<any>(url);
   }
 
+  getQualityModelTreeConfig(organizationId: string, productId: string, releaseId?: number): GetRequest {
+    if (!organizationId || !productId || !releaseId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`,
+      method: 'get',
+      params: { release_id: releaseId }
+    };
+  }
+
+  getEntityAnalysisEntities(organizationId: string, productId: string, releaseId?: number): GetRequest {
+    if (!organizationId || !productId || !releaseId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/entity-analysis/entities/`,
+      method: 'get',
+      params: { release_id: releaseId }
+    };
+  }
+
+  getEntityAnalysis(
+    organizationId: string,
+    productId: string,
+    params: { releaseId?: number; level: EntityLevel; key?: string }
+  ): GetRequest {
+    if (!organizationId || !productId || !params.releaseId || !params.key) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/entity-analysis/`,
+      method: 'get',
+      params: { release_id: params.releaseId, level: params.level, key: params.key }
+    };
+  }
+
   getRepositoriesConfig(organizationId: string, productId: string): GetRequest {
     if (!organizationId || !productId) return null;
     return { url: `/v1/organizations/${organizationId}/products/${productId}/repositories/`, method: 'get' };
@@ -194,6 +227,20 @@ class ProductQuery {
       url: `/v1/organizations/${organizationId}/products/${productId}/release-dashboard/characteristics/`,
       method: 'get',
       params: { release_id: releaseId }
+    };
+  }
+
+  getMetricDistribution(
+    organizationId: string,
+    productId: string,
+    { releaseId, metric, repositoryId }: { releaseId?: number; metric: FileMetricKey; repositoryId?: number }
+  ): GetRequest {
+    if (!organizationId || !productId || !releaseId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/metrics-distribution/`,
+      method: 'get',
+      // sem repository_id (undefined some da URL e da chave do SWR) o Service devolve só o resumo de cada repositório
+      params: { release_id: releaseId, metric, repository_id: repositoryId }
     };
   }
 

@@ -4,5 +4,8 @@
   "repositories_gitlab": "Projetos",
   "releases": "Releases",
   "organizations": "Organizações",
-  "organizations_gitlab": "Grupos"
+  "organizations_gitlab": "Grupos",
+  "dashboards": "Dashboards",
+  "metamodelo": "3. Metamodelo",
+  "distribuicao": "5. Distribuição das Métricas"
 }

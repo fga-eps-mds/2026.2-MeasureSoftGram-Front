@@ -78,6 +78,9 @@ export const handlers = [
   rest.get('*/v1/organizations/:orgId/products/:productId/release/', (_req, res, ctx) =>
     res(ctx.status(200), ctx.json([]))
   ),
+  rest.get('*/v1/organizations/:orgId/products/:productId/quality-model-tree/', (_req, res, ctx) =>
+    res(ctx.status(200), ctx.json([]))
+  ),
   rest.get('*/v1/organizations/:orgId/products/:productId/repositories-tsqmi-historical-values/', (_req, res, ctx) =>
     res(ctx.status(200), ctx.json({ count: 0, next: null, previous: null, results: [] }))
   ),
@@ -86,20 +89,6 @@ export const handlers = [
   ),
   rest.get('*/v1/organizations/:orgId/products/:productId/repositories/:repositoryId/', (_req, res, ctx) =>
     res(ctx.status(200), ctx.json(repositories.results[0]))
-  ),
-
-  // ----- Grafana -----
-  rest.get('*/v1/grafana/dashboard/:uid/', (req, res, ctx) =>
-    res(
-      ctx.status(200),
-      ctx.json({
-        dashboard_uid: req.params.uid,
-        title: 'Dashboard Mock',
-        grafana_url: 'https://grafana.example.dev/d/mock',
-        product_id: 1,
-        repository: { id: 1, name: '2026.1-MeasureSoftGram-Front' }
-      })
-    )
   ),
 
   // ----- Fallback -----
