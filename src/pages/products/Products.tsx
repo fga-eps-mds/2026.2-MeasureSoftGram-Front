@@ -151,7 +151,7 @@ const Products: NextPageWithLayout = () => {
 
             let defaultName = '';
             if (targetOrg) {
-              const matchGo = namespaces.find(go => 
+              const matchGo = namespaces.find(go =>
                 isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
               );
               if (matchGo) {
@@ -200,7 +200,7 @@ const Products: NextPageWithLayout = () => {
 
             let defaultName = '';
             if (targetOrg) {
-              const matchGo = orgs.find(go => 
+              const matchGo = orgs.find(go =>
                 isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
               );
               if (matchGo) {
@@ -227,7 +227,7 @@ const Products: NextPageWithLayout = () => {
   const getBackendOrgId = async (orgName: string): Promise<string> => {
     const res = await organizationQuery.getAllOrganization();
     if (res.type !== 'success') return '';
-    const match = res.value.find((o: any) => 
+    const match = res.value.find((o: any) =>
       isSameGithubOrg(orgName, o.name, o.key, o.github_org_name)
     );
     return match?.id || '';
@@ -256,7 +256,7 @@ const Products: NextPageWithLayout = () => {
   };
 
   const handleSelectOrgRef = useRef<boolean>(false);
-  
+
   const loadProductsForOrg = async (orgDbId: string) => {
     const productsRes = await productQuery.getAllProducts(orgDbId);
     const productList = (productsRes.data?.results || productsRes.data || []) as ProductType[];
@@ -411,7 +411,7 @@ const Products: NextPageWithLayout = () => {
       });
       if (response.type === 'success') {
         toast.success(`${terms.Repository} ${repo.name} importado com sucesso!`);
-        loadProductRepositories(selectedOrgDbId, selectedProductId);
+        void loadProductRepositories(selectedOrgDbId, selectedProductId);
       } else {
         toast.error(`Erro ao importar ${terms.repository}: ${response.error.message || 'Erro desconhecido'}`);
       }
@@ -444,16 +444,16 @@ const Products: NextPageWithLayout = () => {
         } finally {
           setLoadingOrgs(false);
           const { code: _, ...query } = router.query;
-          router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+          void router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
         }
       };
-      exchangeCode();
+      void exchangeCode();
     }
   }, [router.query.code, provider]);
 
   useEffect(() => {
     if (selectedOrgName) {
-      handleSelectOrganization(selectedOrgName);
+      void handleSelectOrganization(selectedOrgName);
     }
   }, [selectedOrgName]);
 
@@ -484,7 +484,7 @@ const Products: NextPageWithLayout = () => {
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
-      const matchGo = providerNamespaces.find(go => 
+      const matchGo = providerNamespaces.find(go =>
         isSameGithubOrg(go.name, currentOrganization?.name, currentOrganization?.key, (currentOrganization as any)?.github_org_name)
       );
       if (matchGo) {
@@ -503,7 +503,7 @@ const Products: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (selectedOrgDbId && selectedProductId) {
-      loadProductRepositories(selectedOrgDbId, selectedProductId);
+      void loadProductRepositories(selectedOrgDbId, selectedProductId);
     }
   }, [selectedOrgDbId, selectedProductId]);
 
@@ -738,77 +738,77 @@ const Products: NextPageWithLayout = () => {
                   );
                 }
                 return (
-                <List sx={{ padding: 0 }}>
-                  {displayedRepos.length > 0 ? (
-                    displayedRepos.map((repo) => {
-                      const isAlreadyImported = importedRepoUrls.some(
-                        url => url && repo.url && (url === repo.url || url.toLowerCase() === repo.url.toLowerCase())
-                      );
-                      return (
-                        <ListItem
-                          key={repo.gitlab_project_id || repo.github_repo_id}
-                          sx={{
-                            padding: '1.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            '&:last-child': { borderBottom: 'none' },
-                            transition: 'background-color 0.2s',
-                            '&:hover': {
-                              backgroundColor: 'action.hover'
-                            }
-                          }}
-                        >
-                          <Box display="flex" flexDirection="column" gap="0.5rem" flexGrow={1}>
-                            <Box display="flex" alignItems="center" gap="1rem">
-                              <Typography variant="subtitle1" fontWeight="bold">
-                                {repo.gitlab_path_with_namespace || repo.github_full_name || repo.name}
+                  <List sx={{ padding: 0 }}>
+                    {displayedRepos.length > 0 ? (
+                      displayedRepos.map((repo) => {
+                        const isAlreadyImported = importedRepoUrls.some(
+                          url => url && repo.url && (url === repo.url || url.toLowerCase() === repo.url.toLowerCase())
+                        );
+                        return (
+                          <ListItem
+                            key={repo.gitlab_project_id || repo.github_repo_id}
+                            sx={{
+                              padding: '1.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              borderBottom: '1px solid',
+                              borderColor: 'divider',
+                              '&:last-child': { borderBottom: 'none' },
+                              transition: 'background-color 0.2s',
+                              '&:hover': {
+                                backgroundColor: 'action.hover'
+                              }
+                            }}
+                          >
+                            <Box display="flex" flexDirection="column" gap="0.5rem" flexGrow={1}>
+                              <Box display="flex" alignItems="center" gap="1rem">
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                  {repo.gitlab_path_with_namespace || repo.github_full_name || repo.name}
+                                </Typography>
+                              </Box>
+                              <Typography variant="body2" color="text.secondary">
+                                {repo.description}
                               </Typography>
                             </Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {repo.description}
-                            </Typography>
-                          </Box>
 
-                          <Box display="flex" alignItems="center" gap="1rem" marginLeft="2rem">
-                            {isAlreadyImported ? (
-                              <Chip
-                                icon={<CheckCircle color="success" />}
-                                label="Importado"
-                                variant="outlined"
-                                color="success"
-                                sx={{ fontWeight: '500', minWidth: '110px' }}
-                              />
-                            ) : (
-                              <Button
-                                variant="contained"
-                                color="primary"
-                                startIcon={<AddCircle />}
-                                onClick={() => handleImport(repo)}
-                                sx={{
-                                  textTransform: 'none',
-                                  fontWeight: 'bold',
-                                  minWidth: '110px',
-                                  borderRadius: '8px'
-                                }}
-                              >
-                                Importar
-                              </Button>
-                            )}
-                          </Box>
-                        </ListItem>
-                      );
-                    })
-                  ) : (
-                    <Box padding="3rem" textAlign="center">
-                      <Typography variant="body1" color="text.secondary">
-                        {`Nenhum ${terms.repository} associado a este produto foi encontrado.`}
-                      </Typography>
-                    </Box>
-                  )}
-                </List>
+                            <Box display="flex" alignItems="center" gap="1rem" marginLeft="2rem">
+                              {isAlreadyImported ? (
+                                <Chip
+                                  icon={<CheckCircle color="success" />}
+                                  label="Importado"
+                                  variant="outlined"
+                                  color="success"
+                                  sx={{ fontWeight: '500', minWidth: '110px' }}
+                                />
+                              ) : (
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  startIcon={<AddCircle />}
+                                  onClick={() => handleImport(repo)}
+                                  sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 'bold',
+                                    minWidth: '110px',
+                                    borderRadius: '8px'
+                                  }}
+                                >
+                                  Importar
+                                </Button>
+                              )}
+                            </Box>
+                          </ListItem>
+                        );
+                      })
+                    ) : (
+                      <Box padding="3rem" textAlign="center">
+                        <Typography variant="body1" color="text.secondary">
+                          {`Nenhum ${terms.repository} associado a este produto foi encontrado.`}
+                        </Typography>
+                      </Box>
+                    )}
+                  </List>
                 );
               })()}
 

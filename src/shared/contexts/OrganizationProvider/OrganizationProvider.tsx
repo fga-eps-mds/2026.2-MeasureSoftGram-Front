@@ -96,7 +96,7 @@ export function OrganizationProvider({ children }: Props) {
         setOrganizationList(organizations);
         setHasFetched(true);
         setIsLoading(false);
-  
+
         if (provider !== 'gitlab') {
           syncGithubOrganizations(organizations);
         }
@@ -115,7 +115,7 @@ export function OrganizationProvider({ children }: Props) {
 
   useEffect(() => {
     if (session?.username) {
-      fetchOrganizations();
+      void fetchOrganizations();
     } else if (!session) {
       setOrganizationList([]);
       setHasFetched(false);
