@@ -38,6 +38,7 @@ import { createOAuthState } from "@services/Auth/oauthState";
 import { isSameGithubOrg } from "@utils/isSameGithubOrg";
 import { FaGitlab } from 'react-icons/fa';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { refreshRepositoryList } from '@hooks/useRepositoryList';
 import { useAuth } from '@contexts/Auth';
 
 interface ProductType {

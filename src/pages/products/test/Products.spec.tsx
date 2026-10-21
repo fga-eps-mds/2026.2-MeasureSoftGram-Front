@@ -143,6 +143,7 @@ describe('Products Component', () => {
       expect(repository.createRepository).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalledWith('Repositório Repo 1 importado com sucesso!');
     });
+    expect(toast.error).not.toHaveBeenCalled();
   });
   
   it('handles importing a repo with error', async () => {
