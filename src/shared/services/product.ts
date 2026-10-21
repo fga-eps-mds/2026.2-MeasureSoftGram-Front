@@ -146,6 +146,14 @@ class ProductQuery {
   }
 
 
+  getProductRepositoriesLatestTsqmiConfig(organizationId: string, productId: string): GetRequest {
+    if (!organizationId || !productId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/repositories-tsqmi-latest-values/`,
+      method: 'get'
+    };
+  }
+
   async getProductRepositoriesLatestTsqmi(organizationId: string, productId: string) {
     const url = `/v1/organizations/${organizationId}/products/${productId}/repositories-tsqmi-latest-values/`;
     return api.get<RepositoriesLatestTsqmi>(url);
@@ -197,18 +205,17 @@ class ProductQuery {
     return { url: `/v1/organizations/${organizationId}/products/${productId}/repositories/`, method: 'get' };
   }
 
-  getRepositoryHistoricalValuesConfig(
+  getRepositoryReleaseHistoryConfig(
     organizationId: string,
     productId: string,
     repositoryId: number | undefined,
-    entity: 'characteristics' | 'subcharacteristics' | 'measures' | 'metrics'
+    level: 'characteristic' | 'subcharacteristic' | 'measure' | 'metric'
   ): GetRequest {
     if (!organizationId || !productId || !repositoryId) return null;
     return {
-      url: `/v1/organizations/${organizationId}/products/${productId}/repositories/${repositoryId}/historical-values/${entity}/`,
+      url: `/v1/organizations/${organizationId}/products/${productId}/repositories/${repositoryId}/release-history/`,
       method: 'get',
-      // o histórico de métricas mistura valores por arquivo; TRK é o valor do repositório
-      params: entity === 'metrics' ? { qualifier: 'TRK' } : undefined
+      params: { level }
     };
   }
 

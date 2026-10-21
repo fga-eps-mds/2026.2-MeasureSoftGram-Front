@@ -77,8 +77,11 @@ export function OrganizationProvider({ children }: Props) {
     }
   };
 
+  // depende só de haver sessão: o Auth troca o objeto da sessão quando o accounts/ responde, e cada troca buscava as
+  // organizações de novo
+  const hasSession = Boolean(session);
   const fetchOrganizations = useCallback(async (forceFetch?: boolean) => {
-    if (!session && !forceFetch) return;
+    if (!hasSession && !forceFetch) return;
 
     setIsLoading(true);
     try {
@@ -97,7 +100,8 @@ export function OrganizationProvider({ children }: Props) {
         setHasFetched(true);
         setIsLoading(false);
 
-        if (provider !== 'gitlab') {
+        // só quem entrou pelo GitHub tem organizações para importar de lá; para os outros o Service responde 400
+        if (provider === 'github') {
           void syncGithubOrganizations(organizations);
         }
       } else {
@@ -111,7 +115,7 @@ export function OrganizationProvider({ children }: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, [session, terms, provider]);
+  }, [hasSession, terms, provider]);
 
   useEffect(() => {
     if (session?.username) {
