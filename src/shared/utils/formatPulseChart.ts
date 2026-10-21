@@ -22,14 +22,29 @@ export interface QualityStatus {
   color: string;
 }
 
+/**
+ * Faixas do indicador, da pior para a melhor; cada uma começa em `min`. É o único lugar das faixas: as cores do pulso,
+ * as legendas e os outros gráficos que pintam pelo valor seguem daqui.
+ */
+export const QUALITY_RANGES: (QualityStatus & { min: number; legend: string })[] = [
+  { key: 'critical', label: 'crítico', color: COLOR_TOKENS.critical, min: 0, legend: 'Crítico (< 0,40)' },
+  { key: 'warning', label: 'atenção', color: COLOR_TOKENS.warning, min: 0.4, legend: 'Atenção (0,40–0,69)' },
+  { key: 'adequate', label: 'adequado', color: COLOR_TOKENS.adequate, min: 0.7, legend: 'Adequado (≥ 0,70)' },
+];
+
 export function getQualityStatus(value: number): QualityStatus {
-  if (value < 0.4) {
-    return { key: 'critical', label: 'crítico', color: COLOR_TOKENS.critical };
-  }
-  if (value < 0.7) {
-    return { key: 'warning', label: 'atenção', color: COLOR_TOKENS.warning };
-  }
-  return { key: 'adequate', label: 'adequado', color: COLOR_TOKENS.adequate };
+  const range = [...QUALITY_RANGES].reverse().find((item) => value >= item.min) ?? QUALITY_RANGES[0];
+  return { key: range.key, label: range.label, color: range.color };
+}
+
+/** Medidas das faixas do gráfico de pulso, em px: as mesmas no pulso do produto e no do repositório. */
+export const PULSE_GRID = { topOffset: 60, height: 82, gap: 34 };
+
+export interface PulseChartOptions {
+  /** `first-row` mostra o nome das releases só na primeira faixa, para as etiquetas não se repetirem nem se sobreporem. */
+  releaseLabels?: 'every-row' | 'first-row';
+  /** Linhas horizontais de grade dentro de cada faixa. */
+  horizontalLines?: boolean;
 }
 
 export interface VariationInfo {
@@ -94,15 +109,16 @@ export interface PulseRepositoryData {
   releases: PulseRelease[];
 }
 
-export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
+export function formatPulseChartOptions(
+  repositories: PulseRepositoryData[],
+  { releaseLabels = 'every-row', horizontalLines = true }: PulseChartOptions = {}
+) {
   if (!repositories || !repositories.length) {
     return {};
   }
 
   const gridCount = repositories.length;
-  const gridHeight = 82;
-  const gridGap = 34;
-  const topOffset = 60;
+  const { height: gridHeight, gap: gridGap, topOffset } = PULSE_GRID;
 
   const grids: any[] = [];
   const xAxes: any[] = [];
@@ -111,6 +127,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
 
   repositories.forEach((repo, index) => {
     const isLast = index === gridCount - 1;
+    const showReleaseLabels = releaseLabels === 'every-row' || index === 0;
     const topPosition = topOffset + index * (gridHeight + gridGap);
 
     const sortedMeasurements = [...repo.measurements].sort(
@@ -137,7 +154,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
             name: `Início ${labelText}`,
             xAxis: startMs,
             label: {
-              show: true,
+              show: showReleaseLabels,
               formatter: `Início ${labelText}`,
               position: 'start',
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
@@ -163,7 +180,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
             name: labelText,
             xAxis: endMs,
             label: {
-              show: true,
+              show: showReleaseLabels,
               formatter: labelText,
               position: 'end',
               backgroundColor: COLOR_TOKENS.primary,
@@ -237,7 +254,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
         formatter: (v: number) => v.toFixed(1),
       },
       splitLine: {
-        show: true,
+        show: horizontalLines,
         lineStyle: {
           color: COLOR_TOKENS.gridLine,
           type: 'solid',
@@ -283,11 +300,11 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
         show: false,
         dimension: 1,
         seriesIndex: Array.from({ length: gridCount }, (_, i) => i),
-        pieces: [
-          { lte: 0.399, color: COLOR_TOKENS.critical },
-          { gte: 0.4, lte: 0.699, color: COLOR_TOKENS.warning },
-          { gte: 0.7, color: COLOR_TOKENS.adequate },
-        ],
+        pieces: QUALITY_RANGES.map((range, index) => ({
+          gte: range.min,
+          ...(QUALITY_RANGES[index + 1] ? { lt: QUALITY_RANGES[index + 1].min } : {}),
+          color: range.color,
+        })),
       },
     ],
     tooltip: {

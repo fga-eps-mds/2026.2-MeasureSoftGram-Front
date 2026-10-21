@@ -5,6 +5,7 @@ import {
   convertPulseRepositoriesToCsv,
   COLOR_TOKENS,
   PulseRepositoryData,
+  QUALITY_RANGES,
 } from '../formatPulseChart';
 
 
@@ -106,6 +107,42 @@ describe('formatPulseChart Utility', () => {
 
       expect(markLines.map((line: any) => line.name)).toEqual(['Início v1 Release 1', 'v1 Release 1']);
       expect(markLines[0].xAxis).toBe(new Date('2026-01-01T00:00:00Z').getTime());
+    });
+
+    it('deve pintar o pulso com as mesmas faixas de getQualityStatus', () => {
+      const options: any = formatPulseChartOptions([repoWithReleases]);
+
+      expect(options.visualMap[0].pieces).toEqual([
+        { gte: 0, lt: 0.4, color: COLOR_TOKENS.critical },
+        { gte: 0.4, lt: 0.7, color: COLOR_TOKENS.warning },
+        { gte: 0.7, color: COLOR_TOKENS.adequate },
+      ]);
+      QUALITY_RANGES.forEach((range) => expect(getQualityStatus(range.min).color).toBe(range.color));
+    });
+
+    it('mantém por padrão as etiquetas das releases em todas as faixas e as linhas horizontais', () => {
+      const options: any = formatPulseChartOptions([repoWithReleases, { ...repoWithReleases, id: 3 }]);
+
+      options.series.forEach((series: any) =>
+        series.markLine.data.forEach((line: any) => expect(line.label.show).toBe(true))
+      );
+      expect(options.yAxis[0].splitLine.show).toBe(true);
+    });
+
+    it('pode mostrar as etiquetas só na primeira faixa e tirar as linhas horizontais', () => {
+      const options: any = formatPulseChartOptions([repoWithReleases, { ...repoWithReleases, id: 3 }], {
+        releaseLabels: 'first-row',
+        horizontalLines: false,
+      });
+
+      const labelsShown = options.series.map((series: any) => series.markLine.data.map((line: any) => line.label.show));
+      expect(labelsShown).toEqual([
+        [true, true],
+        [false, false],
+      ]);
+      // os marcadores continuam em todas as faixas
+      expect(options.series[1].markLine.data).toHaveLength(2);
+      options.yAxis.forEach((axis: any) => expect(axis.splitLine.show).toBe(false));
     });
 
     it('deve formatar os eixos como mês/dia e nota com uma casa decimal', () => {
