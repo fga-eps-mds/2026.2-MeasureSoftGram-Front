@@ -142,13 +142,14 @@ const Products: NextPageWithLayout = () => {
     return namespaces[0].name;
   };
 
-  const loadProviderNamespaces = async () => {
+  const loadProviderNamespaces = async (estaAtivo: () => boolean = () => true) => {
     setLoadingOrgs(true);
     setRepoFetchError(null);
     try {
       let namespaces: ProviderNamespaceItem[] | null = null;
       if (provider === 'gitlab') {
         const res = await organizationQuery.getGitLabNamespaces();
+        if (!estaAtivo()) return;
         if (res.type === 'success') {
           namespaces = res.value.map(ns => ({
             id: ns.id,
@@ -169,8 +170,9 @@ const Products: NextPageWithLayout = () => {
             toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
           }
         }
-      } else {
+      } else if (provider === 'github') {
         const res = await organizationQuery.getGithubOrganizations();
+        if (!estaAtivo()) return;
         if (res.type === 'success') {
           namespaces = res.value.map(go => ({
             id: go.github_org_id,
@@ -195,14 +197,16 @@ const Products: NextPageWithLayout = () => {
         setProviderNamespaces(namespaces);
         if (namespaces.length > 0) {
           const defaultName = await resolveDefaultOrgName(namespaces);
+          if (!estaAtivo()) return;
           setSelectedOrgName(defaultName);
         }
       }
     } catch (error) {
+      if (!estaAtivo()) return;
       console.error(error);
       toast.error(`Erro ao carregar ${terms.organizations}.`);
     } finally {
-      setLoadingOrgs(false);
+      if (estaAtivo()) setLoadingOrgs(false);
     }
   };
 
@@ -418,7 +422,10 @@ const Products: NextPageWithLayout = () => {
   };
 
   useEffect(() => {
-    void loadProviderNamespaces();
+  if (provider !== 'github' && provider !== 'gitlab') return;
+  let ativo = true;
+  void loadProviderNamespaces(() => ativo);
+  return () => { ativo = false; };
   }, [provider]);
 
   useEffect(() => {
