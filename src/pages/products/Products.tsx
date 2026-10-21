@@ -144,6 +144,7 @@ const Products: NextPageWithLayout = () => {
 
   const loadProviderNamespaces = async () => {
     setLoadingOrgs(true);
+    setRepoFetchError(null);
     try {
       let namespaces: ProviderNamespaceItem[] | null = null;
       if (provider === 'gitlab') {
@@ -160,7 +161,13 @@ const Products: NextPageWithLayout = () => {
             github_org_name: ns.name
           }));
         } else {
-          toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
+          const status = res.error?.response?.status;
+          if (status === 409) {
+            setRepoFetchError('409');
+            toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
+          } else {
+            toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
+          }
         }
       } else {
         const res = await organizationQuery.getGithubOrganizations();
@@ -174,7 +181,13 @@ const Products: NextPageWithLayout = () => {
             github_org_name: go.github_org_name
           }));
         } else {
-          toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
+          const status = res.error?.response?.status;
+          if (status === 409) {
+            setRepoFetchError('409');
+            toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
+          } else {
+            toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
+          }
         }
       }
 
@@ -602,7 +615,34 @@ const Products: NextPageWithLayout = () => {
             </Box>
           </Paper>
 
-          {selectedProductId ? (
+          {(() => {
+            if (repoFetchError === '409') {
+              return (
+                <Paper variant="outlined" sx={{ padding: '4rem', textAlign: 'center', borderRadius: '12px' }}>
+                  <Typography variant="h6" color="error" gutterBottom>
+                    {`Token do ${terms.providerName} expirado ou inválido`}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {`Para carregar os ${terms.repositories}, autorize o aplicativo novamente.`}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={handleReauthorize}
+                    sx={
+                      provider === 'gitlab'
+                        ? { backgroundColor: '#fc6d26', '&:hover': { backgroundColor: '#e24329' } }
+                        : undefined
+                    }
+                    color={provider === 'gitlab' ? undefined : "primary"}
+                  >
+                    {`Autorizar ${terms.providerName}`}
+                  </Button>
+                </Paper>
+              );
+            }
+
+            if (selectedProductId) {
+              return (
             <Paper variant="outlined" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
               <Box
                 display="flex"
@@ -773,28 +813,32 @@ const Products: NextPageWithLayout = () => {
                   />
                 </Box>
               )}
-            </Paper>
-          ) : (
-            <Paper variant="outlined" sx={{ padding: '3rem', textAlign: 'center', borderRadius: '12px' }}>
-              <FolderSpecial color="disabled" sx={{ fontSize: '3rem', marginBottom: '1rem' }} />
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                {selectedOrgDbId && products.length === 0
-                  ? `${terms.thisOrganization.charAt(0).toUpperCase()}${terms.thisOrganization.slice(1)} ainda não possui nenhum produto cadastrado.`
-                  : `Selecione ${terms.anOrganization} e um produto para carregar os ${terms.repositories} correspondentes.`
-                }
-              </Typography>
-              {selectedOrgDbId && products.length === 0 && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => router.push(`/products/create?id_organization=${selectedOrgDbId}`)}
-                  sx={{ marginTop: '1.5rem', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}
-                >
-                  Cadastrar Primeiro Produto
-                </Button>
-              )}
-            </Paper>
-          )}
+                </Paper>
+              );
+            }
+
+            return (
+              <Paper variant="outlined" sx={{ padding: '3rem', textAlign: 'center', borderRadius: '12px' }}>
+                <FolderSpecial color="disabled" sx={{ fontSize: '3rem', marginBottom: '1rem' }} />
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  {selectedOrgDbId && products.length === 0
+                    ? `${terms.thisOrganization.charAt(0).toUpperCase()}${terms.thisOrganization.slice(1)} ainda não possui nenhum produto cadastrado.`
+                    : `Selecione ${terms.anOrganization} e um produto para carregar os ${terms.repositories} correspondentes.`
+                  }
+                </Typography>
+                {selectedOrgDbId && products.length === 0 && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => router.push(`/products/create?id_organization=${selectedOrgDbId}`)}
+                    sx={{ marginTop: '1.5rem', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}
+                  >
+                    Cadastrar Primeiro Produto
+                  </Button>
+                )}
+              </Paper>
+            );
+          })()}
         </Box>
       </Container>
     </>

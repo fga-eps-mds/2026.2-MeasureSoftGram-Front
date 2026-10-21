@@ -230,6 +230,21 @@ describe('Products Component', () => {
     });
   });
 
+  it('handles getGithubOrganizations 409 error displaying reauthorize button without logging out', async () => {
+    (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
+      type: 'error',
+      error: { response: { status: 409 } }
+    });
+
+    render(<Products />);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Token do GitHub expirado ou inválido.');
+    });
+    expect(await screen.findByText('Token do GitHub expirado ou inválido')).toBeInTheDocument();
+    expect(await screen.findByText('Autorizar GitHub')).toBeInTheDocument();
+  });
+
   it('handles loadGitHubOrgs exception', async () => {
     (organizationQuery.getGithubOrganizations as jest.Mock).mockRejectedValue(new Error('Network error'));
 
@@ -520,6 +535,20 @@ describe('Products Component', () => {
           imported: true
         });
         expect(toast.success).toHaveBeenCalledWith('Projeto project-1 importado com sucesso!');
+      });
+    });
+
+    it('handles 409 error on gitlab namespaces with Autorizar GitLab button', async () => {
+      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValueOnce({
+        type: 'error',
+        error: { response: { status: 409 } }
+      });
+
+      render(<Products />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Token do GitLab expirado ou inválido')).toBeInTheDocument();
+        expect(screen.getByText('Autorizar GitLab')).toBeInTheDocument();
       });
     });
 
