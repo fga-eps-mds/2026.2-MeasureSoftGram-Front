@@ -38,7 +38,11 @@ describe('Products Component', () => {
     localStorage.clear();
     
     (useRouter as jest.Mock).mockReturnValue({ query: {}, push: mockPush, replace: mockReplace });
-    (useAuth as jest.Mock).mockReturnValue({ signInWithGithub: mockSignInWithGithub });
+    (useAuth as jest.Mock).mockReturnValue({
+      provider: 'github',
+      isProviderReady: true,
+      signInWithGithub: mockSignInWithGithub
+    });
     
     (useOrganizationContext as jest.Mock).mockReturnValue({
       organizationList: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }],
@@ -429,12 +433,60 @@ describe('Products Component', () => {
     });
   });
 
+  describe('leitura do provider salvo', () => {
+    it('não busca organizações enquanto o provider não foi lido e busca uma vez depois', async () => {
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials', isProviderReady: false });
+
+      const { rerender } = render(<Products />);
+      await act(async () => {});
+      expect(organizationQuery.getGithubOrganizations).not.toHaveBeenCalled();
+      expect(organizationQuery.getGitLabNamespaces).not.toHaveBeenCalled();
+
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'github', isProviderReady: true });
+      rerender(<Products />);
+
+      await waitFor(() => {
+        expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('mostra um único toast de token inválido quando o provider muda de provisório para github', async () => {
+      (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
+        type: 'error',
+        error: { response: { status: 409 } }
+      });
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials', isProviderReady: false });
+
+      const { rerender } = render(<Products />);
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'github', isProviderReady: true });
+      rerender(<Products />);
+
+      expect(await screen.findByText('Autorizar GitHub')).toBeInTheDocument();
+      expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith('Token do GitHub expirado ou inválido.');
+    });
+
+    it('usa as organizações do GitHub para quem entrou por credenciais', async () => {
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials', isProviderReady: true });
+
+      render(<Products />);
+
+      await waitFor(() => {
+        expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
+      });
+      expect(organizationQuery.getGitLabNamespaces).not.toHaveBeenCalled();
+      expect(await screen.findByText('Org 1')).toBeInTheDocument();
+    });
+  });
+
   describe('GitLab Provider in Products Component', () => {
     const mockSignInWithGitlab = jest.fn();
 
     beforeEach(() => {
       (useAuth as jest.Mock).mockReturnValue({
         provider: 'gitlab',
+        isProviderReady: true,
         signInWithGithub: mockSignInWithGithub,
         signInWithGitlab: mockSignInWithGitlab
       });

@@ -38,6 +38,7 @@ import { createOAuthState } from "@services/Auth/oauthState";
 import { isSameGithubOrg } from "@utils/isSameGithubOrg";
 import { FaGitlab } from 'react-icons/fa';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { useAuth } from '@contexts/Auth';
 
 interface ProductType {
   id: string | number;
@@ -67,6 +68,7 @@ interface UnifiedRepoItem {
 
 const Products: NextPageWithLayout = () => {
   const { terms, provider } = useProviderTerms();
+  const { isProviderReady } = useAuth();
   useRequireAuth();
   const { t: tp } = useTranslation('product');
   const router = useRouter();
@@ -170,7 +172,8 @@ const Products: NextPageWithLayout = () => {
             toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
           }
         }
-      } else if (provider === 'github') {
+      } else {
+        // 'github' e 'credentials' (admin com token do GitHub) usam o GitHub, padrão da plataforma.
         const res = await organizationQuery.getGithubOrganizations();
         if (!estaAtivo()) return;
         if (res.type === 'success') {
@@ -421,12 +424,14 @@ const Products: NextPageWithLayout = () => {
     }
   };
 
+  // Só busca depois de o provider real ser lido do localStorage; antes disso ele
+  // vale 'credentials' provisoriamente e geraria uma busca (e um toast) a mais.
   useEffect(() => {
-  if (provider !== 'github' && provider !== 'gitlab') return;
-  let ativo = true;
-  void loadProviderNamespaces(() => ativo);
-  return () => { ativo = false; };
-  }, [provider]);
+    if (!isProviderReady) return;
+    let ativo = true;
+    void loadProviderNamespaces(() => ativo);
+    return () => { ativo = false; };
+  }, [provider, isProviderReady]);
 
   useEffect(() => {
     if (selectedOrgName) {
