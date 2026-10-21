@@ -2,21 +2,8 @@ import React, { useMemo } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Alert, Box, Button, CircularProgress, Paper, Typography } from '@mui/material';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
+import { SERIES_COLORS } from '@utils/dashboardColors';
 import { ReleaseSeries } from '@utils/releaseHistory';
-
-/** Paleta das telas atuais: primária, planejado × realizado e faixas de qualidade. */
-export const SERIES_COLORS = [
-  COLOR_TOKENS.primary,
-  '#FF8C00',
-  COLOR_TOKENS.adequate,
-  '#1F60C4',
-  COLOR_TOKENS.warning,
-  COLOR_TOKENS.secondary,
-  COLOR_TOKENS.critical,
-  '#7B5EA7',
-  '#2E9C9C',
-  COLOR_TOKENS.axisText,
-];
 
 export interface ReleaseEvolutionChartProps {
   title: string;
