@@ -38,7 +38,7 @@ function SideMenu() {
   const { currentOrganization } = useOrganizationContext();
   const { currentProduct } = useProductContext();
   const router = useRouter();
-  const { isCollapsed } = useSideMenuContext();
+  const { isCollapsed, closeOverlay } = useSideMenuContext();
   const [isDashboardMenuOpen, setIsDashboardMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -150,6 +150,7 @@ function SideMenu() {
                 key={item.text}
                 {...item}
                 onClick={() => {
+                  closeOverlay();
                   void router.push(item.path);
                 }}
               />
@@ -185,6 +186,7 @@ function SideMenu() {
                     key={item.text}
                     {...item}
                     onClick={() => {
+                      closeOverlay();
                       void router.push(item.path);
                     }}
                   />

@@ -31,7 +31,7 @@ jest.mock('@contexts/ProductProvider', () => ({
   }),
 }));
 
-const mockSideMenu = { isCollapsed: false };
+const mockSideMenu = { isCollapsed: false, closeOverlay: jest.fn() };
 
 jest.mock('@contexts/SidebarProvider/SideMenuProvider', () => ({
   useSideMenuContext: () => mockSideMenu,

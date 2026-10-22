@@ -6,17 +6,17 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-7ae66ca6-0 hNKNcT"
+        class="sc-14d06553-0 lemoMD"
       >
         <div
-          class="sc-7ae66ca6-1 gUdVaJ"
+          class="sc-14d06553-1 gkqUzG"
         >
           <div
-            class="sc-fa6cf72a-0 fJOORa"
+            class="sc-ad3618fb-0 bQYuRm"
             data-testid="side-menu"
           >
             <div
-              class="sc-fa6cf72a-3 VPszp"
+              class="sc-ad3618fb-3 gNVfPA"
               data-testid="side-menu-collapse"
             >
               <svg
@@ -32,14 +32,14 @@ Object {
               </svg>
             </div>
             <div
-              class="sc-fa6cf72a-1 cNCBzU"
+              class="sc-ad3618fb-1 iIeQFd"
               data-testid="side-menu-content"
             >
               <div
                 class="MuiBox-root css-nb2z2f"
               >
                 <img
-                  class="sc-fa6cf72a-4 gPRQcZ"
+                  class="sc-ad3618fb-4 bXirHI"
                   height="50"
                   src="/images/svg/logo_white.svg"
                 />
@@ -198,7 +198,7 @@ Object {
                 class="MuiDivider-root MuiDivider-fullWidth css-qrim74-MuiDivider-root"
               />
               <div
-                class="sc-fa6cf72a-2 jRkNZU"
+                class="sc-ad3618fb-2 BRKxB"
               >
                 <div
                   class="MuiBox-root css-10wzbhq"
@@ -474,7 +474,7 @@ Object {
           </div>
         </div>
         <div
-          class="sc-7ae66ca6-4 CWiRX"
+          class="sc-14d06553-4 hONrww"
         >
           <div
             class="sc-6674b5e5-0 gSYjiE"
@@ -570,24 +570,24 @@ Object {
           </div>
         </div>
         <div
-          class="sc-7ae66ca6-5 hnOxTW"
+          class="sc-14d06553-5 fEeMmh"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-7ae66ca6-0 hNKNcT"
+      class="sc-14d06553-0 lemoMD"
     >
       <div
-        class="sc-7ae66ca6-1 gUdVaJ"
+        class="sc-14d06553-1 gkqUzG"
       >
         <div
-          class="sc-fa6cf72a-0 fJOORa"
+          class="sc-ad3618fb-0 bQYuRm"
           data-testid="side-menu"
         >
           <div
-            class="sc-fa6cf72a-3 VPszp"
+            class="sc-ad3618fb-3 gNVfPA"
             data-testid="side-menu-collapse"
           >
             <svg
@@ -603,14 +603,14 @@ Object {
             </svg>
           </div>
           <div
-            class="sc-fa6cf72a-1 cNCBzU"
+            class="sc-ad3618fb-1 iIeQFd"
             data-testid="side-menu-content"
           >
             <div
               class="MuiBox-root css-nb2z2f"
             >
               <img
-                class="sc-fa6cf72a-4 gPRQcZ"
+                class="sc-ad3618fb-4 bXirHI"
                 height="50"
                 src="/images/svg/logo_white.svg"
               />
@@ -769,7 +769,7 @@ Object {
               class="MuiDivider-root MuiDivider-fullWidth css-qrim74-MuiDivider-root"
             />
             <div
-              class="sc-fa6cf72a-2 jRkNZU"
+              class="sc-ad3618fb-2 BRKxB"
             >
               <div
                 class="MuiBox-root css-10wzbhq"
@@ -1045,7 +1045,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-7ae66ca6-4 CWiRX"
+        class="sc-14d06553-4 hONrww"
       >
         <div
           class="sc-6674b5e5-0 gSYjiE"
@@ -1141,7 +1141,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-7ae66ca6-5 hnOxTW"
+        class="sc-14d06553-5 fEeMmh"
       />
     </div>
   </div>,
@@ -1205,14 +1205,14 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-7ae66ca6-0 kaOurT"
+        class="sc-14d06553-0 cxxzwQ"
       >
         <header
-          class="sc-7ae66ca6-2 cmYJdq"
+          class="sc-14d06553-2 gIhd"
         >
           <img
             alt="MeasureSoftGram"
-            class="sc-7ae66ca6-3 eOHVtt"
+            class="sc-14d06553-3 hrEnUK"
             src="/images/svg/logo_white.svg"
           />
           <button
@@ -1262,7 +1262,7 @@ Object {
           </button>
         </header>
         <div
-          class="sc-7ae66ca6-4 CWiRX"
+          class="sc-14d06553-4 hONrww"
         >
           <div
             class="sc-6674b5e5-0 gSYjiE"
@@ -1358,21 +1358,21 @@ Object {
           </div>
         </div>
         <div
-          class="sc-7ae66ca6-5 hnOxTW"
+          class="sc-14d06553-5 fEeMmh"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-7ae66ca6-0 kaOurT"
+      class="sc-14d06553-0 cxxzwQ"
     >
       <header
-        class="sc-7ae66ca6-2 cmYJdq"
+        class="sc-14d06553-2 gIhd"
       >
         <img
           alt="MeasureSoftGram"
-          class="sc-7ae66ca6-3 eOHVtt"
+          class="sc-14d06553-3 hrEnUK"
           src="/images/svg/logo_white.svg"
         />
         <button
@@ -1422,7 +1422,7 @@ Object {
         </button>
       </header>
       <div
-        class="sc-7ae66ca6-4 CWiRX"
+        class="sc-14d06553-4 hONrww"
       >
         <div
           class="sc-6674b5e5-0 gSYjiE"
@@ -1518,7 +1518,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-7ae66ca6-5 hnOxTW"
+        class="sc-14d06553-5 fEeMmh"
       />
     </div>
   </div>,

@@ -177,14 +177,19 @@ describe('<Layout />', () => {
         fetchOrganizations: jest.fn(),
       });
 
-      const { container } = render(
+      render(
         <RepositoryProvider>
           <Layout />
         </RepositoryProvider>
       );
 
-      // o jsdom não calcula o grid: o teste confere a regra, e os prints do PR, a largura de fato
-      expect(container.firstChild).toHaveStyle({ gridTemplateColumns: 'min-content 1fr min-content' });
+      // o jsdom não calcula o grid nem entende minmax(): o teste confere a regra no CSS gerado, e os prints do
+      // PR, a largura de fato
+      const css = Array.from(document.querySelectorAll('style'))
+        .map((style) => style.textContent)
+        .join('\n');
+      expect(css).toContain('grid-template-columns:min-content minmax(0,1fr) min-content;');
+      expect(css).not.toContain('328px');
     });
   });
 });

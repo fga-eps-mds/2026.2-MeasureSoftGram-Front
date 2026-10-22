@@ -2,14 +2,16 @@ import styled from 'styled-components';
 
 // A casca fica fixa na altura da tela e segura o botão de recolher, que sai pela direita do menu. A rolagem fica
 // no Content: com o overflow aqui, o botão seria cortado.
-export const Wrapper = styled.div`
+// Em tela estreita, o menu aberto ($overlay) sai da coluna e fica por cima do conteúdo (zIndex.drawer do MUI).
+export const Wrapper = styled.div<{ $overlay?: boolean }>`
   height: 100vh;
 
   border-right: 0.1px solid rgba(0, 0, 0, 0.5);
   background-color: #2b4d6f;
-  position: sticky;
+  position: ${(props) => (props.$overlay ? 'fixed' : 'sticky')};
   top: 0;
   left: 0;
+  z-index: ${(props) => (props.$overlay ? 1200 : 'auto')};
   filter: drop-shadow(4px 0px 9px rgba(0, 0, 0, 0.25));
 `;
 
