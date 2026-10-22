@@ -104,18 +104,18 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
           </Typography>
         </Box>
 
-        {/* Quality Legend: linha própria, à direita, logo acima do gráfico (protótipo) */}
-        <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap={2} marginTop="16px">
+        {/* Quality Legend: logo abaixo do subtítulo, à esquerda (protótipo) */}
+        <Box display="flex" alignItems="center" flexWrap="wrap" gap={2} marginTop="4px">
           <Box display="flex" alignItems="center" gap={0.5}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.critical }} />
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: COLOR_TOKENS.critical }} />
             <Typography variant="caption" color="text.secondary">Crítico (&lt; 0,40)</Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.warning }} />
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: COLOR_TOKENS.warning }} />
             <Typography variant="caption" color="text.secondary">Atenção (0,40–0,69)</Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.adequate }} />
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: COLOR_TOKENS.adequate }} />
             <Typography variant="caption" color="text.secondary">Adequado (&ge; 0,70)</Typography>
           </Box>
         </Box>
