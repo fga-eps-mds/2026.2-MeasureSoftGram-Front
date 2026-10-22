@@ -95,24 +95,18 @@ const Products: NextPageWithLayout = () => {
   const [tabValue, setTabValue] = useState(0);
 
   const [page, setPage] = useState(1);
-  const [gitlabTotalPages, setGitlabTotalPages] = useState(1);
-  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     setPage(1);
-    if (provider === 'gitlab') {
-      setGitlabTotalPages(1);
-    }
   }, [search, tabValue, selectedOrgName, provider]);
 
   useEffect(() => {
-    if (provider !== 'gitlab') {
-      setPage(1);
-    }
-  }, [gitHubRepos, provider]);
+    setTotalPages(1);
+  }, [selectedOrgName, provider]);
 
   const lastLoadedProductIdRef = useRef<string>('');
-  const prevGitlabQueryRef = useRef({ page: 1, search: '', orgName: '', orgDbId: '' });
+  const prevQueryRef = useRef({ page: 1, search: '', orgName: '', orgDbId: '' });
 
   const resolveTargetOrg = async (): Promise<any> => {
     if (currentOrganization) return currentOrganization;
@@ -266,11 +260,28 @@ const Products: NextPageWithLayout = () => {
     }
   };
 
-  const loadGithubReposForOrg = async (orgDbId: string) => {
+  const applyTotalPages = (targetPage: number, total: number | null, nextPage: number | null) => {
+    // A paginação vem dos headers do provedor, que o service repassa.
+    if (total) {
+      setTotalPages(total);
+    } else if (nextPage) {
+      setTotalPages(prev => Math.max(prev, nextPage));
+    } else {
+      setTotalPages(targetPage);
+    }
+  };
+
+  const loadGithubReposForOrg = async (
+    orgDbId: string,
+    targetPage: number = page,
+    searchTerm: string = search
+  ) => {
     setRepoFetchError(null);
-    const reposRes = await organizationQuery.getGithubRepos(orgDbId);
+    const reposRes = await organizationQuery.getGithubRepos(orgDbId, targetPage, searchTerm);
     if (reposRes.type === 'success') {
-      setGitHubRepos(reposRes.value);
+      const { repos, totalPages: total, nextPage } = reposRes.value;
+      setGitHubRepos(repos);
+      applyTotalPages(targetPage, total, nextPage);
     } else {
       const status = reposRes.error?.response?.status;
       if (status === 409) {
@@ -308,14 +319,7 @@ const Products: NextPageWithLayout = () => {
           github_full_name: p.gitlab_path_with_namespace
         }));
         setGitHubRepos(mappedRepos);
-        // A paginação vem dos headers do GitLab, que o service repassa; a página dele tem 50 itens.
-        if (totalPages) {
-          setGitlabTotalPages(totalPages);
-        } else if (nextPage) {
-          setGitlabTotalPages(prev => Math.max(prev, nextPage));
-        } else {
-          setGitlabTotalPages(targetPage);
-        }
+        applyTotalPages(targetPage, totalPages, nextPage);
       } else {
         const status = res.error?.response?.status;
         if (status === 409) {
@@ -359,10 +363,11 @@ const Products: NextPageWithLayout = () => {
       await loadProductsForOrg(orgDbId);
       if (provider === 'gitlab') {
         const currentNs = providerNamespaces.find(ns => ns.name === orgName || ns.full_path === orgName);
-        prevGitlabQueryRef.current = { page: 1, search: '', orgName, orgDbId };
+        prevQueryRef.current = { page: 1, search: '', orgName, orgDbId };
         await loadGitLabProjectsForOrg(orgDbId, currentNs, 1, '');
       } else {
-        await loadGithubReposForOrg(orgDbId);
+        prevQueryRef.current = { page: 1, search: '', orgName, orgDbId };
+        await loadGithubReposForOrg(orgDbId, 1, '');
       }
 
     } catch (error: any) {
@@ -445,9 +450,9 @@ const Products: NextPageWithLayout = () => {
   }, [selectedOrgName]);
 
   useEffect(() => {
-    if (provider !== 'gitlab' || !selectedOrgDbId) return;
+    if (!selectedOrgDbId) return;
 
-    const prev = prevGitlabQueryRef.current;
+    const prev = prevQueryRef.current;
     if (
       prev.page === page &&
       prev.search === search &&
@@ -461,8 +466,12 @@ const Products: NextPageWithLayout = () => {
     const delay = prev.search !== search ? 400 : 0;
 
     const timer = setTimeout(() => {
-      prevGitlabQueryRef.current = { page, search, orgName: selectedOrgName, orgDbId: selectedOrgDbId };
-      void loadGitLabProjectsForOrg(selectedOrgDbId, currentNs, page, search);
+      prevQueryRef.current = { page, search, orgName: selectedOrgName, orgDbId: selectedOrgDbId };
+      if (provider === 'gitlab') {
+        void loadGitLabProjectsForOrg(selectedOrgDbId, currentNs, page, search);
+      } else {
+        void loadGithubReposForOrg(selectedOrgDbId, page, search);
+      }
     }, delay);
 
     return () => clearTimeout(timer);
@@ -524,23 +533,13 @@ const Products: NextPageWithLayout = () => {
         const isAlreadyImported = importedRepoUrls.some(
           url => url && repo.url && (url === repo.url || url.toLowerCase() === repo.url.toLowerCase())
         );
-        const matchesSearch =
-          provider === 'gitlab'
-            ? true
-            : (repo.name?.toLowerCase().includes(search.toLowerCase()) || false);
-        const matchesTab =
-          (tabValue === 0 && isAlreadyImported) || tabValue === 1 || (tabValue === 2 && !isAlreadyImported);
-        return matchesSearch && matchesTab;
+        // a busca é feita no servidor, junto com a paginação
+        return (tabValue === 0 && isAlreadyImported) || tabValue === 1 || (tabValue === 2 && !isAlreadyImported);
       }),
-    [gitHubRepos, importedRepoUrls, search, tabValue, provider]
+    [gitHubRepos, importedRepoUrls, tabValue]
   );
 
-  const displayedRepos = useMemo(() => {
-    if (provider === 'gitlab') {
-      return filteredRepos;
-    }
-    return filteredRepos.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-  }, [provider, filteredRepos, page, itemsPerPage]);
+  const displayedRepos = filteredRepos;
 
   return (
     <>
@@ -820,10 +819,10 @@ const Products: NextPageWithLayout = () => {
                     );
                   })()}
 
-                  {!loadingRepos && (provider === 'gitlab' ? displayedRepos.length > 0 : filteredRepos.length > 0) && (
+                  {!loadingRepos && displayedRepos.length > 0 && (
                     <Box display="flex" justifyContent="center" padding="2rem">
                       <Pagination
-                        count={provider === 'gitlab' ? gitlabTotalPages : Math.ceil(filteredRepos.length / itemsPerPage)}
+                        count={totalPages}
                         page={page}
                         onChange={(e, value) => setPage(value)}
                         color="primary"

@@ -200,13 +200,18 @@ describe('Organization Service', () => {
   // Testes de getGithubRepos
   it('deve buscar repositórios do GitHub (GET)', async () => {
     const mockRepos = [{ github_repo_id: 1, name: 'repo1' }];
-    (api.get as jest.Mock).mockResolvedValue({ data: mockRepos });
+    (api.get as jest.Mock).mockResolvedValue({
+      data: mockRepos,
+      headers: { 'x-total-pages': '66', 'x-next-page': '3' }
+    });
 
-    const result = await organizationQuery.getGithubRepos('1');
+    const result = await organizationQuery.getGithubRepos('1', 2, 'repo');
 
-    expect(api.get).toHaveBeenCalledWith('/v1/organizations/1/github-repos/');
+    expect(api.get).toHaveBeenCalledWith('/v1/organizations/1/github-repos/', {
+      params: { page: 2, search: 'repo' }
+    });
     expect(result.type).toBe('success');
-    expect((result as any).value).toEqual(mockRepos);
+    expect((result as any).value).toEqual({ repos: mockRepos, totalPages: 66, nextPage: 3 });
   });
 
   it('deve retornar erro ao falhar buscar repositórios do GitHub', async () => {

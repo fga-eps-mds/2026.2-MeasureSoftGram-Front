@@ -114,10 +114,24 @@ class OrganizationQuery {
     }
   }
 
-  async getGithubRepos(orgId: string): Promise<Result<GitHubRepo[]>> {
+  async getGithubRepos(orgId: string, page?: number, search?: string): Promise<Result<GitHubReposPage>> {
     try {
-      const response = await api.get(`/v1/organizations/${orgId}/github-repos/`);
-      return { type: 'success', value: response.data as GitHubRepo[] };
+      const params: Record<string, any> = {};
+      if (page !== undefined && page !== null) {
+        params.page = page;
+      }
+      if (search !== undefined && search !== null && search !== '') {
+        params.search = search;
+      }
+      const response = await api.get(`/v1/organizations/${orgId}/github-repos/`, { params });
+      return {
+        type: 'success',
+        value: {
+          repos: response.data as GitHubRepo[],
+          totalPages: parsePageHeader(response.headers?.['x-total-pages']),
+          nextPage: parsePageHeader(response.headers?.['x-next-page'])
+        }
+      };
     } catch (error) {
       return { type: 'error', error: error as AxiosError };
     }
@@ -200,6 +214,12 @@ export interface GitLabProject {
   name: string;
   description: string;
   url: string;
+}
+
+export interface GitHubReposPage {
+  repos: GitHubRepo[];
+  totalPages: number | null;
+  nextPage: number | null;
 }
 
 export interface GitLabProjectsPage {

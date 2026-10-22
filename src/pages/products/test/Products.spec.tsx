@@ -73,7 +73,11 @@ describe('Products Component', () => {
 
     (organizationQuery.getGithubRepos as jest.Mock).mockResolvedValue({
       type: 'success',
-      value: [{ github_repo_id: 1, name: 'Repo 1', url: 'http://repo1', description: '' }]
+      value: {
+        repos: [{ github_repo_id: 1, name: 'Repo 1', url: 'http://repo1', description: '' }],
+        totalPages: 1,
+        nextPage: null
+      }
     });
 
     (productQuery.getAllRepositories as jest.Mock).mockResolvedValue({
@@ -163,47 +167,46 @@ describe('Products Component', () => {
     });
   });
 
-  it('can change tabs, search and pagination', async () => {
-    (organizationQuery.getGithubRepos as jest.Mock).mockResolvedValue({
+  it('can change tabs, search and paginate on the server', async () => {
+    const makeRepos = (from: number, to: number) =>
+      Array.from({ length: to - from }).map((_, i) => ({
+        github_repo_id: from + i,
+        name: `Repo ${from + i}`,
+        url: `http://repo${from + i}`,
+        description: ''
+      }));
+    (organizationQuery.getGithubRepos as jest.Mock).mockImplementation(async (_org: string, page: number) => ({
       type: 'success',
-      value: Array.from({ length: 15 }).map((_, i) => ({ github_repo_id: i, name: `Repo ${i}`, url: `http://repo${i}`, description: '' }))
-    });
+      value: {
+        repos: page === 2 ? makeRepos(10, 15) : makeRepos(0, 10),
+        totalPages: 2,
+        nextPage: page === 2 ? null : 2
+      }
+    }));
 
     render(<Products />);
 
     await waitFor(() => {
       expect(screen.getByText('Repo 0')).toBeInTheDocument();
     });
+    expect(screen.queryByText('Repo 10')).not.toBeInTheDocument();
 
-    const todosTab = screen.getByText('Todos');
-    await act(async () => { fireEvent.click(todosTab); });
-    
-    const aImportarTab = screen.getByText('A Importar');
-    await act(async () => { fireEvent.click(aImportarTab); });
+    await act(async () => { fireEvent.click(screen.getByText('Todos')); });
 
-    const importadosTab = screen.getByText('Importados');
-    await act(async () => { fireEvent.click(importadosTab); });
-    
+    const page2Button = await screen.findByText('2');
+    await act(async () => { fireEvent.click(page2Button); });
+
+    await waitFor(() => {
+      expect(organizationQuery.getGithubRepos).toHaveBeenLastCalledWith(expect.anything(), 2, '');
+      expect(screen.getByText('Repo 12')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Repo 0')).not.toBeInTheDocument();
+
     const searchInput = screen.getByPlaceholderText('Buscar repositórios do produto...');
     await act(async () => { fireEvent.change(searchInput, { target: { value: 'Repo 10' } }); });
 
     await waitFor(() => {
-      expect(screen.queryByText('Repo 0')).not.toBeInTheDocument();
-    });
-    
-    await act(async () => { fireEvent.change(searchInput, { target: { value: '' } }); });
-    await act(async () => { fireEvent.click(todosTab); });
-    
-    // pagination - clicking page 2
-    let page2Button;
-    await waitFor(() => {
-      page2Button = screen.getByText('2');
-      expect(page2Button).toBeInTheDocument();
-    });
-    await act(async () => { fireEvent.click(page2Button); });
-    
-    await waitFor(() => {
-      expect(screen.getByText('Repo 12')).toBeInTheDocument();
+      expect(organizationQuery.getGithubRepos).toHaveBeenLastCalledWith(expect.anything(), 1, 'Repo 10');
     });
   });
 
@@ -426,7 +429,7 @@ describe('Products Component', () => {
 
     resolveRepos({
       type: 'success',
-      value: []
+      value: { repos: [], totalPages: 1, nextPage: null }
     });
 
     await waitFor(() => {
