@@ -15,6 +15,13 @@ export const COLOR_TOKENS = {
 };
 
 // Limites das faixas, fixos na Release 2 (ata do PO de 14/10/2026); cada limite já pertence à faixa de cima.
+// Posição das faixas de cada repositório no gráfico; a barra lateral do PulseChart usa os mesmos valores para alinhar.
+export const PULSE_LAYOUT = {
+  topOffset: 60,
+  gridHeight: 82,
+  gridGap: 34,
+};
+
 export const QUALITY_THRESHOLDS = {
   warning: 0.4,
   adequate: 0.7,
@@ -106,9 +113,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
   }
 
   const gridCount = repositories.length;
-  const gridHeight = 82;
-  const gridGap = 34;
-  const topOffset = 60;
+  const { topOffset, gridHeight, gridGap } = PULSE_LAYOUT;
 
   const grids: any[] = [];
   const xAxes: any[] = [];

@@ -1,7 +1,12 @@
 import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
-import { COLOR_TOKENS, formatPulseChartOptions, convertPulseRepositoriesToCsv } from '@utils/formatPulseChart';
+import {
+  COLOR_TOKENS,
+  PULSE_LAYOUT,
+  formatPulseChartOptions,
+  convertPulseRepositoriesToCsv,
+} from '@utils/formatPulseChart';
 import { usePulseChartData } from './usePulseChartData';
 import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
@@ -66,9 +71,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     );
   }
 
-  const topOffset = 60;
-  const gridHeight = 82;
-  const gridGap = 34;
+  const { topOffset, gridHeight, gridGap } = PULSE_LAYOUT;
 
   return (
     <Paper

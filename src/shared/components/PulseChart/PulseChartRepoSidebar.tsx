@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import {
   COLOR_TOKENS,
+  PULSE_LAYOUT,
   getQualityStatus,
   calculateVariation,
   PulseMeasurement,
@@ -36,7 +37,7 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
         left: 20,
         top: topOffset,
         width: 190,
-        height: 82,
+        height: PULSE_LAYOUT.gridHeight,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
