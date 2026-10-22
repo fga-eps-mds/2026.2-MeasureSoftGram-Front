@@ -54,7 +54,7 @@ export interface CorrelationCell {
 }
 
 function toRgb(hex: string): number[] {
-  return [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
+  return [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
 }
 
 /** Componentes RGB da cor do coeficiente: do cinza claro em 0 até o laranja em −1 ou o azul em +1. */
@@ -112,10 +112,8 @@ export function formatCorrelationInfo(correlation: RepositoryCorrelation): strin
   const releases = correlation.releases.length;
   const entities = correlation.entities.length;
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
-  const parts = [
-    `${releases === 1 ? '1 release' : `${formatCount(releases)} releases`} de ${correlation.repository.name}`,
-    `${formatCount(entities)} ${noun}`
-  ];
+  const releasesLabel = releases === 1 ? '1 release' : `${formatCount(releases)} releases`;
+  const parts = [`${releasesLabel} de ${correlation.repository.name}`, `${formatCount(entities)} ${noun}`];
   if (correlation.method && correlation.non_normal !== null) {
     const normality = correlation.non_normal
       ? `distribuição não normal em ${formatCount(correlation.non_normal)} de ${formatCount(entities)} ${noun}`

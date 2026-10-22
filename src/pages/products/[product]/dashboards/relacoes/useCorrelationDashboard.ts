@@ -42,13 +42,13 @@ export function useCorrelationDashboard(organizationId: string, productId: strin
   const repositoryList = useRepositoryList(organizationId, productId);
   const repositories = repositoryList.repositories ?? [];
 
-  const [selectedRepositoryId, setRepositoryId] = useState<number | undefined>();
+  const [selectedRepositoryId, setSelectedRepositoryId] = useState<number | undefined>();
   const [level, setLevel] = useState<CorrelationLevel>(DEFAULT_LEVEL);
   // a página não remonta quando só o produto da URL muda: as escolhas voltam ao padrão, como numa página nova
   const [selectionProductId, setSelectionProductId] = useState(productId);
   if (selectionProductId !== productId) {
     setSelectionProductId(productId);
-    setRepositoryId(undefined);
+    setSelectedRepositoryId(undefined);
     setLevel(DEFAULT_LEVEL);
   }
 
@@ -69,11 +69,11 @@ export function useCorrelationDashboard(organizationId: string, productId: strin
   const isLoadingRepositories = !organizationId || !productId || repositoryList.isLoading;
   const error = repositoryList.error || correlationRequest.error;
 
+  // enquanto a lista de repositórios carrega, ou sem a resposta da correlação, a página fica em 'loading'
   let status: CorrelationStatus = 'loading';
   if (error) status = 'error';
-  else if (isLoadingRepositories) status = 'loading';
-  else if (!repositories.length) status = 'noRepository';
-  else if (correlation) status = getCorrelationStatus(correlation);
+  else if (!isLoadingRepositories && !repositories.length) status = 'noRepository';
+  else if (!isLoadingRepositories && correlation) status = getCorrelationStatus(correlation);
 
   const retry = () => {
     void repositoryList.mutate();
@@ -83,7 +83,7 @@ export function useCorrelationDashboard(organizationId: string, productId: strin
   return {
     repositories,
     repository,
-    setRepositoryId,
+    setRepositoryId: setSelectedRepositoryId,
     level,
     setLevel,
     /** A resposta do Service, que pode ser a da seleção anterior enquanto a nova carrega (isUpdating). */
