@@ -39,7 +39,10 @@ function MatrixSkeleton() {
   );
 }
 
-/** As duas matrizes lado a lado; em tela estreita, uma abaixo da outra. */
+/**
+ * As duas matrizes lado a lado, com a altura do cartão maior; em tela estreita, uma abaixo da outra. Cada célula é um
+ * grid para o cartão esticar até o fim dela.
+ */
 function CorrelationGrid({ matrix, bubbles, busy }: { matrix: ReactNode; bubbles: ReactNode; busy?: boolean }) {
   return (
     <Box
@@ -47,15 +50,18 @@ function CorrelationGrid({ matrix, bubbles, busy }: { matrix: ReactNode; bubbles
       aria-busy={busy}
       display="grid"
       gap="24px"
-      alignItems="start"
       sx={{
         gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' },
         opacity: busy ? 0.6 : 1,
         transition: 'opacity 150ms'
       }}
     >
-      <Box minWidth={0}>{matrix}</Box>
-      <Box minWidth={0}>{bubbles}</Box>
+      <Box display="grid" minWidth={0}>
+        {matrix}
+      </Box>
+      <Box display="grid" minWidth={0}>
+        {bubbles}
+      </Box>
     </Box>
   );
 }
