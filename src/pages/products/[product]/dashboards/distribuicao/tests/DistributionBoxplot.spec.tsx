@@ -107,7 +107,7 @@ describe('<DistributionBoxplot />', () => {
     renderBoxplot(entity('tsqmi', 'TSQMI', 'tsqmi'), characteristics);
 
     const scroll = screen.getByRole('group', { name: 'Percentis de cada linha' });
-    expect(scroll).toHaveStyle({ overflowX: 'auto' });
+    expect(scroll).toHaveStyle({ overflowX: 'auto', position: 'relative' });
     expect(within(scroll).getByRole('table')).toBeInTheDocument();
     expect(within(scroll).queryByTestId('echarts')).not.toBeInTheDocument();
   });

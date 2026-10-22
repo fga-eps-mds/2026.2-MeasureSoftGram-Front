@@ -133,7 +133,9 @@ export default function DistributionBoxplot({
           role="group"
           aria-label="Percentis de cada linha"
           tabIndex={0}
-          sx={{ overflowX: 'auto', minWidth: 0 }}
+          // relative: o caption e os nomes escondidos (position absolute) ficam presos aqui dentro; sem isso, eles
+          // escapam da rolagem e alargam a página em tela estreita
+          sx={{ position: 'relative', overflowX: 'auto', minWidth: 0 }}
         >
           <Box component="table" sx={{ borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
             <Box component="caption" sx={VISUALLY_HIDDEN}>
