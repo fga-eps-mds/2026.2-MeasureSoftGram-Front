@@ -25,22 +25,24 @@ function SideMenuWrapper({ menuItems, footer }: Props) {
   const { t, i18n } = useTranslation('sidebar');
 
   return (
-    <Styles.Wrapper>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-        <Link href="/home">
-          <Styles.Logo src={IMAGE_SOURCE} height={50} />
-        </Link>
-        {!isCollapsed && <Translation t={t} i18n={i18n} />}
-      </Box>
-      <OrganizationSelector />
-      <ProductsSelector />
-      <Styles.CollapseButton onClick={toggleCollapse}>
+    <Styles.Wrapper data-testid="side-menu">
+      <Styles.CollapseButton data-testid="side-menu-collapse" onClick={toggleCollapse}>
         {isCollapsed ? <NavigateNextRoundedIcon fontSize="large" color="#f5f5f5" /> : <NavigateBeforeRoundedIcon fontSize="large" color="#f5f5f5" />}
       </Styles.CollapseButton>
-      <Divider sx={{ width: '100%', my: '10px', border: '1px solid rgba(0, 0, 0, 0.30)' }} />
-      <Styles.ItemContainer>{menuItems}</Styles.ItemContainer>
-      <Divider sx={{ width: '100%', my: '2px', border: '1px solid rgba(0, 0, 0, 0.30)' }} />
-      {footer}
+      <Styles.Content data-testid="side-menu-content">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <Link href="/home">
+            <Styles.Logo src={IMAGE_SOURCE} height={50} />
+          </Link>
+          {!isCollapsed && <Translation t={t} i18n={i18n} />}
+        </Box>
+        <OrganizationSelector />
+        <ProductsSelector />
+        <Divider sx={{ width: '100%', my: '10px', border: '1px solid rgba(0, 0, 0, 0.30)' }} />
+        <Styles.ItemContainer>{menuItems}</Styles.ItemContainer>
+        <Divider sx={{ width: '100%', my: '2px', border: '1px solid rgba(0, 0, 0, 0.30)' }} />
+        {footer}
+      </Styles.Content>
     </Styles.Wrapper>
   );
 }

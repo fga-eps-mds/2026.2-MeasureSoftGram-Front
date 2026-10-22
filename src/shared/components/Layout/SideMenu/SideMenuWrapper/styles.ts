@@ -1,20 +1,27 @@
 import styled from 'styled-components';
 
+// A casca fica fixa na altura da tela e segura o botão de recolher, que sai pela direita do menu. A rolagem fica
+// no Content: com o overflow aqui, o botão seria cortado.
 export const Wrapper = styled.div`
   height: 100vh;
 
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0 4px;
-
-  align-items: center;
   border-right: 0.1px solid rgba(0, 0, 0, 0.5);
   background-color: #2b4d6f;
   position: sticky;
   top: 0;
   left: 0;
   filter: drop-shadow(4px 0px 9px rgba(0, 0, 0, 0.25));
+`;
+
+export const Content = styled.div`
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 4px;
 `;
 
 export const ItemContainer = styled.div`
