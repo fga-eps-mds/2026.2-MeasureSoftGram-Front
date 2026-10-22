@@ -332,7 +332,7 @@ describe('Products Component', () => {
         setCurrentOrganizations: mockSetCurrentOrgs,
         fetchOrganizations: mockFetchOrgs
       });
-      let resolveOrg2: (value: unknown) => void = () => undefined;
+      let releaseOrg2: () => void = () => undefined;
       (organizationQuery.getGithubRepos as jest.Mock).mockImplementation((orgId: string) => {
         if (orgId !== 'org-2') {
           return Promise.resolve({
@@ -340,7 +340,14 @@ describe('Products Component', () => {
             value: { repos: [{ github_repo_id: 1, name: 'Repo da Org 1', url: 'http://org1/repo', description: '' }], totalPages: 1, nextPage: null }
           });
         }
-        return new Promise(resolve => { resolveOrg2 = resolve; });
+        return new Promise(resolve => {
+          releaseOrg2 = () => {
+            resolve({
+              type: 'success',
+              value: { repos: [{ github_repo_id: 2, name: 'Repo da Org 2', url: 'http://org2/repo', description: '' }], totalPages: 1, nextPage: null }
+            });
+          };
+        });
       });
 
       renderProducts();
@@ -351,12 +358,7 @@ describe('Products Component', () => {
       await waitFor(() => expect(screen.queryByText('Repo da Org 1')).not.toBeInTheDocument());
       expect(screen.queryByText('Importar')).not.toBeInTheDocument();
 
-      await act(async () => {
-        resolveOrg2({
-          type: 'success',
-          value: { repos: [{ github_repo_id: 2, name: 'Repo da Org 2', url: 'http://org2/repo', description: '' }], totalPages: 1, nextPage: null }
-        });
-      });
+      await act(async () => { releaseOrg2(); });
       expect(await screen.findByText('Repo da Org 2')).toBeInTheDocument();
     });
   });
