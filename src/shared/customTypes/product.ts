@@ -381,3 +381,60 @@ export interface MetricDistribution {
   reference: MetricDistributionReference | null;
   repositories: MetricDistributionRepository[];
 }
+
+/** Níveis do modelo na Distribuição Estatística: o TSQMI e os da Análise por Entidade. */
+export type DistributionLevel = 'tsqmi' | EntityLevel;
+
+/** Uma execução da coleta (Action ou CLI) no repositório, dentro da release. */
+export interface DistributionAnalysis {
+  date: string;
+  value: number;
+  /** Fora dos limites Q1 − 1,5 × IQR e Q3 + 1,5 × IQR, pelo Service. */
+  is_outlier: boolean;
+}
+
+/**
+ * Resumo calculado pelo Service, sem arredondamento: quartis e percentis pelo método inclusive (QUARTIL.INC) e
+ * assimetria amostral ajustada (DISTORÇÃO). Sem análise, count e outliers vêm 0 e o resto vem null; a assimetria
+ * também vem null com menos de 3 análises ou com desvio zero.
+ */
+export interface DistributionSummary {
+  count: number;
+  min: number | null;
+  p10: number | null;
+  q1: number | null;
+  median: number | null;
+  q3: number | null;
+  p90: number | null;
+  max: number | null;
+  iqr: number | null;
+  lower_limit: number | null;
+  upper_limit: number | null;
+  outliers: number;
+  mean: number | null;
+  skewness: number | null;
+}
+
+export interface DistributionEntity {
+  key: string;
+  name: string;
+  level: DistributionLevel;
+  /** Só no nível métrica (INT, FLOAT, PERCENT…). */
+  metric_type: string | null;
+  /** Em ordem de data. */
+  analyses: DistributionAnalysis[];
+  summary: DistributionSummary;
+}
+
+/** GET products/{id}/analysis-distribution/?release_id=&repository_id=&level=&key= (Service, US21.03) */
+export interface AnalysisDistribution {
+  release: ReleaseDashboardRelease;
+  repository: { id: number; name: string };
+  level: DistributionLevel;
+  key: string;
+  /** Quantidade de análises da entidade e as datas da primeira e da última (null sem análise). */
+  period: { count: number; first: string | null; last: string | null };
+  entity: DistributionEntity;
+  /** Filhos com análise na release, na ordem da configuração; vazio no nível métrica. */
+  children: DistributionEntity[];
+}

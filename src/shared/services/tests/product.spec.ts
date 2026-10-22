@@ -355,6 +355,56 @@ describe('ProductQuery', () => {
     });
   });
 
+  describe('getAnalysisDistribution', () => {
+    it('pede as análises de uma entidade num repositório da release', () => {
+      expect(
+        productQuery.getAnalysisDistribution('1', '2', {
+          releaseId: 3,
+          repositoryId: 4,
+          level: 'characteristic',
+          key: 'reliability'
+        })
+      ).toEqual({
+        url: '/v1/organizations/1/products/2/analysis-distribution/',
+        method: 'get',
+        params: { release_id: 3, repository_id: 4, level: 'characteristic', key: 'reliability' }
+      });
+    });
+
+    it('no TSQMI, pede sem a chave', () => {
+      const request = productQuery.getAnalysisDistribution('1', '2', {
+        releaseId: 3,
+        repositoryId: 4,
+        level: 'tsqmi',
+        key: 'tsqmi'
+      });
+
+      expect(request?.params).toEqual({ release_id: 3, repository_id: 4, level: 'tsqmi' });
+      // a chave do SWR é o request serializado: o parâmetro ausente não pode aparecer nela
+      expect(JSON.stringify(request)).not.toContain('"key"');
+    });
+
+    it.each<[string, string, number | undefined, number | undefined, string | undefined]>([
+      ['', '2', 3, 4, 'reliability'],
+      ['1', '', 3, 4, 'reliability'],
+      ['1', '2', undefined, 4, 'reliability'],
+      ['1', '2', 3, undefined, 'reliability'],
+      ['1', '2', 3, 4, undefined]
+    ])(
+      'não pede nada sem organização, produto, release, repositório ou chave (%s, %s, %s, %s, %s)',
+      (organizationId, productId, releaseId, repositoryId, key) => {
+        expect(
+          productQuery.getAnalysisDistribution(organizationId, productId, {
+            releaseId,
+            repositoryId,
+            level: 'measure',
+            key
+          })
+        ).toBeNull();
+      }
+    );
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
