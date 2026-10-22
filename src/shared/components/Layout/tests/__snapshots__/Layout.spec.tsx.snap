@@ -6,10 +6,10 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-4e0701da-0 hveokN"
+        class="sc-557d157a-0 AeOzC"
       >
         <div
-          class="sc-4e0701da-1 kXaLIU"
+          class="sc-557d157a-1 ezYIlz"
         >
           <div
             class="sc-63dcaa60-0 gNIybT"
@@ -467,7 +467,7 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4e0701da-4 kCuHiO"
+          class="sc-557d157a-4 jKGXeR"
         >
           <div
             class="sc-6674b5e5-0 gSYjiE"
@@ -563,17 +563,17 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4e0701da-5 jsyunT"
+          class="sc-557d157a-5 przSI"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-4e0701da-0 hveokN"
+      class="sc-557d157a-0 AeOzC"
     >
       <div
-        class="sc-4e0701da-1 kXaLIU"
+        class="sc-557d157a-1 ezYIlz"
       >
         <div
           class="sc-63dcaa60-0 gNIybT"
@@ -1031,7 +1031,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4e0701da-4 kCuHiO"
+        class="sc-557d157a-4 jKGXeR"
       >
         <div
           class="sc-6674b5e5-0 gSYjiE"
@@ -1127,7 +1127,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4e0701da-5 jsyunT"
+        class="sc-557d157a-5 przSI"
       />
     </div>
   </div>,
@@ -1191,14 +1191,14 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-4e0701da-0 jrKyOu"
+        class="sc-557d157a-0 liilPd"
       >
         <header
-          class="sc-4e0701da-2 jMuSff"
+          class="sc-557d157a-2 garvlU"
         >
           <img
             alt="MeasureSoftGram"
-            class="sc-4e0701da-3 fsQpzg"
+            class="sc-557d157a-3 etQRCz"
             src="/images/svg/logo_white.svg"
           />
           <button
@@ -1248,7 +1248,7 @@ Object {
           </button>
         </header>
         <div
-          class="sc-4e0701da-4 kCuHiO"
+          class="sc-557d157a-4 jKGXeR"
         >
           <div
             class="sc-6674b5e5-0 gSYjiE"
@@ -1344,21 +1344,21 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4e0701da-5 jsyunT"
+          class="sc-557d157a-5 przSI"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-4e0701da-0 jrKyOu"
+      class="sc-557d157a-0 liilPd"
     >
       <header
-        class="sc-4e0701da-2 jMuSff"
+        class="sc-557d157a-2 garvlU"
       >
         <img
           alt="MeasureSoftGram"
-          class="sc-4e0701da-3 fsQpzg"
+          class="sc-557d157a-3 etQRCz"
           src="/images/svg/logo_white.svg"
         />
         <button
@@ -1408,7 +1408,7 @@ Object {
         </button>
       </header>
       <div
-        class="sc-4e0701da-4 kCuHiO"
+        class="sc-557d157a-4 jKGXeR"
       >
         <div
           class="sc-6674b5e5-0 gSYjiE"
@@ -1504,7 +1504,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4e0701da-5 jsyunT"
+        class="sc-557d157a-5 przSI"
       />
     </div>
   </div>,

@@ -7,7 +7,8 @@ export const LayoutGrid = styled.div<{ $showSidebar?: boolean }>`
   ${(props) =>
     props.$showSidebar
       ? `
-        grid-template-columns: 328px 1fr min-content;
+        /* min-content: a coluna acompanha a sidebar (328px aberta, só os ícones recolhida) */
+        grid-template-columns: min-content 1fr min-content;
         grid-template-rows: 1fr;
         grid-template-areas: 'side-menu main-content right-side';
       `
