@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import CallSplitIcon from '@mui/icons-material/CallSplit';
 import {
   COLOR_TOKENS,
   getQualityStatus,
@@ -45,9 +44,8 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
         zIndex: 2,
       }}
     >
-      {/* Branch icon + Repo name */}
-      <Box display="flex" alignItems="center" gap={0.5} marginBottom="2px">
-        <CallSplitIcon sx={{ fontSize: 16, color: COLOR_TOKENS.primary }} />
+      {/* Repo name */}
+      <Box display="flex" alignItems="center" marginBottom="2px">
         <Typography
           variant="body2"
           fontWeight="bold"
@@ -96,7 +94,7 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
           color={COLOR_TOKENS.axisText}
           sx={{ fontSize: '10.5px' }}
         >
-          último TSQMI · {status.label}
+          último indicador TSQMI · {status.label}
         </Typography>
       </Box>
     </Box>
