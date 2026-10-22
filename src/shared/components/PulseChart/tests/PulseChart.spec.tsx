@@ -68,7 +68,7 @@ describe('<PulseChart />', () => {
     const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
     const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
-    fireEvent.click(getByText('exportar .csv'));
+    fireEvent.click(getByText('Exportar .csv'));
 
     expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
     expect(click).toHaveBeenCalledTimes(1);
@@ -82,7 +82,7 @@ describe('<PulseChart />', () => {
     Object.assign(window.URL, { createObjectURL });
 
     const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
-    fireEvent.click(getByText('exportar .csv'));
+    fireEvent.click(getByText('Exportar .csv'));
 
     expect(createObjectURL).not.toHaveBeenCalled();
   });

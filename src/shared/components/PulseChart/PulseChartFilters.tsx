@@ -32,14 +32,7 @@ export const PulseChartFilters: React.FC<Props> = ({
   };
 
   return (
-    <Box
-      display="flex"
-      flexWrap="wrap"
-      alignItems="center"
-      justifyContent="space-between"
-      gap={2}
-      marginBottom="16px"
-    >
+    <Box display="flex" flexWrap="wrap" alignItems="center" gap={2} marginBottom="16px">
       <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
         {/* Repo Selector */}
         <Box display="flex" alignItems="center" gap={1}>
@@ -103,30 +96,30 @@ export const PulseChartFilters: React.FC<Props> = ({
             }}
           />
         </Box>
-      </Box>
 
-      {/* Export CSV Button */}
-      {onExportCsv && (
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onExportCsv}
-          startIcon={<DownloadIcon fontSize="small" />}
-          sx={{
-            borderColor: COLOR_TOKENS.border,
-            color: COLOR_TOKENS.primary,
-            textTransform: 'none',
-            fontSize: '12px',
-            fontWeight: 500,
-            '&:hover': {
+        {/* Export CSV Button: logo após o período, como no protótipo */}
+        {onExportCsv && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onExportCsv}
+            startIcon={<DownloadIcon fontSize="small" />}
+            sx={{
               borderColor: COLOR_TOKENS.primary,
-              backgroundColor: 'rgba(43, 77, 111, 0.04)',
-            },
-          }}
-        >
-          exportar .csv
-        </Button>
-      )}
+              color: COLOR_TOKENS.primary,
+              textTransform: 'none',
+              fontSize: '13px',
+              fontWeight: 500,
+              '&:hover': {
+                borderColor: COLOR_TOKENS.primary,
+                backgroundColor: 'rgba(43, 77, 111, 0.04)',
+              },
+            }}
+          >
+            Exportar .csv
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };
