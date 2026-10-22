@@ -138,10 +138,10 @@ describe('formatPulseChart Utility', () => {
       expect(adequate).toEqual({ gte: 0.7, color: COLOR_TOKENS.adequate });
     });
 
-    it('deve formatar os eixos como mês/dia e nota com uma casa decimal', () => {
+    it('deve formatar os eixos como dia/mês e indicador com uma casa decimal', () => {
       const options: any = formatPulseChartOptions([repoWithReleases]);
 
-      expect(options.xAxis[0].axisLabel.formatter(new Date(2026, 0, 5).getTime())).toBe('01/05');
+      expect(options.xAxis[0].axisLabel.formatter(new Date(2026, 0, 5).getTime())).toBe('05/01');
       expect(options.yAxis[0].axisLabel.formatter(0.5)).toBe('0.5');
     });
 
