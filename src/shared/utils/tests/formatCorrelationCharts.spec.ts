@@ -85,12 +85,21 @@ describe('formatCorrelationCharts', () => {
     );
   });
 
+  it('sem método aplicado, deixa o nome do coeficiente vazio no tooltip', () => {
+    const data = correlation({ method: null });
+
+    expect(formatPairTooltip(getCorrelationCells(data)[0], data)).toBe(
+      'Maintainability × Reliability:  = <strong>0,56</strong>'
+    );
+  });
+
   it('escapa os nomes no tooltip', () => {
     const data = correlation({
       entities: [
         { key: 'reliability', name: '<b>R</b>' },
         { key: 'maintainability', name: 'M' }
-      ]
+      ],
+      pairs: [correlation().pairs[0]]
     });
 
     expect(formatPairTooltip(getCorrelationCells(data)[0], data)).toContain('M × &#60;b&#62;R&#60;/b&#62;');

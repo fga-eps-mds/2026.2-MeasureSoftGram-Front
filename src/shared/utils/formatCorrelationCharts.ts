@@ -79,10 +79,10 @@ export function correlationTextColor(coefficient: number): string {
 
 /** Os pares do Service com a posição de cada um na matriz e os nomes das duas entidades. */
 export function getCorrelationCells(correlation: RepositoryCorrelation): CorrelationCell[] {
-  const indexes = new Map(correlation.entities.map((entity, index) => [entity.key, index]));
+  const keys = correlation.entities.map((entity) => entity.key);
   return correlation.pairs.map((pair) => {
-    const rowIndex = indexes.get(pair.row) ?? 0;
-    const columnIndex = indexes.get(pair.column) ?? 0;
+    const rowIndex = keys.indexOf(pair.row);
+    const columnIndex = keys.indexOf(pair.column);
     return {
       pair,
       rowIndex,
@@ -112,8 +112,11 @@ export function formatCorrelationInfo(correlation: RepositoryCorrelation): strin
   const releases = correlation.releases.length;
   const entities = correlation.entities.length;
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
-  const releasesLabel = releases === 1 ? '1 release' : `${formatCount(releases)} releases`;
-  const parts = [`${releasesLabel} de ${correlation.repository.name}`, `${formatCount(entities)} ${noun}`];
+  // a linha só aparece com as matrizes, que precisam de pelo menos 3 releases
+  const parts = [
+    `${formatCount(releases)} releases de ${correlation.repository.name}`,
+    `${formatCount(entities)} ${noun}`
+  ];
   if (correlation.method && correlation.non_normal !== null) {
     const normality = correlation.non_normal
       ? `distribuição não normal em ${formatCount(correlation.non_normal)} de ${formatCount(entities)} ${noun}`
