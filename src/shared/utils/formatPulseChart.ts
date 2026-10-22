@@ -133,20 +133,11 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
       if (rel.start_at) {
         const startMs = new Date(rel.start_at).getTime();
         if (!isNaN(startMs)) {
+          // Sem etiqueta: o início de uma release costuma cair no fim da anterior, e as duas etiquetas se sobrepunham.
           markLineData.push({
             name: `Início ${labelText}`,
             xAxis: startMs,
-            label: {
-              show: true,
-              formatter: `Início ${labelText}`,
-              position: 'start',
-              backgroundColor: 'rgba(95, 126, 163, 0.85)',
-              color: '#FFFFFF',
-              fontSize: 10,
-              fontFamily: 'Roboto',
-              padding: [2, 5],
-              borderRadius: 3,
-            },
+            label: { show: false },
             lineStyle: {
               color: COLOR_TOKENS.secondary,
               type: 'dotted',

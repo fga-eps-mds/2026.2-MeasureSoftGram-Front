@@ -108,6 +108,13 @@ describe('formatPulseChart Utility', () => {
       expect(markLines[0].xAxis).toBe(new Date('2026-01-01T00:00:00Z').getTime());
     });
 
+    it('deve mostrar etiqueta só no fim da release, para não sobrepor a da release anterior', () => {
+      const [start, end] = (formatPulseChartOptions([repoWithReleases]) as any).series[0].markLine.data;
+
+      expect(start.label.show).toBe(false);
+      expect(end.label.show).toBe(true);
+    });
+
     it('deve formatar os eixos como mês/dia e nota com uma casa decimal', () => {
       const options: any = formatPulseChartOptions([repoWithReleases]);
 
