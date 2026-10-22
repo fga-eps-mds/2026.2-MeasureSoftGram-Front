@@ -1,8 +1,11 @@
 import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { DistributionAnalysis, DistributionEntity } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { DensityPoint } from '@utils/distributionDensity';
 import { formatAxisValue, formatBinLabel, Histogram } from '@utils/distributionHistogram';
-import { formatAnalysisCount, formatCount, formatStatistic } from '@utils/distributionSummary';
+import { formatAnalysisCount, formatCount, formatPeriod, formatStatistic } from '@utils/distributionSummary';
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
 import { BoxplotStats, OutlierGroup } from '@utils/metricDistribution';
@@ -220,6 +223,147 @@ export function formatDensityOptions(
             }
           ]
         : [])
+    ]
+  };
+}
+
+/** Altura da dispersão no tempo, ao lado do resumo estatístico. */
+export const SCATTER_CHART_HEIGHT = 320;
+
+/** Discrepantes listados no texto acessível; os outros entram só na contagem. */
+const MAX_DESCRIBED_OUTLIERS = 10;
+
+/** Data e hora de uma análise no tooltip: "17/08/2026 às 10:00". */
+export function formatAnalysisDateTime(date: string | number): string {
+  return format(new Date(date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+}
+
+function toScatterPoint(analysis: DistributionAnalysis): [number, number] {
+  return [new Date(analysis.date).getTime(), analysis.value];
+}
+
+function describeOutliers(outliers: DistributionAnalysis[]): string {
+  if (!outliers.length) return 'Nenhum valor discrepante.';
+  const listed = outliers
+    .slice(0, MAX_DESCRIBED_OUTLIERS)
+    .map((analysis) => `${formatStatistic(analysis.value)} em ${format(new Date(analysis.date), 'dd/MM/yyyy')}`);
+  const rest = outliers.length - listed.length;
+  const more = rest > 0 ? ` e mais ${formatCount(rest)}` : '';
+  const label = outliers.length === 1 ? '1 valor discrepante' : `${formatCount(outliers.length)} valores discrepantes`;
+  return `${label}: ${listed.join(', ')}${more}.`;
+}
+
+/**
+ * Dispersão das análises no tempo (CA7): um ponto por análise na data dela, com os discrepantes do Service em
+ * círculo vazado. O Q1, a mediana e o Q3 vêm do resumo do Service: a faixa clara do Q1 ao Q3 é um markArea e a
+ * mediana, um markLine, cada um numa série sem pontos. A da faixa tem o próprio item na legenda; a da mediana fica
+ * fora dela e leva o valor no rótulo da linha. O eixo y vai de 0 a 1, ou segue a escala da métrica, como o histograma.
+ */
+export function formatScatterOptions(entity: DistributionEntity, histogram: Histogram) {
+  const { analyses, summary } = entity;
+  const regular = analyses.filter((analysis) => !analysis.is_outlier);
+  const outliers = analyses.filter((analysis) => analysis.is_outlier);
+  const { q1, median, q3 } = summary;
+  const hasQuartiles = q1 !== null && q3 !== null;
+  const period = analyses.length ? formatPeriod(analyses[0].date, analyses[analyses.length - 1].date) : '';
+  const quartiles = `Q1 ${formatStatistic(q1)}, mediana ${formatStatistic(median)} e Q3 ${formatStatistic(q3)}`;
+
+  return {
+    animation: false,
+    aria: {
+      enabled: true,
+      label: {
+        description: `Dispersão de ${entity.name} no tempo: ${formatAnalysisCount(
+          analyses.length
+        )} de ${period}. ${quartiles}. ${describeOutliers(outliers)}`
+      }
+    },
+    tooltip: {
+      trigger: 'item',
+      confine: true,
+      formatter: ({ value }: { value: [number, number] }) =>
+        `${formatAnalysisDateTime(value[0])}<br/><strong>${formatStatistic(value[1])}</strong>`
+    },
+    legend: {
+      ...LEGEND,
+      top: 0,
+      data: [
+        { name: 'Análise', icon: 'circle' },
+        { name: 'Valor discrepante', icon: 'circle' },
+        {
+          name: 'Q1 a Q3',
+          icon: 'rect',
+          itemStyle: { color: DISTRIBUTION_COLORS.boxFill, borderColor: DISTRIBUTION_COLORS.density, borderWidth: 1 }
+        }
+      ]
+    },
+    grid: { left: 8, right: 24, top: 40, bottom: 8, containLabel: true },
+    xAxis: {
+      type: 'time',
+      boundaryGap: ['3%', '3%'],
+      splitLine: { show: false },
+      axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
+      axisLabel: {
+        ...AXIS_LABEL,
+        hideOverlap: true,
+        formatter: (value: number) => format(new Date(value), 'd MMM', { locale: ptBR })
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: histogram.min,
+      max: histogram.max,
+      axisLabel: { ...AXIS_LABEL, formatter: formatAxisValue },
+      splitLine: SPLIT_LINE
+    },
+    series: [
+      {
+        id: 'analyses',
+        name: 'Análise',
+        type: 'scatter',
+        symbolSize: 7,
+        itemStyle: { color: DISTRIBUTION_COLORS.density },
+        data: regular.map(toScatterPoint)
+      },
+      {
+        id: 'outliers',
+        name: 'Valor discrepante',
+        type: 'scatter',
+        symbolSize: 9,
+        ...OUTLIER_STYLE,
+        data: outliers.map(toScatterPoint)
+      },
+      {
+        id: 'iqr',
+        name: 'Q1 a Q3',
+        type: 'line',
+        data: [],
+        itemStyle: { color: DISTRIBUTION_COLORS.boxFill },
+        markArea: hasQuartiles
+          ? { silent: true, itemStyle: { color: DISTRIBUTION_COLORS.boxFill }, data: [[{ yAxis: q1 }, { yAxis: q3 }]] }
+          : undefined
+      },
+      {
+        id: 'median',
+        name: 'Mediana',
+        type: 'line',
+        data: [],
+        markLine:
+          median === null
+            ? undefined
+            : {
+                silent: true,
+                symbol: 'none',
+                lineStyle: { color: DISTRIBUTION_COLORS.median, width: 2, type: 'dashed' },
+                label: {
+                  position: 'insideEndTop',
+                  color: DISTRIBUTION_COLORS.median,
+                  fontSize: 11,
+                  formatter: `Mediana ${formatStatistic(median)}`
+                },
+                data: [{ yAxis: median }]
+              }
+      }
     ]
   };
 }
