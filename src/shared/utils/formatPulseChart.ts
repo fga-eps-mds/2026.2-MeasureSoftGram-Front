@@ -227,13 +227,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
         fontFamily: 'Roboto',
         formatter: (v: number) => v.toFixed(1),
       },
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: COLOR_TOKENS.gridLine,
-          type: 'solid',
-        },
-      },
+      splitLine: { show: false },
     });
 
     const latestVal = values[values.length - 1] ?? 0;

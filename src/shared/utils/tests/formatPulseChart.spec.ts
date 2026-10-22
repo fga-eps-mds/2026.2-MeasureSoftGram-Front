@@ -115,6 +115,12 @@ describe('formatPulseChart Utility', () => {
       expect(end.label.show).toBe(true);
     });
 
+    it('não deve desenhar linhas horizontais no eixo Y', () => {
+      const options: any = formatPulseChartOptions([repoWithReleases]);
+
+      expect(options.yAxis[0].splitLine.show).toBe(false);
+    });
+
     it('deve formatar os eixos como mês/dia e nota com uma casa decimal', () => {
       const options: any = formatPulseChartOptions([repoWithReleases]);
 
