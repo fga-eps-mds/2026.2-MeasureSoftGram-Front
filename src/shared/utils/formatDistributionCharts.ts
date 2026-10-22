@@ -297,7 +297,8 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
         }
       ]
     },
-    grid: { left: 8, right: 24, top: 40, bottom: 8, containLabel: true },
+    // a legenda quebra em duas linhas no cartão de 360 px: o topo do grid tem espaço para a segunda
+    grid: { left: 8, right: 24, top: 60, bottom: 8, containLabel: true },
     xAxis: {
       type: 'time',
       boundaryGap: ['3%', '3%'],
