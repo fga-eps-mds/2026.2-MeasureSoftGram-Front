@@ -3,10 +3,12 @@ import {
   DISTRIBUTION_COLORS,
   formatComparisonChartOptions,
   formatDistributionChartOptions,
+  formatHistogramOptions,
   getPercentAxisMax,
   outlierSymbolSize,
   renderHistogramBar
 } from '../formatDistributionCharts';
+import { buildHistogram } from '../distributionHistogram';
 import { formatNumber, getBoxplotStats, getMetricReference } from '../metricDistribution';
 
 // q1, mediana e q3 de [1..8, 30] pelo método inclusive, como o Service calcula
@@ -487,6 +489,40 @@ describe('formatComparisonChartOptions', () => {
     );
     expect(formatComparisonChartOptions('complexity', repositories, null, 'projeto').aria.label.description).toContain(
       'por projeto.'
+    );
+  });
+});
+
+describe('formatHistogramOptions', () => {
+  it('nos valores de 0 a 1, desenha 10 faixas de 0,10 num eixo de 0 a 1', () => {
+    const histogram = buildHistogram([0.52, 0.55, 0.61, 0.9], 'characteristic');
+    const option = formatHistogramOptions(histogram, 'Reliability');
+
+    expect(option.xAxis).toMatchObject({ min: 0, max: 1, interval: 0.1 });
+    expect(option.series[0].data).toHaveLength(10);
+    expect(option.series[0].data[5]).toEqual([0.5, 0.6, 2]);
+    expect(option.series[0].tooltip.formatter({ dataIndex: 5 })).toBe(
+      '0,50 a 0,60<br/><strong>2 análises</strong>'
+    );
+    expect(option.aria.label.description).toBe(
+      'Histograma de Reliability: 4 análises em faixas de 0,1. 0,50 a 0,60: 2 análises; 0,60 a 0,70: 1 análise; 0,90 a 1,00: 1 análise.'
+    );
+  });
+
+  it('numa métrica, o eixo segue a escala dela', () => {
+    const histogram = buildHistogram([42, 44, 47, 55, 63], 'metric', 'INT');
+    const option = formatHistogramOptions(histogram, 'total_issues');
+
+    expect(option.xAxis).toMatchObject({ min: 40, max: 65, interval: 5 });
+    expect(option.series[0].data).toEqual([
+      [40, 45, 2],
+      [45, 50, 1],
+      [50, 55, 0],
+      [55, 60, 1],
+      [60, 65, 1]
+    ]);
+    expect(option.series[0].tooltip.formatter({ dataIndex: 0 })).toBe(
+      '40 a 44<br/><strong>2 análises</strong>'
     );
   });
 });

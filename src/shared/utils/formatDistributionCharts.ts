@@ -1,6 +1,8 @@
 import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
 import { FileMetricKey, MetricDistributionFile, MetricDistributionSummary } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import { formatAxisValue, formatBinLabel as formatHistogramBinLabel, Histogram } from '@utils/distributionHistogram';
+import { formatAnalysisCount, formatCount } from '@utils/distributionSummary';
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
 import {
@@ -508,6 +510,75 @@ export function formatComparisonChartOptions(
         tooltip: {
           formatter: ({ dataIndex }: { dataIndex: number }) =>
             formatOutlierTooltip(outliers[dataIndex].group, metric, reference, outliers[dataIndex].repository)
+        }
+      }
+    ]
+  };
+}
+
+/** Altura do histograma das análises. */
+export const HISTOGRAM_CHART_HEIGHT = 280;
+
+/**
+ * Margens do grid do histograma, em px, com o containLabel desligado: a régua A a E, desenhada fora do ECharts, usa as
+ * mesmas para ficar alinhada às faixas do eixo.
+ */
+export const HISTOGRAM_GRID_SIDES = { left: 56, right: 24 };
+
+/**
+ * Histograma das análises da entidade (CA4): uma barra por faixa de valor, do início ao fim dela, com a quantidade de
+ * análises. O eixo x é o das faixas; nos valores de 0 a 1, a régua A a E fica abaixo dele, fora do gráfico.
+ */
+export function formatHistogramOptions(histogram: Histogram, entityName: string) {
+  const { bins } = histogram;
+  const total = bins.reduce((sum, bin) => sum + bin.count, 0);
+  const filled = bins
+    .filter((bin) => bin.count > 0)
+    .map((bin) => `${formatHistogramBinLabel(bin, histogram)}: ${formatAnalysisCount(bin.count)}`)
+    .join('; ');
+
+  return {
+    animation: false,
+    aria: {
+      enabled: true,
+      label: {
+        description: `Histograma de ${entityName}: ${formatAnalysisCount(total)} em faixas de ${formatAxisValue(
+          histogram.width
+        )}. ${filled}.`
+      }
+    },
+    tooltip: { trigger: 'item', confine: true },
+    grid: { ...HISTOGRAM_GRID_SIDES, top: 32, bottom: 32 },
+    xAxis: {
+      type: 'value',
+      min: histogram.min,
+      max: histogram.max,
+      interval: histogram.width,
+      splitLine: { show: false },
+      axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
+      axisLabel: { ...AXIS_LABEL, formatter: formatAxisValue, hideOverlap: true }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Análises',
+      nameTextStyle: AXIS_LABEL,
+      minInterval: 1,
+      axisLabel: { ...AXIS_LABEL, formatter: formatCount },
+      splitLine: SPLIT_LINE
+    },
+    series: [
+      {
+        id: 'histogram',
+        type: 'custom',
+        renderItem: renderHistogramBar,
+        // sem o encode, o eixo y leria o fim da faixa (dimensão 1) em vez da contagem
+        encode: { x: [0, 1], y: 2 },
+        data: bins.map((bin) => [bin.start, bin.end, bin.count]),
+        tooltip: {
+          formatter: ({ dataIndex }: { dataIndex: number }) =>
+            `${formatHistogramBinLabel(bins[dataIndex], histogram)}<br/><strong>${formatAnalysisCount(
+              bins[dataIndex].count
+            )}</strong>`
         }
       }
     ]
