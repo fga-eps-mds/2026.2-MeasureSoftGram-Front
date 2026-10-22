@@ -70,7 +70,8 @@ describe('usePulseChartData', () => {
     ]);
     expect(result.current.allRepositories[2].measurements).toEqual([]);
     expect(result.current.totalMeasurements).toBe(3);
-    expect(result.current.latestDate).toBe('2026-09-10');
+    expect(result.current.latestDate).toBe('10/09/2026');
+    expect(result.current.releasesInPeriod).toBe(2);
   });
 
   it('aceita a lista de releases paginada', () => {
@@ -111,6 +112,8 @@ describe('usePulseChartData', () => {
       { created_at: '2026-08-20T12:00:00Z', value: 0.7 }
     ]);
     expect(result.current.selectedMeasurements).toBe(1);
+    // só a Release 1 encerra dentro do período (15/08); a Release 2 encerra em 30/08
+    expect(result.current.releasesInPeriod).toBe(1);
   });
 
   it('aceita período aberto em uma das pontas', () => {
