@@ -359,6 +359,9 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
                   position: 'insideEndTop',
                   color: DISTRIBUTION_COLORS.median,
                   fontSize: 11,
+                  // fundo claro para o rótulo não se misturar com os pontos que passam por trás dele
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                  padding: [1, 4],
                   formatter: `Mediana ${formatStatistic(median)}`
                 },
                 data: [{ yAxis: median }]
