@@ -10,10 +10,21 @@ import DistributionChart from './DistributionChart';
 
 export const HISTOGRAM_TITLE = 'Histograma';
 
+// some da tela, mas continua para os leitores de tela
+const VISUALLY_HIDDEN = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap'
+};
+
 /**
  * Régua das faixas A a E abaixo do eixo de 0 a 1, nas margens do grid do histograma: cada faixa ocupa 0,2 do eixo,
- * então cinco colunas iguais ficam alinhadas às barras. Fica fora do ECharts para o rótulo quebrar a linha em tela
- * estreita.
+ * então cinco colunas iguais ficam alinhadas às barras. Fica fora do ECharts para seguir a largura do cartão: com a
+ * régua mais estreita que 420 px (uns 84 px por faixa, o que cabe "B · Muito bom"), só a letra aparece, e o rótulo
+ * fica no title e no texto para leitores de tela.
  */
 export function QualityBandRuler() {
   return (
@@ -27,15 +38,25 @@ export function QualityBandRuler() {
       padding={0}
       sx={{
         listStyle: 'none',
+        containerType: 'inline-size',
         marginLeft: `${HISTOGRAM_GRID_SIDES.left}px`,
-        marginRight: `${HISTOGRAM_GRID_SIDES.right}px`
+        marginRight: `${HISTOGRAM_GRID_SIDES.right}px`,
+        '@container (max-width: 420px)': { '& .quality-band-label': VISUALLY_HIDDEN }
       }}
     >
       {QUALITY_BANDS.map((band) => (
-        <Box component="li" key={band.grade} data-testid="quality-band" textAlign="center" minWidth={0}>
+        <Box
+          component="li"
+          key={band.grade}
+          data-testid="quality-band"
+          title={`${band.grade} · ${band.label}`}
+          textAlign="center"
+          minWidth={0}
+        >
           <Box sx={{ height: '10px', borderRadius: '2px', backgroundColor: band.color }} />
           <Typography fontSize="11px" color={DASHBOARD_COLORS.text} marginTop="4px" lineHeight={1.3}>
-            <strong>{band.grade}</strong> · {band.label}
+            <strong>{band.grade}</strong>
+            <span className="quality-band-label"> · {band.label}</span>
           </Typography>
         </Box>
       ))}
