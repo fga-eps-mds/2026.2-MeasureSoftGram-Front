@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import { OAUTH_STATE_KEY } from '@services/Auth/oauthState';
 import { SWRConfig } from 'swr';
 import Products from '../Products';
+import { normalizeRepoUrl } from '../hooks/useImportRepos';
 
 jest.mock('@services/organization');
 jest.mock('@services/product');
@@ -274,6 +275,97 @@ describe('Products Component', () => {
 
       expect(await screen.findByText('Repo 1')).toBeInTheDocument();
       expect(productQuery.getAllRepositories).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('troca de produto e de organização', () => {
+    const selectOption = async (label: string, option: string) => {
+      await act(async () => { fireEvent.mouseDown(screen.getByLabelText(label)); });
+      await act(async () => { fireEvent.click(await screen.findByRole('option', { name: new RegExp(option) })); });
+    };
+
+    it('não marca como importado no outro produto o repositório importado no anterior', async () => {
+      // sem produto no contexto, para a seleção da tela não voltar para o produto antigo
+      (useProductContext as jest.Mock).mockReturnValue({
+        currentProduct: undefined,
+        updateProductList: mockUpdateProductList,
+        setCurrentProduct: mockSetCurrentProduct
+      });
+      (productQuery.getAllProducts as jest.Mock).mockResolvedValue({
+        data: { results: [{ id: 'prod-1', name: 'Prod 1' }, { id: 'prod-2', name: 'Prod 2' }] }
+      });
+      (repository.createRepository as jest.Mock).mockResolvedValueOnce({ type: 'success' });
+      (productQuery.getAllRepositories as jest.Mock).mockImplementation(async (_org: string, productId: string) => ({
+        data: {
+          results: productId === 'prod-1' && (repository.createRepository as jest.Mock).mock.calls.length > 0
+            ? [{ id: 1, name: 'Repo 1', url: 'http://repo1', description: '' }]
+            : []
+        }
+      }));
+
+      renderProducts();
+
+      fireEvent.click(await screen.findByText('Importar'));
+      expect(await screen.findByText('Importado')).toBeInTheDocument();
+
+      await selectOption('Produtos do MeasureSoftGram', 'Prod 2');
+
+      expect(await screen.findByText('Importar')).toBeInTheDocument();
+      expect(screen.queryByText('Importado')).not.toBeInTheDocument();
+    });
+
+    it('não mostra nem deixa importar os repositórios da organização anterior enquanto a nova carrega', async () => {
+      (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [
+          { github_org_id: 1, github_org_name: 'Org 1', description: '' },
+          { github_org_id: 2, github_org_name: 'Org 2', description: '' }
+        ]
+      });
+      (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }, { id: 'org-2', name: 'Org 2', key: 'org-2' }]
+      });
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        organizationList: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }, { id: 'org-2', name: 'Org 2', key: 'org-2' }],
+        currentOrganization: undefined,
+        setCurrentOrganizations: mockSetCurrentOrgs,
+        fetchOrganizations: mockFetchOrgs
+      });
+      let resolveOrg2: (value: unknown) => void = () => undefined;
+      (organizationQuery.getGithubRepos as jest.Mock).mockImplementation((orgId: string) => {
+        if (orgId !== 'org-2') {
+          return Promise.resolve({
+            type: 'success',
+            value: { repos: [{ github_repo_id: 1, name: 'Repo da Org 1', url: 'http://org1/repo', description: '' }], totalPages: 1, nextPage: null }
+          });
+        }
+        return new Promise(resolve => { resolveOrg2 = resolve; });
+      });
+
+      renderProducts();
+      expect(await screen.findByText('Repo da Org 1')).toBeInTheDocument();
+
+      await selectOption('Organizações do GitHub', 'Org 2');
+
+      await waitFor(() => expect(screen.queryByText('Repo da Org 1')).not.toBeInTheDocument());
+      expect(screen.queryByText('Importar')).not.toBeInTheDocument();
+
+      await act(async () => {
+        resolveOrg2({
+          type: 'success',
+          value: { repos: [{ github_repo_id: 2, name: 'Repo da Org 2', url: 'http://org2/repo', description: '' }], totalPages: 1, nextPage: null }
+        });
+      });
+      expect(await screen.findByText('Repo da Org 2')).toBeInTheDocument();
+    });
+  });
+
+  describe('normalizeRepoUrl', () => {
+    it('tira espaços, barras finais e maiúsculas', () => {
+      expect(normalizeRepoUrl('  https://GitHub.com/Org/Repo///  ')).toBe('https://github.com/org/repo');
+      expect(normalizeRepoUrl('/////')).toBe('');
+      expect(normalizeRepoUrl(null)).toBe('');
     });
   });
 

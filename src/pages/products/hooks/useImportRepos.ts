@@ -1,7 +1,10 @@
+import { useEffect, useMemo } from 'react';
 import useSWR, { mutate as globalMutate } from 'swr';
+import { toast } from 'react-toastify';
 import type { AxiosError } from 'axios';
 import { organizationQuery } from '@services/organization';
 import { productQuery } from '@services/product';
+import type { ProviderTerms } from '@utils/providerTerminology';
 
 export interface UnifiedRepoItem {
   github_repo_id?: number;
@@ -25,6 +28,8 @@ interface ProductRepository {
 interface ProviderReposPage {
   repos: UnifiedRepoItem[];
   totalPages: number;
+  // de qual provedor/organização/produto a página veio; evita mostrar a lista de outra seleção
+  context: string;
 }
 
 interface ProviderReposParams {
@@ -44,7 +49,12 @@ const PRODUCT_REPOS_KEY = 'product-import-repos';
 // A lista do provedor muda pouco: ao voltar para uma página ou aba, mostra a guardada e não busca de novo.
 const PROVIDER_REPOS_CONFIG = { keepPreviousData: true, revalidateOnFocus: false, dedupingInterval: 30000 };
 
-export const normalizeRepoUrl = (url?: string | null) => (url ?? '').trim().replace(/\/+$/, '').toLowerCase();
+export const normalizeRepoUrl = (url?: string | null) => {
+  const value = (url ?? '').trim();
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end--;
+  return value.slice(0, end).toLowerCase();
+};
 
 const githubFullNameFromUrl = (url?: string | null) => {
   const match = /github\.com\/([^/]+\/[^/]+)/i.exec(url ?? '');
@@ -54,10 +64,20 @@ const githubFullNameFromUrl = (url?: string | null) => {
 const totalPagesOf = (page: number, total: number | null, nextPage: number | null) =>
   Math.max(total ?? 0, nextPage ?? 0, page);
 
+// identifica a seleção (sem página nem busca) a que uma lista do provedor pertence
+const reposContextOf = (
+  provider: string,
+  orgDbId: string,
+  namespaceId: number | string | null,
+  kind: string | null,
+  excludeProductId: string | null
+) => [provider, orgDbId, namespaceId, kind, excludeProductId].join('|');
+
 type ProviderReposKey = [string, string, string, number | string | null, string | null, number, string, string | null];
 
 async function fetchProviderRepos([, provider, orgDbId, namespaceId, kind, page, search, excludeProductId]:
   ProviderReposKey): Promise<ProviderReposPage> {
+  const context = reposContextOf(provider, orgDbId, namespaceId, kind, excludeProductId);
   if (provider === 'gitlab') {
     const res = excludeProductId
       ? await organizationQuery.getGitLabProjects(orgDbId, namespaceId ?? undefined, kind ?? undefined, page, search,
@@ -67,7 +87,8 @@ async function fetchProviderRepos([, provider, orgDbId, namespaceId, kind, page,
     const { projects, totalPages, nextPage } = res.value;
     return {
       repos: projects.map(p => ({ ...p, github_repo_id: p.gitlab_project_id, github_full_name: p.gitlab_path_with_namespace })),
-      totalPages: totalPagesOf(page, totalPages, nextPage)
+      totalPages: totalPagesOf(page, totalPages, nextPage),
+      context
     };
   }
 
@@ -76,7 +97,7 @@ async function fetchProviderRepos([, provider, orgDbId, namespaceId, kind, page,
     : await organizationQuery.getGithubRepos(orgDbId, page, search);
   if (res.type !== 'success') throw res.error;
   const { repos, totalPages, nextPage } = res.value;
-  return { repos, totalPages: totalPagesOf(page, totalPages, nextPage) };
+  return { repos, totalPages: totalPagesOf(page, totalPages, nextPage), context };
 }
 
 /** Uma página dos repositórios do provedor (GitHub ou GitLab) da organização, guardada no cache do SWR. */
@@ -92,11 +113,15 @@ export function useProviderRepos({ provider, orgDbId, namespace, page, search, e
     PROVIDER_REPOS_CONFIG
   );
 
+  // com keepPreviousData, ao trocar de organização ou produto o SWR devolve a lista da seleção anterior até a nova chegar
+  const isStale = !!key && !!data && data.context !== reposContextOf(provider, orgDbId, namespace?.id ?? null,
+    namespace?.kind ?? null, excludeProductId ?? null);
+
   return {
-    repos: data?.repos ?? [],
-    totalPages: data?.totalPages ?? 1,
+    repos: isStale ? [] : data?.repos ?? [],
+    totalPages: isStale ? 1 : data?.totalPages ?? 1,
     error,
-    isLoading,
+    isLoading: isLoading || isStale,
     isValidating,
     mutate
   };
@@ -128,4 +153,72 @@ export function useProductImportedRepos(orgDbId: string, productId: string) {
   );
 
   return { repos: data, error, isLoading, mutate };
+}
+
+export const REPOS_PER_PAGE = 10;
+
+interface ImportListParams {
+  provider: 'github' | 'gitlab';
+  terms: ProviderTerms;
+  orgDbId: string;
+  productId: string;
+  namespace?: { id: number | string; kind?: string };
+  tabValue: number;
+  page: number;
+  search: string;
+}
+
+/** O que a tela de importação lista na aba atual: "Importados" vem do MeasureSoftGram, as outras vêm do provedor. */
+export function useImportList({ provider, terms, orgDbId, productId, namespace, tabValue, page, search }:
+  ImportListParams) {
+  const imported = useProductImportedRepos(orgDbId, productId);
+  const providerRepos = useProviderRepos({
+    provider,
+    orgDbId,
+    namespace,
+    page,
+    search,
+    excludeProductId: tabValue === 2 ? productId : undefined,
+    enabled: tabValue !== 0 && !!orgDbId && !!productId && (provider !== 'gitlab' || !!namespace)
+  });
+
+  const onImportedTab = tabValue === 0;
+  const importedFiltered = useMemo(() => {
+    const needle = search.toLowerCase();
+    return (imported.repos ?? []).filter(repo => !needle || repo.name.toLowerCase().includes(needle));
+  }, [imported.repos, search]);
+
+  const repos = onImportedTab
+    ? importedFiltered.slice((page - 1) * REPOS_PER_PAGE, page * REPOS_PER_PAGE)
+    : providerRepos.repos;
+  const totalPages = onImportedTab
+    ? Math.max(Math.ceil(importedFiltered.length / REPOS_PER_PAGE), 1)
+    : providerRepos.totalPages;
+  const isLoading = onImportedTab ? imported.isLoading : providerRepos.isLoading && providerRepos.repos.length === 0;
+  const isRefreshing = !onImportedTab && providerRepos.isValidating && !isLoading;
+  const error = onImportedTab ? imported.error : providerRepos.error;
+  let errorKind: '409' | 'error' | null = null;
+  if (error) errorKind = error.response?.status === 409 ? '409' : 'error';
+
+  useEffect(() => {
+    if (errorKind === '409') {
+      toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
+    } else if (errorKind) {
+      toast.error(`Erro ao buscar ${terms.repositories} do ${terms.providerName}.`);
+    }
+  }, [errorKind]);
+
+  const retry = () => void (onImportedTab ? imported.mutate() : providerRepos.mutate());
+
+  return {
+    imported,
+    repos,
+    totalPages,
+    isLoading,
+    isRefreshing,
+    errorKind,
+    retry,
+    // sem saber o que o produto já importou, "Importar" poderia repetir um repositório
+    importedReady: imported.repos !== undefined
+  };
 }
