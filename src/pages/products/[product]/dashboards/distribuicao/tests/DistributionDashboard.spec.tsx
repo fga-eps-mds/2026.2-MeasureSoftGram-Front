@@ -195,14 +195,33 @@ describe('<DistributionDashboard />', () => {
     expect(histogram).toHaveTextContent('Quantas análises caem em cada faixa de 5 de sum_ci_feedback_times');
   });
 
-  it('põe o histograma e o resumo nas posições da grade da referência', () => {
+  it('põe o histograma, a densidade e o resumo nas posições da grade da referência', () => {
     render(<DistributionDashboard />);
 
     const grid = screen.getByTestId('distribution-grid');
     expect(within(grid).getByRole('region', { name: 'Histograma' })).toBeInTheDocument();
+    expect(within(grid).getByRole('region', { name: 'Curva de densidade' })).toBeInTheDocument();
     expect(within(grid).getByRole('region', { name: 'Resumo estatístico e IQR' })).toBeInTheDocument();
-    // sem cartões vazios no lugar da densidade, do boxplot e da dispersão
-    expect(within(grid).getAllByRole('region')).toHaveLength(2);
+    // sem cartões vazios no lugar do boxplot e da dispersão
+    expect(within(grid).getAllByRole('region')).toHaveLength(3);
+  });
+
+  it('com poucas análises, a densidade explica que faltam análises e os outros quadros continuam (CA9)', () => {
+    mockRequests({
+      respond: (params) => ({
+        data: distribution({
+          repositoryId: params.repository_id,
+          main: entity('tsqmi', 'TSQMI', 'tsqmi', [0.5, 0.6])
+        })
+      })
+    });
+    render(<DistributionDashboard />);
+
+    expect(screen.getByRole('region', { name: 'Curva de densidade' })).toHaveTextContent(
+      'Faltam análises para a curva de densidade'
+    );
+    expect(within(screen.getByRole('region', { name: 'Histograma' })).getByTestId('echarts')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Resumo estatístico e IQR' })).toBeInTheDocument();
   });
 
   it('produto sem release orienta a planejar a primeira (CA9)', () => {
@@ -246,6 +265,7 @@ describe('<DistributionDashboard />', () => {
 
     const grid = screen.getByTestId('distribution-grid');
     expect(within(grid).getByRole('region', { name: 'Histograma' })).toHaveTextContent('Carregando');
+    expect(within(grid).getByRole('region', { name: 'Curva de densidade' })).toHaveTextContent('Carregando');
     expect(within(grid).getByRole('region', { name: 'Resumo estatístico e IQR' })).toHaveTextContent('Carregando');
   });
 });

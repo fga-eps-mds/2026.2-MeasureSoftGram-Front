@@ -1,9 +1,12 @@
 import { DistributionAnalysis } from '@customTypes/product';
+import { buildDensity, DensityPoint } from '../distributionDensity';
 import { buildHistogram } from '../distributionHistogram';
 import {
   DISTRIBUTION_COLORS,
   formatBoxTooltip,
+  formatDensityOptions,
   formatHistogramOptions,
+  formatMedianLabel,
   outlierSymbolSize,
   renderHistogramBar
 } from '../formatDistributionCharts';
@@ -78,5 +81,63 @@ describe('formatHistogramOptions', () => {
       [60, 65, 1]
     ]);
     expect(option.series[0].tooltip.formatter({ dataIndex: 0 })).toBe('40 a 44<br/><strong>2 análises</strong>');
+  });
+});
+
+describe('formatDensityOptions', () => {
+  const values = [0.31, 0.52, 0.55, 0.56, 0.6, 0.9];
+  const histogram = buildHistogram(values, 'tsqmi');
+  const points = buildDensity(values, { min: 0, max: 1, iqr: 0.0875 }) as DensityPoint[];
+
+  it('usa o mesmo eixo e as mesmas margens do histograma', () => {
+    const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+    const bars = formatHistogramOptions(histogram, 'TSQMI');
+
+    expect(option.xAxis).toEqual(bars.xAxis);
+    expect(option.grid).toMatchObject({ left: bars.grid.left, right: bars.grid.right });
+  });
+
+  it('desenha a curva com a área preenchida em cor clara', () => {
+    const [curve] = formatDensityOptions(points, histogram, 0.555, 'TSQMI').series;
+
+    expect(curve).toMatchObject({
+      name: 'Densidade',
+      type: 'line',
+      showSymbol: false,
+      areaStyle: { color: DISTRIBUTION_COLORS.densityFill }
+    });
+    expect(curve.data).toHaveLength(points.length);
+    expect(curve.data[0]).toEqual([points[0].x, points[0].y]);
+  });
+
+  it('marca a mediana numa linha vertical, com o valor na legenda (CA5)', () => {
+    const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+
+    expect(option.legend.data).toEqual(['Densidade', 'Mediana (0,56)']);
+    expect(option.series[1]).toMatchObject({ name: 'Mediana (0,56)', data: [] });
+    expect(option.series[1].markLine?.data).toEqual([{ xAxis: 0.555 }]);
+  });
+
+  it('sem mediana, só a curva', () => {
+    const option = formatDensityOptions(points, histogram, null, 'TSQMI');
+
+    expect(option.legend.data).toEqual(['Densidade']);
+    expect(option.series).toHaveLength(1);
+  });
+
+  it('descreve a curva no texto acessível e mostra o valor e a densidade no tooltip', () => {
+    const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+
+    expect(option.aria.label.description).toMatch(
+      /^Curva de densidade de TSQMI, de 0 a 1, com o pico em 0,5\d\. Mediana \(0,56\)\.$/
+    );
+    expect(option.tooltip.formatter([{ value: [0.5, 2.345] }])).toBe('0,50<br/>Densidade: <strong>2,35</strong>');
+  });
+});
+
+describe('formatMedianLabel', () => {
+  it('mostra a mediana com duas casas', () => {
+    expect(formatMedianLabel(0.5)).toBe('Mediana (0,50)');
+    expect(formatMedianLabel(47)).toBe('Mediana (47,00)');
   });
 });
