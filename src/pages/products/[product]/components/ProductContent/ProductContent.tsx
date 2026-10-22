@@ -7,6 +7,7 @@ import { Box, Container, Typography } from '@mui/material';
 import { useProductContext } from '@contexts/ProductProvider';
 import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
+import { RepositoriesTsqmiHistory } from '@customTypes/product';
 import { PulseChart } from '@components/PulseChart';
 
 import { getPathId } from '@utils/pathDestructer';
@@ -34,13 +35,25 @@ const ProductContent: React.FC = () => {
     return [];
   };
 
+  // Mesma requisição do PulseChart (o SWR deduplica): a última atualização é a medição de TSQMI mais recente.
+  const { data: tsqmiHistoryData } = useRequest<RepositoriesTsqmiHistory>(
+    organizationId && productId
+      ? productQuery.getProductRepositoriesTsqmiHistoryConfig(organizationId, productId)
+      : null
+  );
+
   const releasesArray = getReleasesArray();
 
-  const lastUpdateDate =
-    currentProduct &&
-    formatRelative(new Date(), new Date(), {
-      locale: ptBR,
-    });
+  const latestMeasurementMs = Math.max(
+    0,
+    ...(tsqmiHistoryData?.results ?? []).flatMap((repo) =>
+      (repo.history ?? []).map((m) => new Date(m.created_at).getTime())
+    )
+  );
+
+  const lastUpdateDate = latestMeasurementMs
+    ? formatRelative(new Date(latestMeasurementMs), new Date(), { locale: ptBR })
+    : '-';
 
   if (!currentProduct || isReleasesLoading || !organizationId || !productId) {
     return (
