@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { DistributionSummary } from '@customTypes/product';
 
 /** O que aparece no lugar de uma estatística que o Service devolve null. */
@@ -67,10 +69,25 @@ export function describeSkewness(skewness: number | null): string | null {
  * Por que a assimetria ficou de fora (CA9): com menos de 3 análises, faltam análises; com 3 ou mais e o Service
  * devolvendo null, todas têm o mesmo valor (desvio zero). Null quando ela foi calculada.
  */
-export function getSkewnessWarning({ count, skewness }: Pick<DistributionSummary, 'count' | 'skewness'>): string | null {
+export function getSkewnessWarning({
+  count,
+  skewness
+}: Pick<DistributionSummary, 'count' | 'skewness'>): string | null {
   if (count < MIN_ANALYSES_FOR_SKEWNESS) {
-    return `Faltam análises para a assimetria: ela precisa de pelo menos ${MIN_ANALYSES_FOR_SKEWNESS}, e o período tem ${formatAnalysisCount(count)}.`;
+    return `Faltam análises para a assimetria: ela precisa de pelo menos ${MIN_ANALYSES_FOR_SKEWNESS}, e o período tem ${formatAnalysisCount(
+      count
+    )}.`;
   }
   if (skewness === null) return 'Sem assimetria: todas as análises do período têm o mesmo valor.';
   return null;
+}
+
+/** Período das análises (CA3): "17 ago a 16 out"; com o ano se as datas forem de anos diferentes; "17 ago" num dia só. */
+export function formatPeriod(first: string, last: string): string {
+  const start = new Date(first);
+  const end = new Date(last);
+  const pattern = start.getFullYear() === end.getFullYear() ? 'd MMM' : 'd MMM yyyy';
+  const from = format(start, pattern, { locale: ptBR });
+  const to = format(end, pattern, { locale: ptBR });
+  return from === to ? from : `${from} a ${to}`;
 }

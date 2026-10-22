@@ -2,6 +2,7 @@ import { DistributionSummary } from '@customTypes/product';
 import {
   describeSkewness,
   formatAnalysisCount,
+  formatPeriod,
   formatStatistic,
   getSkewnessWarning,
   getSummaryRows
@@ -114,5 +115,19 @@ describe('getSkewnessWarning', () => {
 
   it('não avisa nada quando a assimetria foi calculada', () => {
     expect(getSkewnessWarning({ count: 60, skewness: -0.16 })).toBeNull();
+  });
+});
+
+describe('formatPeriod', () => {
+  it('mostra o dia e o mês da primeira e da última análise', () => {
+    expect(formatPeriod('2026-08-17T10:02:00-03:00', '2026-10-16T18:40:00-03:00')).toBe('17 ago a 16 out');
+  });
+
+  it('num dia só, mostra a data uma vez', () => {
+    expect(formatPeriod('2026-08-17T10:02:00-03:00', '2026-08-17T18:40:00-03:00')).toBe('17 ago');
+  });
+
+  it('com anos diferentes, mostra o ano', () => {
+    expect(formatPeriod('2026-12-28T10:00:00-03:00', '2027-01-03T10:00:00-03:00')).toBe('28 dez 2026 a 3 jan 2027');
   });
 });

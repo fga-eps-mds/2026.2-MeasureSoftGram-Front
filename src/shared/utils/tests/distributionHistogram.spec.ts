@@ -1,5 +1,11 @@
 import { DistributionLevel } from '@customTypes/product';
-import { buildHistogram, formatAxisValue, formatBinLabel, getMetricBinWidth, isUnitScale } from '../distributionHistogram';
+import {
+  buildHistogram,
+  formatAxisValue,
+  formatBinLabel,
+  getMetricBinWidth,
+  isUnitScale
+} from '../distributionHistogram';
 
 function counts(values: number[], level: DistributionLevel) {
   return buildHistogram(values, level).bins.map((bin) => bin.count);
