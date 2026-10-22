@@ -497,7 +497,7 @@ export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Hi
       splitArea: {
         show: true,
         areaStyle: {
-          color: [DISTRIBUTION_COLORS.entityRow, ...Array<string>(rows.length - 1).fill('transparent')]
+          color: [DISTRIBUTION_COLORS.entityRow, ...new Array<string>(rows.length - 1).fill('transparent')]
         }
       }
     },
