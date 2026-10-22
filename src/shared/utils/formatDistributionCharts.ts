@@ -406,6 +406,9 @@ export const BOXPLOT_GRID = { top: 36, bottom: 28, left: 124, right: 24 };
 /** Largura dos nomes das linhas no eixo y; um nome maior é cortado com reticências. */
 const BOXPLOT_LABEL_WIDTH = 112;
 
+/** Num gráfico estreito (o cartão em 360 px), os nomes ficam mais curtos para sobrar espaço para as caixas. */
+const BOXPLOT_NARROW = { maxWidth: 360, labelWidth: 72 };
+
 // um discrepante a menos de 1/36 do eixo do centro de um grupo entra nele: nenhum ponto fica escondido atrás de outro
 const OUTLIER_SPREAD = 36;
 
@@ -522,6 +525,15 @@ export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Hi
         ...OUTLIER_STYLE,
         data: outliers.map((point) => [point.value, point.row.entity.key]),
         tooltip: { formatter: ({ dataIndex }: { dataIndex: number }) => formatLevelOutlierTooltip(outliers[dataIndex]) }
+      }
+    ],
+    media: [
+      {
+        query: { maxWidth: BOXPLOT_NARROW.maxWidth },
+        option: {
+          grid: { left: BOXPLOT_NARROW.labelWidth + BOXPLOT_GRID.left - BOXPLOT_LABEL_WIDTH },
+          yAxis: { axisLabel: { width: BOXPLOT_NARROW.labelWidth } }
+        }
       }
     ]
   };

@@ -442,6 +442,14 @@ describe('boxplot do nível', () => {
       expect(getLevelBoxplotHeight(4)).toBe(BOXPLOT_GRID.top + 4 * BOXPLOT_ROW_HEIGHT + BOXPLOT_GRID.bottom);
     });
 
+    it('num gráfico estreito, encurta os nomes e mantém o topo e a base do grid', () => {
+      const [narrow] = formatLevelBoxplotOptions(rows, histogram).media;
+
+      expect(narrow.query).toEqual({ maxWidth: 360 });
+      expect(narrow.option.grid).toEqual({ left: 84 });
+      expect(narrow.option.yAxis.axisLabel.width).toBe(72);
+    });
+
     it('descreve as linhas e os discrepantes no texto acessível', () => {
       expect(formatLevelBoxplotOptions(rows.slice(0, 2), histogram).aria.label.description).toBe(
         'Boxplot de TSQMI e do filho no modelo, de 0 a 1. ' +
