@@ -221,6 +221,18 @@ const Products: NextPageWithLayout = () => {
 
   const importOrg = async (orgName: string): Promise<string> => {
     if (provider === 'gitlab') {
+      // grupo do GitLab: uma Organization compartilhada entre os membros do grupo
+      const group = providerNamespaces.find(
+        ns => ns.kind === 'group' && (ns.name === orgName || ns.full_path === orgName)
+      );
+      if (group) {
+        const importRes = await organizationQuery.importGitlabGroup(group.id);
+        if (importRes.type === 'success' && importRes.value?.id) {
+          await fetchOrganizations();
+          return String(importRes.value.id);
+        }
+        return '';
+      }
       const createRes = await organizationQuery.createOrganization({ name: orgName });
       if (createRes.type === 'success' && createRes.value?.id) {
         await fetchOrganizations();

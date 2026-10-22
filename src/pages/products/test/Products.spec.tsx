@@ -568,6 +568,21 @@ describe('Products Component', () => {
       });
     });
 
+    it('imports a gitlab group through the shared group endpoint when it is not in MeasureSoftGram yet', async () => {
+      (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValue({ type: 'success', value: [] });
+      (organizationQuery.importGitlabGroup as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: { id: 'org-gl-1' }
+      });
+
+      render(<Products />);
+
+      await waitFor(() => {
+        expect(organizationQuery.importGitlabGroup).toHaveBeenCalledWith(101);
+      });
+      expect(organizationQuery.createOrganization).not.toHaveBeenCalled();
+    });
+
     it('imports a gitlab project with platform gitlab', async () => {
       (repository.createRepository as jest.Mock).mockResolvedValueOnce({ type: 'success' });
 
@@ -694,7 +709,13 @@ describe('Products Component', () => {
       }, { timeout: 1000 });
     });
 
-    it('creates organization if gitlab namespace is not yet in backend', async () => {
+    it('creates organization if the gitlab personal space is not yet in backend', async () => {
+      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [
+          { id: 101, name: 'GitLab Group 1', full_path: 'gitlab-group-1', avatar_url: '', description: '', kind: 'user' }
+        ]
+      });
       (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValueOnce({
         type: 'success',
         value: []

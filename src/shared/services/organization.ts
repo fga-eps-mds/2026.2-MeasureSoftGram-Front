@@ -114,6 +114,15 @@ class OrganizationQuery {
     }
   }
 
+  async importGitlabGroup(gitlabGroupId: number | string): Promise<Result<OrganizationFormData>> {
+    try {
+      const response = await api.post('/v1/organizations/import-gitlab/', { gitlab_group_id: gitlabGroupId });
+      return { type: 'success', value: response.data as OrganizationFormData };
+    } catch (error) {
+      return { type: 'error', error: error as AxiosError };
+    }
+  }
+
   async getGithubRepos(orgId: string, page?: number, search?: string): Promise<Result<GitHubReposPage>> {
     try {
       const params: Record<string, any> = {};

@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Box, Container } from '@mui/material';
+import { Alert, Box, Container } from '@mui/material';
 
 import { NextPageWithLayout } from '@pages/_app.next';
 import useRequireAuth from '@hooks/useRequireAuth';
@@ -23,7 +23,7 @@ const Repository: NextPageWithLayout = () => {
   const { latestTSQMI, latestTSQMIBadgeUrl } = useRepositoryContext();
   useRequireAuth();
   usePreloadECharts();
-  useQuery();
+  const { repositoryNotFound } = useQuery();
 
   const { query } = useRouter();
   const [organizationId, productId] = getPathId(query?.product as string);
@@ -39,6 +39,19 @@ const Repository: NextPageWithLayout = () => {
   const emptyMessage = hasReleases
     ? `Nenhuma release tem valores de características deste ${terms.repository}. Eles aparecem depois que a Action do MeasureSoftGram roda dentro do período de uma release.`
     : 'Este produto ainda não tem releases. Crie uma release para acompanhar a evolução por release.';
+
+  if (repositoryNotFound) {
+    return (
+      <>
+        <Head>
+          <title>{terms.Repository}</title>
+        </Head>
+        <Container sx={{ marginTop: '40px' }}>
+          <Alert severity="warning">Você não tem acesso a este repositório no {terms.providerName}.</Alert>
+        </Container>
+      </>
+    );
+  }
 
   return (
     <>

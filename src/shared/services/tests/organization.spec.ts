@@ -197,6 +197,21 @@ describe('Organization Service', () => {
     expect(result.type).toBe('error');
   });
 
+  it('deve importar grupo do GitLab (POST)', async () => {
+    (api.post as jest.Mock).mockResolvedValue({ data: { id: '9', name: 'Grupo' } });
+
+    const result = await organizationQuery.importGitlabGroup(77);
+
+    expect(api.post).toHaveBeenCalledWith('/v1/organizations/import-gitlab/', { gitlab_group_id: 77 });
+    expect(result.type).toBe('success');
+  });
+
+  it('deve retornar erro ao falhar importar grupo do GitLab', async () => {
+    (api.post as jest.Mock).mockRejectedValue(new Error(NETWORK_ERROR));
+    const result = await organizationQuery.importGitlabGroup(77);
+    expect(result.type).toBe('error');
+  });
+
   // Testes de getGithubRepos
   it('deve buscar repositórios do GitHub (GET)', async () => {
     const mockRepos = [{ github_repo_id: 1, name: 'repo1' }];
