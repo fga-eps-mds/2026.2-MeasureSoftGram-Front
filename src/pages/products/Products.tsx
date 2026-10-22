@@ -19,6 +19,7 @@ import {
   Paper,
   InputAdornment,
   CircularProgress,
+  LinearProgress,
   Link,
   Pagination
 } from "@mui/material";
@@ -41,6 +42,13 @@ import { FaGitlab } from 'react-icons/fa';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { refreshRepositoryList } from '@hooks/useRepositoryList';
 import { useAuth } from '@contexts/Auth';
+import {
+  UnifiedRepoItem,
+  normalizeRepoUrl,
+  refreshProviderRepos,
+  useProductImportedRepos,
+  useProviderRepos
+} from './hooks/useImportRepos';
 
 interface ProductType {
   id: string | number;
@@ -58,15 +66,7 @@ interface ProviderNamespaceItem {
   github_org_name?: string;
 }
 
-interface UnifiedRepoItem {
-  github_repo_id?: number;
-  gitlab_project_id?: number;
-  github_full_name?: string;
-  gitlab_path_with_namespace?: string;
-  name: string;
-  description?: string;
-  url: string;
-}
+const REPOS_PER_PAGE = 10;
 
 const Products: NextPageWithLayout = () => {
   const { terms, provider } = useProviderTerms();
@@ -85,28 +85,90 @@ const Products: NextPageWithLayout = () => {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>('');
 
-  const [gitHubRepos, setGitHubRepos] = useState<UnifiedRepoItem[]>([]);
-  const [importedRepoUrls, setImportedRepoUrls] = useState<string[]>([]);
+  // importados nesta tela: marcam o "Importado" na hora, antes de a lista do servidor voltar
+  const [pendingImports, setPendingImports] = useState<Set<string>>(new Set());
   const [loadingOrgs, setLoadingOrgs] = useState<boolean>(true);
   const [loadingProducts, setLoadingProducts] = useState<boolean>(false);
-  const [loadingRepos, setLoadingRepos] = useState<boolean>(false);
   const [repoFetchError, setRepoFetchError] = useState<'409' | 'error' | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tabValue, setTabValue] = useState(0);
 
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     setPage(1);
-  }, [search, tabValue, selectedOrgName, provider]);
+  }, [search, tabValue, selectedOrgName, provider, selectedProductId]);
 
+  // a busca vai para o servidor só quando a pessoa para de digitar
   useEffect(() => {
-    setTotalPages(1);
-  }, [selectedOrgName, provider]);
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), search ? 400 : 0);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const lastLoadedProductIdRef = useRef<string>('');
-  const prevQueryRef = useRef({ page: 1, search: '', orgName: '', orgDbId: '' });
+
+  const currentNamespace = useMemo(
+    () => providerNamespaces.find(ns => ns.name === selectedOrgName || ns.full_path === selectedOrgName),
+    [providerNamespaces, selectedOrgName]
+  );
+
+  // "Importados" vem do MeasureSoftGram; "Todos" e "A Importar" vêm do provedor, paginados no servidor
+  const imported = useProductImportedRepos(selectedOrgDbId, selectedProductId);
+  const mutateImported = imported.mutate;
+  const providerRepos = useProviderRepos({
+    provider: provider === 'gitlab' ? 'gitlab' : 'github',
+    orgDbId: selectedOrgDbId,
+    namespace: currentNamespace,
+    page,
+    search: debouncedSearch,
+    excludeProductId: tabValue === 2 ? selectedProductId : undefined,
+    enabled: tabValue !== 0 && !!selectedOrgDbId && !!selectedProductId && (provider !== 'gitlab' || !!currentNamespace)
+  });
+
+  // ao trocar de produto, abre em "Importados" se ele já tem repositórios e em "A Importar" se não tem
+  useEffect(() => {
+    if (!selectedProductId || imported.repos === undefined) return;
+    if (lastLoadedProductIdRef.current === selectedProductId) return;
+    lastLoadedProductIdRef.current = selectedProductId;
+    setTabValue(imported.repos.length === 0 ? 2 : 0);
+  }, [selectedProductId, imported.repos]);
+
+  const importedUrls = useMemo(
+    () => new Set([...(imported.repos ?? []).map(repo => normalizeRepoUrl(repo.url)), ...pendingImports]),
+    [imported.repos, pendingImports]
+  );
+  const isImported = (repo: UnifiedRepoItem) => !!repo.url && importedUrls.has(normalizeRepoUrl(repo.url));
+
+  const importedFiltered = useMemo(() => {
+    const needle = debouncedSearch.toLowerCase();
+    return (imported.repos ?? []).filter(repo => !needle || repo.name.toLowerCase().includes(needle));
+  }, [imported.repos, debouncedSearch]);
+
+  const onImportedTab = tabValue === 0;
+  const displayedRepos = onImportedTab
+    ? importedFiltered.slice((page - 1) * REPOS_PER_PAGE, page * REPOS_PER_PAGE)
+    : providerRepos.repos;
+  const totalPages = onImportedTab
+    ? Math.max(Math.ceil(importedFiltered.length / REPOS_PER_PAGE), 1)
+    : providerRepos.totalPages;
+  const listLoading = onImportedTab
+    ? imported.isLoading
+    : providerRepos.isLoading && providerRepos.repos.length === 0;
+  const listRefreshing = !onImportedTab && providerRepos.isValidating && !listLoading;
+  const listError = onImportedTab ? imported.error : providerRepos.error;
+  let listErrorKind: '409' | 'error' | null = null;
+  if (listError) listErrorKind = listError.response?.status === 409 ? '409' : 'error';
+  const retryList = () => void (onImportedTab ? imported.mutate() : providerRepos.mutate());
+
+  useEffect(() => {
+    if (!listErrorKind) return;
+    if (listErrorKind === '409') {
+      toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
+    } else {
+      toast.error(`Erro ao buscar ${terms.repositories} do ${terms.providerName}.`);
+    }
+  }, [listErrorKind]);
 
   const resolveTargetOrg = async (): Promise<any> => {
     if (currentOrganization) return currentOrganization;
@@ -272,94 +334,12 @@ const Products: NextPageWithLayout = () => {
     }
   };
 
-  const applyTotalPages = (targetPage: number, total: number | null, nextPage: number | null) => {
-    // A paginação vem dos headers do provedor, que o service repassa.
-    if (total) {
-      setTotalPages(total);
-    } else if (nextPage) {
-      setTotalPages(prev => Math.max(prev, nextPage));
-    } else {
-      setTotalPages(targetPage);
-    }
-  };
-
-  const loadGithubReposForOrg = async (
-    orgDbId: string,
-    targetPage: number = page,
-    searchTerm: string = search
-  ) => {
-    setRepoFetchError(null);
-    const reposRes = await organizationQuery.getGithubRepos(orgDbId, targetPage, searchTerm);
-    if (reposRes.type === 'success') {
-      const { repos, totalPages: total, nextPage } = reposRes.value;
-      setGitHubRepos(repos);
-      applyTotalPages(targetPage, total, nextPage);
-    } else {
-      const status = reposRes.error?.response?.status;
-      if (status === 409) {
-        setRepoFetchError('409');
-        toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
-      } else {
-        setRepoFetchError('error');
-        toast.error(`Erro ao buscar ${terms.repositories} do ${terms.providerName}.`);
-      }
-    }
-  };
-
-  const loadGitLabProjectsForOrg = async (
-    orgDbId: string,
-    namespace?: ProviderNamespaceItem,
-    targetPage: number = page,
-    searchTerm: string = search
-  ) => {
-    if (!orgDbId) return;
-    setLoadingRepos(true);
-    setRepoFetchError(null);
-    try {
-      const res = await organizationQuery.getGitLabProjects(
-        orgDbId,
-        namespace?.id,
-        namespace?.kind,
-        targetPage,
-        searchTerm
-      );
-      if (res.type === 'success') {
-        const { projects, totalPages, nextPage } = res.value;
-        const mappedRepos: UnifiedRepoItem[] = projects.map(p => ({
-          ...p,
-          github_repo_id: p.gitlab_project_id,
-          github_full_name: p.gitlab_path_with_namespace
-        }));
-        setGitHubRepos(mappedRepos);
-        applyTotalPages(targetPage, totalPages, nextPage);
-      } else {
-        const status = res.error?.response?.status;
-        if (status === 409) {
-          setRepoFetchError('409');
-          toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
-        } else {
-          setRepoFetchError('error');
-          toast.error(`Erro ao buscar ${terms.repositories} do ${terms.providerName}.`);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      setRepoFetchError('error');
-      toast.error(`Erro ao carregar ${terms.repositories}.`);
-    } finally {
-      setLoadingRepos(false);
-    }
-  };
-
   const handleSelectOrganization = async (orgName: string) => {
     if (!orgName) return;
     if (handleSelectOrgRef.current) return;
     handleSelectOrgRef.current = true;
     setLoadingProducts(true);
-    setLoadingRepos(true);
     setProducts([]);
-    setGitHubRepos([]);
-    setImportedRepoUrls([]);
     try {
       let orgDbId = await getBackendOrgId(orgName);
 
@@ -373,42 +353,12 @@ const Products: NextPageWithLayout = () => {
 
       setSelectedOrgDbId(orgDbId);
       await loadProductsForOrg(orgDbId);
-      if (provider === 'gitlab') {
-        const currentNs = providerNamespaces.find(ns => ns.name === orgName || ns.full_path === orgName);
-        prevQueryRef.current = { page: 1, search: '', orgName, orgDbId };
-        await loadGitLabProjectsForOrg(orgDbId, currentNs, 1, '');
-      } else {
-        prevQueryRef.current = { page: 1, search: '', orgName, orgDbId };
-        await loadGithubReposForOrg(orgDbId, 1, '');
-      }
-
     } catch (error: any) {
       console.error(error);
       toast.error(`Erro de comunicação com o servidor.`);
     } finally {
       setLoadingProducts(false);
-      setLoadingRepos(false);
       handleSelectOrgRef.current = false;
-    }
-  };
-
-  const loadProductRepositories = async (orgDbId: string, productId: string) => {
-    if (!orgDbId || !productId) return;
-    try {
-      const res = await productQuery.getAllRepositories(orgDbId, productId);
-      const repoList = res?.data?.results || res?.data || [];
-      const urls = repoList.map((r: any) => r.url);
-      setImportedRepoUrls(urls);
-      if (lastLoadedProductIdRef.current !== productId) {
-        lastLoadedProductIdRef.current = productId;
-        if (urls.length === 0) {
-          setTabValue(2); // "A Importar"
-        } else {
-          setTabValue(0); // "Importados"
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao carregar projetos importados:", error);
     }
   };
 
@@ -424,7 +374,10 @@ const Products: NextPageWithLayout = () => {
       });
       if (response.type === 'success') {
         toast.success(`${terms.Repository} ${repo.name} importado com sucesso!`);
-        void loadProductRepositories(selectedOrgDbId, selectedProductId);
+        setPendingImports(prev => new Set(prev).add(normalizeRepoUrl(repo.url)));
+        void mutateImported();
+        // "A Importar" e "Todos" mudam com o repositório importado
+        void refreshProviderRepos();
         // a lista guardada para as outras telas do produto também passa a ter o repositório importado
         void refreshRepositoryList(selectedOrgDbId, selectedProductId);
       } else {
@@ -461,34 +414,6 @@ const Products: NextPageWithLayout = () => {
     }
   }, [selectedOrgName]);
 
-  useEffect(() => {
-    if (!selectedOrgDbId) return;
-
-    const prev = prevQueryRef.current;
-    if (
-      prev.page === page &&
-      prev.search === search &&
-      prev.orgName === selectedOrgName &&
-      prev.orgDbId === selectedOrgDbId
-    ) {
-      return;
-    }
-
-    const currentNs = providerNamespaces.find(ns => ns.name === selectedOrgName || ns.full_path === selectedOrgName);
-    const delay = prev.search !== search ? 400 : 0;
-
-    const timer = setTimeout(() => {
-      prevQueryRef.current = { page, search, orgName: selectedOrgName, orgDbId: selectedOrgDbId };
-      if (provider === 'gitlab') {
-        void loadGitLabProjectsForOrg(selectedOrgDbId, currentNs, page, search);
-      } else {
-        void loadGithubReposForOrg(selectedOrgDbId, page, search);
-      }
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [provider, selectedOrgDbId, selectedOrgName, page, search, providerNamespaces]);
-
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
@@ -502,18 +427,10 @@ const Products: NextPageWithLayout = () => {
       } else if (selectedOrgName !== '') {
         setSelectedOrgName('');
         setProducts([]);
-        setGitHubRepos([]);
-        setImportedRepoUrls([]);
         setSelectedProductId('');
       }
     }
   }, [currentOrganization, providerNamespaces]);
-
-  useEffect(() => {
-    if (selectedOrgDbId && selectedProductId) {
-      void loadProductRepositories(selectedOrgDbId, selectedProductId);
-    }
-  }, [selectedOrgDbId, selectedProductId]);
 
   useEffect(() => {
     if (selectedOrgDbId && organizationList.length > 0) {
@@ -538,20 +455,6 @@ const Products: NextPageWithLayout = () => {
       setSelectedProductId(String(currentProduct.id));
     }
   }, [currentProduct, products]);
-
-  const filteredRepos = useMemo(
-    () =>
-      gitHubRepos.filter((repo) => {
-        const isAlreadyImported = importedRepoUrls.some(
-          url => url && repo.url && (url === repo.url || url.toLowerCase() === repo.url.toLowerCase())
-        );
-        // a busca é feita no servidor, junto com a paginação
-        return (tabValue === 0 && isAlreadyImported) || tabValue === 1 || (tabValue === 2 && !isAlreadyImported);
-      }),
-    [gitHubRepos, importedRepoUrls, tabValue]
-  );
-
-  const displayedRepos = filteredRepos;
 
   return (
     <>
@@ -712,15 +615,16 @@ const Products: NextPageWithLayout = () => {
                     </Box>
                   </Box>
 
+                  {listRefreshing && <LinearProgress />}
                   {(() => {
-                    if (loadingRepos) {
+                    if (listLoading) {
                       return (
                         <Box display="flex" justifyContent="center" alignItems="center" padding="4rem">
                           <CircularProgress />
                         </Box>
                       );
                     }
-                    if (repoFetchError === '409') {
+                    if (listErrorKind === '409') {
                       return (
                         <Box padding="4rem" textAlign="center">
                           <Typography variant="h6" color="error" gutterBottom>
@@ -744,13 +648,13 @@ const Products: NextPageWithLayout = () => {
                         </Box>
                       );
                     }
-                    if (repoFetchError === 'error') {
+                    if (listErrorKind === 'error') {
                       return (
                         <Box padding="4rem" textAlign="center">
                           <Typography variant="h6" color="error" gutterBottom>
                             {`Não foi possível carregar os ${terms.repositories}`}
                           </Typography>
-                          <Button variant="outlined" color="primary" onClick={() => void handleSelectOrganization(selectedOrgName)}>
+                          <Button variant="outlined" color="primary" onClick={retryList}>
                             Tentar Novamente
                           </Button>
                         </Box>
@@ -760,12 +664,10 @@ const Products: NextPageWithLayout = () => {
                       <List sx={{ padding: 0 }}>
                         {displayedRepos.length > 0 ? (
                           displayedRepos.map((repo) => {
-                            const isAlreadyImported = importedRepoUrls.some(
-                              url => url && repo.url && (url === repo.url || url.toLowerCase() === repo.url.toLowerCase())
-                            );
+                            const isAlreadyImported = isImported(repo);
                             return (
                               <ListItem
-                                key={repo.gitlab_project_id || repo.github_repo_id}
+                                key={repo.url || repo.gitlab_project_id || repo.github_repo_id}
                                 sx={{
                                   padding: '1.5rem',
                                   display: 'flex',
@@ -831,7 +733,7 @@ const Products: NextPageWithLayout = () => {
                     );
                   })()}
 
-                  {!loadingRepos && displayedRepos.length > 0 && (
+                  {!listLoading && !listErrorKind && displayedRepos.length > 0 && (
                     <Box display="flex" justifyContent="center" padding="2rem">
                       <Pagination
                         count={totalPages}

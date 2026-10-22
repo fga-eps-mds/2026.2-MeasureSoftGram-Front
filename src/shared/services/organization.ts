@@ -123,9 +123,17 @@ class OrganizationQuery {
     }
   }
 
-  async getGithubRepos(orgId: string, page?: number, search?: string): Promise<Result<GitHubReposPage>> {
+  async getGithubRepos(
+    orgId: string,
+    page?: number,
+    search?: string,
+    excludeProductId?: string
+  ): Promise<Result<GitHubReposPage>> {
     try {
       const params: Record<string, any> = {};
+      if (excludeProductId) {
+        params.exclude_product = excludeProductId;
+      }
       if (page !== undefined && page !== null) {
         params.page = page;
       }
@@ -161,10 +169,14 @@ class OrganizationQuery {
     namespaceId?: number | string,
     kind?: string,
     page?: number,
-    search?: string
+    search?: string,
+    excludeProductId?: string
   ): Promise<Result<GitLabProjectsPage>> {
     try {
       const params: Record<string, any> = {};
+      if (excludeProductId) {
+        params.exclude_product = excludeProductId;
+      }
       if (namespaceId !== undefined && namespaceId !== null && namespaceId !== '') {
         params.namespace_id = namespaceId;
       }
