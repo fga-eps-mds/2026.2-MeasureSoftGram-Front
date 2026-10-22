@@ -14,6 +14,12 @@ export const COLOR_TOKENS = {
   mutedText: 'rgba(0, 0, 0, 0.65)',
 };
 
+// Limites das faixas, fixos na Release 2 (ata do PO de 14/10/2026); cada limite já pertence à faixa de cima.
+export const QUALITY_THRESHOLDS = {
+  warning: 0.4,
+  adequate: 0.7,
+};
+
 export type QualityRange = 'critical' | 'warning' | 'adequate';
 
 export interface QualityStatus {
@@ -23,10 +29,10 @@ export interface QualityStatus {
 }
 
 export function getQualityStatus(value: number): QualityStatus {
-  if (value < 0.4) {
+  if (value < QUALITY_THRESHOLDS.warning) {
     return { key: 'critical', label: 'crítico', color: COLOR_TOKENS.critical };
   }
-  if (value < 0.7) {
+  if (value < QUALITY_THRESHOLDS.adequate) {
     return { key: 'warning', label: 'atenção', color: COLOR_TOKENS.warning };
   }
   return { key: 'adequate', label: 'adequado', color: COLOR_TOKENS.adequate };
@@ -269,9 +275,9 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
         dimension: 1,
         seriesIndex: Array.from({ length: gridCount }, (_, i) => i),
         pieces: [
-          { lte: 0.399, color: COLOR_TOKENS.critical },
-          { gte: 0.4, lte: 0.699, color: COLOR_TOKENS.warning },
-          { gte: 0.7, color: COLOR_TOKENS.adequate },
+          { lt: QUALITY_THRESHOLDS.warning, color: COLOR_TOKENS.critical },
+          { gte: QUALITY_THRESHOLDS.warning, lt: QUALITY_THRESHOLDS.adequate, color: COLOR_TOKENS.warning },
+          { gte: QUALITY_THRESHOLDS.adequate, color: COLOR_TOKENS.adequate },
         ],
       },
     ],

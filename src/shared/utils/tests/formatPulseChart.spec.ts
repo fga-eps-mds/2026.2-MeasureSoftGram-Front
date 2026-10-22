@@ -30,6 +30,15 @@ describe('formatPulseChart Utility', () => {
       expect(status.label).toBe('adequado');
       expect(status.color).toBe(COLOR_TOKENS.adequate);
     });
+
+    it.each([
+      [0.39, 'critical'],
+      [0.4, 'warning'],
+      [0.69, 'warning'],
+      [0.7, 'adequate'],
+    ])('deve classificar o limite %s como %s', (value, key) => {
+      expect(getQualityStatus(value).key).toBe(key);
+    });
   });
 
   describe('calculateVariation', () => {
@@ -119,6 +128,14 @@ describe('formatPulseChart Utility', () => {
       const options: any = formatPulseChartOptions([repoWithReleases]);
 
       expect(options.yAxis[0].splitLine.show).toBe(false);
+    });
+
+    it('deve colorir a linha pelas mesmas faixas, sem intervalo descoberto entre elas', () => {
+      const [critical, warning, adequate] = (formatPulseChartOptions([repoWithReleases]) as any).visualMap[0].pieces;
+
+      expect(critical).toEqual({ lt: 0.4, color: COLOR_TOKENS.critical });
+      expect(warning).toEqual({ gte: 0.4, lt: 0.7, color: COLOR_TOKENS.warning });
+      expect(adequate).toEqual({ gte: 0.7, color: COLOR_TOKENS.adequate });
     });
 
     it('deve formatar os eixos como mês/dia e nota com uma casa decimal', () => {

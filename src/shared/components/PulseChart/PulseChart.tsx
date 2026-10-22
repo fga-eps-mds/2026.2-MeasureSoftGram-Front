@@ -94,7 +94,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
       />
 
       {/* Header section */}
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" marginBottom="16px">
+      <Box display="flex" flexDirection="column" marginBottom="16px">
         <Box>
           <Typography variant="h6" fontWeight="bold" color="#1F2937">
             Gráfico MSG — Evolução de Qualidade
@@ -104,8 +104,8 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
           </Typography>
         </Box>
 
-        {/* Quality Legend */}
-        <Box display="flex" alignItems="center" gap={2}>
+        {/* Quality Legend: linha própria, à direita, logo acima do gráfico (protótipo) */}
+        <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap={2} marginTop="16px">
           <Box display="flex" alignItems="center" gap={0.5}>
             <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.critical }} />
             <Typography variant="caption" color="text.secondary">Crítico (&lt; 0,40)</Typography>
