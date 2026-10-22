@@ -7,7 +7,7 @@ export const LayoutGrid = styled.div<{ $showSidebar?: boolean }>`
   ${(props) =>
     props.$showSidebar
       ? `
-        grid-template-columns: 328px 1fr min-content;
+        grid-template-columns: min-content 1fr min-content;
         grid-template-rows: 1fr;
         grid-template-areas: 'side-menu main-content right-side';
       `
