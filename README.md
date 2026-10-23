@@ -97,6 +97,8 @@ const chart: CsvChart<PairRow> = { name: 'matriz-correlacao', columns, rows };
 
 O exemplo completo é o dashboard "6. Relações e Correlações" (`formatCorrelationCsv`, em `src/shared/utils/formatCorrelationCharts.ts`).
 
+O dashboard "5. Distribuição Estatística" exporta o histograma, a curva de densidade, o boxplot, a dispersão no tempo e o resumo estatístico (`formatDistributionCsvs`, em `src/shared/utils/formatDistributionCsv.ts`), sempre com a release, o repositório, o nível e a entidade escolhidos no começo de cada linha. Com menos de 3 análises, o CSV da densidade fica sem linhas e o botão dele aparece desabilitado no quadro vazio (`emptyHeaderAction` do `DashboardCard`).
+
 ## Licença
 
 Este projeto é distribuído sob a licença [GNU AGPL-3.0](./LICENSE).
