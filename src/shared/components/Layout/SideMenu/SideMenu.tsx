@@ -6,6 +6,7 @@ import {
   FiGitBranch,
   FiPaperclip,
   FiGrid,
+  FiLink,
   FiChevronDown,
   FiChevronUp,
   FiPieChart,
@@ -16,6 +17,7 @@ import { useAuth } from '@contexts/Auth';
 import { useProductContext } from '@contexts/ProductProvider';
 import { useRouter } from 'next/router';
 import { useOrganizationContext } from '@contexts/OrganizationProvider';
+import { useSideMenuContext } from '@contexts/SidebarProvider/SideMenuProvider';
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import { Box } from '@mui/material';
 import SideMenuItem from './SideMenuItem/SideMenuItem';
@@ -37,6 +39,7 @@ function SideMenu() {
   const { currentOrganization } = useOrganizationContext();
   const { currentProduct } = useProductContext();
   const router = useRouter();
+  const { isCollapsed, closeOverlay } = useSideMenuContext();
   const [isDashboardMenuOpen, setIsDashboardMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -106,11 +109,19 @@ function SideMenu() {
     },
     {
       startIcon: <FiBarChart fontSize={24} />,
-      text: '5. Distribuição das Métricas',
-      tooltip: 'Distribuição das Métricas',
+      text: '5. Distribuição Estatística',
+      tooltip: 'Distribuição Estatística',
       path: `/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/dashboards/distribuicao`,
       disable: !currentProduct,
       selected: router.pathname === '/products/[product]/dashboards/distribuicao',
+    },
+    {
+      startIcon: <FiLink fontSize={24} />,
+      text: '6. Relações e Correlações',
+      tooltip: 'Relações e Correlações',
+      path: `/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/dashboards/relacoes`,
+      disable: !currentProduct,
+      selected: router.pathname === '/products/[product]/dashboards/relacoes',
     },
   ];
 
@@ -148,6 +159,7 @@ function SideMenu() {
                 key={item.text}
                 {...item}
                 onClick={() => {
+                  closeOverlay();
                   void router.push(item.path);
                 }}
               />
@@ -164,13 +176,26 @@ function SideMenu() {
               onClick={() => setIsDashboardMenuOpen((prev) => !prev)}
             />
 
+            {/* O contain tira o recuo da largura do menu: sem ele, abrir o submenu alargava a coluna em 20 px e o
+                conteúdo pulava. Recolhido, o submenu fica sem recuo, alinhado aos outros ícones. */}
             {isDashboardMenuOpen &&
               dashboardSubItems.map((item) => (
-                <Box key={item.text} sx={{ width: '100%', paddingLeft: '20px', boxSizing: 'border-box', overflow: 'hidden' }}>
+                <Box
+                  key={item.text}
+                  data-testid="dashboard-subitem"
+                  sx={{
+                    width: '100%',
+                    paddingLeft: isCollapsed ? 0 : '20px',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                    contain: 'inline-size',
+                  }}
+                >
                   <SideMenuItem
                     key={item.text}
                     {...item}
                     onClick={() => {
+                      closeOverlay();
                       void router.push(item.path);
                     }}
                   />

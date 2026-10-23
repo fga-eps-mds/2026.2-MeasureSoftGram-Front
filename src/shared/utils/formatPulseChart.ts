@@ -1,3 +1,4 @@
+import { getQualityBandClamped, getQualityVisualMapPieces, QualityGrade } from './qualityBands';
 import { toPulseSeries } from './toPulseSeries';
 
 export const COLOR_TOKENS = {
@@ -14,7 +15,7 @@ export const COLOR_TOKENS = {
   mutedText: 'rgba(0, 0, 0, 0.65)',
 };
 
-export type QualityRange = 'critical' | 'warning' | 'adequate';
+export type QualityRange = QualityGrade;
 
 export interface QualityStatus {
   key: QualityRange;
@@ -22,19 +23,10 @@ export interface QualityStatus {
   color: string;
 }
 
-/**
- * Faixas do indicador, da pior para a melhor; cada uma começa em `min`. É o único lugar das faixas: as cores do pulso,
- * as legendas e os outros gráficos que pintam pelo valor seguem daqui.
- */
-export const QUALITY_RANGES: (QualityStatus & { min: number; legend: string })[] = [
-  { key: 'critical', label: 'crítico', color: COLOR_TOKENS.critical, min: 0, legend: 'Crítico (< 0,40)' },
-  { key: 'warning', label: 'atenção', color: COLOR_TOKENS.warning, min: 0.4, legend: 'Atenção (0,40–0,69)' },
-  { key: 'adequate', label: 'adequado', color: COLOR_TOKENS.adequate, min: 0.7, legend: 'Adequado (≥ 0,70)' },
-];
-
+/** Faixa do Indicador Total da Qualidade (A a E, US06.01) de um valor; as faixas ficam em `qualityBands`. */
 export function getQualityStatus(value: number): QualityStatus {
-  const range = [...QUALITY_RANGES].reverse().find((item) => value >= item.min) ?? QUALITY_RANGES[0];
-  return { key: range.key, label: range.label, color: range.color };
+  const band = getQualityBandClamped(value);
+  return { key: band.grade, label: band.label, color: band.color };
 }
 
 /** Medidas das faixas do gráfico de pulso, em px: as mesmas no pulso do produto e no do repositório. */
@@ -300,11 +292,7 @@ export function formatPulseChartOptions(
         show: false,
         dimension: 1,
         seriesIndex: Array.from({ length: gridCount }, (_, i) => i),
-        pieces: QUALITY_RANGES.map((range, index) => ({
-          gte: range.min,
-          ...(QUALITY_RANGES[index + 1] ? { lt: QUALITY_RANGES[index + 1].min } : {}),
-          color: range.color,
-        })),
+        pieces: getQualityVisualMapPieces(),
       },
     ],
     tooltip: {

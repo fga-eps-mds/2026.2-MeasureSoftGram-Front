@@ -85,7 +85,7 @@ describe('<RepositoryPulseChart />', () => {
     expect(screen.getByText('0.500')).toBeTruthy();
     expect(screen.getByText('0.800')).toBeTruthy();
     expect(screen.getAllByText(/último valor/)).toHaveLength(2);
-    expect(screen.getByText('Adequado (≥ 0,70)')).toBeTruthy();
+    expect(screen.getByText('A · Ótimo (0,80 a 1,00)')).toBeTruthy();
   });
 
   it('marca as releases do repositório, com o nome uma vez só e sem linhas horizontais', () => {
