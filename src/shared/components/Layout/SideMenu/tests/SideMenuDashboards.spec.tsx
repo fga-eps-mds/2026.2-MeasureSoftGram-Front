@@ -107,7 +107,7 @@ describe('SideMenu Dashboards Submenu (CA1)', () => {
       fireEvent.click(screen.getByText('Dashboards'));
 
       const subitems = screen.getAllByTestId('dashboard-subitem');
-      expect(subitems).toHaveLength(5);
+      expect(subitems).toHaveLength(6);
       subitems.forEach((subitem) => {
         expect(subitem).toHaveStyle({ paddingLeft: '20px', contain: 'inline-size', overflow: 'hidden' });
       });
