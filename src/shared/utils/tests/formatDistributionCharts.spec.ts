@@ -234,6 +234,36 @@ describe('formatScatterOptions', () => {
     expect(option.xAxis.axisLabel.formatter(at('2026-08-17T10:00:00-03:00'))).toBe('17 ago');
   });
 
+  it('com todas as análises no mesmo dia, abre o eixo um dia antes e um depois e mostra a data completa', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const sameDay: DistributionEntity = {
+      ...tsqmi,
+      analyses: [
+        { date: '2026-10-23T09:00:00-03:00', value: 0.9, is_outlier: false },
+        { date: '2026-10-23T15:30:00-03:00', value: 0.88, is_outlier: false }
+      ]
+    };
+
+    const { xAxis } = formatScatterOptions(sameDay, histogram);
+
+    expect(xAxis).toMatchObject({
+      type: 'time',
+      min: at('2026-10-23T09:00:00-03:00') - day,
+      max: at('2026-10-23T15:30:00-03:00') + day,
+      minInterval: day
+    });
+    expect(xAxis.axisLabel.formatter(at('2026-10-23T00:00:00-03:00'))).toBe('23/10/2026');
+    expect(xAxis.axisLabel.formatter(at('2026-10-24T00:00:00-03:00'))).toBe('24/10/2026');
+  });
+
+  it('com análises em dias diferentes, o eixo segue as datas delas, com dia e mês', () => {
+    const { xAxis } = formatScatterOptions(tsqmi, histogram);
+
+    expect(xAxis).not.toHaveProperty('min');
+    expect(xAxis).not.toHaveProperty('max');
+    expect(xAxis.axisLabel.formatter(at('2026-08-17T10:00:00-03:00'))).toBe('17 ago');
+  });
+
   it('numa métrica, o eixo y segue a escala dela', () => {
     const values = [42, 44, 47, 55, 63];
     const metric: DistributionEntity = {

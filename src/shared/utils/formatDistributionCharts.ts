@@ -251,6 +251,32 @@ function toScatterPoint(analysis: DistributionAnalysis): [number, number] {
   return [new Date(analysis.date).getTime(), analysis.value];
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Eixo de tempo da dispersão. Com as análises em dias diferentes, o ECharts escolhe o intervalo e os rótulos saem com
+ * dia e mês. Com todas no mesmo dia (uma análise só, por exemplo), ele não tem como escolher e enche o eixo de
+ * "1 jul / 1 jan" sem ano: aí o eixo vai de um dia antes a um dia depois, com um rótulo por dia e a data completa.
+ */
+export function scatterTimeAxis(analyses: DistributionAnalysis[]) {
+  const times = analyses.map((analysis) => new Date(analysis.date).getTime());
+  const days = new Set(times.map((time) => format(new Date(time), 'yyyy-MM-dd')));
+  const sameDay = days.size === 1;
+  const pattern = sameDay ? 'dd/MM/yyyy' : 'd MMM';
+  return {
+    type: 'time',
+    ...(sameDay ? { min: Math.min(...times) - DAY_MS, max: Math.max(...times) + DAY_MS, minInterval: DAY_MS } : {}),
+    boundaryGap: ['3%', '3%'],
+    splitLine: { show: false },
+    axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
+    axisLabel: {
+      ...AXIS_LABEL,
+      hideOverlap: true,
+      formatter: (value: number) => format(new Date(value), pattern, { locale: ptBR })
+    }
+  };
+}
+
 function describeOutliers(outliers: DistributionAnalysis[]): string {
   if (!outliers.length) return 'Nenhum valor discrepante.';
   const listed = outliers
@@ -308,17 +334,7 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
     },
     // a legenda quebra em duas linhas no cartão de 360 px: o topo do grid tem espaço para a segunda
     grid: { left: 8, right: 24, top: 60, bottom: 8, containLabel: true },
-    xAxis: {
-      type: 'time',
-      boundaryGap: ['3%', '3%'],
-      splitLine: { show: false },
-      axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
-      axisLabel: {
-        ...AXIS_LABEL,
-        hideOverlap: true,
-        formatter: (value: number) => format(new Date(value), 'd MMM', { locale: ptBR })
-      }
-    },
+    xAxis: scatterTimeAxis(analyses),
     yAxis: {
       type: 'value',
       min: histogram.min,
