@@ -18,7 +18,7 @@ interface Props {
   onSelectCell: (cell: SelectedCell) => void;
 }
 
-const CELL_WIDTH = 104;
+const CELL_WIDTH = 80;
 const CELL_HEIGHT = 46;
 const HIGHLIGHT_BORDER = '#1F2328';
 const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
@@ -153,8 +153,8 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell }: Pro
     return () => cancelAnimationFrame(frame);
   }, [matrix]);
 
-  const previousName = matrix.previous_release?.release_name;
-  const tsqmiHeader = previousName ? `TSQMI · Δ ${previousName}→${matrix.release.release_name}` : 'TSQMI';
+  // os nomes das releases ficam na descrição do quadro: aqui eles alargavam a coluna
+  const tsqmiHeader = matrix.previous_release ? 'TSQMI · Δ' : 'TSQMI';
 
   return (
     // a rolagem horizontal fica só no quadro, para o mapa caber em telas estreitas

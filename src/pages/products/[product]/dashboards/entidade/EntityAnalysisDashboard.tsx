@@ -233,16 +233,16 @@ const EntityAnalysisDashboard: NextPageWithLayout = () => {
       );
     }
 
-    const deltaLabel = matrix.previous_release
-      ? `${matrix.previous_release.release_name}→${matrix.release.release_name}`
-      : 'release anterior';
+    const deltaCaption = matrix.previous_release
+      ? ` Δ é a variação em relação à release anterior, ${matrix.previous_release.release_name}.`
+      : ` ${matrix.release.release_name} é a primeira release do produto: sem variação para mostrar.`;
 
     return (
       <>
         <DashboardCard title={heatmapTitle} status="ready">
           <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
             Linhas do pior para o melhor TSQMI. Cada célula mostra o valor normalizado [0, 1] e o grau; clique numa
-            célula para ver a composição da entidade naquele {terms.repository}.
+            célula para ver a composição da entidade naquele {terms.repository}.{deltaCaption}
           </Typography>
           <EntityHeatmap matrix={matrix} highlighted={highlighted} onSelectCell={setSelectedCell} />
           <QualityGradeLegend />
@@ -268,9 +268,9 @@ const EntityAnalysisDashboard: NextPageWithLayout = () => {
             }
           >
             <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-              {terms.repository} × {levelNoun(matrix.level)}, do menor valor para o maior.
+              {terms.repository} × {levelNoun(matrix.level)}, do menor valor para o maior.{deltaCaption}
             </Typography>
-            <WorstPairsRanking pairs={worstPairs} deltaLabel={deltaLabel} />
+            <WorstPairsRanking pairs={worstPairs} />
           </DashboardCard>
         </Box>
 
@@ -316,7 +316,7 @@ const EntityAnalysisDashboard: NextPageWithLayout = () => {
 
           {releases.length > 0 && (
             <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent="space-between" gap="12px">
-              <Box display="flex" alignItems="center" gap="12px">
+              <Box display="flex" flexWrap="wrap" alignItems="center" gap="12px" minWidth={0} maxWidth="100%">
                 <Typography id="entity-level-label" fontSize="14px" fontWeight="bold" color={DASHBOARD_COLORS.text}>
                   Nível do modelo
                 </Typography>
@@ -324,7 +324,14 @@ const EntityAnalysisDashboard: NextPageWithLayout = () => {
                   value={level}
                   onChange={(_, value: EntityMatrixLevel) => setLevel(value)}
                   aria-labelledby="entity-level-label"
-                  sx={{ minHeight: 36, '& .MuiTab-root': { minHeight: 36, textTransform: 'none', fontWeight: 'bold' } }}
+                  // em tela estreita as abas rolam dentro delas, sem alargar a página
+                  variant="scrollable"
+                  scrollButtons={false}
+                  sx={{
+                    minHeight: 36,
+                    maxWidth: '100%',
+                    '& .MuiTab-root': { minHeight: 36, textTransform: 'none', fontWeight: 'bold' }
+                  }}
                 >
                   {MATRIX_LEVELS.map((item) => (
                     <Tab key={item} value={item} label={LEVEL_LABELS[item]} />

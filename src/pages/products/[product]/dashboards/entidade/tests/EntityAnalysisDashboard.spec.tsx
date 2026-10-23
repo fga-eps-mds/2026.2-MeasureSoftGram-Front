@@ -93,7 +93,13 @@ describe('<EntityAnalysisDashboard />', () => {
       ['Maturity · 50%', '1'],
       ['Modifiability · 100%', '1']
     ]);
-    expect(within(heatmap()).getByRole('columnheader', { name: 'TSQMI · Δ R1→R2' })).toBeTruthy();
+    expect(within(heatmap()).getByRole('columnheader', { name: 'TSQMI · Δ' })).toBeTruthy();
+    // os nomes das releases ficam no texto, e não no cabeçalho
+    expect(
+      within(card('Mapa de calor: repositório × medida')).getByText(
+        /Δ é a variação em relação à release anterior, R1\./
+      )
+    ).toBeTruthy();
   });
 
   it('ordena as linhas do pior para o melhor TSQMI e mostra o TSQMI com o grau e a variação', () => {
@@ -161,8 +167,9 @@ describe('<EntityAnalysisDashboard />', () => {
       within(card('O que puxa a qualidade total para baixo')).getByText('R2 é a primeira release do produto')
     ).toBeTruthy();
     expect(screen.getByTestId('tsqmi-1').textContent).toBe('0,60B · —');
+    expect(within(heatmap()).getByRole('columnheader', { name: 'TSQMI' })).toBeTruthy();
     expect(within(card('Ranking dos piores pares')).getAllByRole('row')[1].textContent).toBe(
-      '1api · test_coverage0,40 C—'
+      '1apitest_coverage0,40 C—'
     );
   });
 
@@ -172,8 +179,8 @@ describe('<EntityAnalysisDashboard />', () => {
     const ranking = card('Ranking dos piores pares');
     expect(within(ranking).getByText('Nível: Medida')).toBeTruthy();
     const rows = within(ranking).getAllByRole('row').slice(1);
-    expect(rows[0].textContent).toBe('1AI · test_coverage0,18 E−0,29');
-    expect(rows[1].textContent).toBe('2Front · commented_file_density0,22 D−0,02');
+    expect(rows[0].textContent).toBe('1AItest_coverage0,18 E−0,29');
+    expect(rows[1].textContent).toBe('2Frontcommented_file_density0,22 D−0,02');
     expect(rows).toHaveLength(10);
   });
 
