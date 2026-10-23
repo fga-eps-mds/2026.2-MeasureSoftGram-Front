@@ -9,7 +9,8 @@ import {
   RepositoriesLatestTsqmi,
   ReleaseGoal,
   EntityLevel,
-  FileMetricKey
+  DistributionLevel,
+  CorrelationLevel
 } from '@customTypes/product';
 import { PreConfigData, PreConfigRoot, ReleaseInfoForm } from '@customTypes/preConfig';
 
@@ -240,6 +241,15 @@ class ProductQuery {
     };
   }
 
+  /** analysis_data da release: planejado (Rp) e, por repositório, realizado (Rd), diff e norm_diff. */
+  getReleaseAnalysisDataConfig(organizationId: string, productId: string, releaseId?: number): GetRequest {
+    if (!organizationId || !productId || !releaseId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data/`,
+      method: 'get'
+    };
+  }
+
   getReleaseDashboardSummary(organizationId: string, productId: string, releaseId?: number): GetRequest {
     if (!organizationId || !productId || !releaseId) return null;
     return {
@@ -258,17 +268,36 @@ class ProductQuery {
     };
   }
 
-  getMetricDistribution(
+  getAnalysisDistribution(
     organizationId: string,
     productId: string,
-    { releaseId, metric, repositoryId }: { releaseId?: number; metric: FileMetricKey; repositoryId?: number }
+    {
+      releaseId,
+      repositoryId,
+      level,
+      key
+    }: { releaseId?: number; repositoryId?: number; level: DistributionLevel; key?: string }
   ): GetRequest {
-    if (!organizationId || !productId || !releaseId) return null;
+    // a chave só é obrigatória abaixo do TSQMI; no TSQMI ela fica fora da URL e da chave do SWR
+    const needsKey = level !== 'tsqmi';
+    if (!organizationId || !productId || !releaseId || !repositoryId || (needsKey && !key)) return null;
     return {
-      url: `/v1/organizations/${organizationId}/products/${productId}/metrics-distribution/`,
+      url: `/v1/organizations/${organizationId}/products/${productId}/analysis-distribution/`,
       method: 'get',
-      // sem repository_id (undefined some da URL e da chave do SWR) o Service devolve só o resumo de cada repositório
-      params: { release_id: releaseId, metric, repository_id: repositoryId }
+      params: { release_id: releaseId, repository_id: repositoryId, level, key: needsKey ? key : undefined }
+    };
+  }
+
+  getCorrelation(
+    organizationId: string,
+    productId: string,
+    { repositoryId, level }: { repositoryId?: number; level: CorrelationLevel }
+  ): GetRequest {
+    if (!organizationId || !productId || !repositoryId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/correlation/`,
+      method: 'get',
+      params: { repository_id: repositoryId, level }
     };
   }
 

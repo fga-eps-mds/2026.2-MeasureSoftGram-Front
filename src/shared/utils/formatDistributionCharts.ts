@@ -1,92 +1,46 @@
 import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
-import { FileMetricKey, MetricDistributionFile, MetricDistributionSummary } from '@customTypes/product';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { DistributionAnalysis, DistributionEntity } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import { DensityPoint } from '@utils/distributionDensity';
+import { formatAxisValue, formatBinLabel, Histogram, isUnitScale } from '@utils/distributionHistogram';
+import { formatAnalysisCount, formatCount, formatPeriod, formatStatistic } from '@utils/distributionSummary';
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
-import {
-  BoxplotStats,
-  buildHistogramBins,
-  describeReferencePosition,
-  formatBinLabel,
-  formatFileCount,
-  formatMetricValue,
-  formatNumber,
-  formatOutlierCount,
-  getBinWidth,
-  getBoxplotStats,
-  getFileMetric,
-  groupOutliers,
-  MetricKind,
-  MetricReference,
-  OutlierGroup
-} from '@utils/metricDistribution';
+import { BoxplotStats, getBoxplotStats, groupOutliers, OutlierGroup } from '@utils/metricDistribution';
 
-/** Cores do protótipo: barras em azul claro, caixa na cor primária, outliers em laranja e referência em verde. */
+/** Cores dos gráficos da distribuição: barras em azul claro, caixa na cor primária e discrepantes em laranja. */
 export const DISTRIBUTION_COLORS = {
   bar: '#7BA7D7',
   barHover: DASHBOARD_COLORS.planned,
   box: DASHBOARD_COLORS.primary,
   boxFill: DASHBOARD_COLORS.infoBackground,
   outlier: COLOR_TOKENS.warning,
-  reference: COLOR_TOKENS.adequate,
-  referenceLabel: '#D4EFE3'
+  density: DASHBOARD_COLORS.planned,
+  densityFill: 'rgba(123, 167, 215, 0.3)',
+  median: DASHBOARD_COLORS.primary,
+  // boxplot do nível: a entidade escolhida em cor escura, sobre o fundo destacado, e os filhos em cor clara
+  entityBox: DASHBOARD_COLORS.primary,
+  entityBoxFill: 'rgba(43, 77, 111, 0.35)',
+  entityRow: DASHBOARD_COLORS.infoBackground,
+  childBox: '#7BA7D7',
+  childBoxFill: '#FFFFFF'
 };
 
-/** Altura do gráfico de um repositório: rótulos da referência, histograma, boxplot e legenda do eixo x. */
-export const DISTRIBUTION_CHART_HEIGHT = 384;
+const LEGEND = { textStyle: { color: DASHBOARD_COLORS.text, fontSize: 11 }, itemWidth: 16, itemHeight: 8 };
 
 const AXIS_LABEL = { color: DASHBOARD_COLORS.mutedText, fontSize: 11 };
 const SPLIT_LINE = { lineStyle: { color: DASHBOARD_COLORS.gridLine } };
-// mesmo left/right nos dois grids, com containLabel desligado: o histograma e o boxplot dividem o eixo x
-const GRID_SIDES = { left: 64, right: 32 };
-// enterable deixa o mouse entrar no tooltip para rolar a lista de arquivos; o hideDelay dá tempo de chegar nele. O
-// confine só prende a posição: sem max-width, um caminho longo estica a caixa (nowrap do ECharts) e a página rola
-const TOOLTIP = {
-  trigger: 'item',
-  triggerOn: 'mousemove|click',
-  enterable: true,
-  confine: true,
-  hideDelay: 300,
-  extraCssText: 'max-width: 420px; white-space: normal; overflow-wrap: anywhere;'
-};
-// um outlier a menos de 1/36 do eixo do centro de um grupo entra nele: uns 17 px num gráfico de 600 px, mais que os
-// 13,5 px do ponto maior, então nenhum ponto fica escondido atrás de outro
-const OUTLIER_SPREAD = 36;
 
-const OUTLIER_STYLE = {
+/** Discrepante em círculo vazado; o que está sob o mouse ou clicado fica preenchido (TASK21.03.05). */
+export const OUTLIER_STYLE = {
   cursor: 'pointer',
   itemStyle: { color: '#FFFFFF', borderColor: DISTRIBUTION_COLORS.outlier, borderWidth: 1.5 },
-  // o outlier sob o mouse ou clicado fica preenchido, como no protótipo
   emphasis: { itemStyle: { color: DISTRIBUTION_COLORS.outlier } }
 };
 
-const REFERENCE_LINE = {
-  silent: true,
-  symbol: 'none',
-  lineStyle: { color: DISTRIBUTION_COLORS.reference, type: 'dashed', width: 1.5 }
-};
-
-const REFERENCE_LABEL = {
-  show: true,
-  color: DISTRIBUTION_COLORS.reference,
-  fontSize: 11,
-  fontWeight: 'bold',
-  backgroundColor: DISTRIBUTION_COLORS.referenceLabel,
-  padding: [2, 6],
-  borderRadius: 3,
-  // na v5 o estilo rich não herda a fonte do label, então cada estilo declara a sua
-  rich: {
-    value: { color: DISTRIBUTION_COLORS.reference, fontSize: 11, fontWeight: 'bold' },
-    measure: { color: DISTRIBUTION_COLORS.reference, fontSize: 10, lineHeight: 14 }
-  }
-};
-
-/** No rich text do ECharts a chave fecha o bloco {estilo|texto}, então ela sai do texto. */
-function richText(text: string): string {
-  return text.replace(/[{}]/g, '');
-}
-
-/** Cada faixa é [início, fim, arquivos]: um retângulo de início a fim, do zero até a contagem. */
+/** Cada faixa é [início, fim, análises]: um retângulo de início a fim, do zero até a contagem. */
 export function renderHistogramBar(
   _params: CustomSeriesRenderItemParams,
   api: CustomSeriesRenderItemAPI
@@ -102,412 +56,516 @@ export function renderHistogramBar(
   };
 }
 
-/** Ponto maior quando junta mais de um arquivo. */
+/** Ponto maior quando junta mais de uma análise. */
 export function outlierSymbolSize(groups: OutlierGroup[]) {
-  return (_value: unknown, { dataIndex }: { dataIndex: number }) => (groups[dataIndex].files.length > 1 ? 12 : 9);
+  return (_value: unknown, { dataIndex }: { dataIndex: number }) => (groups[dataIndex].analyses.length > 1 ? 12 : 9);
 }
 
-/** Caixa e bigodes; o params.value do boxplot traz o índice da categoria na frente, então não é usado. */
-export function formatBoxTooltip(stats: BoxplotStats, kind: MetricKind, title = 'Boxplot'): string {
-  const value = (item: number) => formatMetricValue(item, kind);
+/** Caixa e hastes no tooltip do boxplot, com duas casas; o params.value do boxplot traz o índice da categoria na frente. */
+export function formatBoxTooltip(stats: BoxplotStats, title = 'Boxplot'): string {
   return [
     `<strong>${escapeHtml(title)}</strong>`,
-    `Bigode superior: ${value(stats.high)}`,
-    `3º quartil: ${value(stats.q3)}`,
-    `Mediana: ${value(stats.median)}`,
-    `1º quartil: ${value(stats.q1)}`,
-    `Bigode inferior: ${value(stats.low)}`
+    `Haste superior: ${formatStatistic(stats.high)}`,
+    `Q3: ${formatStatistic(stats.q3)}`,
+    `Mediana: ${formatStatistic(stats.median)}`,
+    `Q1: ${formatStatistic(stats.q1)}`,
+    `Haste inferior: ${formatStatistic(stats.low)}`
   ].join('<br/>');
 }
 
-/**
- * Arquivos de um ponto de outliers (CA5), escapados porque o tooltip do ECharts é HTML. Lista todos os caminhos; com
- * muitos arquivos no mesmo ponto, a lista rola dentro do tooltip. A posição em relação à faixa de referência vai numa
- * linha só quando vale para o grupo inteiro; senão, vai ao lado de cada arquivo.
- */
-export function formatOutlierTooltip(
-  group: OutlierGroup,
-  metric: FileMetricKey,
-  reference: MetricReference | null,
-  repository?: string
-): string {
-  const { kind } = getFileMetric(metric);
-  const { files } = group;
-  const lowest = formatMetricValue(files[0].value, kind);
-  const highest = formatMetricValue(files[files.length - 1].value, kind);
-  const sameValue = lowest === highest;
-  const positions = files.map((file) => describeReferencePosition(file.value, reference, kind));
-  const samePosition = positions.every((position) => position === positions[0]);
-  const title = files.length === 1 ? 'Outlier' : formatOutlierCount(files.length);
-  const paths = files
-    .map((file, index) => {
-      const valueText = sameValue ? '' : `: ${formatMetricValue(file.value, kind)}`;
-      const positionText = samePosition ? '' : ` · ${positions[index]}`;
-      return `<strong>${escapeHtml(file.path)}</strong>${valueText}${positionText}`;
-    })
-    .join('<br/>');
-
-  const lines = [`<span style="color:${DISTRIBUTION_COLORS.outlier};font-weight:bold">${title}</span>`];
-  if (repository) lines.push(escapeHtml(repository));
-  lines.push(files.length > 1 ? `<div style="max-height:160px;overflow-y:auto">${paths}</div>` : paths);
-  lines.push(sameValue ? `${metric}: ${lowest}` : `${metric}: ${lowest} a ${highest}`);
-  if (samePosition && positions[0]) lines.push(positions[0]);
-  return lines.join('<br/>');
-}
-
-// quantos caminhos de outliers entram na descrição acessível; o resto vira "e mais N"
-const MAX_DESCRIBED_OUTLIERS = 10;
+/** Altura do histograma das análises. */
+export const HISTOGRAM_CHART_HEIGHT = 280;
 
 /**
- * Caminhos e valores dos outliers em texto puro para a descrição para leitores de tela (CA5), do mais distante da
- * mediana ao mais próximo, até 10 arquivos; o que passar disso vira "e mais N". Vazio sem outliers.
+ * Margens do grid do histograma, em px, com o containLabel desligado: a régua A a E, desenhada fora do ECharts, usa as
+ * mesmas para ficar alinhada às faixas do eixo.
  */
-function describeOutlierFiles(outliers: MetricDistributionFile[], median: number, kind: MetricKind): string {
-  const byDistance = [...outliers].sort((a, b) => Math.abs(b.value - median) - Math.abs(a.value - median));
-  const listed = byDistance
-    .slice(0, MAX_DESCRIBED_OUTLIERS)
-    .map((file) => `${file.path} (${formatMetricValue(file.value, kind)})`)
-    .join(', ');
-  const rest = byDistance.length - MAX_DESCRIBED_OUTLIERS;
-  return rest > 0 ? `${listed} e mais ${rest}` : listed;
-}
+export const HISTOGRAM_GRID_SIDES = { left: 56, right: 24 };
 
-/** Rótulo da linha de referência; o do máximo traz a medida na segunda linha, como no protótipo. */
-function referenceLabel(reference: MetricReference, kind: MetricKind, bound: 'min' | 'max'): string {
-  if (bound === 'min') return `Mín. de referência = ${formatMetricValue(reference.min_threshold, kind)}`;
-  const value = formatMetricValue(reference.max_threshold, kind);
-  return `{value|Máx. de referência = ${value}}\n{measure|medida: ${richText(reference.measureName)}}`;
-}
-
-/** Linhas tracejadas verticais do mínimo e do máximo (CA4); os rótulos ficam só no gráfico de cima. */
-function verticalReferenceLines(
-  reference: MetricReference | null,
-  kind: MetricKind,
-  axisMax: number,
-  withLabels: boolean
-) {
-  if (!reference) return undefined;
-  if (!withLabels) {
-    return {
-      ...REFERENCE_LINE,
-      label: { show: false },
-      data: [{ xAxis: reference.min_threshold }, { xAxis: reference.max_threshold }]
-    };
-  }
-
-  const line = (value: number, formatter: string, rowDistance: number) => ({
-    xAxis: value,
-    label: {
-      formatter,
-      // o rótulo cresce para dentro do gráfico, e o do máximo fica uma linha acima do do mínimo
-      align: value > axisMax / 2 ? 'right' : 'left',
-      distance: [0, rowDistance]
-    }
-  });
-
+/** Eixo x de valor de um quadro alinhado ao histograma: o mesmo início, fim e intervalo das faixas. */
+function histogramValueAxis(histogram: Histogram) {
   return {
-    ...REFERENCE_LINE,
-    label: { ...REFERENCE_LABEL, position: 'end' },
-    data: [
-      line(reference.min_threshold, referenceLabel(reference, kind, 'min'), 6),
-      line(reference.max_threshold, referenceLabel(reference, kind, 'max'), 30)
-    ]
+    type: 'value',
+    min: histogram.min,
+    max: histogram.max,
+    interval: histogram.width,
+    splitLine: { show: false },
+    axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
+    axisLabel: { ...AXIS_LABEL, formatter: formatAxisValue, hideOverlap: true }
   };
 }
 
-export interface DistributionChartData {
-  metric: FileMetricKey;
-  files: MetricDistributionFile[];
-  stats: BoxplotStats;
-  reference: MetricReference | null;
-}
-
 /**
- * Histograma (grid de cima, série custom com um retângulo por faixa) e boxplot de Tukey deitado (grid de baixo,
- * com os outliers), no mesmo eixo x (CA3).
+ * Histograma das análises da entidade (CA4): uma barra por faixa de valor, do início ao fim dela, com a quantidade de
+ * análises. O eixo x é o das faixas; nos valores de 0 a 1, a régua A a E fica abaixo dele, fora do gráfico.
  */
-export function formatDistributionChartOptions({ metric, files, stats, reference }: DistributionChartData) {
-  const { description, kind } = getFileMetric(metric);
-  const bins = buildHistogramBins(
-    files.map((file) => file.value),
-    kind
-  );
-  // o eixo é o das faixas, do zero até o fim da última; sem arquivos, vai até o bigode de cima
-  const axisMax = bins.length ? bins[bins.length - 1].end : Math.max(1, stats.high);
-  // como no protótipo, uma marca a cada 2 faixas do histograma (faixas de 5: 0, 10, 20…)
-  // reduce, e não Math.max(...valores): espalhar um repositório grande nos argumentos estoura a pilha
-  const maxValue = files.reduce((max, file) => Math.max(max, file.value), 0);
-  const tickInterval = 2 * getBinWidth(kind, maxValue);
-  const sharedXAxis = { type: 'value', min: 0, max: axisMax, interval: tickInterval, splitLine: { show: false } };
-  const formatValue = (value: number) => formatMetricValue(value, kind);
-  const outlierGroups = groupOutliers(stats.outliers, axisMax / OUTLIER_SPREAD);
-  const fileCount = formatFileCount(files.length);
-  const median = formatValue(stats.median);
-  const outlierCount = formatOutlierCount(stats.outliers.length);
-  const outlierFiles = describeOutlierFiles(stats.outliers, stats.median, kind);
-  const outlierSentence = outlierFiles ? ` Outliers: ${outlierFiles}.` : '';
+export function formatHistogramOptions(histogram: Histogram, entityName: string) {
+  const { bins } = histogram;
+  const total = bins.reduce((sum, bin) => sum + bin.count, 0);
+  const filled = bins
+    .filter((bin) => bin.count > 0)
+    .map((bin) => `${formatBinLabel(bin, histogram)}: ${formatAnalysisCount(bin.count)}`)
+    .join('; ');
 
   return {
     animation: false,
     aria: {
       enabled: true,
       label: {
-        description: `Histograma e boxplot de ${metric}: ${fileCount}, mediana ${median}, ${outlierCount}.${outlierSentence}`
+        description: `Histograma de ${entityName}: ${formatAnalysisCount(total)} em faixas de ${formatAxisValue(
+          histogram.width
+        )}. ${filled}.`
       }
     },
-    tooltip: TOOLTIP,
-    // sem referência não há rótulos no topo: o histograma sobe e ocupa o espaço, e o boxplot não muda de lugar
-    grid: [
-      reference ? { ...GRID_SIDES, top: 64, height: 200 } : { ...GRID_SIDES, top: 16, height: 248 },
-      { ...GRID_SIDES, top: 284, height: 44 }
-    ],
-    xAxis: [
-      {
-        ...sharedXAxis,
-        gridIndex: 0,
-        axisLabel: { show: false },
-        axisTick: { show: false },
-        axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } }
-      },
-      {
-        ...sharedXAxis,
-        gridIndex: 1,
-        name: `${metric} (${description})`,
-        nameLocation: 'middle',
-        nameGap: 30,
-        nameTextStyle: { color: DASHBOARD_COLORS.text, fontSize: 12 },
-        axisLabel: { ...AXIS_LABEL, formatter: formatValue }
-      }
-    ],
-    yAxis: [
-      {
-        gridIndex: 0,
-        type: 'value',
-        name: 'Arquivos',
-        // embaixo do zero, como no protótipo, longe dos rótulos da referência que ficam no topo
-        nameLocation: 'start',
-        nameGap: 10,
-        nameTextStyle: AXIS_LABEL,
-        minInterval: 1,
-        axisLabel: { ...AXIS_LABEL, formatter: formatNumber },
-        splitLine: SPLIT_LINE
-      },
-      {
-        gridIndex: 1,
-        type: 'category',
-        data: ['Boxplot'],
-        axisTick: { show: false },
-        axisLine: { show: false },
-        // margem maior: um outlier em 0 fica no começo do eixo, encostado no rótulo
-        axisLabel: { ...AXIS_LABEL, margin: 14 }
-      }
-    ],
+    tooltip: { trigger: 'item', confine: true },
+    grid: { ...HISTOGRAM_GRID_SIDES, top: 32, bottom: 32 },
+    xAxis: histogramValueAxis(histogram),
+    yAxis: {
+      type: 'value',
+      name: 'Análises',
+      nameTextStyle: AXIS_LABEL,
+      minInterval: 1,
+      axisLabel: { ...AXIS_LABEL, formatter: formatCount },
+      splitLine: SPLIT_LINE
+    },
     series: [
       {
         id: 'histogram',
         type: 'custom',
-        xAxisIndex: 0,
-        yAxisIndex: 0,
         renderItem: renderHistogramBar,
         // sem o encode, o eixo y leria o fim da faixa (dimensão 1) em vez da contagem
         encode: { x: [0, 1], y: 2 },
         data: bins.map((bin) => [bin.start, bin.end, bin.count]),
         tooltip: {
           formatter: ({ dataIndex }: { dataIndex: number }) =>
-            `${formatBinLabel(bins[dataIndex], kind)}<br/><strong>${formatFileCount(bins[dataIndex].count)}</strong>`
-        },
-        markLine: verticalReferenceLines(reference, kind, axisMax, true)
-      },
-      {
-        id: 'boxplot',
-        type: 'boxplot',
-        xAxisIndex: 1,
-        yAxisIndex: 1,
-        // sem layout: com o eixo y de categoria o ECharts já deita a caixa
-        boxWidth: [18, 28],
-        itemStyle: { color: DISTRIBUTION_COLORS.boxFill, borderColor: DISTRIBUTION_COLORS.box, borderWidth: 1.5 },
-        data: [[stats.low, stats.q1, stats.median, stats.q3, stats.high]],
-        tooltip: { formatter: () => formatBoxTooltip(stats, kind) },
-        markLine: verticalReferenceLines(reference, kind, axisMax, false)
-      },
-      {
-        id: 'outliers',
-        type: 'scatter',
-        xAxisIndex: 1,
-        yAxisIndex: 1,
-        ...OUTLIER_STYLE,
-        symbolSize: outlierSymbolSize(outlierGroups),
-        // [valor, 0]: 0 é o índice da única categoria do eixo y
-        data: outlierGroups.map((group) => [group.value, 0]),
-        tooltip: {
-          formatter: ({ dataIndex }: { dataIndex: number }) =>
-            formatOutlierTooltip(outlierGroups[dataIndex], metric, reference)
+            `${formatBinLabel(bins[dataIndex], histogram)}<br/><strong>${formatAnalysisCount(
+              bins[dataIndex].count
+            )}</strong>`
         }
       }
     ]
   };
 }
 
-/** Altura do gráfico de comparação, com o nome, o n e a mediana de cada repositório embaixo da caixa. */
-export const COMPARISON_CHART_HEIGHT = 440;
-
-export interface ComparisonRepository {
-  name: string;
-  summary: MetricDistributionSummary;
-  files: MetricDistributionFile[];
-}
-
-const MAX_CATEGORY_NAME = 18;
-
-// três linhas (nome, n e mediana): o n e a mediana não se sobrepõem nem com muitos arquivos. O nome perde o prefixo
-// comum e fica com até 18 caracteres (uns 128 px); com muitos repositórios de nome longo num gráfico estreito, ainda
-// pode encostar no vizinho, e o nome inteiro fica no tooltip
-const CATEGORY_RICH = {
-  name: { color: DASHBOARD_COLORS.text, fontSize: 13, fontWeight: 'bold', lineHeight: 20 },
-  meta: { color: DASHBOARD_COLORS.mutedText, fontSize: 11, lineHeight: 15 }
-};
-
-/** Prefixo comum a todos os nomes, até o último '-' ou '_' (ex.: '2026.2-MeasureSoftGram-'); vazio com menos de 2. */
-function commonNamePrefix(names: string[]): string {
-  if (names.length < 2) return '';
-  const common = names.reduce((prefix, name) => {
-    let size = 0;
-    while (size < prefix.length && prefix[size] === name[size]) size += 1;
-    return prefix.slice(0, size);
-  }, names[0]);
-  // o '.' fica de fora: em '2026.1-…' x '2026.2-…' ele cortaria dentro do semestre
-  return common.slice(0, Math.max(common.lastIndexOf('-'), common.lastIndexOf('_')) + 1);
+/** Rótulo da mediana na legenda: "Mediana (0,55)". */
+export function formatMedianLabel(median: number | null): string {
+  return `Mediana (${formatStatistic(median)})`;
 }
 
 /**
- * Nome do repositório no eixo, sem o prefixo comum; se ainda for longo, perde o meio, porque o começo e o fim são o
- * que diferencia os nomes. O nome inteiro fica no tooltip.
+ * Curva de densidade das análises (CA5), no mesmo eixo x e com as mesmas margens do histograma, para os dois quadros
+ * ficarem alinhados lado a lado. A área fica preenchida em cor clara. A mediana do Service é uma linha vertical
+ * tracejada numa série sem pontos, só para ter o próprio item na legenda. O eixo y fica sem rótulos e sem marcas,
+ * como na tela de referência: a densidade é relativa, e numa métrica de valores grandes os rótulos viravam "0" ou se
+ * repetiam. A grade leve continua, e o texto acessível descreve a curva.
  */
-function categoryName(name: string, prefix: string): string {
-  const clean = richText(name.slice(prefix.length) || name);
-  if (clean.length <= MAX_CATEGORY_NAME) return clean;
-  const head = Math.ceil((MAX_CATEGORY_NAME - 1) / 2);
-  return `${clean.slice(0, head)}…${clean.slice(head + 1 - MAX_CATEGORY_NAME)}`;
-}
-
-/** Percentual fica na escala de 0 a 100, a menos que algum valor passe disso. */
-export function getPercentAxisMax({ max }: { max: number }): number {
-  return Math.max(100, max);
-}
-
-/** Linhas tracejadas horizontais da comparação, com rótulos curtos na margem direita, fora das caixas (CA4). */
-function horizontalReferenceLines(reference: MetricReference | null, kind: MetricKind) {
-  if (!reference) return undefined;
-  const line = (value: number, text: string) => ({
-    yAxis: value,
-    label: { formatter: `${text} ${formatMetricValue(value, kind)}` }
-  });
-  return {
-    ...REFERENCE_LINE,
-    // dentro do grid, o rótulo opaco (z 5) cobriria a última caixa (z 2); em 'end', ele fica depois do fim da linha
-    label: { ...REFERENCE_LABEL, position: 'end' },
-    data: [line(reference.min_threshold, 'Mín.'), line(reference.max_threshold, 'Máx.')]
-  };
-}
-
-/** Um boxplot de Tukey por repositório na mesma métrica, com os outliers de cada um (CA6). */
-export function formatComparisonChartOptions(
-  metric: FileMetricKey,
-  repositories: ComparisonRepository[],
-  reference: MetricReference | null = null,
-  repositoryTerm = 'repositório'
+export function formatDensityOptions(
+  points: DensityPoint[],
+  histogram: Histogram,
+  median: number | null,
+  entityName: string
 ) {
-  const { kind } = getFileMetric(metric);
-  const formatValue = (value: number) => formatMetricValue(value, kind);
-  const boxes = repositories.map((repository) => ({
-    ...repository,
-    stats: getBoxplotStats(repository.summary, repository.files)
-  }));
-  const prefix = commonNamePrefix(boxes.map((box) => box.name));
-  // os outliers vêm em ordem crescente: o último é o maior valor da caixa
-  const dataMax = boxes.reduce(
-    (max, { stats }) => Math.max(max, stats.high, stats.outliers[stats.outliers.length - 1]?.value ?? stats.high),
-    1
-  );
-  const axisMax = kind === 'percent' ? getPercentAxisMax({ max: dataMax }) : dataMax;
-  // o eixo da comparação é vertical e mais baixo (uns 320 px): a tolerância do agrupamento dobra
-  const outliers = boxes.flatMap((box, index) =>
-    groupOutliers(box.stats.outliers, axisMax / (OUTLIER_SPREAD / 2)).map((group) => ({
-      group,
-      index,
-      repository: box.name
-    }))
-  );
-  const summaries = boxes
-    .map((box) => {
-      const outlierFiles = describeOutlierFiles(box.stats.outliers, box.stats.median, kind);
-      const outlierText = outlierFiles ? `, outliers: ${outlierFiles}` : '';
-      return `${box.name}: mediana ${formatValue(box.summary.median)}${outlierText}`;
-    })
-    .join('; ');
+  const peak = points.reduce((top, point) => (point.y > top.y ? point : top), points[0]);
+  const medianLabel = formatMedianLabel(median);
+  const hasMedian = median !== null;
+  const medianSentence = hasMedian ? ` ${medianLabel}.` : '';
 
   return {
     animation: false,
-    aria: { enabled: true, label: { description: `Um boxplot de ${metric} por ${repositoryTerm}. ${summaries}.` } },
-    tooltip: TOOLTIP,
-    // com referência, a margem direita recebe os rótulos: "Máx. 100%" pede até uns 85 px com uma fonte larga
-    grid: { left: 64, right: reference ? 96 : 32, top: 40, bottom: 76 },
-    xAxis: {
-      type: 'category',
-      data: boxes.map((box) => box.name),
-      axisTick: { show: false },
-      axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
-      axisLabel: {
-        interval: 0,
-        formatter: (name: string, index: number) => {
-          const { count, median } = boxes[index].summary;
-          const label = categoryName(name, prefix);
-          const total = formatNumber(count);
-          // de 10 para cima, sem casa decimal: "mediana 87,2%" passa da faixa de cada repositório com 6 deles num
-          // gráfico estreito (uns 620 px). Abaixo de 10 a casa fica, senão 0,4% de duplicação viraria "mediana 0%".
-          // O valor exato fica no tooltip da caixa e na descrição para leitores de tela
-          const medianText = formatValue(Math.abs(median) >= 10 ? Math.round(median) : median);
-          return `{name|${label}}\n{meta|n = ${total}}\n{meta|mediana ${medianText}}`;
-        },
-        rich: CATEGORY_RICH
+    aria: {
+      enabled: true,
+      label: {
+        description: `Curva de densidade de ${entityName}, de ${formatAxisValue(histogram.min)} a ${formatAxisValue(
+          histogram.max
+        )}, com o pico em ${formatStatistic(peak.x)}.${medianSentence}`
       }
     },
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      formatter: (params: { value: number[] }[]) => {
+        const [x, y] = params[0].value;
+        return `${formatStatistic(x)}<br/>Densidade: <strong>${formatStatistic(y)}</strong>`;
+      }
+    },
+    legend: {
+      ...LEGEND,
+      top: 0,
+      right: HISTOGRAM_GRID_SIDES.right,
+      data: hasMedian ? ['Densidade', medianLabel] : ['Densidade']
+    },
+    grid: { ...HISTOGRAM_GRID_SIDES, top: 40, bottom: 32 },
+    xAxis: histogramValueAxis(histogram),
     yAxis: {
       type: 'value',
-      name: metric,
-      // embaixo, à esquerda, abaixo das três linhas de rótulo, como na tela 03
-      nameLocation: 'start',
-      nameGap: 60,
-      min: 0,
-      max: kind === 'percent' ? getPercentAxisMax : undefined,
-      nameTextStyle: AXIS_LABEL,
-      axisLabel: { ...AXIS_LABEL, formatter: formatValue },
+      axisLabel: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: true, ...SPLIT_LINE }
+    },
+    series: [
+      {
+        id: 'density',
+        name: 'Densidade',
+        type: 'line',
+        data: points.map((point) => [point.x, point.y]),
+        showSymbol: false,
+        lineStyle: { color: DISTRIBUTION_COLORS.density, width: 2 },
+        itemStyle: { color: DISTRIBUTION_COLORS.density },
+        areaStyle: { color: DISTRIBUTION_COLORS.densityFill }
+      },
+      ...(hasMedian
+        ? [
+            {
+              id: 'median',
+              name: medianLabel,
+              type: 'line',
+              data: [],
+              itemStyle: { color: DISTRIBUTION_COLORS.median },
+              lineStyle: { color: DISTRIBUTION_COLORS.median, type: 'dashed' },
+              markLine: {
+                silent: true,
+                symbol: 'none',
+                label: { show: false },
+                lineStyle: { color: DISTRIBUTION_COLORS.median, width: 2, type: 'dashed' },
+                data: [{ xAxis: median }]
+              }
+            }
+          ]
+        : [])
+    ]
+  };
+}
+
+/** Altura da dispersão no tempo, ao lado do resumo estatístico. */
+export const SCATTER_CHART_HEIGHT = 320;
+
+/** Discrepantes listados no texto acessível; os outros entram só na contagem. */
+const MAX_DESCRIBED_OUTLIERS = 10;
+
+/** Data e hora de uma análise no tooltip: "17/08/2026 às 10:00". */
+export function formatAnalysisDateTime(date: string | number): string {
+  return format(new Date(date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+}
+
+function toScatterPoint(analysis: DistributionAnalysis): [number, number] {
+  return [new Date(analysis.date).getTime(), analysis.value];
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Folga de cada lado dos rótulos de data. O hideOverlap só esconde um rótulo cuja caixa invade a do vizinho, e no
+ * cartão de 360 px "22 set" e "1 out" só se encostavam ("22 set1 out"). Com um fundo transparente, o padding entra
+ * na caixa do rótulo (sem fundo o ECharts mede só o texto), então dois que se encostam passam a se sobrepor e um some.
+ */
+const TIME_LABEL_SPACING = { backgroundColor: 'transparent', padding: [0, 4] };
+
+/**
+ * Eixo de tempo da dispersão. Com as análises em dias diferentes, o ECharts escolhe o intervalo e os rótulos saem com
+ * dia e mês. Com todas no mesmo dia (uma análise só, por exemplo), ele não tem como escolher e enche o eixo de
+ * "1 jul / 1 jan" sem ano: aí o eixo vai de um dia antes a um dia depois, com um rótulo por dia e a data completa.
+ */
+export function scatterTimeAxis(analyses: DistributionAnalysis[]) {
+  const times = analyses.map((analysis) => new Date(analysis.date).getTime());
+  const days = new Set(times.map((time) => format(new Date(time), 'yyyy-MM-dd')));
+  const sameDay = days.size === 1;
+  const pattern = sameDay ? 'dd/MM/yyyy' : 'd MMM';
+  return {
+    type: 'time',
+    ...(sameDay ? { min: Math.min(...times) - DAY_MS, max: Math.max(...times) + DAY_MS, minInterval: DAY_MS } : {}),
+    boundaryGap: ['3%', '3%'],
+    splitLine: { show: false },
+    axisLine: { lineStyle: { color: DASHBOARD_COLORS.gridLine } },
+    axisLabel: {
+      ...AXIS_LABEL,
+      hideOverlap: true,
+      ...TIME_LABEL_SPACING,
+      formatter: (value: number) => format(new Date(value), pattern, { locale: ptBR })
+    }
+  };
+}
+
+function describeOutliers(outliers: DistributionAnalysis[]): string {
+  if (!outliers.length) return 'Nenhum valor discrepante.';
+  const listed = outliers
+    .slice(0, MAX_DESCRIBED_OUTLIERS)
+    .map((analysis) => `${formatStatistic(analysis.value)} em ${format(new Date(analysis.date), 'dd/MM/yyyy')}`);
+  const rest = outliers.length - listed.length;
+  const more = rest > 0 ? ` e mais ${formatCount(rest)}` : '';
+  const label = outliers.length === 1 ? '1 valor discrepante' : `${formatCount(outliers.length)} valores discrepantes`;
+  return `${label}: ${listed.join(', ')}${more}.`;
+}
+
+/**
+ * Dispersão das análises no tempo (CA7): um ponto por análise na data dela, com os discrepantes do Service em
+ * círculo vazado. O Q1, a mediana e o Q3 vêm do resumo do Service: a faixa clara do Q1 ao Q3 é um markArea e a
+ * mediana, um markLine, cada um numa série sem pontos. A da faixa tem o próprio item na legenda; a da mediana fica
+ * fora dela e leva o valor no rótulo da linha. O eixo y vai de 0 a 1, ou segue a escala da métrica, como o histograma.
+ */
+export function formatScatterOptions(entity: DistributionEntity, histogram: Histogram) {
+  const { analyses, summary } = entity;
+  const regular = analyses.filter((analysis) => !analysis.is_outlier);
+  const outliers = analyses.filter((analysis) => analysis.is_outlier);
+  const { q1, median, q3 } = summary;
+  const hasQuartiles = q1 !== null && q3 !== null;
+  const period = analyses.length ? formatPeriod(analyses[0].date, analyses[analyses.length - 1].date) : '';
+  const quartiles = `Q1 ${formatStatistic(q1)}, mediana ${formatStatistic(median)} e Q3 ${formatStatistic(q3)}`;
+
+  return {
+    animation: false,
+    aria: {
+      enabled: true,
+      label: {
+        description: `Dispersão de ${entity.name} no tempo: ${formatAnalysisCount(
+          analyses.length
+        )} de ${period}. ${quartiles}. ${describeOutliers(outliers)}`
+      }
+    },
+    tooltip: {
+      trigger: 'item',
+      confine: true,
+      formatter: ({ value }: { value: [number, number] }) =>
+        `${formatAnalysisDateTime(value[0])}<br/><strong>${formatStatistic(value[1])}</strong>`
+    },
+    legend: {
+      ...LEGEND,
+      top: 0,
+      data: [
+        { name: 'Análise', icon: 'circle' },
+        { name: 'Valor discrepante', icon: 'circle' },
+        {
+          name: 'Q1 a Q3',
+          icon: 'rect',
+          itemStyle: { color: DISTRIBUTION_COLORS.boxFill, borderColor: DISTRIBUTION_COLORS.density, borderWidth: 1 }
+        }
+      ]
+    },
+    // a legenda quebra em duas linhas no cartão de 360 px: o topo do grid tem espaço para a segunda
+    grid: { left: 8, right: 24, top: 60, bottom: 8, containLabel: true },
+    xAxis: scatterTimeAxis(analyses),
+    yAxis: {
+      type: 'value',
+      min: histogram.min,
+      max: histogram.max,
+      axisLabel: { ...AXIS_LABEL, formatter: formatAxisValue },
       splitLine: SPLIT_LINE
     },
     series: [
       {
-        id: 'boxplot',
-        type: 'boxplot',
-        // sem layout: com o eixo x de categoria o ECharts deixa as caixas em pé, lado a lado
-        boxWidth: [16, 48],
-        itemStyle: { color: DISTRIBUTION_COLORS.boxFill, borderColor: DISTRIBUTION_COLORS.box, borderWidth: 1.5 },
-        data: boxes.map(({ stats }) => [stats.low, stats.q1, stats.median, stats.q3, stats.high]),
-        tooltip: {
-          formatter: ({ dataIndex }: { dataIndex: number }) =>
-            formatBoxTooltip(boxes[dataIndex].stats, kind, boxes[dataIndex].name)
-        },
-        markLine: horizontalReferenceLines(reference, kind)
+        id: 'analyses',
+        name: 'Análise',
+        type: 'scatter',
+        symbolSize: 7,
+        itemStyle: { color: DISTRIBUTION_COLORS.density },
+        data: regular.map(toScatterPoint)
       },
       {
         id: 'outliers',
+        name: 'Valor discrepante',
         type: 'scatter',
+        symbolSize: 9,
         ...OUTLIER_STYLE,
-        symbolSize: outlierSymbolSize(outliers.map(({ group }) => group)),
-        // [índice do repositório no eixo x, valor]
-        data: outliers.map(({ group, index }) => [index, group.value]),
+        data: outliers.map(toScatterPoint)
+      },
+      {
+        id: 'iqr',
+        name: 'Q1 a Q3',
+        type: 'line',
+        data: [],
+        itemStyle: { color: DISTRIBUTION_COLORS.boxFill },
+        markArea: hasQuartiles
+          ? { silent: true, itemStyle: { color: DISTRIBUTION_COLORS.boxFill }, data: [[{ yAxis: q1 }, { yAxis: q3 }]] }
+          : undefined
+      },
+      {
+        id: 'median',
+        name: 'Mediana',
+        type: 'line',
+        data: [],
+        markLine:
+          median === null
+            ? undefined
+            : {
+                silent: true,
+                symbol: 'none',
+                lineStyle: { color: DISTRIBUTION_COLORS.median, width: 2, type: 'dashed' },
+                label: {
+                  position: 'insideEndTop',
+                  color: DISTRIBUTION_COLORS.median,
+                  fontSize: 11,
+                  // fundo claro para o rótulo não se misturar com os pontos que passam por trás dele
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                  padding: [1, 4],
+                  formatter: `Mediana ${formatStatistic(median)}`
+                },
+                data: [{ yAxis: median }]
+              }
+      }
+    ]
+  };
+}
+
+/** Uma linha do boxplot do nível: a entidade escolhida ou um filho dela, com a caixa e as hastes. */
+export interface LevelBoxplotRow {
+  entity: DistributionEntity;
+  stats: BoxplotStats;
+}
+
+/**
+ * Linhas do boxplot do nível (CA6): a entidade escolhida e os filhos com análise, na ordem em que o Service manda (a da
+ * configuração da release). Só entram os filhos na mesma escala da entidade: abaixo da medida vêm as métricas, com o
+ * valor bruto, que não cabem no eixo de 0 a 1. Um filho sem análise (resumo sem quartis) fica fora.
+ */
+export function getLevelBoxplotRows(entity: DistributionEntity, children: DistributionEntity[]): LevelBoxplotRow[] {
+  const sameScale = children.filter((child) => isUnitScale(child.level) === isUnitScale(entity.level));
+  return [entity, ...sameScale].flatMap((item) => {
+    const stats = getBoxplotStats(item.summary, item.analyses);
+    return stats ? [{ entity: item, stats }] : [];
+  });
+}
+
+/** Altura de cada linha do boxplot do nível; a tabela de percentis usa a mesma, para as linhas ficarem alinhadas. */
+export const BOXPLOT_ROW_HEIGHT = 44;
+
+/** Margens do grid do boxplot do nível, em px: o cabeçalho da tabela de percentis tem a altura do topo. */
+export const BOXPLOT_GRID = { top: 36, bottom: 28, left: 124, right: 24 };
+
+/** Largura dos nomes das linhas no eixo y; um nome maior é cortado com reticências. */
+const BOXPLOT_LABEL_WIDTH = 112;
+
+/**
+ * Num gráfico estreito (o cartão em 360 px), os nomes e a margem direita encolhem para sobrar espaço para as caixas;
+ * os nomes inteiros ficam na tabela de percentis, logo abaixo.
+ */
+const BOXPLOT_NARROW = { maxWidth: 360, labelWidth: 56, right: 12 };
+
+// um discrepante a menos de 1/36 do eixo do centro de um grupo entra nele: nenhum ponto fica escondido atrás de outro
+const OUTLIER_SPREAD = 36;
+
+/** Altura do gráfico: o topo, uma faixa por linha e a base com os valores do eixo. */
+export function getLevelBoxplotHeight(rows: number): number {
+  return BOXPLOT_GRID.top + rows * BOXPLOT_ROW_HEIGHT + BOXPLOT_GRID.bottom;
+}
+
+interface LevelOutlierPoint extends OutlierGroup {
+  row: LevelBoxplotRow;
+}
+
+/** Entidade e valor e data de cada análise do ponto, escapados porque o tooltip do ECharts é HTML. */
+export function formatLevelOutlierTooltip({ row, analyses }: LevelOutlierPoint): string {
+  const title = analyses.length === 1 ? 'Valor discrepante' : `${formatCount(analyses.length)} valores discrepantes`;
+  return [
+    `<span style="color:${DISTRIBUTION_COLORS.outlier};font-weight:bold">${title}</span>`,
+    escapeHtml(row.entity.name),
+    ...analyses.map(
+      (analysis) => `<strong>${formatStatistic(analysis.value)}</strong> em ${formatAnalysisDateTime(analysis.date)}`
+    )
+  ].join('<br/>');
+}
+
+function describeBoxplotRow({ entity, stats }: LevelBoxplotRow): string {
+  const count = stats.outliers.length;
+  let outliers = `${formatCount(count)} valores discrepantes`;
+  if (count === 0) outliers = 'nenhum valor discrepante';
+  else if (count === 1) outliers = '1 valor discrepante';
+  return `${entity.name}: mediana ${formatStatistic(stats.median)}, Q1 ${formatStatistic(
+    stats.q1
+  )} e Q3 ${formatStatistic(stats.q3)}, ${outliers}`;
+}
+
+/**
+ * Boxplot do nível (CA6): uma linha para a entidade escolhida e uma para cada filho dela no modelo, no mesmo eixo de
+ * valores do histograma (0 a 1, ou a escala da métrica). A primeira linha é a da entidade, em cor escura e sobre o
+ * fundo destacado; os filhos vêm em cor clara, na ordem da configuração da release. Caixa e hastes vêm de
+ * getBoxplotStats, e os discrepantes do Service ficam em círculo vazado, numa série à parte. O grid tem margens fixas
+ * em px e cada linha tem BOXPLOT_ROW_HEIGHT, para a tabela de percentis ao lado ficar alinhada às linhas.
+ */
+export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Histogram) {
+  const [chosen, ...children] = rows;
+  const tolerance = (histogram.max - histogram.min) / OUTLIER_SPREAD;
+  const outliers: LevelOutlierPoint[] = rows.flatMap((row) =>
+    groupOutliers(row.stats.outliers, tolerance).map((group) => ({ ...group, row }))
+  );
+  let childrenSentence = '';
+  if (children.length === 1) childrenSentence = ' e do filho no modelo';
+  else if (children.length > 1) childrenSentence = ` e dos ${formatCount(children.length)} filhos no modelo`;
+
+  return {
+    animation: false,
+    aria: {
+      enabled: true,
+      label: {
+        description: `Boxplot de ${chosen.entity.name}${childrenSentence}, de ${formatAxisValue(
+          histogram.min
+        )} a ${formatAxisValue(histogram.max)}. ${rows.map(describeBoxplotRow).join('; ')}.`
+      }
+    },
+    tooltip: { trigger: 'item', confine: true },
+    grid: BOXPLOT_GRID,
+    xAxis: { ...histogramValueAxis(histogram), splitLine: SPLIT_LINE },
+    yAxis: {
+      type: 'category',
+      // a entidade escolhida fica no topo, e os filhos descem na ordem da release
+      inverse: true,
+      data: rows.map((row) => row.entity.key),
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        ...AXIS_LABEL,
+        color: DASHBOARD_COLORS.text,
+        width: BOXPLOT_LABEL_WIDTH,
+        overflow: 'truncate',
+        formatter: (_key: string, index: number) =>
+          index === 0 ? `{chosen|${rows[index].entity.name.replace(/[{}|]/g, '')}}` : rows[index].entity.name,
+        // na v5 o estilo rich não herda a fonte do label, então ele declara a sua
+        rich: { chosen: { color: DASHBOARD_COLORS.primary, fontSize: 11, fontWeight: 'bold' } }
+      },
+      // as cores do splitArea são cíclicas: só a primeira faixa fica destacada, sem repetir nas faixas ímpares
+      splitArea: {
+        show: true,
+        areaStyle: {
+          color: [DISTRIBUTION_COLORS.entityRow, ...new Array<string>(rows.length - 1).fill('transparent')]
+        }
+      }
+    },
+    series: [
+      {
+        id: 'boxplot',
+        name: 'Boxplot',
+        type: 'boxplot',
+        boxWidth: [10, 20],
+        data: rows.map(({ stats }, index) => ({
+          value: [stats.low, stats.q1, stats.median, stats.q3, stats.high],
+          itemStyle:
+            index === 0
+              ? { color: DISTRIBUTION_COLORS.entityBoxFill, borderColor: DISTRIBUTION_COLORS.entityBox, borderWidth: 2 }
+              : { color: DISTRIBUTION_COLORS.childBoxFill, borderColor: DISTRIBUTION_COLORS.childBox, borderWidth: 1.5 }
+        })),
         tooltip: {
           formatter: ({ dataIndex }: { dataIndex: number }) =>
-            formatOutlierTooltip(outliers[dataIndex].group, metric, reference, outliers[dataIndex].repository)
+            formatBoxTooltip(rows[dataIndex].stats, rows[dataIndex].entity.name)
+        }
+      },
+      {
+        id: 'outliers',
+        name: 'Valor discrepante',
+        type: 'scatter',
+        z: 3,
+        symbolSize: outlierSymbolSize(outliers),
+        ...OUTLIER_STYLE,
+        data: outliers.map((point) => [point.value, point.row.entity.key]),
+        tooltip: { formatter: ({ dataIndex }: { dataIndex: number }) => formatLevelOutlierTooltip(outliers[dataIndex]) }
+      }
+    ],
+    media: [
+      {
+        query: { maxWidth: BOXPLOT_NARROW.maxWidth },
+        option: {
+          grid: {
+            left: BOXPLOT_NARROW.labelWidth + BOXPLOT_GRID.left - BOXPLOT_LABEL_WIDTH,
+            right: BOXPLOT_NARROW.right
+          },
+          yAxis: { axisLabel: { width: BOXPLOT_NARROW.labelWidth } }
         }
       }
     ]
