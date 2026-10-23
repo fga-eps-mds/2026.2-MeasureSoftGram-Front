@@ -254,6 +254,13 @@ function toScatterPoint(analysis: DistributionAnalysis): [number, number] {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
+ * Folga de cada lado dos rótulos de data. O hideOverlap só esconde um rótulo cuja caixa invade a do vizinho, e no
+ * cartão de 360 px "22 set" e "1 out" só se encostavam ("22 set1 out"). Com um fundo transparente, o padding entra
+ * na caixa do rótulo (sem fundo o ECharts mede só o texto), então dois que se encostam passam a se sobrepor e um some.
+ */
+const TIME_LABEL_SPACING = { backgroundColor: 'transparent', padding: [0, 4] };
+
+/**
  * Eixo de tempo da dispersão. Com as análises em dias diferentes, o ECharts escolhe o intervalo e os rótulos saem com
  * dia e mês. Com todas no mesmo dia (uma análise só, por exemplo), ele não tem como escolher e enche o eixo de
  * "1 jul / 1 jan" sem ano: aí o eixo vai de um dia antes a um dia depois, com um rótulo por dia e a data completa.
@@ -272,6 +279,7 @@ export function scatterTimeAxis(analyses: DistributionAnalysis[]) {
     axisLabel: {
       ...AXIS_LABEL,
       hideOverlap: true,
+      ...TIME_LABEL_SPACING,
       formatter: (value: number) => format(new Date(value), pattern, { locale: ptBR })
     }
   };

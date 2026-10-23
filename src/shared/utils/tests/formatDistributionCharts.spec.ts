@@ -256,6 +256,13 @@ describe('formatScatterOptions', () => {
     expect(xAxis.axisLabel.formatter(at('2026-10-24T00:00:00-03:00'))).toBe('24/10/2026');
   });
 
+  it('esconde os rótulos de data que se sobrepõem, com uma folga para os que só se encostam', () => {
+    const { axisLabel } = formatScatterOptions(tsqmi, histogram).xAxis;
+
+    // sem fundo o ECharts mede só o texto: a folga só conta na caixa do rótulo com um fundo, mesmo transparente
+    expect(axisLabel).toMatchObject({ hideOverlap: true, backgroundColor: 'transparent', padding: [0, 4] });
+  });
+
   it('com análises em dias diferentes, o eixo segue as datas delas, com dia e mês', () => {
     const { xAxis } = formatScatterOptions(tsqmi, histogram);
 
