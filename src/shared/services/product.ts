@@ -227,20 +227,6 @@ class ProductQuery {
     return { url: `/v1/organizations/${organizationId}/products/${productId}/repositories/`, method: 'get' };
   }
 
-  getRepositoryReleaseHistoryConfig(
-    organizationId: string,
-    productId: string,
-    repositoryId: number | undefined,
-    level: 'characteristic' | 'subcharacteristic' | 'measure' | 'metric'
-  ): GetRequest {
-    if (!organizationId || !productId || !repositoryId) return null;
-    return {
-      url: `/v1/organizations/${organizationId}/products/${productId}/repositories/${repositoryId}/release-history/`,
-      method: 'get',
-      params: { level }
-    };
-  }
-
   /** analysis_data da release: planejado (Rp) e, por repositório, realizado (Rd), diff e norm_diff. */
   getReleaseAnalysisDataConfig(organizationId: string, productId: string, releaseId?: number): GetRequest {
     if (!organizationId || !productId || !releaseId) return null;
