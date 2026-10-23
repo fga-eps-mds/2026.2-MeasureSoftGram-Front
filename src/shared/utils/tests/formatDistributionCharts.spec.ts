@@ -133,6 +133,14 @@ describe('formatDensityOptions', () => {
     expect(option.series).toHaveLength(1);
   });
 
+  it('esconde os rótulos e as marcas do eixo y, mantendo a grade, como na tela de referência', () => {
+    const { yAxis } = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+
+    expect(yAxis.axisLabel).toMatchObject({ show: false });
+    expect(yAxis.axisTick).toMatchObject({ show: false });
+    expect(yAxis.splitLine).toMatchObject({ show: true, lineStyle: { color: expect.any(String) } });
+  });
+
   it('descreve a curva no texto acessível e mostra o valor e a densidade no tooltip', () => {
     const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
 

@@ -155,7 +155,9 @@ export function formatMedianLabel(median: number | null): string {
 /**
  * Curva de densidade das análises (CA5), no mesmo eixo x e com as mesmas margens do histograma, para os dois quadros
  * ficarem alinhados lado a lado. A área fica preenchida em cor clara. A mediana do Service é uma linha vertical
- * tracejada numa série sem pontos, só para ter o próprio item na legenda.
+ * tracejada numa série sem pontos, só para ter o próprio item na legenda. O eixo y fica sem rótulos e sem marcas,
+ * como na tela de referência: a densidade é relativa, e numa métrica de valores grandes os rótulos viravam "0" ou se
+ * repetiam. A grade leve continua, e o texto acessível descreve a curva.
  */
 export function formatDensityOptions(
   points: DensityPoint[],
@@ -196,8 +198,9 @@ export function formatDensityOptions(
     xAxis: histogramValueAxis(histogram),
     yAxis: {
       type: 'value',
-      axisLabel: { ...AXIS_LABEL, formatter: (value: number) => formatAxisValue(Number(value.toFixed(2))) },
-      splitLine: SPLIT_LINE
+      axisLabel: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: true, ...SPLIT_LINE }
     },
     series: [
       {
