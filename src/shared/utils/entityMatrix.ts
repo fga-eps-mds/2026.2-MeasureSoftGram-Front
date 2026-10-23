@@ -84,7 +84,7 @@ export function getColumnGroups(columns: EntityMatrixColumn[]): ColumnGroup[][] 
         .slice(0, index + 1)
         .map((item) => item.key)
         .join('/');
-      const last = groups[groups.length - 1];
+      const last = groups.at(-1);
       if (last?.branch === branch) {
         last.span += 1;
       } else {
@@ -182,30 +182,29 @@ export function getReading(matrix: EntityMatrix): MatrixReading | null {
     .filter((entry) => entry.pairs.length > 0);
   if (byColumn.length === 0) return null;
 
-  const weakest = byColumn
-    .map(({ column, pairs: columnPairs }) => ({
+  const stats = byColumn.map(({ column, pairs: columnPairs }) => {
+    const sorted = [...columnPairs].sort((a, b) => (a.value as number) - (b.value as number));
+    const lowest = sorted[0];
+    const highest = sorted.at(-1) ?? lowest;
+    return {
       column,
-      mean: columnPairs.reduce((sum, pair) => sum + (pair.value as number), 0) / columnPairs.length
-    }))
-    .reduce((worst, entry) => (entry.mean < worst.mean ? entry : worst));
+      count: sorted.length,
+      mean: sorted.reduce((sum, pair) => sum + (pair.value as number), 0) / sorted.length,
+      lowest: { repository: lowest.repository.name, value: lowest.value as number },
+      highest: { repository: highest.repository.name, value: highest.value as number }
+    };
+  });
+  type ColumnStats = typeof stats[number];
+  const spread = (entry: ColumnStats) => entry.highest.value - entry.lowest.value;
 
-  const spreads = byColumn
-    .filter((entry) => entry.pairs.length > 1)
-    .map(({ column, pairs: columnPairs }) => {
-      const sorted = [...columnPairs].sort((a, b) => (a.value as number) - (b.value as number));
-      const lowest = sorted[0];
-      const highest = sorted[sorted.length - 1];
-      return {
-        column,
-        lowest: { repository: lowest.repository.name, value: lowest.value as number },
-        highest: { repository: highest.repository.name, value: highest.value as number }
-      };
-    });
-  const widest = spreads.length
-    ? spreads.reduce((best, entry) =>
-        entry.highest.value - entry.lowest.value > best.highest.value - best.lowest.value ? entry : best
-      )
-    : null;
+  const weakest = stats.reduce((worst, entry) => (entry.mean < worst.mean ? entry : worst), stats[0]);
+  // com um repositório só não há dispersão
+  const widest = stats
+    .filter((entry) => entry.count > 1)
+    .reduce<ColumnStats | null>((best, entry) => (best === null || spread(entry) > spread(best) ? entry : best), null);
 
-  return { weakest, widest };
+  return {
+    weakest: { column: weakest.column, mean: weakest.mean },
+    widest: widest && { column: widest.column, lowest: widest.lowest, highest: widest.highest }
+  };
 }
