@@ -21,10 +21,7 @@ const BUTTON_SX = {
 export default function ExportCsvButton<T extends Row>({
   dashboard,
   chart
-}: {
-  dashboard: string;
-  chart: CsvChart<T>;
-}) {
+}: Readonly<{ dashboard: string; chart: CsvChart<T> }>) {
   return (
     <Button
       variant="outlined"
@@ -40,7 +37,10 @@ export default function ExportCsvButton<T extends Row>({
 }
 
 /** Exportação geral do topo da página: um `.zip` com um CSV por gráfico com dados; desabilitado se nenhum tiver. */
-export function ExportAllCsvButton<T extends Row>({ dashboard, charts }: { dashboard: string; charts: CsvChart<T>[] }) {
+export function ExportAllCsvButton<T extends Row>({
+  dashboard,
+  charts
+}: Readonly<{ dashboard: string; charts: CsvChart<T>[] }>) {
   const [isExporting, setIsExporting] = useState(false);
   const withRows = charts.filter((chart) => chart.rows.length > 0);
 
