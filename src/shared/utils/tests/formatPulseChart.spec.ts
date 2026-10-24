@@ -174,6 +174,7 @@ describe('formatPulseChart Utility', () => {
       const formatter = (formatPulseChartOptions([repoWithReleases]) as any).tooltip.formatter;
       const point = (dataIndex: number, value: number) => ({
         seriesName: 'CLI',
+        seriesIndex: 0,
         dataIndex,
         value: [new Date('2026-01-03T12:00:00Z').getTime(), value],
       });
@@ -193,6 +194,23 @@ describe('formatPulseChart Utility', () => {
 
       it('deve mostrar variação negativa em vermelho', () => {
         expect(formatter([point(3, 0.4)])).toContain(`color: ${COLOR_TOKENS.critical}">(-0.0500)`);
+      });
+
+      it('deve calcular a variação com o repositório da série, mesmo com nomes repetidos', () => {
+        const homonym: PulseRepositoryData = {
+          ...repoWithReleases,
+          id: 3,
+          measurements: [
+            { created_at: '2026-01-01T12:00:00Z', value: 0.2 },
+            { created_at: '2026-01-03T12:00:00Z', value: 0.3 },
+          ],
+        };
+        const twoSeriesFormatter = (formatPulseChartOptions([repoWithReleases, homonym]) as any).tooltip.formatter;
+
+        // segunda série, segunda medição: 0.3 - 0.2 = +0.1 (pelo nome, pegaria o primeiro repositório: 0.3 - 0.45)
+        const html = twoSeriesFormatter([{ ...point(3, 0.3), seriesIndex: 1 }]);
+
+        expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0.1000)`);
       });
 
       it('não deve mostrar variação na primeira medição nem quando o valor não muda', () => {

@@ -320,7 +320,8 @@ export function formatPulseChartOptions(
           const status = getQualityStatus(val);
 
           const rawIdx = Math.floor(p.dataIndex / 3);
-          const repo = repositories.find((r) => r.name === repoName);
+          // Uma série por repositório, na mesma ordem: o índice evita confundir repositórios de mesmo nome.
+          const repo = repositories[p.seriesIndex];
           let varText = '';
 
           if (repo && repo.measurements && rawIdx > 0) {
