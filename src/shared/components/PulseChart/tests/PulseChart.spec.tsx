@@ -30,9 +30,9 @@ const defaultChartData = () => ({
   setStartDate: jest.fn(),
   endDate: '',
   setEndDate: jest.fn(),
-  totalMeasurements: 50,
   selectedMeasurements: 10,
-  latestDate: '2026-09-25',
+  latestDate: '25/09/2026',
+  releasesInPeriod: 2,
   isLoading: false,
   error: null,
 });
@@ -86,7 +86,7 @@ describe('<PulseChart />', () => {
   });
 
   it('renders pulse chart header, legend and summary correctly', () => {
-    const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
+    const { getByText, queryByText } = render(<PulseChart organizationId="1" productId="1" />);
 
     expect(getByText('Gráfico MSG — Evolução de Qualidade')).toBeInTheDocument();
     expect(getByText('A · Ótimo (0,80 a 1,00)')).toBeInTheDocument();
@@ -96,6 +96,9 @@ describe('<PulseChart />', () => {
     expect(getByText('E · Muito ruim (0,00 a 0,19)')).toBeInTheDocument();
     expect(getByText('2022-1-MeasureSoftGram-CLI')).toBeInTheDocument();
     expect(getByText('0.918')).toBeInTheDocument();
-    expect(getByText('Renderizado com Apache ECharts')).toBeInTheDocument();
+    expect(
+      getByText(/1 repositório • 10 medições no período selecionado • 2 Releases no período • última medição: 25\/09\/2026/)
+    ).toBeInTheDocument();
+    expect(queryByText('Renderizado com Apache ECharts')).not.toBeInTheDocument();
   });
 });

@@ -4,6 +4,14 @@ import { productQuery } from '@services/product';
 import { RepositoriesTsqmiHistory, ReleasesPaginated } from '@customTypes/product';
 import { PulseRepositoryData } from '@utils/formatPulseChart';
 
+// Janela De/Até em milissegundos, com o dia final inteiro; sem data, o lado fica aberto.
+function getPeriodBounds(startDate: string, endDate: string) {
+  return {
+    startMs: startDate ? new Date(startDate).getTime() : 0,
+    endMs: endDate ? new Date(endDate).getTime() + 86400000 - 1 : Infinity,
+  };
+}
+
 export function usePulseChartData(organizationId?: string, productId?: string) {
   const [selectedRepo, setSelectedRepo] = useState<string>('all');
   const [startDate, setStartDate] = useState<string>('');
@@ -66,8 +74,7 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     }
 
     if (startDate || endDate) {
-      const startMs = startDate ? new Date(startDate).getTime() : 0;
-      const endMs = endDate ? new Date(endDate).getTime() + 86400000 - 1 : Infinity;
+      const { startMs, endMs } = getPeriodBounds(startDate, endDate);
 
       list = list.map((repo) => ({
         ...repo,
@@ -97,8 +104,18 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
         if (t > maxMs) maxMs = t;
       });
     });
-    return maxMs ? new Date(maxMs).toISOString().split('T')[0] : '';
+    // dd/mm/aaaa
+    return maxMs ? new Date(maxMs).toISOString().split('T')[0].split('-').reverse().join('/') : '';
   }, [allRepositories]);
+
+  // Releases do produto (iguais em todos os repositórios) que encerram dentro do período De/Até.
+  const releasesInPeriod = useMemo(() => {
+    const { startMs, endMs } = getPeriodBounds(startDate, endDate);
+    return (allRepositories[0]?.releases ?? []).filter((rel) => {
+      const t = new Date(rel.end_at).getTime();
+      return t >= startMs && t <= endMs;
+    }).length;
+  }, [allRepositories, startDate, endDate]);
 
   return {
     allRepositories,
@@ -112,6 +129,7 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     totalMeasurements,
     selectedMeasurements,
     latestDate,
+    releasesInPeriod,
     isLoading: isTsqmiLoading || isReleasesLoading,
     error: tsqmiError,
   };

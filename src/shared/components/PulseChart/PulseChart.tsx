@@ -28,9 +28,9 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     setStartDate,
     endDate,
     setEndDate,
-    totalMeasurements,
     selectedMeasurements,
     latestDate,
+    releasesInPeriod,
     isLoading,
     error,
   } = usePulseChartData(organizationId, productId);
@@ -131,12 +131,12 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
       )}
 
       {/* Footer summary */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" marginTop="16px">
+      <Box marginTop="16px">
         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-          {filteredRepositories.length} {terms.repository}(s) • {totalMeasurements} medição(ões) total(is) • {selectedMeasurements} no período • Última medição: {latestDate || 'N/A'}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-          Renderizado com Apache ECharts
+          {filteredRepositories.length} {terms.repository}
+          {filteredRepositories.length === 1 ? '' : 's'} • {selectedMeasurements}{' '}
+          {selectedMeasurements === 1 ? 'medição' : 'medições'} no período selecionado • {releasesInPeriod}{' '}
+          {releasesInPeriod === 1 ? 'Release' : 'Releases'} no período • última medição: {latestDate || 'N/A'}
         </Typography>
       </Box>
     </Paper>
