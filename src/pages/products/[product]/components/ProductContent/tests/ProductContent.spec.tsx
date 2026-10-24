@@ -47,6 +47,35 @@ describe('<ProductContent />', () => {
     expect(container.querySelector('.MuiSkeleton-root')).toBeNull();
   });
 
+  it('mostra como ultima atualizacao a medicao de TSQMI mais recente', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-09-25T18:00:00'));
+    (useRequest as jest.Mock).mockImplementation((config: { url: string } | null) =>
+      config?.url.includes('repositories-tsqmi-historical-values')
+        ? {
+            data: {
+              results: [
+                { id: 1, name: 'CLI', history: [{ created_at: '2026-09-24T10:00:00', value: 0.5 }] },
+                { id: 2, name: 'Front', history: [{ created_at: '2026-09-25T14:56:00', value: 0.7 }] }
+              ]
+            }
+          }
+        : { data: [{ id: 1 }], isLoading: false }
+    );
+
+    render(<ProductContent />);
+
+    expect(screen.getByText(/last-update : hoje às 14:56/)).toBeTruthy();
+    jest.useRealTimers();
+  });
+
+  it('mostra traco na ultima atualizacao quando nao ha medicoes', () => {
+    (useRequest as jest.Mock).mockReturnValue({ data: [{ id: 1 }], isLoading: false });
+
+    render(<ProductContent />);
+
+    expect(screen.getByText('last-update : -')).toBeTruthy();
+  });
+
   it('renderiza NoReleasesState quando nao existem releases', () => {
     (useRequest as jest.Mock).mockReturnValue({ data: { results: [] }, isLoading: false });
 
