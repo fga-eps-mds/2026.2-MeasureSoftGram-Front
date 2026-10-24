@@ -115,6 +115,8 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
               name={repo.name}
               measurements={repo.measurements}
               topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
+              valueLabel="último indicador TSQMI"
+              showIcon={false}
             />
           ))}
 
