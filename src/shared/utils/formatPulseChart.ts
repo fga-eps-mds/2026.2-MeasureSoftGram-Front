@@ -1,4 +1,5 @@
 import { TsqmiReleasePoint } from '@customTypes/product';
+import { escapeHtml, formatDecimal, formatVariation } from './formatNumber';
 import { getQualityBandClamped, QualityGrade } from './qualityBands';
 import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
 
@@ -437,7 +438,7 @@ export function formatPulseChartOptions(
           sortedByRepository[p.seriesIndex]?.[Math.floor(p.dataIndex / PULSE_POINTS_PER_MEASUREMENT)];
         const firstMeasurement = measurementOf(params[0]);
         if (!firstMeasurement) return '';
-        const dateStr = new Date(firstMeasurement.created_at).toISOString().split('T')[0];
+        const dateStr = new Date(firstMeasurement.created_at).toLocaleDateString('pt-BR');
 
         let html = `<div style="font-weight:bold; font-size:14px; margin-bottom:8px;">${dateStr}</div>`;
 
@@ -452,19 +453,17 @@ export function formatPulseChartOptions(
 
           if (rawIdx > 0) {
             const prevVal = sortedByRepository[p.seriesIndex][rawIdx - 1]?.value;
-            if (prevVal !== undefined) {
-              const diff = val - prevVal;
-              const sign = diff >= 0 ? '+' : '';
-              const diffColor = diff >= 0 ? COLOR_TOKENS.adequate : COLOR_TOKENS.critical;
-              if (diff !== 0) {
-                varText = ` <span style="color: ${diffColor}">(${sign}${diff.toFixed(4)})</span>`;
-              }
+            const diff = prevVal === undefined ? 0 : Math.round((val - prevVal) * 100) / 100;
+            // Sem variação visível nas duas casas, não mostra "(0,00)".
+            if (diff !== 0) {
+              const diffColor = diff > 0 ? COLOR_TOKENS.adequate : COLOR_TOKENS.critical;
+              varText = ` <span style="color: ${diffColor}">(${formatVariation(diff)})</span>`;
             }
           }
 
           html += `<div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
             <span style="display:inline-block; width:8px; height:8px; background-color:${status.color}; border-radius:2px;"></span>
-            <span><strong>${repoName}:</strong> ${val.toFixed(4)}${varText}</span>
+            <span><strong>${escapeHtml(repoName)}:</strong> ${formatDecimal(val)}${varText}</span>
           </div>`;
         });
 

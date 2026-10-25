@@ -288,7 +288,7 @@ describe('formatPulseChart Utility', () => {
         expect(formatter([measurement, releasePoint])).toBe('detalhes da release');
         expect(releaseTooltip).toHaveBeenCalledWith([{ repository: 'A', release: release1, value: 0.85 }]);
         // longe das releases, continuam as medições
-        expect(formatter([measurement])).toContain('<strong>B:</strong> 0.4500');
+        expect(formatter([measurement])).toContain('<strong>B:</strong> 0,45');
       });
 
       it('o tooltip das medições ignora os pontos das releases', () => {
@@ -297,7 +297,7 @@ describe('formatPulseChart Utility', () => {
 
         expect(formatter([releasePoint])).toBe('');
         expect(formatter([{ seriesName: 'A', seriesIndex: 0, dataIndex: 0, value: [0, 0.45] }, releasePoint])).toContain(
-          '<strong>A:</strong> 0.4500'
+          '<strong>A:</strong> 0,45'
         );
       });
     });
@@ -321,10 +321,10 @@ describe('formatPulseChart Utility', () => {
         // medições em ordem: 01/01 = 0.45, 03/01 = 0.5, 05/01 = 0.5
         const html = formatter([point(1)]);
 
-        expect(html).toContain('2026-01-03');
-        expect(html).toContain('<strong>CLI:</strong> 0.5000');
-        expect(html).not.toContain('0.9900');
-        expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0.0500)`);
+        expect(html).toContain('03/01/2026');
+        expect(html).toContain('<strong>CLI:</strong> 0,50');
+        expect(html).not.toContain('0,99');
+        expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0,05)`);
       });
 
       it('deve mostrar variação negativa em vermelho', () => {
@@ -337,7 +337,7 @@ describe('formatPulseChart Utility', () => {
         };
         const fallingFormatter = (formatPulseChartOptions([falling]) as any).tooltip.formatter;
 
-        expect(fallingFormatter([point(1)])).toContain(`color: ${COLOR_TOKENS.critical}">(-0.0500)`);
+        expect(fallingFormatter([point(1)])).toContain(`color: ${COLOR_TOKENS.critical}">(−0,05)`);
       });
 
       it('deve calcular a variação com o repositório da série, mesmo com nomes repetidos', () => {
@@ -354,8 +354,8 @@ describe('formatPulseChart Utility', () => {
         // segunda série, segunda medição: 0.3 - 0.2 = +0.1 (pelo nome, pegaria o primeiro repositório: 0.5 - 0.45)
         const html = twoSeriesFormatter([point(1, 1)]);
 
-        expect(html).toContain('<strong>CLI:</strong> 0.3000');
-        expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0.1000)`);
+        expect(html).toContain('<strong>CLI:</strong> 0,30');
+        expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0,10)`);
       });
 
       it('não deve mostrar variação na primeira medição nem quando o valor não muda', () => {
@@ -367,8 +367,28 @@ describe('formatPulseChart Utility', () => {
         const atBase = { ...point(1), dataIndex: PULSE_POINTS_PER_MEASUREMENT };
         const atNewBase = { ...point(1), dataIndex: 2 * PULSE_POINTS_PER_MEASUREMENT - 1 };
 
-        expect(formatter([atBase])).toContain('<strong>CLI:</strong> 0.5000');
-        expect(formatter([atNewBase])).toContain('<strong>CLI:</strong> 0.5000');
+        expect(formatter([atBase])).toContain('<strong>CLI:</strong> 0,50');
+        expect(formatter([atNewBase])).toContain('<strong>CLI:</strong> 0,50');
+      });
+
+      it('não mostra variação que some nas duas casas decimais', () => {
+        const tiny: PulseRepositoryData = {
+          ...repoWithReleases,
+          measurements: [
+            { created_at: '2026-01-01T12:00:00Z', value: 0.5 },
+            { created_at: '2026-01-03T12:00:00Z', value: 0.502 },
+          ],
+        };
+        const tinyFormatter = (formatPulseChartOptions([tiny]) as any).tooltip.formatter;
+
+        expect(tinyFormatter([point(1)])).not.toContain('<span style="color');
+      });
+
+      it('escapa o HTML do nome do repositório', () => {
+        const html = formatter([{ ...point(1), seriesName: '<img src=x onerror=alert(1)>' }]);
+
+        expect(html).not.toContain('<img');
+        expect(html).toContain('&#60;img');
       });
     });
 
