@@ -116,7 +116,8 @@ describe('<PulseChart />', () => {
   it('renders pulse chart header, legend and summary correctly', () => {
     const { getByText, queryByText } = render(<PulseChart organizationId="1" productId="1" />);
 
-    expect(getByText('Gráfico MSG — Evolução de Qualidade')).toBeInTheDocument();
+    expect(getByText('Gráfico MSG — Evolução de Qualidade por Release')).toBeInTheDocument();
+    expect(getByText(/ponto = indicador consolidado no encerramento da Release/)).toBeInTheDocument();
     expect(getByText('A · Ótimo (0,80 a 1,00)')).toBeInTheDocument();
     expect(getByText('B · Muito bom (0,60 a 0,79)')).toBeInTheDocument();
     expect(getByText('C · Bom (0,40 a 0,59)')).toBeInTheDocument();
@@ -128,5 +129,54 @@ describe('<PulseChart />', () => {
       getByText(/1 repositório • 10 medições no período selecionado • 2 Releases no período • última medição: 25\/09\/2026/)
     ).toBeInTheDocument();
     expect(queryByText('Renderizado com Apache ECharts')).not.toBeInTheDocument();
+  });
+
+  it('mostra a legenda da pior para a melhor faixa', () => {
+    const { getAllByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getAllByText(/^[A-E] · /).map((el) => el.textContent?.[0])).toEqual(['E', 'D', 'C', 'B', 'A']);
+  });
+
+  it('põe o botão de exportar logo depois do filtro de período', () => {
+    const { getByRole, getByLabelText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    const endDate = getByLabelText('Até');
+    const exportButton = getByRole('button', { name: 'Exportar .csv' });
+    // eslint-disable-next-line no-bitwise
+    expect(endDate.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('mostra na barra lateral a variação em relação à última release com indicador', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      filteredRepositories: [
+        {
+          ...defaultChartData().filteredRepositories[0],
+          releases: [
+            { id: 1, name: 'v2025.4.0 Release 2', version: 'v2025.4.0 Release 2', end_at: '2026-08-20T12:00:00Z', tsqmi: { value: 0.95 } },
+            { id: 2, name: 'Release 3', version: 'Release 3', end_at: '2026-08-21T12:00:00Z', tsqmi: { value: null } },
+          ],
+        },
+      ],
+    });
+
+    const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    // 0,918 contra 0,95: −3,37%; a Release 3 não tem indicador
+    expect(getByText('▼ 3,37% vs. v2025.4.0 Release 2')).toBeInTheDocument();
+    expect(getByText('último indicador TSQMI · ótimo')).toBeInTheDocument();
+  });
+
+  it('mostra a etiqueta das releases em todas as faixas', () => {
+    const repo = {
+      ...defaultChartData().filteredRepositories[0],
+      releases: [{ id: 1, name: 'Release 1', version: 'Release 1', end_at: '2026-08-21T12:00:00Z' }],
+    };
+    mockUsePulseChartData.mockReturnValue({ ...defaultChartData(), filteredRepositories: [repo, { ...repo, id: 2 }] });
+
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    const option = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0];
+    expect(option.series.map((series: any) => series.markLine.data[0].label.show)).toEqual([true, true]);
   });
 });

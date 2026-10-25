@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
-import { PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
+import { PULSE_GRID, PulseRelease, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
 import { formatPulseReleaseTooltip } from '@utils/formatPulseReleaseTooltip';
 import { usePulseChartData } from './usePulseChartData';
@@ -11,14 +11,20 @@ import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
 import { QualityLegend } from './QualityLegend';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 
-// Protótipo aprovado pelo PO (US06.01): sem linhas horizontais, uma etiqueta por release (sem a de início) e os
-// detalhes da release no ponto do indicador.
+// Protótipo aprovado pelo PO (US06.01): sem linhas horizontais, a etiqueta da release em cada faixa (sem a de início)
+// e os detalhes da release no ponto do indicador.
 const PULSE_OPTIONS = {
-  releaseLabels: 'first-row',
+  releaseLabels: 'every-row',
   releaseStartLabels: false,
   horizontalLines: false,
   releaseTooltip: formatPulseReleaseTooltip,
 } as const;
+
+// Base da variação na barra lateral: a release mais recente do repositório com indicador.
+function getLastReleaseWithTsqmi(releases: PulseRelease[]) {
+  const release = [...releases].reverse().find((rel) => typeof rel.tsqmi?.value === 'number');
+  return release ? { name: release.name, value: release.tsqmi?.value as number } : undefined;
+}
 
 interface Props {
   organizationId?: string;
@@ -89,58 +95,59 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         exportAction={<ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />}
       />
 
-      {/* Header section */}
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" marginBottom="16px">
-        <Box>
+      {/* Card do gráfico: título, subtítulo e legenda logo abaixo, à esquerda (protótipo) */}
+      <Box sx={{ border: '1px solid #E0E0E0', borderRadius: '8px', padding: '24px' }}>
+        <Box display="flex" flexDirection="column" gap="4px" marginBottom="16px">
           <Typography variant="h6" fontWeight="bold" color="#1F2937">
-            Gráfico MSG — Evolução de Qualidade
+            Gráfico MSG — Evolução de Qualidade por Release
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-            Gráfico de pulso por {terms.repository} (TSQMI) • pico = variação entre medições • marcadores = releases planejadas • cor = faixa de qualidade
+            Gráfico de pulso por {terms.repository} (indicador TSQMI) • pico = variação entre medições • marcador = Release
+            • ponto = indicador consolidado no encerramento da Release • cor = faixa de qualidade
           </Typography>
+          <QualityLegend />
         </Box>
 
-        <QualityLegend />
-      </Box>
+        {/* Main ECharts + Sidebar Area */}
+        {filteredRepositories.length === 0 ? (
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            minHeight="200px"
+            sx={{ border: '1px dashed #D0D7DE', borderRadius: '8px' }}
+          >
+            <Typography color="text.secondary" variant="body2">
+              Nenhuma medição no período selecionado. Ajuste as datas De/Até.
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ position: 'relative', width: '100%' }}>
+            {/* Left repo overlays */}
+            {filteredRepositories.map((repo, index) => (
+              <PulseChartRepoSidebar
+                key={repo.id}
+                name={repo.name}
+                measurements={repo.measurements}
+                topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
+                valueLabel="último indicador TSQMI"
+                showIcon={false}
+                reference={getLastReleaseWithTsqmi(repo.releases)}
+              />
+            ))}
 
-      {/* Main ECharts + Sidebar Area */}
-      {filteredRepositories.length === 0 ? (
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          minHeight="200px"
-          sx={{ border: '1px dashed #D0D7DE', borderRadius: '8px' }}
-        >
-          <Typography color="text.secondary" variant="body2">
-            Nenhuma medição no período selecionado. Ajuste as datas De/Até.
-          </Typography>
-        </Box>
-      ) : (
-        <Box sx={{ position: 'relative', width: '100%' }}>
-          {/* Left repo overlays */}
-          {filteredRepositories.map((repo, index) => (
-            <PulseChartRepoSidebar
-              key={repo.id}
-              name={repo.name}
-              measurements={repo.measurements}
-              topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
-              valueLabel="último indicador TSQMI"
-              showIcon={false}
+            {/* Apache ECharts dynamic component */}
+            <ReactEcharts
+              ref={echartsRef}
+              option={chartOptions}
+              style={{
+                height: `${chartOptions.height || 400}px`,
+                width: '100%',
+              }}
             />
-          ))}
-
-          {/* Apache ECharts dynamic component */}
-          <ReactEcharts
-            ref={echartsRef}
-            option={chartOptions}
-            style={{
-              height: `${chartOptions.height || 400}px`,
-              width: '100%',
-            }}
-          />
-        </Box>
-      )}
+          </Box>
+        )}
+      </Box>
 
       {/* Footer summary */}
       <Box marginTop="16px">
