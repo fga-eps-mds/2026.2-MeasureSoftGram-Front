@@ -1,6 +1,6 @@
 import { TsqmiReleasePoint } from '@customTypes/product';
-import { getQualityBandClamped, getQualityVisualMapPieces, QualityGrade } from './qualityBands';
-import { toPulseSeries } from './toPulseSeries';
+import { getQualityBandClamped, QualityGrade } from './qualityBands';
+import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
 
 export const COLOR_TOKENS = {
   primary: '#2B4D6F',
@@ -131,6 +131,24 @@ export interface PulseRepositoryData {
   releases: PulseRelease[];
 }
 
+/**
+ * Trechos de tempo do pulso de um repositório, cada um na cor da faixa do indicador vigente; a cor troca no instante
+ * da medição que muda de faixa. A cor vem do tempo, não da altura: os picos são ampliados e passariam por outras
+ * faixas. No ECharts, o `visualMap` de uma série `line` só pinta pela dimensão de um eixo.
+ */
+export function getBandTimePieces(sortedMeasurements: PulseMeasurement[]) {
+  const pieces: { gte?: number; lt?: number; color: string }[] = [];
+  sortedMeasurements.forEach((measurement) => {
+    const { color } = getQualityStatus(measurement.value);
+    const last = pieces[pieces.length - 1];
+    if (last?.color === color) return;
+    const time = new Date(measurement.created_at).getTime();
+    if (last) last.lt = time;
+    pieces.push(last ? { gte: time, color } : { color });
+  });
+  return pieces;
+}
+
 export function formatPulseChartOptions(
   repositories: PulseRepositoryData[],
   {
@@ -153,7 +171,10 @@ export function formatPulseChartOptions(
   const seriesList: any[] = [];
   // Ficam depois das séries do pulso, para o índice da série continuar sendo o do repositório (visualMap e tooltip).
   const releasePointSeries: any[] = [];
+  // Medições de cada repositório em ordem cronológica: o tooltip lê o valor medido daqui, não do desenho do pulso.
+  const sortedByRepository: PulseMeasurement[][] = [];
   const labeledReleases = new Set<string>();
+  const bandVisualMaps: any[] = [];
 
   repositories.forEach((repo, index) => {
     const isLast = index === gridCount - 1;
@@ -162,6 +183,14 @@ export function formatPulseChartOptions(
     const sortedMeasurements = [...repo.measurements].sort(
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
+
+    sortedByRepository.push(sortedMeasurements);
+    // Com troca de faixa, a cor vem do visualMap; sem troca, fica na série (a cor da série teria prioridade).
+    const bandPieces = getBandTimePieces(sortedMeasurements);
+    const changesBand = bandPieces.length > 1;
+    if (changesBand) {
+      bandVisualMaps.push({ show: false, seriesIndex: index, dimension: 0, pieces: bandPieces });
+    }
 
     const ts = sortedMeasurements.map((m) => new Date(m.created_at).getTime());
     const values = sortedMeasurements.map((m) => m.value);
@@ -316,8 +345,11 @@ export function formatPulseChartOptions(
       yAxisIndex: index,
       showSymbol: false,
       hoverAnimation: false,
+      // O pico do batimento pode passar um pouco da faixa, como no eletrocardiograma.
+      clip: false,
       lineStyle: {
         width: 2,
+        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? COLOR_TOKENS.secondary }),
       },
       data: pulseData,
       markLine: {
@@ -352,14 +384,7 @@ export function formatPulseChartOptions(
         type: 'dashed',
       },
     },
-    visualMap: [
-      {
-        show: false,
-        dimension: 1,
-        seriesIndex: Array.from({ length: gridCount }, (_, i) => i),
-        pieces: getQualityVisualMapPieces(),
-      },
-    ],
+    visualMap: bandVisualMaps,
     tooltip: {
       trigger: 'axis',
       backgroundColor: '#FFFFFF',
@@ -382,26 +407,26 @@ export function formatPulseChartOptions(
         // Só as medições do pulso; os pontos das releases ficam de fora.
         const params = (allParams ?? []).filter((p: any) => p.seriesIndex < gridCount);
         if (!params.length) return '';
-        const firstParam = params[0];
-        const dateStr = new Date(firstParam.value[0]).toISOString().split('T')[0];
+        // Uma série por repositório, na mesma ordem: o índice evita confundir repositórios de mesmo nome.
+        const measurementOf = (p: any) =>
+          sortedByRepository[p.seriesIndex]?.[Math.floor(p.dataIndex / PULSE_POINTS_PER_MEASUREMENT)];
+        const firstMeasurement = measurementOf(params[0]);
+        if (!firstMeasurement) return '';
+        const dateStr = new Date(firstMeasurement.created_at).toISOString().split('T')[0];
 
         let html = `<div style="font-weight:bold; font-size:14px; margin-bottom:8px;">${dateStr}</div>`;
 
         params.forEach((p: any) => {
           const repoName = p.seriesName;
-          const val = p.value[1];
+          const rawIdx = Math.floor(p.dataIndex / PULSE_POINTS_PER_MEASUREMENT);
+          const measurement = measurementOf(p);
+          if (!measurement) return;
+          const val = measurement.value;
           const status = getQualityStatus(val);
-
-          const rawIdx = Math.floor(p.dataIndex / 3);
-          // Uma série por repositório, na mesma ordem: o índice evita confundir repositórios de mesmo nome.
-          const repo = repositories[p.seriesIndex];
           let varText = '';
 
-          if (repo && repo.measurements && rawIdx > 0) {
-            const sortedM = [...repo.measurements].sort(
-              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            );
-            const prevVal = sortedM[rawIdx - 1]?.value;
+          if (rawIdx > 0) {
+            const prevVal = sortedByRepository[p.seriesIndex][rawIdx - 1]?.value;
             if (prevVal !== undefined) {
               const diff = val - prevVal;
               const sign = diff >= 0 ? '+' : '';

@@ -2,10 +2,12 @@ import {
   getQualityStatus,
   calculateVariation,
   formatPulseChartOptions,
+  getBandTimePieces,
   COLOR_TOKENS,
   PulseRepositoryData,
 } from '../formatPulseChart';
 import { QUALITY_BANDS } from '../qualityBands';
+import { PULSE_POINTS_PER_MEASUREMENT } from '../toPulseSeries';
 
 
 describe('formatPulseChart Utility', () => {
@@ -33,19 +35,51 @@ describe('formatPulseChart Utility', () => {
   });
 
   describe('formatPulseChartOptions', () => {
-    it('pinta o pulso com as 5 faixas', () => {
+    it('pinta o pulso com as 5 faixas, trocando a cor no instante da medição que muda de faixa', () => {
+      const at = (day: number) => `2026-01-0${day}T12:00:00Z`;
+      const ms = (day: number) => new Date(at(day)).getTime();
       const repos: PulseRepositoryData[] = [
-        { id: 1, name: 'repo', measurements: [{ created_at: '2026-01-01T12:00:00Z', value: 0.5 }], releases: [] },
+        {
+          id: 1,
+          name: 'repo',
+          measurements: [0.1, 0.3, 0.5, 0.7, 0.9].map((value, i) => ({ created_at: at(i + 1), value })),
+          releases: [],
+        },
       ];
-      const options = formatPulseChartOptions(repos) as { visualMap: { pieces: { color: string }[] }[] };
+      const options: any = formatPulseChartOptions(repos);
 
-      expect(options.visualMap[0].pieces.map((piece) => piece.color)).toEqual([
-        '#D7191C',
-        '#FE7D37',
-        '#DFB317',
-        '#8CC63F',
-        '#1A9641',
+      expect(options.visualMap).toEqual([
+        {
+          show: false,
+          seriesIndex: 0,
+          dimension: 0,
+          pieces: [
+            { lt: ms(2), color: '#D7191C' },
+            { gte: ms(2), lt: ms(3), color: '#FE7D37' },
+            { gte: ms(3), lt: ms(4), color: '#DFB317' },
+            { gte: ms(4), lt: ms(5), color: '#8CC63F' },
+            { gte: ms(5), color: '#1A9641' },
+          ],
+        },
       ]);
+      // a cor da série teria prioridade sobre o visualMap
+      expect(options.series[0].lineStyle.color).toBeUndefined();
+    });
+
+    it('agrupa as medições seguidas da mesma faixa num único trecho', () => {
+      const at = (day: number) => `2026-01-0${day}T12:00:00Z`;
+      expect(
+        getBandTimePieces([
+          { created_at: at(1), value: 0.85 },
+          { created_at: at(2), value: 0.9 },
+          { created_at: at(3), value: 0.5 },
+          { created_at: at(4), value: 0.55 },
+        ])
+      ).toEqual([
+        { lt: new Date(at(3)).getTime(), color: '#1A9641' },
+        { gte: new Date(at(3)).getTime(), color: '#DFB317' },
+      ]);
+      expect(getBandTimePieces([])).toEqual([]);
     });
   });
 
@@ -125,16 +159,12 @@ describe('formatPulseChart Utility', () => {
       expect(markLines[0].xAxis).toBe(new Date('2026-01-01T00:00:00Z').getTime());
     });
 
-    it('deve pintar o pulso com as mesmas faixas de getQualityStatus', () => {
+    it('sem troca de faixa, pinta o pulso inteiro na cor da faixa, sem visualMap', () => {
+      // 0.45, 0.5 e 0.5: tudo na faixa C
       const options: any = formatPulseChartOptions([repoWithReleases]);
 
-      expect(options.visualMap[0].pieces).toEqual([
-        { lt: 0.2, color: '#D7191C' },
-        { gte: 0.2, lt: 0.4, color: '#FE7D37' },
-        { gte: 0.4, lt: 0.6, color: '#DFB317' },
-        { gte: 0.6, lt: 0.8, color: '#8CC63F' },
-        { gte: 0.8, color: '#1A9641' },
-      ]);
+      expect(options.visualMap).toEqual([]);
+      expect(options.series[0].lineStyle.color).toBe('#DFB317');
       QUALITY_BANDS.forEach((band) => expect(getQualityStatus(band.min).color).toBe(band.color));
     });
 
@@ -229,7 +259,7 @@ describe('formatPulseChart Utility', () => {
         expect(options.series[2].xAxisIndex).toBe(1);
         expect(options.series[2].yAxisIndex).toBe(1);
         // o visualMap das faixas continua só nas séries do pulso
-        expect(options.visualMap[0].seriesIndex).toEqual([0, 1]);
+        options.visualMap.forEach((visualMap: any) => expect(visualMap.seriesIndex).toBeLessThan(2));
       });
 
       it('não cria a série de pontos sem indicador nas releases', () => {
@@ -274,11 +304,12 @@ describe('formatPulseChart Utility', () => {
 
     describe('tooltip', () => {
       const formatter = (formatPulseChartOptions([repoWithReleases]) as any).tooltip.formatter;
-      const point = (dataIndex: number, value: number) => ({
+      // Ponto do pulso no pico do complexo da medição; o y do desenho é o pico ampliado, não o valor medido.
+      const point = (measurement: number, seriesIndex = 0) => ({
         seriesName: 'CLI',
-        seriesIndex: 0,
-        dataIndex,
-        value: [new Date('2026-01-03T12:00:00Z').getTime(), value],
+        seriesIndex,
+        dataIndex: measurement * PULSE_POINTS_PER_MEASUREMENT + 2,
+        value: [0, 0.99, 0],
       });
 
       it('deve ficar vazio sem pontos', () => {
@@ -286,16 +317,27 @@ describe('formatPulseChart Utility', () => {
         expect(formatter(undefined)).toBe('');
       });
 
-      it('deve mostrar data, valor e variação em relação à medição anterior', () => {
-        const html = formatter([point(3, 0.5)]);
+      it('deve mostrar data, valor medido e variação em relação à medição anterior', () => {
+        // medições em ordem: 01/01 = 0.45, 03/01 = 0.5, 05/01 = 0.5
+        const html = formatter([point(1)]);
 
         expect(html).toContain('2026-01-03');
         expect(html).toContain('<strong>CLI:</strong> 0.5000');
+        expect(html).not.toContain('0.9900');
         expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0.0500)`);
       });
 
       it('deve mostrar variação negativa em vermelho', () => {
-        expect(formatter([point(3, 0.4)])).toContain(`color: ${COLOR_TOKENS.critical}">(-0.0500)`);
+        const falling: PulseRepositoryData = {
+          ...repoWithReleases,
+          measurements: [
+            { created_at: '2026-01-01T12:00:00Z', value: 0.45 },
+            { created_at: '2026-01-03T12:00:00Z', value: 0.4 },
+          ],
+        };
+        const fallingFormatter = (formatPulseChartOptions([falling]) as any).tooltip.formatter;
+
+        expect(fallingFormatter([point(1)])).toContain(`color: ${COLOR_TOKENS.critical}">(-0.0500)`);
       });
 
       it('deve calcular a variação com o repositório da série, mesmo com nomes repetidos', () => {
@@ -309,15 +351,33 @@ describe('formatPulseChart Utility', () => {
         };
         const twoSeriesFormatter = (formatPulseChartOptions([repoWithReleases, homonym]) as any).tooltip.formatter;
 
-        // segunda série, segunda medição: 0.3 - 0.2 = +0.1 (pelo nome, pegaria o primeiro repositório: 0.3 - 0.45)
-        const html = twoSeriesFormatter([{ ...point(3, 0.3), seriesIndex: 1 }]);
+        // segunda série, segunda medição: 0.3 - 0.2 = +0.1 (pelo nome, pegaria o primeiro repositório: 0.5 - 0.45)
+        const html = twoSeriesFormatter([point(1, 1)]);
 
+        expect(html).toContain('<strong>CLI:</strong> 0.3000');
         expect(html).toContain(`color: ${COLOR_TOKENS.adequate}">(+0.1000)`);
       });
 
       it('não deve mostrar variação na primeira medição nem quando o valor não muda', () => {
-        expect(formatter([point(0, 0.45)])).not.toContain('<span style="color');
-        expect(formatter([point(6, 0.5)])).not.toContain('<span style="color');
+        expect(formatter([point(0)])).not.toContain('<span style="color');
+        expect(formatter([point(2)])).not.toContain('<span style="color');
+      });
+
+      it('qualquer ponto do complexo de uma medição mostra essa medição', () => {
+        const atBase = { ...point(1), dataIndex: PULSE_POINTS_PER_MEASUREMENT };
+        const atNewBase = { ...point(1), dataIndex: 2 * PULSE_POINTS_PER_MEASUREMENT - 1 };
+
+        expect(formatter([atBase])).toContain('<strong>CLI:</strong> 0.5000');
+        expect(formatter([atNewBase])).toContain('<strong>CLI:</strong> 0.5000');
+      });
+    });
+
+    describe('pulso de eletrocardiograma', () => {
+      it('deixa o pico passar da faixa e usa o complexo de cada medição', () => {
+        const options: any = formatPulseChartOptions([repoWithReleases]);
+
+        expect(options.series[0].clip).toBe(false);
+        expect(options.series[0].data).toHaveLength(3 * PULSE_POINTS_PER_MEASUREMENT);
       });
     });
   });
