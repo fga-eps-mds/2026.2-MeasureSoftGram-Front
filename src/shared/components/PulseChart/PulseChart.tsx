@@ -1,10 +1,13 @@
 import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
-import { COLOR_TOKENS, formatPulseChartOptions, convertPulseRepositoriesToCsv } from '@utils/formatPulseChart';
+import ExportCsvButton from '@components/ExportCsvButton';
+import { PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
+import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
 import { usePulseChartData } from './usePulseChartData';
 import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
+import { QualityLegend } from './QualityLegend';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 
 interface Props {
@@ -34,19 +37,6 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
 
   const chartOptions = formatPulseChartOptions(filteredRepositories);
 
-  const handleExportCsv = () => {
-    if (!filteredRepositories.length) return;
-    const csvContent = convertPulseRepositoriesToCsv(filteredRepositories);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const timestamp = new Date().toISOString().split('T')[0];
-    a.download = `msgram-evolucao-qualidade-${timestamp}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
 
   if (isLoading) {
     return (
@@ -65,10 +55,6 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
       </Paper>
     );
   }
-
-  const topOffset = 60;
-  const gridHeight = 82;
-  const gridGap = 34;
 
   return (
     <Paper
@@ -90,7 +76,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         onStartDateChange={setStartDate}
         endDate={endDate}
         onEndDateChange={setEndDate}
-        onExportCsv={handleExportCsv}
+        exportAction={<ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />}
       />
 
       {/* Header section */}
@@ -104,21 +90,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
           </Typography>
         </Box>
 
-        {/* Quality Legend */}
-        <Box display="flex" alignItems="center" gap={2}>
-          <Box display="flex" alignItems="center" gap={0.5}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.critical }} />
-            <Typography variant="caption" color="text.secondary">Crítico (&lt; 0,40)</Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={0.5}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.warning }} />
-            <Typography variant="caption" color="text.secondary">Atenção (0,40–0,69)</Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={0.5}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: COLOR_TOKENS.adequate }} />
-            <Typography variant="caption" color="text.secondary">Adequado (&ge; 0,70)</Typography>
-          </Box>
-        </Box>
+        <QualityLegend />
       </Box>
 
       {/* Main ECharts + Sidebar Area */}
@@ -142,7 +114,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
               key={repo.id}
               name={repo.name}
               measurements={repo.measurements}
-              topOffset={topOffset + index * (gridHeight + gridGap)}
+              topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
             />
           ))}
 

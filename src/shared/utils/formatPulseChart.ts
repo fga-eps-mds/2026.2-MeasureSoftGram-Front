@@ -1,3 +1,4 @@
+import { getQualityBandClamped, getQualityVisualMapPieces, QualityGrade } from './qualityBands';
 import { toPulseSeries } from './toPulseSeries';
 
 export const COLOR_TOKENS = {
@@ -14,7 +15,7 @@ export const COLOR_TOKENS = {
   mutedText: 'rgba(0, 0, 0, 0.65)',
 };
 
-export type QualityRange = 'critical' | 'warning' | 'adequate';
+export type QualityRange = QualityGrade;
 
 export interface QualityStatus {
   key: QualityRange;
@@ -22,14 +23,20 @@ export interface QualityStatus {
   color: string;
 }
 
+/** Faixa do Indicador Total da Qualidade (A a E, US06.01) de um valor; as faixas ficam em `qualityBands`. */
 export function getQualityStatus(value: number): QualityStatus {
-  if (value < 0.4) {
-    return { key: 'critical', label: 'crítico', color: COLOR_TOKENS.critical };
-  }
-  if (value < 0.7) {
-    return { key: 'warning', label: 'atenção', color: COLOR_TOKENS.warning };
-  }
-  return { key: 'adequate', label: 'adequado', color: COLOR_TOKENS.adequate };
+  const band = getQualityBandClamped(value);
+  return { key: band.grade, label: band.label, color: band.color };
+}
+
+/** Medidas das faixas do gráfico de pulso, em px: as mesmas no pulso do produto e no do repositório. */
+export const PULSE_GRID = { topOffset: 60, height: 82, gap: 34 };
+
+export interface PulseChartOptions {
+  /** `first-row` mostra o nome das releases só na primeira faixa, para as etiquetas não se repetirem nem se sobreporem. */
+  releaseLabels?: 'every-row' | 'first-row';
+  /** Linhas horizontais de grade dentro de cada faixa. */
+  horizontalLines?: boolean;
 }
 
 export interface VariationInfo {
@@ -94,15 +101,16 @@ export interface PulseRepositoryData {
   releases: PulseRelease[];
 }
 
-export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
+export function formatPulseChartOptions(
+  repositories: PulseRepositoryData[],
+  { releaseLabels = 'every-row', horizontalLines = true }: PulseChartOptions = {}
+) {
   if (!repositories || !repositories.length) {
     return {};
   }
 
   const gridCount = repositories.length;
-  const gridHeight = 82;
-  const gridGap = 34;
-  const topOffset = 60;
+  const { height: gridHeight, gap: gridGap, topOffset } = PULSE_GRID;
 
   const grids: any[] = [];
   const xAxes: any[] = [];
@@ -111,6 +119,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
 
   repositories.forEach((repo, index) => {
     const isLast = index === gridCount - 1;
+    const showReleaseLabels = releaseLabels === 'every-row' || index === 0;
     const topPosition = topOffset + index * (gridHeight + gridGap);
 
     const sortedMeasurements = [...repo.measurements].sort(
@@ -137,7 +146,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
             name: `Início ${labelText}`,
             xAxis: startMs,
             label: {
-              show: true,
+              show: showReleaseLabels,
               formatter: `Início ${labelText}`,
               position: 'start',
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
@@ -163,7 +172,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
             name: labelText,
             xAxis: endMs,
             label: {
-              show: true,
+              show: showReleaseLabels,
               formatter: labelText,
               position: 'end',
               backgroundColor: COLOR_TOKENS.primary,
@@ -237,7 +246,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
         formatter: (v: number) => v.toFixed(1),
       },
       splitLine: {
-        show: true,
+        show: horizontalLines,
         lineStyle: {
           color: COLOR_TOKENS.gridLine,
           type: 'solid',
@@ -283,11 +292,7 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
         show: false,
         dimension: 1,
         seriesIndex: Array.from({ length: gridCount }, (_, i) => i),
-        pieces: [
-          { lte: 0.399, color: COLOR_TOKENS.critical },
-          { gte: 0.4, lte: 0.699, color: COLOR_TOKENS.warning },
-          { gte: 0.7, color: COLOR_TOKENS.adequate },
-        ],
+        pieces: getQualityVisualMapPieces(),
       },
     ],
     tooltip: {
@@ -365,45 +370,3 @@ export function formatPulseChartOptions(repositories: PulseRepositoryData[]) {
     ],
   };
 }
-
-export function convertPulseRepositoriesToCsv(repositories: PulseRepositoryData[]): string {
-  const csvHeader = [
-    'id',
-    'key',
-    'name',
-    'description',
-    'historyId',
-    'history_characteristic_id',
-    'history_value',
-    'history_created_at',
-    'quality_status',
-  ];
-
-  const rows: string[][] = [];
-
-  repositories.forEach((repo) => {
-    const sorted = [...repo.measurements].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-
-    sorted.forEach((m, idx) => {
-      const status = getQualityStatus(m.value);
-      rows.push([
-        String(repo.id),
-        '',
-        `"${repo.name.replace(/"/g, '""')}"`,
-        '',
-        String(idx + 1),
-        '',
-        String(m.value),
-        m.created_at,
-        status.label,
-      ]);
-    });
-  });
-
-  const lines = [csvHeader, ...rows];
-  return lines.map((line) => line.join(',')).join('\n');
-}
-
-

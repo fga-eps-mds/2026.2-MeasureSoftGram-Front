@@ -202,6 +202,7 @@ export interface IReleases {
   product: number;
   goal?: number;
   description?: string;
+  repositories_ids?: number[];
 }
 
 export interface ReleasesPaginated {
@@ -274,6 +275,49 @@ export interface EntityAnalysis {
   repositories: EntityAnalysisRepository[];
 }
 
+/** Níveis do mapa de calor da Análise por Entidade: as métricas não têm valor de 0 a 1 nem grau. */
+export type EntityMatrixLevel = Exclude<EntityLevel, 'metric'>;
+
+export interface EntityMatrixEntity {
+  key: string;
+  name: string;
+  /** Peso na configuração da release, dentro da entidade de cima. */
+  weight: number | null;
+}
+
+export interface EntityMatrixColumn extends EntityMatrixEntity {
+  /** As entidades de cima, da característica até o pai. */
+  path: Array<EntityMatrixEntity & { level: EntityLevel }>;
+}
+
+export interface EntityMatrixValue {
+  value: number | null;
+  /** Valor na release anterior; null na primeira release ou sem valor nela. */
+  previous_value: number | null;
+}
+
+export interface EntityMatrixCell extends EntityMatrixValue {
+  key: string;
+  /** Quanto a entidade fez o TSQMI do repositório subir ou descer desde a release anterior. */
+  contribution: number | null;
+}
+
+export interface EntityMatrixRepository {
+  id: number;
+  name: string;
+  tsqmi: EntityMatrixValue;
+  cells: EntityMatrixCell[];
+}
+
+/** GET products/{id}/entity-analysis/matrix/?release_id=&level= (Service, US21.02) */
+export interface EntityMatrix {
+  release: ReleaseDashboardRelease;
+  previous_release: ReleaseDashboardRelease | null;
+  level: EntityMatrixLevel;
+  columns: EntityMatrixColumn[];
+  repositories: EntityMatrixRepository[];
+}
+
 /** Valor de uma entidade numa release: o último calculado dentro da janela dela (null sem análise). */
 export interface ReleaseValue {
   value: number | null;
@@ -300,28 +344,19 @@ export interface ReleaseDashboardSummary {
   };
 }
 
-export interface ReleaseDashboardCharacteristic {
-  key: string;
-  name: string;
-  /** Meta da release, de 0 a 1; null quando a release não tem meta para a característica. */
-  planned: number | null;
-  /** Média entre os repositórios com valor; null quando nenhum tem valor. */
-  accomplished: number | null;
-  /** Desvio padrão entre os repositórios com valor. */
-  dispersion: number | null;
-}
-
 export interface ReleaseDashboardRepository {
   id: number;
   name: string;
+  /** Indicador Total da Qualidade (TSQMI) do repositório na release. */
   tsqmi: ReleaseValue;
-  characteristics: Array<ReleaseValue & { key: string }>;
 }
 
-/** GET products/{id}/release-dashboard/characteristics/?release_id= (Service, US07.01) */
+/**
+ * GET products/{id}/release-dashboard/characteristics/?release_id= (Service, US07.01): o Indicador Total da Qualidade
+ * de cada repositório na release. O planejado × realizado e o radar usam o analysis_data da release.
+ */
 export interface ReleaseDashboardCharacteristics {
   release: ReleaseDashboardRelease;
-  characteristics: ReleaseDashboardCharacteristic[];
   repositories: ReleaseDashboardRepository[];
 }
 

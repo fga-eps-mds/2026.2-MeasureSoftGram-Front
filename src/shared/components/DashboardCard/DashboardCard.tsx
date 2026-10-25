@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
-import { Box, Button, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import MSGAlert from '../../../components/idv/feedback';
 
 export type DashboardCardStatus = 'loading' | 'empty' | 'error' | 'ready';
 
@@ -9,6 +10,8 @@ export interface DashboardCardProps {
   status: DashboardCardStatus;
   /** Ação no canto do cabeçalho (um seletor, uma legenda), só quando há dados. */
   headerAction?: ReactNode;
+  /** Ação ao lado do selo do estado vazio (um botão de exportar desabilitado, por exemplo). */
+  emptyHeaderAction?: ReactNode;
   /** Esqueleto mostrado enquanto carrega. */
   loadingContent?: ReactNode;
   loadingMessage?: string;
@@ -44,57 +47,12 @@ export function SkeletonBlock({ width, height }: { width: number | string; heigh
   );
 }
 
-function StateMessage({
-  icon,
-  iconColor,
-  iconBackground,
-  title,
-  description,
-  action
-}: {
-  icon: string;
-  iconColor: string;
-  iconBackground: string;
-  title: string;
-  description?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap="10px" padding="24px" width="100%">
-      <Box
-        aria-hidden
-        sx={{
-          width: 48,
-          height: 48,
-          borderRadius: '24px',
-          backgroundColor: iconBackground,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <Typography fontWeight="bold" fontSize="22px" color={iconColor}>
-          {icon}
-        </Typography>
-      </Box>
-      <Typography fontWeight="bold" fontSize="16px" color={DASHBOARD_COLORS.text} textAlign="center">
-        {title}
-      </Typography>
-      {description && (
-        <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText} textAlign="center" maxWidth="420px">
-          {description}
-        </Typography>
-      )}
-      {action}
-    </Box>
-  );
-}
-
 /** Card dos dashboards nativos, com os estados de carregamento, sem dados e erro (CA5 da US07.01). */
 export default function DashboardCard({
   title,
   status,
   headerAction,
+  emptyHeaderAction,
   loadingContent,
   loadingMessage = 'Carregando os dados da release…',
   emptyTitle = 'Ainda não há análises nesta release',
@@ -118,39 +76,24 @@ export default function DashboardCard({
         </>
       );
     }
+    // mensagens de erro e de aviso do guia de IDV (CA4 da US07.01)
     if (status === 'error') {
       return (
-        <StateMessage
-          icon="!"
-          iconColor={DASHBOARD_COLORS.error}
-          iconBackground={DASHBOARD_COLORS.errorBackground}
+        <MSGAlert
+          severity="error"
           title={errorTitle}
-          description="Tente de novo em alguns instantes. Se o problema continuar, avise o administrador do produto."
-          action={
-            onRetry && (
-              <Button
-                variant="contained"
-                disableElevation
-                onClick={onRetry}
-                sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
-              >
-                Tentar novamente
-              </Button>
-            )
-          }
-        />
+          actionLabel={onRetry ? 'Tentar novamente' : undefined}
+          onAction={onRetry}
+        >
+          Tente de novo em alguns instantes. Se o problema continuar, avise o administrador do produto.
+        </MSGAlert>
       );
     }
     if (status === 'empty') {
       return (
-        <StateMessage
-          icon="i"
-          iconColor={DASHBOARD_COLORS.primary}
-          iconBackground={DASHBOARD_COLORS.infoBackground}
-          title={emptyTitle}
-          description={emptyDescription}
-          action={emptyAction}
-        />
+        <MSGAlert severity="warning" title={emptyTitle} action={emptyAction}>
+          {emptyDescription}
+        </MSGAlert>
       );
     }
     return children;
@@ -171,19 +114,26 @@ export default function DashboardCard({
       }}
     >
       {/* em tela estreita, a ação do cabeçalho (uma legenda) desce para baixo do título em vez de alargar o cartão */}
-      <Box display="flex" flexWrap="wrap" alignItems="center" gap="12px" minHeight="36px" data-testid="dashboard-card-header">
+      <Box
+        display="flex"
+        flexWrap="wrap"
+        alignItems="center"
+        gap="12px"
+        minHeight="36px"
+        data-testid="dashboard-card-header"
+      >
         <Typography flex={1} fontWeight="bold" fontSize="18px" color={DASHBOARD_COLORS.cardTitle}>
           {title}
         </Typography>
-        {badge ? (
+        {badge && (
           <Box sx={{ backgroundColor: badge.background, borderRadius: '12px', padding: '4px 10px' }}>
             <Typography fontWeight="bold" fontSize="12px" color={badge.color}>
               {badgeLabel ?? badge.label}
             </Typography>
           </Box>
-        ) : (
-          headerAction
         )}
+        {status === 'ready' && headerAction}
+        {status === 'empty' && emptyHeaderAction}
       </Box>
       {renderContent()}
     </Paper>

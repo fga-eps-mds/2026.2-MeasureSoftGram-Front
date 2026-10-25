@@ -1,60 +1,79 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Alert, Box, Container, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { Box, Container, SxProps, Theme, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import { NextPageWithLayout } from '@pages/_app.next';
 import getLayout from '@components/Layout';
-import ReleaseEvolutionChart from '@components/ReleaseEvolutionChart';
+import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
+import ReactEcharts, { usePreloadECharts } from '@components/ECharts';
+import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
 import useRequireAuth from '@hooks/useRequireAuth';
-import { usePreloadECharts } from '@components/ECharts';
 import { useProviderTerms } from '@hooks/useProviderTerms';
-import { EvolutionEntity, useReleaseEvolution } from '@hooks/useReleaseEvolution';
-import { useRepositoryList } from '@hooks/useRepositoryList';
-import { Repository } from '@customTypes/repository';
+import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import { TEMPORAL_CSV, TemporalCsvRow, formatTemporalCsv } from '@utils/formatTemporalCsv';
+import { formatTimeEvolutionOptions } from '@utils/formatTimeEvolutionChart';
+import { CsvChart } from '@utils/exportCsv';
+import { TimeGranularity } from '@utils/historicalValues';
 import { getPathId } from '@utils/pathDestructer';
 
-const TITLE = 'Evolução Temporal';
-const NO_REPOSITORIES: Repository[] = [];
+import { MultiSelectFilter, SingleSelectFilter } from './TemporalFilters';
+import { EvolutionChartData, EvolutionLevel, useTemporalEvolution } from './useTemporalEvolution';
 
-const CHARTS: { entity: EvolutionEntity; title: string; label: string; normalized: boolean }[] = [
-  { entity: 'characteristics', title: 'Características', label: 'características', normalized: true },
-  { entity: 'subcharacteristics', title: 'Subcaracterísticas', label: 'subcaracterísticas', normalized: true },
-  { entity: 'measures', title: 'Medidas', label: 'medidas', normalized: true },
-  { entity: 'metrics', title: 'Métricas', label: 'métricas', normalized: false },
+const TITLE = '2. Evolução Temporal';
+const CHART_HEIGHT = 300;
+const TOGGLE_SX: SxProps<Theme> = {
+  textTransform: 'none',
+  fontWeight: 'bold',
+  paddingX: '16px',
+  color: DASHBOARD_COLORS.text,
+  '&.Mui-selected, &.Mui-selected:hover': { backgroundColor: DASHBOARD_COLORS.primary, color: '#FFFFFF' }
+};
+
+const CHARTS: { level: EvolutionLevel; title: string; label: string; normalized: boolean }[] = [
+  { level: 'characteristics', title: 'Característica', label: 'característica', normalized: true },
+  { level: 'subcharacteristics', title: 'Subcaracterísticas', label: 'subcaracterísticas', normalized: true },
+  { level: 'measures', title: 'Medidas', label: 'medidas', normalized: true },
+  { level: 'metrics', title: 'Métricas', label: 'métricas', normalized: false }
 ];
 
-interface EvolutionChartProps {
-  organizationId: string;
-  productId: string;
-  repositoryId?: number;
-  chart: (typeof CHARTS)[number];
+function getStatus(data: EvolutionChartData): 'loading' | 'error' | 'empty' | 'ready' {
+  if (data.hasError) return 'error';
+  if (data.isLoading) return 'loading';
+  return data.series.length === 0 ? 'empty' : 'ready';
 }
 
-function EvolutionChart({ organizationId, productId, repositoryId, chart }: EvolutionChartProps) {
-  const { terms } = useProviderTerms();
-  const { releaseNames, series, hasReleases, isLoading, hasError, retry } = useReleaseEvolution(
-    organizationId,
-    productId,
-    repositoryId,
-    chart.entity
-  );
+interface EvolutionChartCardProps {
+  chart: (typeof CHARTS)[number];
+  data: EvolutionChartData;
+  granularity: TimeGranularity;
+  csv: CsvChart<TemporalCsvRow>;
+  emptyTitle: string;
+  emptyDescription: string;
+}
 
-  const emptyMessage = hasReleases
-    ? `Nenhuma release tem valores de ${chart.label} deste ${terms.repository}. Eles aparecem depois que a Action do MeasureSoftGram roda dentro do período de uma release.`
-    : 'Este produto ainda não tem releases. Crie uma release para acompanhar a evolução por release.';
+function EvolutionChartCard({ chart, data, granularity, csv, emptyTitle, emptyDescription }: EvolutionChartCardProps) {
+  const options = useMemo(
+    () => formatTimeEvolutionOptions(data.series, granularity, chart.normalized),
+    [data.series, granularity, chart.normalized]
+  );
+  const exportButton = <ExportCsvButton dashboard={TEMPORAL_CSV.dashboard} chart={csv} />;
 
   return (
-    <ReleaseEvolutionChart
+    <DashboardCard
       title={chart.title}
-      releaseNames={releaseNames}
-      series={series}
-      isLoading={isLoading}
-      hasError={hasError}
-      onRetry={retry}
-      emptyMessage={emptyMessage}
-      normalized={chart.normalized}
-    />
+      status={getStatus(data)}
+      headerAction={exportButton}
+      emptyHeaderAction={exportButton}
+      loadingContent={<SkeletonBlock width="100%" height={CHART_HEIGHT} />}
+      loadingMessage={`Carregando a evolução das ${chart.label}…`}
+      emptyTitle={emptyTitle}
+      emptyDescription={emptyDescription}
+      errorTitle={`Não foi possível carregar a evolução das ${chart.label}`}
+      onRetry={data.retry}
+    >
+      <ReactEcharts option={options} notMerge style={{ height: CHART_HEIGHT, width: '100%' }} />
+    </DashboardCard>
   );
 }
 
@@ -65,17 +84,63 @@ const TemporalDashboard: NextPageWithLayout = () => {
 
   const { query } = useRouter();
   const [organizationId, productId] = getPathId(query?.product as string);
+  const evolution = useTemporalEvolution(organizationId, productId);
+  const { repositories, isLoadingRepositories, granularity, measures } = evolution;
 
-  // a lista que o Layout já pediu: ao voltar para a aba, os gráficos não esperam por ela
-  const { repositories = NO_REPOSITORIES, isLoading: isLoadingRepositories } = useRepositoryList(
-    organizationId,
-    productId
-  );
-  const [chosenRepoId, setSelectedRepoId] = useState<number | undefined>();
-  // decidido no render: os históricos já saem com o primeiro repositório, sem esperar um efeito
-  const selectedRepoId = repositories.some((repository) => repository.id === chosenRepoId)
-    ? chosenRepoId
-    : repositories[0]?.id;
+  // os CSVs levam o que os gráficos mostram: o gráfico carregando, com erro ou sem dados não exporta nada
+  const repositoryName = repositories.find((repository) => repository.id === evolution.repositoryId)?.name ?? '';
+  const csvs = Object.fromEntries(
+    CHARTS.map(({ level }) => {
+      const data = evolution.charts[level];
+      const series = getStatus(data) === 'ready' ? data.series : [];
+      return [level, formatTemporalCsv(level, repositoryName, series, granularity)];
+    })
+  ) as Record<EvolutionLevel, CsvChart<TemporalCsvRow>>;
+
+  const emptyMessages: Record<EvolutionLevel, { title: string; description: string }> = {
+    characteristics: {
+      title: `Ainda não há valores desta característica neste ${terms.repository}`,
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+    },
+    subcharacteristics: {
+      title: `Ainda não há valores das subcaracterísticas escolhidas neste ${terms.repository}`,
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+    },
+    measures: {
+      title: `Ainda não há valores das medidas escolhidas neste ${terms.repository}`,
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+    },
+    metrics: {
+      title: `${measures === 'all' ? 'As medidas' : 'As medidas escolhidas'} não têm métricas do ${
+        terms.repository
+      } inteiro`,
+      description: 'As métricas coletadas por arquivo estão no dashboard 5. Distribuição das Métricas.'
+    }
+  };
+
+  const renderContent = () => {
+    if (!isLoadingRepositories && repositories.length === 0) {
+      return (
+        <DashboardCard
+          title="Evolução Temporal"
+          status="empty"
+          emptyTitle={`Este produto ainda não tem ${terms.repositories}`}
+          emptyDescription={`Adicione um ${terms.repository} para acompanhar a evolução da qualidade.`}
+        />
+      );
+    }
+    return CHARTS.map((chart) => (
+      <EvolutionChartCard
+        key={chart.level}
+        chart={chart}
+        data={evolution.charts[chart.level]}
+        granularity={granularity}
+        csv={csvs[chart.level]}
+        emptyTitle={emptyMessages[chart.level].title}
+        emptyDescription={emptyMessages[chart.level].description}
+      />
+    ));
+  };
 
   return (
     <>
@@ -84,54 +149,73 @@ const TemporalDashboard: NextPageWithLayout = () => {
       </Head>
 
       <Container maxWidth="xl">
-        <Box display="flex" flexDirection="column" gap={2} marginTop="40px" marginBottom="40px">
-          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+        <Box display="flex" flexDirection="column" gap="28px" marginTop="40px" marginBottom="40px">
+          {/* em tela estreita, o botão de exportar desce para baixo do título em vez de alargar a página */}
+          <Box display="flex" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" gap="16px">
             <Box>
-              <Typography variant="h4" color="#33568E" fontWeight="500">
+              <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
                 {TITLE}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Valor de cada entidade na última análise feita dentro do período de cada release.
+              <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
+                Cada nível mostra as filhas do que foi escolhido no nível anterior. Com mais de uma análise no mesmo
+                dia ou mês, vale a última.
               </Typography>
             </Box>
-
-            {repositories.length > 0 && (
-              <FormControl size="small" sx={{ minWidth: 220 }}>
-                <InputLabel id="temporal-repository">{terms.Repository}</InputLabel>
-                <Select
-                  labelId="temporal-repository"
-                  value={selectedRepoId ?? ''}
-                  label={terms.Repository}
-                  onChange={(event) => setSelectedRepoId(Number(event.target.value))}
-                >
-                  {repositories.map((repository) => (
-                    <MenuItem key={repository.id} value={repository.id}>
-                      {repository.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            <ExportAllCsvButton dashboard={TEMPORAL_CSV.dashboard} charts={Object.values(csvs)} />
           </Box>
 
-          {!isLoadingRepositories && repositories.length === 0 ? (
-            <Alert severity="info">
-              Este produto ainda não tem {terms.repositories}. Adicione um {terms.repository} para ver a evolução da
-              qualidade.
-            </Alert>
-          ) : (
-            <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap={2}>
-              {CHARTS.map((chart) => (
-                <EvolutionChart
-                  key={chart.entity}
-                  organizationId={organizationId}
-                  productId={productId}
-                  repositoryId={selectedRepoId}
-                  chart={chart}
-                />
-              ))}
-            </Box>
-          )}
+          <Box display="flex" alignItems="center" flexWrap="wrap" gap="16px">
+            <SingleSelectFilter
+              label={terms.Repository}
+              value={evolution.repositoryId}
+              options={repositories.map((repository) => ({ key: repository.id, name: repository.name }))}
+              onChange={(value) => evolution.setRepositoryId(Number(value))}
+            />
+            <SingleSelectFilter
+              label="Característica"
+              value={evolution.characteristic}
+              options={evolution.characteristicOptions}
+              onChange={evolution.setCharacteristic}
+            />
+            <MultiSelectFilter
+              label="Subcaracterística"
+              value={evolution.subcharacteristics}
+              options={evolution.subcharacteristicOptions}
+              onChange={evolution.setSubcharacteristics}
+            />
+            <MultiSelectFilter
+              label="Medida"
+              value={evolution.measures}
+              options={evolution.measureOptions}
+              onChange={evolution.setMeasures}
+            />
+            <MultiSelectFilter
+              label="Métrica"
+              value={evolution.metrics}
+              options={evolution.metricOptions}
+              onChange={evolution.setMetrics}
+            />
+
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={granularity}
+              onChange={(_event, value: TimeGranularity | null) => {
+                if (value) evolution.setGranularity(value);
+              }}
+              aria-label="Eixo do tempo"
+              sx={{ marginLeft: { md: 'auto' }, backgroundColor: '#FFFFFF' }}
+            >
+              <ToggleButton value="day" sx={TOGGLE_SX}>
+                Dias
+              </ToggleButton>
+              <ToggleButton value="month" sx={TOGGLE_SX}>
+                Meses
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          {renderContent()}
         </Box>
       </Container>
     </>

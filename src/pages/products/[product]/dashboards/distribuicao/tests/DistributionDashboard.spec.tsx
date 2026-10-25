@@ -1,7 +1,8 @@
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useRequest } from '@hooks/useRequest';
+import { downloadCsv, downloadCsvZip } from '@utils/exportCsv';
 import { DistributionLevel, ReleaseDashboardRepository } from '@customTypes/product';
 import DistributionDashboard from '../DistributionDashboard';
 import { action, catalog, distribution, entity, front, releaseRepositories, releases, service, tree } from './fixtures';
@@ -18,6 +19,7 @@ jest.mock('next/router', () => ({ useRouter: () => ({ query: { product: '1-2-Pro
 jest.mock('@components/Layout', () => ({ __esModule: true, default: (page: React.ReactNode) => page }));
 jest.mock('@hooks/useRequireAuth', () => ({ __esModule: true, default: jest.fn() }));
 jest.mock('@hooks/useRequest', () => ({ useRequest: jest.fn() }));
+jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({
     terms: {
@@ -73,6 +75,24 @@ function choose(label: string, option: string) {
   fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: option }));
 }
 
+const CARD_TITLES = [
+  'Histograma',
+  'Curva de densidade',
+  'Boxplot e percentis do nível',
+  'Dispersão das análises no tempo',
+  'Resumo estatístico e IQR'
+];
+const card = (name: string) => screen.getByRole('region', { name });
+const exportButton = (name: string) => within(card(name)).getByRole('button', { name: 'Exportar .csv' });
+const exportAllButton = () => screen.getByRole('button', { name: 'Exportar todos (.zip)' });
+/** Clica no .zip e espera ele terminar de gerar (o botão fica "Exportando…" enquanto isso). */
+async function exportAll() {
+  fireEvent.click(exportAllButton());
+  await waitFor(() => expect(exportAllButton()).toBeEnabled());
+}
+const zipCharts = (): { name: string; rows: Record<string, unknown>[] }[] =>
+  (downloadCsvZip as jest.Mock).mock.calls.at(-1)[1];
+
 function optionsOf(label: string) {
   fireEvent.mouseDown(screen.getByRole('combobox', { name: label }));
   const names = within(screen.getByRole('listbox'))
@@ -110,6 +130,26 @@ describe('<DistributionDashboard />', () => {
       'MeasureSoftGram-Service',
       'MeasureSoftGram-Front'
     ]);
+  });
+
+  it('a opção escolhida do repositório cabe na largura disponível, cortada com reticências e com o texto inteiro no title', () => {
+    render(<DistributionDashboard />);
+
+    choose('Repositório', 'MeasureSoftGram-Action (sem análise na release)');
+
+    const select = screen.getByRole('combobox', { name: 'Repositório' });
+    expect(select).toHaveTextContent('MeasureSoftGram-Action (sem análise na release)');
+    expect(select).toHaveAttribute('title', 'MeasureSoftGram-Action (sem análise na release)');
+    // o jsdom não calcula a largura: o teste confere as regras que o emotion inseriu para o seletor
+    const rules = Array.from(document.styleSheets).flatMap((sheet) =>
+      Array.from(sheet.cssRules).map((rule) => rule.cssText)
+    );
+    const root = select.closest('.MuiTextField-root') as HTMLElement;
+    const rootClass = Array.from(root.classList).find((name) => name.startsWith('css-'));
+    expect(rules).toContainEqual(expect.stringMatching(`^\\.${rootClass} \\{.*min-width: 0;.*max-width: 100%;`));
+    expect(rules).toContainEqual(
+      `.${rootClass} .MuiSelect-select {min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis;}`
+    );
   });
 
   it('tem os cinco níveis e nenhum seletor de entidade no TSQMI', () => {
@@ -290,6 +330,98 @@ describe('<DistributionDashboard />', () => {
     expect(screen.queryByText(/status code/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
     expect(mutate).toHaveBeenCalled();
+  });
+
+  describe('exportação de CSV', () => {
+    it('exporta o CSV de cada quadro pelo botão do cabeçalho, com os filtros da tela', () => {
+      render(<DistributionDashboard />);
+
+      CARD_TITLES.forEach((name) => fireEvent.click(exportButton(name)));
+
+      const exported = (downloadCsv as jest.Mock).mock.calls.map(([dashboard, chart]) => [
+        dashboard,
+        chart.name,
+        chart.rows.length
+      ]);
+      expect(exported).toEqual([
+        ['distribuicao', 'histograma', 10],
+        ['distribuicao', 'densidade', 120],
+        ['distribuicao', 'boxplot', 2],
+        ['distribuicao', 'dispersao', 6],
+        ['distribuicao', 'resumo', 12]
+      ]);
+      expect((downloadCsv as jest.Mock).mock.calls[0][1].rows[0]).toMatchObject({
+        release: 'R2',
+        repository: 'MeasureSoftGram-Service',
+        level: 'TSQMI',
+        entity: 'TSQMI'
+      });
+    });
+
+    it('exporta os cinco quadros num .zip pelo botão do topo, com o repositório e o nível escolhidos', async () => {
+      render(<DistributionDashboard />);
+      choose('Repositório', 'MeasureSoftGram-Front');
+      fireEvent.click(screen.getByRole('button', { name: 'Métrica' }));
+
+      await exportAll();
+
+      expect((downloadCsvZip as jest.Mock).mock.calls[0][0]).toBe('distribuicao');
+      expect(zipCharts().map((chart) => chart.name)).toEqual([
+        'histograma',
+        'densidade',
+        'boxplot',
+        'dispersao',
+        'resumo'
+      ]);
+      expect(zipCharts()[0].rows[0]).toMatchObject({
+        release: 'R2',
+        repository: 'MeasureSoftGram-Front',
+        level: 'Métrica',
+        entity: 'sum_ci_feedback_times',
+        start: 40,
+        end: 45,
+        count: 2
+      });
+    });
+
+    it('com menos de 3 análises, o botão da densidade fica desabilitado e o .zip leva os outros quadros', async () => {
+      mockRequests({
+        respond: (params) => ({
+          data: distribution({
+            repositoryId: params.repository_id,
+            main: entity('tsqmi', 'TSQMI', 'tsqmi', [0.5, 0.6])
+          })
+        })
+      });
+      render(<DistributionDashboard />);
+
+      expect(exportButton('Curva de densidade')).toBeDisabled();
+      expect(exportButton('Histograma')).toBeEnabled();
+      await exportAll();
+
+      expect(zipCharts().map((chart) => chart.name)).toEqual(['histograma', 'boxplot', 'dispersao', 'resumo']);
+    });
+
+    it('desabilita o .zip e não mostra os botões dos quadros sem análise, no erro e enquanto carrega', () => {
+      mockRequests({
+        respond: (params) => ({
+          data: distribution({ repositoryId: params.repository_id, main: entity('tsqmi', 'TSQMI', 'tsqmi', []) })
+        })
+      });
+      const { rerender } = render(<DistributionDashboard />);
+      expect(exportAllButton()).toBeDisabled();
+      expect(screen.queryByRole('button', { name: 'Exportar .csv' })).not.toBeInTheDocument();
+
+      mockRequests({ respond: () => ({ error: new Error('Request failed with status code 500') }) });
+      rerender(<DistributionDashboard />);
+      expect(exportAllButton()).toBeDisabled();
+      expect(screen.queryByRole('button', { name: 'Exportar .csv' })).not.toBeInTheDocument();
+
+      mockRequests({ respond: () => ({}) });
+      rerender(<DistributionDashboard />);
+      expect(exportAllButton()).toBeDisabled();
+      expect(screen.queryByRole('button', { name: 'Exportar .csv' })).not.toBeInTheDocument();
+    });
   });
 
   it('enquanto carrega, mostra os esqueletos nas posições da grade', () => {

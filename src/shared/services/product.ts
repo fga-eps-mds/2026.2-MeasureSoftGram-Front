@@ -9,6 +9,7 @@ import {
   RepositoriesLatestTsqmi,
   ReleaseGoal,
   EntityLevel,
+  EntityMatrixLevel,
   DistributionLevel,
   CorrelationLevel
 } from '@customTypes/product';
@@ -179,12 +180,46 @@ class ProductQuery {
     };
   }
 
+  /** Árvore do modelo da configuração atual do produto, sem depender de uma release. */
+  getCurrentQualityModelTreeConfig(organizationId: string, productId: string): GetRequest {
+    if (!organizationId || !productId) return null;
+    return { url: `/v1/organizations/${organizationId}/products/${productId}/quality-model-tree/`, method: 'get' };
+  }
+
+  getRepositoryHistoricalValuesConfig(
+    organizationId: string,
+    productId: string,
+    repositoryId: number | undefined,
+    entity: 'characteristics' | 'subcharacteristics' | 'measures' | 'metrics',
+    params?: Record<string, string>
+  ): GetRequest {
+    if (!organizationId || !productId || !repositoryId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/repositories/${repositoryId}/historical-values/${entity}/`,
+      method: 'get',
+      ...(params ? { params } : {})
+    };
+  }
+
   getEntityAnalysisEntities(organizationId: string, productId: string, releaseId?: number): GetRequest {
     if (!organizationId || !productId || !releaseId) return null;
     return {
       url: `/v1/organizations/${organizationId}/products/${productId}/entity-analysis/entities/`,
       method: 'get',
       params: { release_id: releaseId }
+    };
+  }
+
+  getEntityMatrix(
+    organizationId: string,
+    productId: string,
+    params: { releaseId?: number; level: EntityMatrixLevel }
+  ): GetRequest {
+    if (!organizationId || !productId || !params.releaseId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/entity-analysis/matrix/`,
+      method: 'get',
+      params: { release_id: params.releaseId, level: params.level }
     };
   }
 
@@ -206,17 +241,12 @@ class ProductQuery {
     return { url: `/v1/organizations/${organizationId}/products/${productId}/repositories/`, method: 'get' };
   }
 
-  getRepositoryReleaseHistoryConfig(
-    organizationId: string,
-    productId: string,
-    repositoryId: number | undefined,
-    level: 'characteristic' | 'subcharacteristic' | 'measure' | 'metric'
-  ): GetRequest {
-    if (!organizationId || !productId || !repositoryId) return null;
+  /** analysis_data da release: planejado (Rp) e, por repositório, realizado (Rd), diff e norm_diff. */
+  getReleaseAnalysisDataConfig(organizationId: string, productId: string, releaseId?: number): GetRequest {
+    if (!organizationId || !productId || !releaseId) return null;
     return {
-      url: `/v1/organizations/${organizationId}/products/${productId}/repositories/${repositoryId}/release-history/`,
-      method: 'get',
-      params: { level }
+      url: `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data/`,
+      method: 'get'
     };
   }
 
