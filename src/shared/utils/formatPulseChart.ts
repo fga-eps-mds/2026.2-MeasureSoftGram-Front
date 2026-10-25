@@ -44,7 +44,7 @@ export interface PulseChartOptions {
    * da anterior, e as duas etiquetas se sobrepunham (ata do PO de 14/10/2026).
    */
   releaseStartLabels?: boolean;
-  /** Linhas horizontais de grade dentro de cada faixa. */
+  /** Linhas de grade dentro de cada faixa (as horizontais e as verticais da última faixa, a única com o eixo do tempo). */
   horizontalLines?: boolean;
   /** Conteúdo do tooltip quando o cursor encaixa no ponto de uma release; sem ele, o tooltip só mostra as medições. */
   releaseTooltip?: (points: PulseReleaseHover[]) => string;
@@ -149,6 +149,29 @@ export function getBandTimePieces(sortedMeasurements: PulseMeasurement[]) {
   return pieces;
 }
 
+/** Folga à direita do eixo do tempo, em fração do período: a etiqueta da última release fica centrada na linha. */
+const TIME_AXIS_RIGHT_PADDING = 0.05;
+
+/**
+ * Mesmo intervalo de tempo em todas as faixas: das medições e dos pontos de indicador das releases de todos os
+ * repositórios. Com um eixo por faixa, cada uma calcularia o seu, e as faixas ficariam desalinhadas. Releases sem
+ * indicador (antes das medições, por exemplo) não esticam o eixo; os marcadores delas fora do intervalo não aparecem.
+ */
+function getTimeRange(repositories: PulseRepositoryData[]): { min?: number; max?: number } {
+  const times = repositories
+    .flatMap((repo) => [
+      ...repo.measurements.map((m) => m.created_at),
+      ...repo.releases.filter((rel) => typeof rel.tsqmi?.value === 'number').map((rel) => rel.end_at),
+    ])
+    .map((date) => new Date(date).getTime())
+    .filter((time) => !Number.isNaN(time));
+  if (!times.length) return {};
+
+  const min = Math.min(...times);
+  const max = Math.max(...times);
+  return { min, max: max + (max - min) * TIME_AXIS_RIGHT_PADDING };
+}
+
 export function formatPulseChartOptions(
   repositories: PulseRepositoryData[],
   {
@@ -174,6 +197,7 @@ export function formatPulseChartOptions(
   // Medições de cada repositório em ordem cronológica: o tooltip lê o valor medido daqui, não do desenho do pulso.
   const sortedByRepository: PulseMeasurement[][] = [];
   const labeledReleases = new Set<string>();
+  const timeRange = getTimeRange(repositories);
   const bandVisualMaps: any[] = [];
 
   repositories.forEach((repo, index) => {
@@ -289,6 +313,7 @@ export function formatPulseChartOptions(
     xAxes.push({
       type: 'time',
       gridIndex: index,
+      ...timeRange,
       show: isLast,
       axisLine: { show: false },
       axisTick: { show: false },
@@ -304,7 +329,7 @@ export function formatPulseChartOptions(
         },
       },
       splitLine: {
-        show: true,
+        show: horizontalLines,
         lineStyle: {
           color: COLOR_TOKENS.gridLine,
           type: 'solid',

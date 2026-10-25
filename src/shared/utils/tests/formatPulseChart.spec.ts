@@ -379,6 +379,37 @@ describe('formatPulseChart Utility', () => {
         expect(options.series[0].clip).toBe(false);
         expect(options.series[0].data).toHaveLength(3 * PULSE_POINTS_PER_MEASUREMENT);
       });
+
+      it('usa o mesmo intervalo de tempo em todas as faixas, com folga à direita', () => {
+        const early: PulseRepositoryData = {
+          ...repoWithReleases,
+          id: 9,
+          measurements: [{ created_at: '2026-01-02T12:00:00Z', value: 0.5 }],
+          releases: [],
+        };
+        const options: any = formatPulseChartOptions([early, repoWithReleases]);
+        const min = new Date('2026-01-01T12:00:00Z').getTime();
+        const max = new Date('2026-01-05T12:00:00Z').getTime();
+
+        options.xAxis.forEach((axis: any) => {
+          expect(axis.min).toBe(min);
+          expect(axis.max).toBe(max + (max - min) * 0.05);
+        });
+      });
+
+      it('o intervalo inclui o ponto de indicador das releases, mas não as releases sem indicador', () => {
+        const withPoint: PulseRepositoryData = {
+          ...repoWithReleases,
+          releases: [
+            { id: 1, name: 'R1', version: 'R1', end_at: '2026-01-10T12:00:00Z', tsqmi: { release_id: 1, value: 0.5, created_at: null, previous_value: null, variation: null, variation_percent: null } },
+            { id: 2, name: 'R0', version: 'R0', start_at: '2025-06-01T00:00:00Z', end_at: '2025-07-01T00:00:00Z' },
+          ],
+        };
+        const [axis] = (formatPulseChartOptions([withPoint]) as any).xAxis;
+
+        expect(axis.min).toBe(new Date('2026-01-01T12:00:00Z').getTime());
+        expect(axis.max).toBeGreaterThan(new Date('2026-01-10T12:00:00Z').getTime());
+      });
     });
   });
 });
