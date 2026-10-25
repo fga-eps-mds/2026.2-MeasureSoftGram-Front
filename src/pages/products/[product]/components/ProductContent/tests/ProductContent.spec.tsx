@@ -77,7 +77,7 @@ describe('<ProductContent />', () => {
 
     render(<ProductContent />);
 
-    expect(screen.getByText(/last-update : hoje às 14:56/)).toBeTruthy();
+    expect(screen.getByText(/last-update: hoje às 14:56/)).toBeTruthy();
     jest.useRealTimers();
   });
 
@@ -86,7 +86,7 @@ describe('<ProductContent />', () => {
 
     render(<ProductContent />);
 
-    expect(screen.getByText('last-update : -')).toBeTruthy();
+    expect(screen.getByText('last-update: -')).toBeTruthy();
   });
 
   it('renderiza NoReleasesState quando nao existem releases (Cenario 6)', () => {

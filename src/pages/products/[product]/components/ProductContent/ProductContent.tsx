@@ -75,7 +75,7 @@ const ProductContent: React.FC = () => {
               </Typography>
             </Box>
             <Typography variant="caption" color="gray">
-              {t('last-update')} : {lastUpdateDate}
+              {t('last-update')}: {lastUpdateDate}
             </Typography>
           </Box>
         </Box>
