@@ -249,6 +249,18 @@ describe('formatPulseChart Utility', () => {
         expect(endLabels(options.series[2])).toEqual([true, false]);
       });
 
+      it('com releaseTooltip, mostra os detalhes da release sob o cursor', () => {
+        const releaseTooltip = jest.fn(() => 'detalhes da release');
+        const { formatter } = (formatPulseChartOptions([repoB, repoA], { releaseTooltip }) as any).tooltip;
+        const releasePoint = { seriesName: 'A', seriesIndex: 2, dataIndex: 0, value: [0, 0.85], data: { release: release1, value: [0, 0.85] } };
+        const measurement = { seriesName: 'B', seriesIndex: 0, dataIndex: 0, value: [0, 0.45] };
+
+        expect(formatter([measurement, releasePoint])).toBe('detalhes da release');
+        expect(releaseTooltip).toHaveBeenCalledWith([{ repository: 'A', release: release1, value: 0.85 }]);
+        // longe das releases, continuam as medições
+        expect(formatter([measurement])).toContain('<strong>B:</strong> 0.4500');
+      });
+
       it('o tooltip das medições ignora os pontos das releases', () => {
         const { formatter } = (formatPulseChartOptions([repoA]) as any).tooltip;
         const releasePoint = { seriesName: 'A', seriesIndex: 1, dataIndex: 0, value: [0, 0.85] };

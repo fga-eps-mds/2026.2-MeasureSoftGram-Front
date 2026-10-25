@@ -46,6 +46,15 @@ export interface PulseChartOptions {
   releaseStartLabels?: boolean;
   /** Linhas horizontais de grade dentro de cada faixa. */
   horizontalLines?: boolean;
+  /** Conteúdo do tooltip quando o cursor encaixa no ponto de uma release; sem ele, o tooltip só mostra as medições. */
+  releaseTooltip?: (points: PulseReleaseHover[]) => string;
+}
+
+/** Ponto de release sob o cursor: um por repositório que tem a release. */
+export interface PulseReleaseHover {
+  repository: string;
+  release: PulseRelease;
+  value: number;
 }
 
 /** Ponto do indicador TSQMI consolidado no encerramento de uma release (US06.01); `release` vai para o tooltip. */
@@ -111,6 +120,8 @@ export interface PulseRelease {
   end_at: string;
   /** Indicador TSQMI consolidado do repositório na release (US06.01); só no pulso do produto. */
   tsqmi?: TsqmiReleasePoint;
+  /** Nome da release anterior do mesmo repositório, a base de `tsqmi.previous_value`. */
+  previousName?: string;
 }
 
 export interface PulseRepositoryData {
@@ -122,7 +133,12 @@ export interface PulseRepositoryData {
 
 export function formatPulseChartOptions(
   repositories: PulseRepositoryData[],
-  { releaseLabels = 'every-row', releaseStartLabels = true, horizontalLines = true }: PulseChartOptions = {}
+  {
+    releaseLabels = 'every-row',
+    releaseStartLabels = true,
+    horizontalLines = true,
+    releaseTooltip,
+  }: PulseChartOptions = {}
 ) {
   if (!repositories || !repositories.length) {
     return {};
@@ -357,6 +373,12 @@ export function formatPulseChartOptions(
         fontFamily: 'Roboto',
       },
       formatter: (allParams: any[]) => {
+        // Com o cursor no ponto de uma release, o eixo encaixa nele e os params trazem os pontos dessa release.
+        const releasePoints: PulseReleaseHover[] = (allParams ?? [])
+          .filter((p: any) => p.seriesIndex >= gridCount && p.data?.release)
+          .map((p: any) => ({ repository: p.seriesName, release: p.data.release, value: p.data.value[1] }));
+        if (releaseTooltip && releasePoints.length) return releaseTooltip(releasePoints);
+
         // Só as medições do pulso; os pontos das releases ficam de fora.
         const params = (allParams ?? []).filter((p: any) => p.seriesIndex < gridCount);
         if (!params.length) return '';

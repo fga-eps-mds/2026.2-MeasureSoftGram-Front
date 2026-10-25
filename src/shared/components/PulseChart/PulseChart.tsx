@@ -4,14 +4,21 @@ import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
 import { PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
+import { formatPulseReleaseTooltip } from '@utils/formatPulseReleaseTooltip';
 import { usePulseChartData } from './usePulseChartData';
 import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
 import { QualityLegend } from './QualityLegend';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 
-// Protótipo aprovado pelo PO (US06.01): sem linhas horizontais e com uma etiqueta por release, sem a de início.
-const PULSE_OPTIONS = { releaseLabels: 'first-row', releaseStartLabels: false, horizontalLines: false } as const;
+// Protótipo aprovado pelo PO (US06.01): sem linhas horizontais, uma etiqueta por release (sem a de início) e os
+// detalhes da release no ponto do indicador.
+const PULSE_OPTIONS = {
+  releaseLabels: 'first-row',
+  releaseStartLabels: false,
+  horizontalLines: false,
+  releaseTooltip: formatPulseReleaseTooltip,
+} as const;
 
 interface Props {
   organizationId?: string;

@@ -89,7 +89,8 @@ describe('usePulseChartData', () => {
         version: 'Release 2',
         start_at: '2026-08-16',
         end_at: '2026-08-30',
-        tsqmi: point(20, 0.7, 0.5)
+        tsqmi: point(20, 0.7, 0.5),
+        previousName: 'Release 1'
       }
     ]);
     expect(result.current.allRepositories[2].measurements).toEqual([]);

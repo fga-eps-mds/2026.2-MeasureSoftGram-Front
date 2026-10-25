@@ -56,6 +56,7 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
           start_at: release.start_at,
           end_at: release.end_at,
           tsqmi: point,
+          previousName: releases[releases.length - 1]?.name,
         });
       });
       byRepository.set(repo.id, releases);
