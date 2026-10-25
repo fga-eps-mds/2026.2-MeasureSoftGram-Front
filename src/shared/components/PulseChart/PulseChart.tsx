@@ -10,6 +10,9 @@ import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
 import { QualityLegend } from './QualityLegend';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 
+// Protótipo aprovado pelo PO (US06.01): sem linhas horizontais e com uma etiqueta por release, sem a de início.
+const PULSE_OPTIONS = { releaseLabels: 'first-row', releaseStartLabels: false, horizontalLines: false } as const;
+
 interface Props {
   organizationId?: string;
   productId?: string;
@@ -35,7 +38,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     error,
   } = usePulseChartData(organizationId, productId);
 
-  const chartOptions = formatPulseChartOptions(filteredRepositories);
+  const chartOptions = formatPulseChartOptions(filteredRepositories, PULSE_OPTIONS);
 
 
   if (isLoading) {

@@ -34,10 +34,25 @@ export function getQualityStatus(value: number): QualityStatus {
 export const PULSE_GRID = { topOffset: 60, height: 82, gap: 34 };
 
 export interface PulseChartOptions {
-  /** `first-row` mostra o nome das releases só na primeira faixa, para as etiquetas não se repetirem nem se sobreporem. */
+  /**
+   * `first-row` mostra o nome de cada release só na primeira faixa que a tem, para as etiquetas não se repetirem nem
+   * se sobreporem.
+   */
   releaseLabels?: 'every-row' | 'first-row';
+  /**
+   * Etiqueta "Início" das releases. Sem ela, só fica a linha pontilhada: o início de uma release costuma cair no fim
+   * da anterior, e as duas etiquetas se sobrepunham (ata do PO de 14/10/2026).
+   */
+  releaseStartLabels?: boolean;
   /** Linhas horizontais de grade dentro de cada faixa. */
   horizontalLines?: boolean;
+}
+
+/** Ponto do indicador TSQMI consolidado no encerramento de uma release (US06.01); `release` vai para o tooltip. */
+export interface PulseReleasePoint {
+  value: [number, number];
+  itemStyle: { color: string };
+  release: PulseRelease;
 }
 
 export interface VariationInfo {
@@ -107,7 +122,7 @@ export interface PulseRepositoryData {
 
 export function formatPulseChartOptions(
   repositories: PulseRepositoryData[],
-  { releaseLabels = 'every-row', horizontalLines = true }: PulseChartOptions = {}
+  { releaseLabels = 'every-row', releaseStartLabels = true, horizontalLines = true }: PulseChartOptions = {}
 ) {
   if (!repositories || !repositories.length) {
     return {};
@@ -120,10 +135,12 @@ export function formatPulseChartOptions(
   const xAxes: any[] = [];
   const yAxes: any[] = [];
   const seriesList: any[] = [];
+  // Ficam depois das séries do pulso, para o índice da série continuar sendo o do repositório (visualMap e tooltip).
+  const releasePointSeries: any[] = [];
+  const labeledReleases = new Set<string>();
 
   repositories.forEach((repo, index) => {
     const isLast = index === gridCount - 1;
-    const showReleaseLabels = releaseLabels === 'every-row' || index === 0;
     const topPosition = topOffset + index * (gridHeight + gridGap);
 
     const sortedMeasurements = [...repo.measurements].sort(
@@ -137,11 +154,17 @@ export function formatPulseChartOptions(
     // Releases markLines (Início e Fim da Release)
     const markLineData: any[] = [];
 
+    const releasePoints: PulseReleasePoint[] = [];
+
     repo.releases.forEach((rel) => {
       const labelText =
         rel.version === rel.name || !rel.name
           ? rel.version || rel.name
           : `${rel.version} ${rel.name}`;
+
+      const releaseKey = rel.id !== undefined ? String(rel.id) : `${labelText}|${rel.end_at}`;
+      const showReleaseLabels = releaseLabels === 'every-row' || !labeledReleases.has(releaseKey);
+      labeledReleases.add(releaseKey);
 
       if (rel.start_at) {
         const startMs = new Date(rel.start_at).getTime();
@@ -150,7 +173,7 @@ export function formatPulseChartOptions(
             name: `Início ${labelText}`,
             xAxis: startMs,
             label: {
-              show: showReleaseLabels,
+              show: showReleaseLabels && releaseStartLabels,
               formatter: `Início ${labelText}`,
               position: 'start',
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
@@ -172,6 +195,15 @@ export function formatPulseChartOptions(
       if (rel.end_at) {
         const endMs = new Date(rel.end_at).getTime();
         if (!isNaN(endMs)) {
+          const tsqmiValue = rel.tsqmi?.value;
+          if (tsqmiValue !== undefined && tsqmiValue !== null) {
+            releasePoints.push({
+              value: [endMs, tsqmiValue],
+              itemStyle: { color: getQualityStatus(tsqmiValue).color },
+              release: rel,
+            });
+          }
+
           markLineData.push({
             name: labelText,
             xAxis: endMs,
@@ -278,6 +310,19 @@ export function formatPulseChartOptions(
         data: markLineData,
       },
     });
+
+    if (releasePoints.length) {
+      releasePointSeries.push({
+        name: repo.name,
+        type: 'scatter',
+        xAxisIndex: index,
+        yAxisIndex: index,
+        symbolSize: 10,
+        z: 3,
+        itemStyle: { borderColor: '#FFFFFF', borderWidth: 2 },
+        data: releasePoints,
+      });
+    }
   });
 
   const totalHeight = topOffset + gridCount * (gridHeight + gridGap) + 40;
@@ -311,8 +356,10 @@ export function formatPulseChartOptions(
         fontSize: 12,
         fontFamily: 'Roboto',
       },
-      formatter: (params: any[]) => {
-        if (!params || !params.length) return '';
+      formatter: (allParams: any[]) => {
+        // Só as medições do pulso; os pontos das releases ficam de fora.
+        const params = (allParams ?? []).filter((p: any) => p.seriesIndex < gridCount);
+        if (!params.length) return '';
         const firstParam = params[0];
         const dateStr = new Date(firstParam.value[0]).toISOString().split('T')[0];
 
@@ -355,7 +402,7 @@ export function formatPulseChartOptions(
     grid: grids,
     xAxis: xAxes,
     yAxis: yAxes,
-    series: seriesList,
+    series: [...seriesList, ...releasePointSeries],
     dataZoom: [
       {
         type: 'inside',

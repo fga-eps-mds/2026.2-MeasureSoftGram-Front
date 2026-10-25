@@ -37,8 +37,13 @@ const defaultChartData = () => ({
   error: null,
 });
 
+const mockEchartsOption = jest.fn();
+
 jest.mock('next/dynamic', () => () => {
-  const MockECharts = () => <div data-testid="echarts-mock" />;
+  const MockECharts = ({ option }: { option: unknown }) => {
+    mockEchartsOption(option);
+    return <div data-testid="echarts-mock" />;
+  };
   return MockECharts;
 });
 
@@ -46,6 +51,29 @@ describe('<PulseChart />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePulseChartData.mockReturnValue(defaultChartData());
+  });
+
+  it('desenha o pulso sem linhas horizontais e sem a etiqueta de início das releases', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      filteredRepositories: [
+        {
+          ...defaultChartData().filteredRepositories[0],
+          releases: [
+            { name: 'Release 1', version: 'Release 1', start_at: '2026-08-01T12:00:00Z', end_at: '2026-08-21T12:00:00Z' },
+          ],
+        },
+      ],
+    });
+
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    const option = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0];
+    expect(option.yAxis[0].splitLine.show).toBe(false);
+    expect(option.series[0].markLine.data.map((line: any) => [line.name, line.label.show])).toEqual([
+      ['Início Release 1', false],
+      ['Release 1', true],
+    ]);
   });
 
   it('mostra o carregamento enquanto busca os dados', () => {

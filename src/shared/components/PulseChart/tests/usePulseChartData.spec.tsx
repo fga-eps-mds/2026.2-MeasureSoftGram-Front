@@ -151,6 +151,8 @@ describe('usePulseChartData', () => {
     ]);
     expect(result.current.selectedMeasurements).toBe(1);
     // só a Release 1 encerra dentro do período (15/08); a Release 2 encerra em 30/08
+    expect(result.current.filteredRepositories[0].releases.map((rel) => rel.name)).toEqual(['Release 1']);
+    expect(result.current.filteredRepositories[1].releases).toEqual([]);
     expect(result.current.releasesInPeriod).toBe(1);
   });
 

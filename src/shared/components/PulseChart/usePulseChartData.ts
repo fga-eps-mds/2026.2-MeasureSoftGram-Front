@@ -88,12 +88,16 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     if (startDate || endDate) {
       const { startMs, endMs } = getPeriodBounds(startDate, endDate);
 
+      const inPeriod = (date: string) => {
+        const t = new Date(date).getTime();
+        return t >= startMs && t <= endMs;
+      };
+
+      // Releases pelo encerramento, onde ficam o marcador e o ponto do indicador.
       list = list.map((repo) => ({
         ...repo,
-        measurements: repo.measurements.filter((m) => {
-          const t = new Date(m.created_at).getTime();
-          return t >= startMs && t <= endMs;
-        }),
+        measurements: repo.measurements.filter((m) => inPeriod(m.created_at)),
+        releases: repo.releases.filter((rel) => inPeriod(rel.end_at)),
       }));
     }
 
@@ -120,18 +124,11 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     return maxMs ? new Date(maxMs).toISOString().split('T')[0].split('-').reverse().join('/') : '';
   }, [allRepositories]);
 
-  // Releases dos repositórios exibidos que encerram dentro do período De/Até; uma release com vários repositórios conta uma vez.
-  const releasesInPeriod = useMemo(() => {
-    const { startMs, endMs } = getPeriodBounds(startDate, endDate);
-    const releaseIds = new Set<number | undefined>();
-    filteredRepositories.forEach((repo) =>
-      repo.releases.forEach((rel) => {
-        const t = new Date(rel.end_at).getTime();
-        if (t >= startMs && t <= endMs) releaseIds.add(rel.id);
-      })
-    );
-    return releaseIds.size;
-  }, [filteredRepositories, startDate, endDate]);
+  // Releases dos repositórios exibidos (já filtradas pelo período); uma release com vários repositórios conta uma vez.
+  const releasesInPeriod = useMemo(
+    () => new Set(filteredRepositories.flatMap((repo) => repo.releases.map((rel) => rel.id))).size,
+    [filteredRepositories]
+  );
 
   return {
     allRepositories,

@@ -170,6 +170,96 @@ describe('formatPulseChart Utility', () => {
       expect(options.yAxis[0].axisLabel.formatter(0.5)).toBe('0.5');
     });
 
+    it('pode tirar a etiqueta de início das releases e manter a linha pontilhada', () => {
+      const options: any = formatPulseChartOptions([repoWithReleases], { releaseStartLabels: false });
+      const [start, end] = options.series[0].markLine.data;
+
+      expect(start.name).toBe('Início v1 Release 1');
+      expect(start.label.show).toBe(false);
+      expect(end.label.show).toBe(true);
+    });
+
+    describe('indicador TSQMI por release (US06.01)', () => {
+      const tsqmi = (releaseId: number, value: number | null) => ({
+        release_id: releaseId,
+        value,
+        created_at: null,
+        previous_value: null,
+        variation: null,
+        variation_percent: null,
+      });
+      const release1 = {
+        id: 10,
+        name: 'Release 1',
+        version: 'Release 1',
+        end_at: '2026-01-04T00:00:00Z',
+        tsqmi: tsqmi(10, 0.85),
+      };
+      const release2 = {
+        id: 20,
+        name: 'Release 2',
+        version: 'Release 2',
+        end_at: '2026-01-08T00:00:00Z',
+        tsqmi: tsqmi(20, null),
+      };
+      const repoA: PulseRepositoryData = { ...repoWithReleases, id: 1, name: 'A', releases: [release1, release2] };
+      const repoB: PulseRepositoryData = { ...repoWithReleases, id: 2, name: 'B', releases: [] };
+
+      it('desenha um ponto no encerramento de cada release com indicador, na cor da faixa', () => {
+        const options: any = formatPulseChartOptions([repoA]);
+        const pointsSeries = options.series[1];
+
+        expect(options.series).toHaveLength(2);
+        expect(pointsSeries.type).toBe('scatter');
+        expect(pointsSeries.xAxisIndex).toBe(0);
+        // a Release 2 não teve análise na janela: sem ponto
+        expect(pointsSeries.data).toEqual([
+          {
+            value: [new Date('2026-01-04T00:00:00Z').getTime(), 0.85],
+            itemStyle: { color: '#1A9641' },
+            release: release1,
+          },
+        ]);
+      });
+
+      it('põe os pontos depois das séries do pulso, na faixa do repositório', () => {
+        const options: any = formatPulseChartOptions([repoB, repoA]);
+
+        expect(options.series.map((series: any) => series.type)).toEqual(['line', 'line', 'scatter']);
+        expect(options.series[2].xAxisIndex).toBe(1);
+        expect(options.series[2].yAxisIndex).toBe(1);
+        // o visualMap das faixas continua só nas séries do pulso
+        expect(options.visualMap[0].seriesIndex).toEqual([0, 1]);
+      });
+
+      it('não cria a série de pontos sem indicador nas releases', () => {
+        const options: any = formatPulseChartOptions([repoWithReleases]);
+
+        expect(options.series).toHaveLength(1);
+      });
+
+      it('com first-row, a etiqueta fica na primeira faixa que tem a release', () => {
+        const onlyRelease2: PulseRepositoryData = { ...repoA, id: 3, name: 'C', releases: [release2] };
+        const options: any = formatPulseChartOptions([repoB, onlyRelease2, repoA], { releaseLabels: 'first-row' });
+        const endLabels = (series: any) =>
+          series.markLine.data.filter((line: any) => !line.name.startsWith('Início')).map((line: any) => line.label.show);
+
+        expect(endLabels(options.series[1])).toEqual([true]);
+        // Release 1 ainda sem etiqueta, Release 2 já mostrada na faixa de C
+        expect(endLabels(options.series[2])).toEqual([true, false]);
+      });
+
+      it('o tooltip das medições ignora os pontos das releases', () => {
+        const { formatter } = (formatPulseChartOptions([repoA]) as any).tooltip;
+        const releasePoint = { seriesName: 'A', seriesIndex: 1, dataIndex: 0, value: [0, 0.85] };
+
+        expect(formatter([releasePoint])).toBe('');
+        expect(formatter([{ seriesName: 'A', seriesIndex: 0, dataIndex: 0, value: [0, 0.45] }, releasePoint])).toContain(
+          '<strong>A:</strong> 0.4500'
+        );
+      });
+    });
+
     describe('tooltip', () => {
       const formatter = (formatPulseChartOptions([repoWithReleases]) as any).tooltip.formatter;
       const point = (dataIndex: number, value: number) => ({
