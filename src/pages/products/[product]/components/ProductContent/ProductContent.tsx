@@ -7,7 +7,7 @@ import { Box, Container, Typography } from '@mui/material';
 import { useProductContext } from '@contexts/ProductProvider';
 import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
-import { RepositoriesTsqmiHistory } from '@customTypes/product';
+import { ProductTsqmiReleaseHistory, RepositoriesTsqmiHistory } from '@customTypes/product';
 import { PulseChart } from '@components/PulseChart';
 
 import { getPathId } from '@utils/pathDestructer';
@@ -23,17 +23,15 @@ const ProductContent: React.FC = () => {
 
   const [organizationId, productId] = getPathId(query?.product as string);
 
-  const { data: releaseData, isLoading: isReleasesLoading } = useRequest<any>(
-    organizationId && productId
-      ? productQuery.getReleaseList(organizationId, productId)
-      : null
+  // Mesma requisição do PulseChart (o SWR deduplica): sem release cadastrada, a resposta vem com `releases: []`
+  // (Cenário 6 da US06.01). Com erro, o PulseChart mostra o alerta, em vez de um empty state enganoso.
+  const {
+    data: releaseHistoryData,
+    isLoading: isReleasesLoading,
+    error: releaseHistoryError,
+  } = useRequest<ProductTsqmiReleaseHistory>(
+    organizationId && productId ? productQuery.getProductTsqmiReleaseHistoryConfig(organizationId, productId) : null
   );
-
-  const getReleasesArray = (): any[] => {
-    if (Array.isArray(releaseData)) return releaseData;
-    if (Array.isArray(releaseData?.results)) return releaseData.results;
-    return [];
-  };
 
   // Mesma requisição do PulseChart (o SWR deduplica): a última atualização é a medição de TSQMI mais recente.
   const { data: tsqmiHistoryData } = useRequest<RepositoriesTsqmiHistory>(
@@ -41,8 +39,6 @@ const ProductContent: React.FC = () => {
       ? productQuery.getProductRepositoriesTsqmiHistoryConfig(organizationId, productId)
       : null
   );
-
-  const releasesArray = getReleasesArray();
 
   const latestMeasurementMs = Math.max(
     0,
@@ -63,7 +59,7 @@ const ProductContent: React.FC = () => {
     );
   }
 
-  const hasNoReleases = releasesArray.length === 0;
+  const hasNoReleases = !releaseHistoryError && (releaseHistoryData?.releases ?? []).length === 0;
 
   return (
     <Container>
