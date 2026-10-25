@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv } from '@utils/exportCsv';
-import PulseChart from '../PulseChart';
+import PulseChart, { getReferenceRelease } from '../PulseChart';
 
 const mockUsePulseChartData = jest.fn();
 
@@ -165,6 +165,21 @@ describe('<PulseChart />', () => {
     // 0,918 contra 0,95: −3,37%; a Release 3 não tem indicador
     expect(getByText('▼ 3,37% vs. v2025.4.0 Release 2')).toBeInTheDocument();
     expect(getByText('último indicador TSQMI · ótimo')).toBeInTheDocument();
+  });
+
+  it('a variação da barra lateral não usa a release cuja janela inclui a última medição', () => {
+    const tsqmi = (value: number) => ({ value });
+    const releases = [
+      { id: 1, name: 'Release 1', version: 'Release 1', end_at: '2026-08-10T12:00:00Z', tsqmi: tsqmi(0.9) },
+      // encerra depois da última medição (21/08): o indicador dela é essa mesma medição
+      { id: 2, name: 'Release 2', version: 'Release 2', end_at: '2026-09-30T12:00:00Z', tsqmi: tsqmi(0.918) },
+    ];
+
+    expect(getReferenceRelease(releases, [{ created_at: '2026-08-21T12:00:00Z', value: 0.918 }])).toEqual({
+      name: 'Release 1',
+      value: 0.9,
+    });
+    expect(getReferenceRelease(releases.slice(1), [{ created_at: '2026-08-21T12:00:00Z', value: 0.918 }])).toBeUndefined();
   });
 
   it('mostra a etiqueta das releases em todas as faixas', () => {

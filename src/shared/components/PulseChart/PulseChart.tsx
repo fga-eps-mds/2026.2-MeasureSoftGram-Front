@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
-import { PULSE_GRID, PulseRelease, formatPulseChartOptions } from '@utils/formatPulseChart';
+import { PULSE_GRID, PulseMeasurement, PulseRelease, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
 import { formatPulseReleaseTooltip } from '@utils/formatPulseReleaseTooltip';
 import { usePulseChartData } from './usePulseChartData';
@@ -20,9 +20,16 @@ const PULSE_OPTIONS = {
   releaseTooltip: formatPulseReleaseTooltip,
 } as const;
 
-// Base da variação na barra lateral: a release mais recente do repositório com indicador.
-function getLastReleaseWithTsqmi(releases: PulseRelease[]) {
-  const release = [...releases].reverse().find((rel) => typeof rel.tsqmi?.value === 'number');
+/**
+ * Base da variação na barra lateral: a release com indicador encerrada mais recentemente antes da última medição.
+ * Uma release cuja janela inclui a última medição tem como indicador essa mesma medição, e a variação daria sempre 0.
+ */
+export function getReferenceRelease(releases: PulseRelease[], measurements: PulseMeasurement[]) {
+  const latestMs = Math.max(...measurements.map((m) => new Date(m.created_at).getTime()));
+  const release = releases
+    .filter((rel) => typeof rel.tsqmi?.value === 'number' && new Date(rel.end_at).getTime() < latestMs)
+    .sort((a, b) => new Date(a.end_at).getTime() - new Date(b.end_at).getTime())
+    .pop();
   return release ? { name: release.name, value: release.tsqmi?.value as number } : undefined;
 }
 
@@ -132,7 +139,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
                 topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
                 valueLabel="último indicador TSQMI"
                 showIcon={false}
-                reference={getLastReleaseWithTsqmi(repo.releases)}
+                reference={getReferenceRelease(repo.releases, repo.measurements)}
               />
             ))}
 

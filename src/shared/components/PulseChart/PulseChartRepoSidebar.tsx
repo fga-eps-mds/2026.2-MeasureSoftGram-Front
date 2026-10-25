@@ -123,7 +123,13 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
               {referenceVariation.text} vs. {reference.name}
             </Typography>
           )}
-          <Typography variant="caption" color={COLOR_TOKENS.axisText} sx={{ fontSize: '10.5px', lineHeight: 1.4 }}>
+          <Typography
+            variant="caption"
+            color={COLOR_TOKENS.axisText}
+            sx={{ fontSize: '10.5px', lineHeight: 1.4 }}
+            noWrap
+            title={`${valueLabel} · ${status.label.toLowerCase()}`}
+          >
             {valueLabel} · {status.label.toLowerCase()}
           </Typography>
         </>
