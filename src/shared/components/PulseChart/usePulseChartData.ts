@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
-import { RepositoriesTsqmiHistory, ReleasesPaginated } from '@customTypes/product';
-import { PulseRepositoryData } from '@utils/formatPulseChart';
+import { ProductTsqmiReleaseHistory, RepositoriesTsqmiHistory } from '@customTypes/product';
+import { PulseRelease, PulseRepositoryData } from '@utils/formatPulseChart';
 
 // Janela De/Até em milissegundos, com o dia final inteiro; sem data, o lado fica aberto.
 function getPeriodBounds(startDate: string, endDate: string) {
@@ -23,37 +23,49 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
   }, [organizationId, productId]);
 
 
-  const releaseConfig = useMemo(() => {
+  const releaseHistoryConfig = useMemo(() => {
     if (!organizationId || !productId) return null;
-    return productQuery.getReleaseList(organizationId, productId);
+    return productQuery.getProductTsqmiReleaseHistoryConfig(organizationId, productId);
   }, [organizationId, productId]);
 
   const { data: tsqmiHistoryData, isLoading: isTsqmiLoading, error: tsqmiError } = useRequest<RepositoriesTsqmiHistory>(
     tsqmiHistoryConfig
   );
 
-  const { data: releaseData, isLoading: isReleasesLoading } = useRequest<ReleasesPaginated | any>(
-    releaseConfig
-  );
+  const {
+    data: releaseHistoryData,
+    isLoading: isReleaseHistoryLoading,
+    error: releaseHistoryError,
+  } = useRequest<ProductTsqmiReleaseHistory>(releaseHistoryConfig);
 
+  // Releases de cada repositório, com o indicador TSQMI consolidado em cada uma (US06.01). Só entram as releases que
+  // incluem o repositório, pela regra do Service; a etiqueta é o nome cadastrado no MSGram.
+  const releasesByRepository = useMemo(() => {
+    const releasesById = new Map((releaseHistoryData?.releases ?? []).map((release) => [release.id, release]));
+    const byRepository = new Map<number, PulseRelease[]>();
+
+    (releaseHistoryData?.repositories ?? []).forEach((repo) => {
+      const releases: PulseRelease[] = [];
+      repo.history.forEach((point) => {
+        const release = releasesById.get(point.release_id);
+        if (!release) return;
+        releases.push({
+          id: release.id,
+          name: release.release_name,
+          version: release.release_name,
+          start_at: release.start_at,
+          end_at: release.end_at,
+          tsqmi: point,
+        });
+      });
+      byRepository.set(repo.id, releases);
+    });
+
+    return byRepository;
+  }, [releaseHistoryData]);
 
   const allRepositories: PulseRepositoryData[] = useMemo(() => {
     if (!tsqmiHistoryData || !tsqmiHistoryData.results) return [];
-
-    const rawReleases: any[] = Array.isArray(releaseData)
-      ? releaseData
-      : Array.isArray(releaseData?.results)
-      ? releaseData.results
-      : [];
-
-    const parsedReleases = rawReleases.map((rel) => ({
-      name: rel.release_name || rel.name || '',
-      version: rel.release_name || rel.version || '',
-      start_at: rel.start_at,
-      end_at: rel.end_at,
-    }));
-
-
 
     return tsqmiHistoryData.results.map((repo) => ({
       id: repo.id,
@@ -62,9 +74,9 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
         created_at: m.created_at,
         value: m.value,
       })),
-      releases: parsedReleases,
+      releases: releasesByRepository.get(repo.id) ?? [],
     }));
-  }, [tsqmiHistoryData, releaseData]);
+  }, [tsqmiHistoryData, releasesByRepository]);
 
   const filteredRepositories = useMemo(() => {
     let list = [...allRepositories];
@@ -108,14 +120,18 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     return maxMs ? new Date(maxMs).toISOString().split('T')[0].split('-').reverse().join('/') : '';
   }, [allRepositories]);
 
-  // Releases do produto (iguais em todos os repositórios) que encerram dentro do período De/Até.
+  // Releases dos repositórios exibidos que encerram dentro do período De/Até; uma release com vários repositórios conta uma vez.
   const releasesInPeriod = useMemo(() => {
     const { startMs, endMs } = getPeriodBounds(startDate, endDate);
-    return (allRepositories[0]?.releases ?? []).filter((rel) => {
-      const t = new Date(rel.end_at).getTime();
-      return t >= startMs && t <= endMs;
-    }).length;
-  }, [allRepositories, startDate, endDate]);
+    const releaseIds = new Set<number | undefined>();
+    filteredRepositories.forEach((repo) =>
+      repo.releases.forEach((rel) => {
+        const t = new Date(rel.end_at).getTime();
+        if (t >= startMs && t <= endMs) releaseIds.add(rel.id);
+      })
+    );
+    return releaseIds.size;
+  }, [filteredRepositories, startDate, endDate]);
 
   return {
     allRepositories,
@@ -130,7 +146,7 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     selectedMeasurements,
     latestDate,
     releasesInPeriod,
-    isLoading: isTsqmiLoading || isReleasesLoading,
-    error: tsqmiError,
+    isLoading: isTsqmiLoading || isReleaseHistoryLoading,
+    error: tsqmiError || releaseHistoryError,
   };
 }

@@ -1,3 +1,4 @@
+import { TsqmiReleasePoint } from '@customTypes/product';
 import { getQualityBandClamped, getQualityVisualMapPieces, QualityGrade } from './qualityBands';
 import { toPulseSeries } from './toPulseSeries';
 
@@ -88,10 +89,13 @@ export interface PulseMeasurement {
 }
 
 export interface PulseRelease {
+  id?: number;
   name: string;
   version: string;
   start_at?: string;
   end_at: string;
+  /** Indicador TSQMI consolidado do repositório na release (US06.01); só no pulso do produto. */
+  tsqmi?: TsqmiReleasePoint;
 }
 
 export interface PulseRepositoryData {
