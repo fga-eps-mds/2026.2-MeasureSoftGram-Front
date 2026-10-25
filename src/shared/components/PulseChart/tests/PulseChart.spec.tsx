@@ -40,8 +40,8 @@ const defaultChartData = () => ({
 const mockEchartsOption = jest.fn();
 
 jest.mock('next/dynamic', () => () => {
-  const MockECharts = ({ option }: { option: unknown }) => {
-    mockEchartsOption(option);
+  const MockECharts = ({ option, notMerge }: { option: unknown; notMerge?: boolean }) => {
+    mockEchartsOption(option, notMerge);
     return <div data-testid="echarts-mock" />;
   };
   return MockECharts;
@@ -51,6 +51,13 @@ describe('<PulseChart />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePulseChartData.mockReturnValue(defaultChartData());
+  });
+
+  it('refaz o gráfico a cada atualização, sem mesclar com as faixas do filtro anterior', () => {
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    const [, notMerge] = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1];
+    expect(notMerge).toBe(true);
   });
 
   it('desenha o pulso sem linhas horizontais e sem a etiqueta de início das releases', () => {

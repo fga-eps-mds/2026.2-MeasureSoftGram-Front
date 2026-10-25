@@ -144,9 +144,11 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
             ))}
 
             {/* Apache ECharts dynamic component */}
+            {/* notMerge: a cada filtro, o gráfico é refeito; mesclando, ficariam as faixas e séries anteriores */}
             <ReactEcharts
               ref={echartsRef}
               option={chartOptions}
+              notMerge
               style={{
                 height: `${chartOptions.height || 400}px`,
                 width: '100%',
