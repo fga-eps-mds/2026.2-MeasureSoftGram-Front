@@ -14,16 +14,16 @@ describe('formatPulseChart Utility', () => {
   describe('getQualityStatus', () => {
     // faixas A a E do Indicador Total da Qualidade (US06.01), com os valores de limite
     it.each([
-      [0, 'E', 'Muito ruim', '#D7191C'],
-      [0.19, 'E', 'Muito ruim', '#D7191C'],
-      [0.2, 'D', 'Ruim', '#FE7D37'],
-      [0.39, 'D', 'Ruim', '#FE7D37'],
-      [0.4, 'C', 'Bom', '#DFB317'],
-      [0.59, 'C', 'Bom', '#DFB317'],
-      [0.6, 'B', 'Muito bom', '#8CC63F'],
-      [0.79, 'B', 'Muito bom', '#8CC63F'],
-      [0.8, 'A', 'Ótimo', '#1A9641'],
-      [1, 'A', 'Ótimo', '#1A9641'],
+      [0, 'E', 'Muito ruim', '#BE2E0E'],
+      [0.19, 'E', 'Muito ruim', '#BE2E0E'],
+      [0.2, 'D', 'Ruim', '#F16141'],
+      [0.39, 'D', 'Ruim', '#F16141'],
+      [0.4, 'C', 'Bom', '#EBA133'],
+      [0.59, 'C', 'Bom', '#EBA133'],
+      [0.6, 'B', 'Muito bom', '#0DC889'],
+      [0.79, 'B', 'Muito bom', '#0DC889'],
+      [0.8, 'A', 'Ótimo', '#04724D'],
+      [1, 'A', 'Ótimo', '#04724D'],
     ])('classifica %p na faixa %s (%s)', (value, grade, label, color) => {
       expect(getQualityStatus(value)).toEqual({ key: grade, label, color });
     });
@@ -54,11 +54,11 @@ describe('formatPulseChart Utility', () => {
           seriesIndex: 0,
           dimension: 0,
           pieces: [
-            { lt: ms(2), color: '#D7191C' },
-            { gte: ms(2), lt: ms(3), color: '#FE7D37' },
-            { gte: ms(3), lt: ms(4), color: '#DFB317' },
-            { gte: ms(4), lt: ms(5), color: '#8CC63F' },
-            { gte: ms(5), color: '#1A9641' },
+            { lt: ms(2), color: '#BE2E0E' },
+            { gte: ms(2), lt: ms(3), color: '#F16141' },
+            { gte: ms(3), lt: ms(4), color: '#EBA133' },
+            { gte: ms(4), lt: ms(5), color: '#0DC889' },
+            { gte: ms(5), color: '#04724D' },
           ],
         },
       ]);
@@ -76,8 +76,8 @@ describe('formatPulseChart Utility', () => {
           { created_at: at(4), value: 0.55 },
         ])
       ).toEqual([
-        { lt: new Date(at(3)).getTime(), color: '#1A9641' },
-        { gte: new Date(at(3)).getTime(), color: '#DFB317' },
+        { lt: new Date(at(3)).getTime(), color: '#04724D' },
+        { gte: new Date(at(3)).getTime(), color: '#EBA133' },
       ]);
       expect(getBandTimePieces([])).toEqual([]);
     });
@@ -164,7 +164,7 @@ describe('formatPulseChart Utility', () => {
       const options: any = formatPulseChartOptions([repoWithReleases]);
 
       expect(options.visualMap).toEqual([]);
-      expect(options.series[0].lineStyle.color).toBe('#DFB317');
+      expect(options.series[0].lineStyle.color).toBe('#EBA133');
       QUALITY_BANDS.forEach((band) => expect(getQualityStatus(band.min).color).toBe(band.color));
     });
 
@@ -246,7 +246,7 @@ describe('formatPulseChart Utility', () => {
         expect(pointsSeries.data).toEqual([
           {
             value: [new Date('2026-01-04T00:00:00Z').getTime(), 0.85],
-            itemStyle: { color: '#1A9641' },
+            itemStyle: { color: '#04724D' },
             release: release1,
           },
         ]);
