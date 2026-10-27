@@ -6,14 +6,14 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-4f5aa5a5-0 eXTPAO"
+        class="sc-14d06553-0 cxxzwQ"
       >
         <header
-          class="sc-4f5aa5a5-2 jgcVcL"
+          class="sc-14d06553-2 gIhd"
         >
           <img
             alt="MeasureSoftGram"
-            class="sc-4f5aa5a5-3 fUruDA"
+            class="sc-14d06553-3 hrEnUK"
             src="/images/svg/logo_white.svg"
           />
           <button
@@ -63,10 +63,10 @@ Object {
           </button>
         </header>
         <div
-          class="sc-4f5aa5a5-4 gvDGtq"
+          class="sc-14d06553-4 hONrww"
         >
           <div
-            class="sc-ce0c8e64-0 hxPJaW"
+            class="sc-6674b5e5-0 gSYjiE"
           >
             <div
               class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
@@ -188,21 +188,21 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4f5aa5a5-5 ciajIT"
+          class="sc-14d06553-5 fEeMmh"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-4f5aa5a5-0 eXTPAO"
+      class="sc-14d06553-0 cxxzwQ"
     >
       <header
-        class="sc-4f5aa5a5-2 jgcVcL"
+        class="sc-14d06553-2 gIhd"
       >
         <img
           alt="MeasureSoftGram"
-          class="sc-4f5aa5a5-3 fUruDA"
+          class="sc-14d06553-3 hrEnUK"
           src="/images/svg/logo_white.svg"
         />
         <button
@@ -252,10 +252,10 @@ Object {
         </button>
       </header>
       <div
-        class="sc-4f5aa5a5-4 gvDGtq"
+        class="sc-14d06553-4 hONrww"
       >
         <div
-          class="sc-ce0c8e64-0 hxPJaW"
+          class="sc-6674b5e5-0 gSYjiE"
         >
           <div
             class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
@@ -377,7 +377,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4f5aa5a5-5 ciajIT"
+        class="sc-14d06553-5 fEeMmh"
       />
     </div>
   </div>,

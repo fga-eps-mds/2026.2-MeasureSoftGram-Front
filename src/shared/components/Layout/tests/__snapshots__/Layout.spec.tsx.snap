@@ -6,17 +6,17 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-4f5aa5a5-0 bgBPd"
+        class="sc-14d06553-0 lemoMD"
       >
         <div
-          class="sc-4f5aa5a5-1 jBPnBA"
+          class="sc-14d06553-1 gkqUzG"
         >
           <div
-            class="sc-8d2ae625-0 bANQFY"
+            class="sc-ad3618fb-0 bQYuRm"
             data-testid="side-menu"
           >
             <div
-              class="sc-8d2ae625-3 dxqrRC"
+              class="sc-ad3618fb-3 gNVfPA"
               data-testid="side-menu-collapse"
             >
               <svg
@@ -32,14 +32,14 @@ Object {
               </svg>
             </div>
             <div
-              class="sc-8d2ae625-1 aIJcH"
+              class="sc-ad3618fb-1 iIeQFd"
               data-testid="side-menu-content"
             >
               <div
                 class="MuiBox-root css-nb2z2f"
               >
                 <img
-                  class="sc-8d2ae625-4 uiXky"
+                  class="sc-ad3618fb-4 bXirHI"
                   height="50"
                   src="/images/svg/logo_white.svg"
                 />
@@ -91,7 +91,7 @@ Object {
                   organization.placeholder
                 </label>
                 <div
-                  class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-c0a51989-0 lnMTxn css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
+                  class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 fsOGtg css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
                 >
                   <div
                     aria-controls=":r0:"
@@ -148,7 +148,7 @@ Object {
                   product.placeholder
                 </label>
                 <div
-                  class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-c0a51989-0 lnMTxn css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
+                  class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 fsOGtg css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
                 >
                   <div
                     aria-controls=":r1:"
@@ -198,18 +198,18 @@ Object {
                 class="MuiDivider-root MuiDivider-fullWidth css-qrim74-MuiDivider-root"
               />
               <div
-                class="sc-8d2ae625-2 eskDwj"
+                class="sc-ad3618fb-2 BRKxB"
               >
                 <div
                   class="MuiBox-root css-10wzbhq"
                 >
                   <div
                     aria-label="sidebar-options.overview.tooltip"
-                    class="sc-51546bac-0 gnZxJj"
+                    class="sc-ad80db87-0 dwUUfE"
                     data-mui-internal-clone-element="true"
                   >
                     <div
-                      class="sc-51546bac-1 hsAeTH"
+                      class="sc-ad80db87-1 bba-DyI"
                     >
                       <svg
                         fill="none"
@@ -255,11 +255,11 @@ Object {
                 >
                   <div
                     aria-label="sidebar-options.repos.tooltip"
-                    class="sc-51546bac-0 gnZxJj"
+                    class="sc-ad80db87-0 dwUUfE"
                     data-mui-internal-clone-element="true"
                   >
                     <div
-                      class="sc-51546bac-1 hsAeTH"
+                      class="sc-ad80db87-1 bba-DyI"
                     >
                       <svg
                         fill="none"
@@ -306,11 +306,11 @@ Object {
                 >
                   <div
                     aria-label="sidebar-options.release.tooltip"
-                    class="sc-51546bac-0 gnZxJj"
+                    class="sc-ad80db87-0 dwUUfE"
                     data-mui-internal-clone-element="true"
                   >
                     <div
-                      class="sc-51546bac-1 hsAeTH"
+                      class="sc-ad80db87-1 bba-DyI"
                     >
                       <svg
                         fill="none"
@@ -341,11 +341,11 @@ Object {
                 >
                   <div
                     aria-label="Dashboards"
-                    class="sc-51546bac-0 gnZxJj"
+                    class="sc-ad80db87-0 dwUUfE"
                     data-mui-internal-clone-element="true"
                   >
                     <div
-                      class="sc-51546bac-1 hsAeTH"
+                      class="sc-ad80db87-1 bba-DyI"
                     >
                       <svg
                         fill="none"
@@ -421,11 +421,11 @@ Object {
               >
                 <div
                   aria-label="tooltip.user-menu"
-                  class="sc-51546bac-0 gnZxJj"
+                  class="sc-ad80db87-0 dwUUfE"
                   data-mui-internal-clone-element="true"
                 >
                   <div
-                    class="sc-51546bac-1 hsAeTH"
+                    class="sc-ad80db87-1 bba-DyI"
                   >
                     <div
                       class="MuiAvatar-root MuiAvatar-circular MuiAvatar-colorDefault css-128rogb-MuiAvatar-root"
@@ -474,10 +474,10 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4f5aa5a5-4 gvDGtq"
+          class="sc-14d06553-4 hONrww"
         >
           <div
-            class="sc-ce0c8e64-0 hxPJaW"
+            class="sc-6674b5e5-0 gSYjiE"
           >
             <div
               class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
@@ -570,24 +570,24 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4f5aa5a5-5 ciajIT"
+          class="sc-14d06553-5 fEeMmh"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-4f5aa5a5-0 bgBPd"
+      class="sc-14d06553-0 lemoMD"
     >
       <div
-        class="sc-4f5aa5a5-1 jBPnBA"
+        class="sc-14d06553-1 gkqUzG"
       >
         <div
-          class="sc-8d2ae625-0 bANQFY"
+          class="sc-ad3618fb-0 bQYuRm"
           data-testid="side-menu"
         >
           <div
-            class="sc-8d2ae625-3 dxqrRC"
+            class="sc-ad3618fb-3 gNVfPA"
             data-testid="side-menu-collapse"
           >
             <svg
@@ -603,14 +603,14 @@ Object {
             </svg>
           </div>
           <div
-            class="sc-8d2ae625-1 aIJcH"
+            class="sc-ad3618fb-1 iIeQFd"
             data-testid="side-menu-content"
           >
             <div
               class="MuiBox-root css-nb2z2f"
             >
               <img
-                class="sc-8d2ae625-4 uiXky"
+                class="sc-ad3618fb-4 bXirHI"
                 height="50"
                 src="/images/svg/logo_white.svg"
               />
@@ -662,7 +662,7 @@ Object {
                 organization.placeholder
               </label>
               <div
-                class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-c0a51989-0 lnMTxn css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
+                class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 fsOGtg css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
               >
                 <div
                   aria-controls=":r0:"
@@ -719,7 +719,7 @@ Object {
                 product.placeholder
               </label>
               <div
-                class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-c0a51989-0 lnMTxn css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
+                class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 fsOGtg css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
               >
                 <div
                   aria-controls=":r1:"
@@ -769,18 +769,18 @@ Object {
               class="MuiDivider-root MuiDivider-fullWidth css-qrim74-MuiDivider-root"
             />
             <div
-              class="sc-8d2ae625-2 eskDwj"
+              class="sc-ad3618fb-2 BRKxB"
             >
               <div
                 class="MuiBox-root css-10wzbhq"
               >
                 <div
                   aria-label="sidebar-options.overview.tooltip"
-                  class="sc-51546bac-0 gnZxJj"
+                  class="sc-ad80db87-0 dwUUfE"
                   data-mui-internal-clone-element="true"
                 >
                   <div
-                    class="sc-51546bac-1 hsAeTH"
+                    class="sc-ad80db87-1 bba-DyI"
                   >
                     <svg
                       fill="none"
@@ -826,11 +826,11 @@ Object {
               >
                 <div
                   aria-label="sidebar-options.repos.tooltip"
-                  class="sc-51546bac-0 gnZxJj"
+                  class="sc-ad80db87-0 dwUUfE"
                   data-mui-internal-clone-element="true"
                 >
                   <div
-                    class="sc-51546bac-1 hsAeTH"
+                    class="sc-ad80db87-1 bba-DyI"
                   >
                     <svg
                       fill="none"
@@ -877,11 +877,11 @@ Object {
               >
                 <div
                   aria-label="sidebar-options.release.tooltip"
-                  class="sc-51546bac-0 gnZxJj"
+                  class="sc-ad80db87-0 dwUUfE"
                   data-mui-internal-clone-element="true"
                 >
                   <div
-                    class="sc-51546bac-1 hsAeTH"
+                    class="sc-ad80db87-1 bba-DyI"
                   >
                     <svg
                       fill="none"
@@ -912,11 +912,11 @@ Object {
               >
                 <div
                   aria-label="Dashboards"
-                  class="sc-51546bac-0 gnZxJj"
+                  class="sc-ad80db87-0 dwUUfE"
                   data-mui-internal-clone-element="true"
                 >
                   <div
-                    class="sc-51546bac-1 hsAeTH"
+                    class="sc-ad80db87-1 bba-DyI"
                   >
                     <svg
                       fill="none"
@@ -992,11 +992,11 @@ Object {
             >
               <div
                 aria-label="tooltip.user-menu"
-                class="sc-51546bac-0 gnZxJj"
+                class="sc-ad80db87-0 dwUUfE"
                 data-mui-internal-clone-element="true"
               >
                 <div
-                  class="sc-51546bac-1 hsAeTH"
+                  class="sc-ad80db87-1 bba-DyI"
                 >
                   <div
                     class="MuiAvatar-root MuiAvatar-circular MuiAvatar-colorDefault css-128rogb-MuiAvatar-root"
@@ -1045,10 +1045,10 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4f5aa5a5-4 gvDGtq"
+        class="sc-14d06553-4 hONrww"
       >
         <div
-          class="sc-ce0c8e64-0 hxPJaW"
+          class="sc-6674b5e5-0 gSYjiE"
         >
           <div
             class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
@@ -1141,7 +1141,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4f5aa5a5-5 ciajIT"
+        class="sc-14d06553-5 fEeMmh"
       />
     </div>
   </div>,
@@ -1205,14 +1205,14 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="sc-4f5aa5a5-0 eXTPAO"
+        class="sc-14d06553-0 cxxzwQ"
       >
         <header
-          class="sc-4f5aa5a5-2 jgcVcL"
+          class="sc-14d06553-2 gIhd"
         >
           <img
             alt="MeasureSoftGram"
-            class="sc-4f5aa5a5-3 fUruDA"
+            class="sc-14d06553-3 hrEnUK"
             src="/images/svg/logo_white.svg"
           />
           <button
@@ -1262,10 +1262,10 @@ Object {
           </button>
         </header>
         <div
-          class="sc-4f5aa5a5-4 gvDGtq"
+          class="sc-14d06553-4 hONrww"
         >
           <div
-            class="sc-ce0c8e64-0 hxPJaW"
+            class="sc-6674b5e5-0 gSYjiE"
           >
             <div
               class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
@@ -1358,21 +1358,21 @@ Object {
           </div>
         </div>
         <div
-          class="sc-4f5aa5a5-5 ciajIT"
+          class="sc-14d06553-5 fEeMmh"
         />
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="sc-4f5aa5a5-0 eXTPAO"
+      class="sc-14d06553-0 cxxzwQ"
     >
       <header
-        class="sc-4f5aa5a5-2 jgcVcL"
+        class="sc-14d06553-2 gIhd"
       >
         <img
           alt="MeasureSoftGram"
-          class="sc-4f5aa5a5-3 fUruDA"
+          class="sc-14d06553-3 hrEnUK"
           src="/images/svg/logo_white.svg"
         />
         <button
@@ -1422,10 +1422,10 @@ Object {
         </button>
       </header>
       <div
-        class="sc-4f5aa5a5-4 gvDGtq"
+        class="sc-14d06553-4 hONrww"
       >
         <div
-          class="sc-ce0c8e64-0 hxPJaW"
+          class="sc-6674b5e5-0 gSYjiE"
         >
           <div
             class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
@@ -1518,7 +1518,7 @@ Object {
         </div>
       </div>
       <div
-        class="sc-4f5aa5a5-5 ciajIT"
+        class="sc-14d06553-5 fEeMmh"
       />
     </div>
   </div>,
