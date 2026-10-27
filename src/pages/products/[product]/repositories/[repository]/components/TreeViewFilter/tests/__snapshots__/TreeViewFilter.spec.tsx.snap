@@ -3,13 +3,13 @@
 exports[`<TreeViewFilter /> should render correctly 1`] = `
 <div>
   <div
-    class="sc-17a7a058-0 kLLSTh"
+    class="sc-ad1a3c95-0 jcNafk"
   >
     <div
       class="MuiBox-root css-13y5u2s"
     >
       <div
-        class="sc-17a7a058-1 iufzKX"
+        class="sc-ad1a3c95-1 hMuEkS"
       >
         <button
           aria-label="Ocultar Filtros"
