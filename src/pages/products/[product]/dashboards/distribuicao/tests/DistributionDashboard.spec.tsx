@@ -358,7 +358,7 @@ describe('<DistributionDashboard />', () => {
         ['distribuicao', 'densidade', 120],
         ['distribuicao', 'boxplot', 2],
         ['distribuicao', 'dispersao', 6],
-        ['distribuicao', 'resumo', 12]
+        ['distribuicao', 'resumo', 14]
       ]);
       expect((downloadCsv as jest.Mock).mock.calls[0][1].rows[0]).toMatchObject({
         release: 'R2',

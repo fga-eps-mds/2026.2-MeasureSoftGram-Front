@@ -77,7 +77,8 @@ export default function DistributionSummary({
       >
         <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
           O IQR é a distância entre o Q3 e o Q1, onde ficam as 50% análises do meio. Discrepantes são as análises fora
-          dos limites: abaixo de Q1 − 1,5 × IQR ou acima de Q3 + 1,5 × IQR.
+          dos limites: abaixo de Q1 − 1,5 × IQR ou acima de Q3 + 1,5 × IQR. O desvio padrão e a variância medem o quanto
+          as análises se afastam da média e, por serem amostrais, precisam de pelo menos 2 análises.
         </Typography>
         <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText} marginTop="6px">
           {skewness ??

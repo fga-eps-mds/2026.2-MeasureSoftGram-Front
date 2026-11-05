@@ -235,6 +235,8 @@ describe('formatScatterOptions', () => {
     upper_limit: 0.73,
     outliers: 2,
     mean: 0.58,
+    std: 0.2,
+    variance: 0.04,
     skewness: 0.1
   };
   const tsqmi: DistributionEntity = {
@@ -408,6 +410,8 @@ describe('boxplot do nível', () => {
         upper_limit: null,
         outliers: outliers.length,
         mean: null,
+        std: null,
+        variance: null,
         skewness: null
       }
     };

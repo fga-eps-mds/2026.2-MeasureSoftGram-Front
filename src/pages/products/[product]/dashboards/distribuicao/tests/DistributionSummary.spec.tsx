@@ -9,7 +9,7 @@ function rows() {
 }
 
 describe('<DistributionSummary />', () => {
-  it('mostra as 12 estatísticas com duas casas (CA8)', () => {
+  it('mostra as 14 estatísticas com duas casas (CA8)', () => {
     render(<DistributionSummary summary={summary} />);
 
     expect(rows()).toEqual([
@@ -24,6 +24,8 @@ describe('<DistributionSummary />', () => {
       'Limite superior0,73',
       'Discrepantes2',
       'Média0,57',
+      'Desvio padrão0,19',
+      'Variância0,04',
       'Assimetria0,48'
     ]);
   });
@@ -41,6 +43,7 @@ describe('<DistributionSummary />', () => {
     const note = screen.getByTestId('summary-note');
     expect(note).toHaveTextContent('O IQR é a distância entre o Q3 e o Q1');
     expect(note).toHaveTextContent('Discrepantes são as análises fora dos limites');
+    expect(note).toHaveTextContent('O desvio padrão e a variância medem o quanto as análises se afastam da média');
     expect(note).toHaveTextContent('Assimetria positiva (0,48): a cauda longa fica à direita');
     expect(screen.queryByTestId('skewness-warning')).not.toBeInTheDocument();
   });
@@ -49,7 +52,7 @@ describe('<DistributionSummary />', () => {
     const two = { ...emptySummary, count: 2, min: 0.4, q1: 0.425, median: 0.45, q3: 0.475, max: 0.5, mean: 0.45 };
     render(<DistributionSummary summary={two} />);
 
-    expect(rows()[11]).toBe('Assimetria—');
+    expect(rows().at(-1)).toBe('Assimetria—');
     expect(screen.getByTestId('skewness-warning')).toHaveTextContent(
       'Faltam análises para a assimetria: ela precisa de pelo menos 3, e o período tem 2 análises.'
     );
@@ -60,6 +63,6 @@ describe('<DistributionSummary />', () => {
   it('mostra "—" em tudo o que o Service devolve null', () => {
     render(<DistributionSummary summary={emptySummary} />);
 
-    expect(rows().filter((row) => row?.endsWith('—'))).toHaveLength(10);
+    expect(rows().filter((row) => row?.endsWith('—'))).toHaveLength(12);
   });
 });
