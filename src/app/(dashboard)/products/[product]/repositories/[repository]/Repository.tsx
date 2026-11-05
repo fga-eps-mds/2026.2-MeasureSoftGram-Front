@@ -4,7 +4,6 @@ import React from 'react';
 import { useRouter } from '@hooks/useRouter';
 import { Alert, Box, Container } from '@mui/material';
 
-import useRequireAuth from '@hooks/useRequireAuth';
 import { usePreloadECharts } from '@components/ECharts';
 import { ExportAllCsvButton } from '@components/ExportCsvButton';
 import { useRepositoryContext } from '@contexts/RepositoryProvider';
@@ -21,7 +20,6 @@ import { useRepositoryPulse } from './hooks/useRepositoryPulse';
 const Repository: React.FC = () => {
   const { terms } = useProviderTerms();
   const { currentRepository, latestTSQMI, latestTSQMIBadgeUrl } = useRepositoryContext();
-  useRequireAuth();
   usePreloadECharts();
   const { repositoryNotFound } = useQuery();
 

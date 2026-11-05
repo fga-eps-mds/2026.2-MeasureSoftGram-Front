@@ -7,7 +7,6 @@ import { Box, Container, SxProps, Theme, ToggleButton, ToggleButtonGroup, Typogr
 import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import ReactEcharts, { usePreloadECharts } from '@components/ECharts';
 import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
-import useRequireAuth from '@hooks/useRequireAuth';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { TEMPORAL_CSV, TemporalCsvRow, formatTemporalCsv } from '@utils/formatTemporalCsv';
@@ -78,7 +77,6 @@ function EvolutionChartCard({ chart, data, granularity, csv, emptyTitle, emptyDe
 
 const TemporalDashboard: React.FC = () => {
   const { terms } = useProviderTerms();
-  useRequireAuth();
   usePreloadECharts();
 
   const { query } = useRouter();

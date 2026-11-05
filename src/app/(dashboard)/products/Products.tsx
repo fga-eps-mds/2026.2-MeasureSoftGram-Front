@@ -22,7 +22,6 @@ import {
   Pagination
 } from "@mui/material";
 import { Search, GitHub, FolderSpecial } from "@mui/icons-material";
-import useRequireAuth from "@hooks/useRequireAuth";
 import { toast } from "react-toastify";
 import { organizationQuery, Result, ResultError } from "@services/organization";
 import type { AxiosError } from 'axios';
@@ -31,13 +30,10 @@ import { productQuery } from "@services/product";
 import { repository } from "@services/repository";
 import { useOrganizationContext } from "@contexts/OrganizationProvider";
 import { useProductContext } from "@contexts/ProductProvider";
-import { getGithubReauthorizeUrl, getGitlabAuthUrl } from "@services/Auth";
-import { createOAuthState } from "@services/Auth/oauthState";
 import { isSameGithubOrg } from "@utils/isSameGithubOrg";
 import { FaGitlab } from 'react-icons/fa';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { refreshRepositoryList } from '@hooks/useRepositoryList';
-import { useAuth } from '@contexts/Auth';
 import {
   UnifiedRepoItem,
   normalizeRepoUrl,
@@ -65,8 +61,6 @@ interface ProviderNamespaceItem {
 
 const Products: React.FC = () => {
   const { terms, provider } = useProviderTerms();
-  const { isProviderReady } = useAuth();
-  useRequireAuth();
   const { t: tp } = useTranslation('product');
   const router = useRouter();
 
@@ -362,25 +356,18 @@ const Products: React.FC = () => {
     }
   };
 
-  // Volta para esta tela pelo callback do OAuth, que valida o state e renova o token.
+  // O servidor guarda o state e leva ao provedor; o callback renova o token e volta para esta tela.
   const handleReauthorize = () => {
-    try {
-      const state = createOAuthState(provider === 'gitlab' ? 'gitlab' : 'github', '/products');
-      window.location.assign(provider === 'gitlab' ? getGitlabAuthUrl(state) : getGithubReauthorizeUrl(state));
-    } catch (error) {
-      console.error(error);
-      toast.error(`Não foi possível iniciar a autorização do ${terms.providerName}.`);
-    }
+    const targetProvider = provider === 'gitlab' ? 'gitlab' : 'github';
+    window.location.assign(`/auth/oauth/${targetProvider}?returnTo=${encodeURIComponent('/products')}&reauthorize=1`);
   };
 
-  // Só busca depois de o provider real ser lido do localStorage; antes disso ele
-  // vale 'credentials' provisoriamente e geraria uma busca (e um toast) a mais.
+  // o provider vem da sessão no servidor, então já é o real no primeiro render
   useEffect(() => {
-    if (!isProviderReady) return;
     let ativo = true;
     void loadProviderNamespaces(() => ativo);
     return () => { ativo = false; };
-  }, [provider, isProviderReady]);
+  }, [provider]);
 
   useEffect(() => {
     if (selectedOrgName) {

@@ -5,13 +5,11 @@ import { useTranslation } from "react-i18next";
 
 import { InfoData } from "@customTypes/home";
 import { Container, Box, Typography } from "@mui/material";
-import useRequireAuth from "@hooks/useRequireAuth";
 import CardInfo from "./components/CardInfo/CardInfo";
 import ListNavCard from "./components/ListNavCard/ListNavCard";
 
 
 const About: React.FC = () => {
-  useRequireAuth();
   const { t } = useTranslation('about');
 
   const cardsData: Array<InfoData> = [

@@ -4,66 +4,37 @@ import React, { useEffect, useState } from 'react';
 import { Button, Box, Typography, CircularProgress } from '@mui/material';
 import { GitHub } from '@mui/icons-material';
 import { FaGitlab } from 'react-icons/fa';
-import { getGithubAuthUrl, getGitlabAuthUrl, getLoginOrigin } from '@services/Auth';
-import { createOAuthState } from '@services/Auth/oauthState';
-import { useRouter } from '@hooks/useRouter';
-import { useAuth } from '@contexts/Auth';
+import { getLoginOrigin } from '@services/Auth';
 import { AuthLayout } from '@layouts/auth';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
 
 const PRIMARY_MAIN = 'primary.main';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 type OAuthProvider = 'github' | 'gitlab';
 
 const Auth: React.FC = () => {
-  const router = useRouter();
-  const { setProvider } = useAuth();
   const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null);
 
-  // O GitHub sempre volta para a origem do callback; o provider salvo no
-  // localStorage de outra origem (ex.: localhost x 127.0.0.1) se perderia.
+  // O botão Voltar do navegador restaura esta página do cache (bfcache) com os botões ainda desabilitados.
   useEffect(() => {
-    const loginOrigin = getLoginOrigin();
-    if (loginOrigin && loginOrigin !== window.location.origin) {
-      window.location.replace(`${loginOrigin}${window.location.pathname}${window.location.search}`);
-    }
+    const enableButtons = () => setLoadingProvider(null);
+    window.addEventListener('pageshow', enableButtons);
+    return () => window.removeEventListener('pageshow', enableButtons);
   }, []);
 
-  // Valida o client id no Service antes de sair para o provedor; qualquer
-  // falha leva a /auth/error em vez de um redirecionamento invalido.
-  const startOAuthLogin = async (provider: OAuthProvider, clientId: string | undefined, getAuthUrl: typeof getGithubAuthUrl) => {
+  // Quem valida o client id, guarda o state e leva ao provedor é o servidor (/auth/oauth/[provider]).
+  // O provedor sempre volta para a origem do callback, e o cookie do state é de quem o gravou: por isso o login começa
+  // nessa origem (ex.: localhost x 127.0.0.1).
+  const startOAuthLogin = (provider: OAuthProvider) => {
     setLoadingProvider(provider);
-    try {
-      if (!clientId) {
-        await router.push('/auth/error');
-        return;
-      }
 
-      const response = await fetch(`${API_URL}/v1/accounts/${provider}/validate/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ client_id: clientId })
-      });
-      if (!response.ok) {
-        throw new Error(`${provider} OAuth validation failed with status ${response.status}`);
-      }
-      const data = await response.json();
-      if (!data?.valid) {
-        await router.push('/auth/error');
-        return;
-      }
-      const state = createOAuthState(provider);
-      setProvider(provider);
-      window.location.assign(getAuthUrl(state));
-    } catch (err) {
-      await router.push('/auth/error');
-    } finally {
-      setLoadingProvider(null);
-    }
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+    const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+    const loginOrigin = getLoginOrigin();
+    const origin = loginOrigin && loginOrigin !== window.location.origin ? loginOrigin : '';
+
+    window.location.assign(`${origin}/auth/oauth/${provider}${query}`);
   };
 
   return (
@@ -94,7 +65,7 @@ const Auth: React.FC = () => {
             )
           }
           disabled={loadingProvider !== null}
-          onClick={() => startOAuthLogin('github', process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID, getGithubAuthUrl)}
+          onClick={() => startOAuthLogin('github')}
           sx={{
             py: 1.5,
             fontSize: '1rem',
@@ -126,7 +97,7 @@ const Auth: React.FC = () => {
             )
           }
           disabled={loadingProvider !== null}
-          onClick={() => startOAuthLogin('gitlab', process.env.GITLAB_CLIENT_ID, getGitlabAuthUrl)}
+          onClick={() => startOAuthLogin('gitlab')}
           sx={{
             py: 1.5,
             fontSize: '1rem',

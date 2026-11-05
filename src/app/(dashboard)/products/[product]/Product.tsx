@@ -5,7 +5,6 @@ import { useRouter } from '@hooks/useRouter';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
-import useRequireAuth from '@hooks/useRequireAuth';
 import { usePreloadECharts } from '@components/ECharts';
 import { useProductContext } from '@contexts/ProductProvider';
 
@@ -14,7 +13,6 @@ import { useQuery } from './hooks/useQuery';
 import ProductContent from './components/ProductContent';
 
 const Product: React.FC = () => {
-  useRequireAuth();
   usePreloadECharts();
   useQuery();
   const { currentProduct } = useProductContext();

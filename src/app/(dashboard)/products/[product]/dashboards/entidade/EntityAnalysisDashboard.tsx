@@ -7,7 +7,6 @@ import { Box, Button, Container, Tab, Tabs, Typography } from '@mui/material';
 import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
 import ReleaseSelect from '@components/ReleaseSelect';
-import useRequireAuth from '@hooks/useRequireAuth';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { EntityMatrix, EntityMatrixLevel } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
@@ -86,7 +85,6 @@ function Reading({ matrix }: { matrix: EntityMatrix }) {
 }
 
 const EntityAnalysisDashboard: React.FC = () => {
-  useRequireAuth();
   const { terms } = useProviderTerms();
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);

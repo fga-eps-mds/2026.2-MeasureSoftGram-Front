@@ -1,6 +1,5 @@
 'use client';
 
-import useRequireAuth from '@hooks/useRequireAuth';
 import { Container, TextField, InputAdornment, IconButton } from '@mui/material';
 import { Visibility, VisibilityOff, ContentCopy } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
@@ -8,7 +7,6 @@ import { getAccessToken } from '@services/Auth';
 import { useTranslation } from 'react-i18next';
 
 const ProfileConfig: React.FC = () => {
-  useRequireAuth();
 
   const [tokenVisible, setTokenVisible] = useState(false);
   const [apiToken, setApiToken] = useState('');

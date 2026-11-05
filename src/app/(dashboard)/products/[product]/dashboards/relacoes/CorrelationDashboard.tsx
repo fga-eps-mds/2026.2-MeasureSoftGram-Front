@@ -6,7 +6,6 @@ import { Box, Button, Container, Typography } from '@mui/material';
 
 import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import { ExportAllCsvButton } from '@components/ExportCsvButton';
-import useRequireAuth from '@hooks/useRequireAuth';
 import { usePreloadECharts } from '@components/ECharts';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
@@ -72,7 +71,6 @@ function CorrelationGrid({ matrix, bubbles, busy }: { matrix: ReactNode; bubbles
 }
 
 const CorrelationDashboard: React.FC = () => {
-  useRequireAuth();
   usePreloadECharts();
   const { terms } = useProviderTerms();
   const router = useRouter();

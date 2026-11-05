@@ -1,14 +1,8 @@
 type authContextType = {
   session: User | null;
-  loading: 'loading' | string;
-  signInWithGithub: (code: string) => Promise<Result<User>>;
-  signInWithGitlab: (code: string) => Promise<Result<User>>;
-  signInWithCredentials: (data: LoginFormData) => Promise<Result<User>>;
+  loading: 'loading' | 'loaded';
   logout: () => Promise<void>;
   provider: Providers;
-  // false enquanto provider ainda é o valor padrão, antes da leitura do localStorage
-  isProviderReady: boolean;
-  setProvider: React.Dispatch<SetStateAction<Providers>>;
 };
 
 interface User {

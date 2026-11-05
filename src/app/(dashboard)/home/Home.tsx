@@ -6,13 +6,11 @@ import { useRouter } from '@hooks/useRouter';
 import Image from "next/image";
 
 import { Container, Box, Typography } from "@mui/material";
-import useRequireAuth from "@hooks/useRequireAuth";
 import MSGButton from '../../../components/idv/buttons/MSGButton';
 
 const IMAGE_SOURCE = '/images/svg/logo.svg';
 
 const Home: React.FC = () => {
-  useRequireAuth();
   const { t } = useTranslation('home');
   const router = useRouter();
 

@@ -8,7 +8,6 @@ import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import ExportCsvButton from '@components/ExportCsvButton';
 import ReleaseSelect from '@components/ReleaseSelect';
 import { MetamodelTreeChart } from '@components/MetamodelTreeChart';
-import useRequireAuth from '@hooks/useRequireAuth';
 import { usePreloadECharts } from '@components/ECharts';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { METAMODEL_CSV, formatMetamodelCsv } from '@utils/formatMetamodelCsv';
@@ -18,7 +17,6 @@ import { useMetamodelo } from './useMetamodelo';
 const TITLE = '3. Estrutura das Medidas e Indicadores (Metamodelo)';
 
 const MetamodeloDashboard: React.FC = () => {
-  useRequireAuth();
   usePreloadECharts();
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);

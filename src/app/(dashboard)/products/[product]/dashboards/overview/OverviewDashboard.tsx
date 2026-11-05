@@ -8,7 +8,6 @@ import { Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } 
 import DashboardCard, { dashboardCardSx, SkeletonBlock } from '@components/DashboardCard';
 import ReleaseSelect from '@components/ReleaseSelect';
 import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
-import useRequireAuth from '@hooks/useRequireAuth';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { ReleaseDashboardSummary } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
@@ -148,7 +147,6 @@ function QualityBandsLegend() {
 }
 
 const OverviewDashboard: React.FC = () => {
-  useRequireAuth();
   usePreloadECharts();
   const { terms } = useProviderTerms();
   const router = useRouter();
