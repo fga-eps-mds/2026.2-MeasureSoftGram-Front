@@ -4,7 +4,7 @@ import { Product } from '@customTypes/product';
 import { productQuery } from '@services/product';
 import { useOrganizationContext } from '@contexts/OrganizationProvider';
 import { useLocalStorage } from '@hooks/useLocalStorage';
-import { useRouter } from 'next/router';
+import { useRouter } from '@hooks/useRouter';
 import { getPathId } from '@utils/pathDestructer';
 
 interface Props {
@@ -17,6 +17,7 @@ export interface IProductContext {
   productsList?: Product[];
   updateProductList: (products: Product[]) => void;
   loadAllProducts: () => Promise<void>;
+  hasLoadedProducts: boolean;
 }
 
 export const ProductContext = createContext<IProductContext | undefined>(undefined);
@@ -105,15 +106,18 @@ export function ProductProvider({ children }: Props) {
     }
   }, [currentProduct, setStoredProductId]);
 
+  const hasLoadedProducts = loadedOrgId !== undefined && loadedOrgId === String(currentOrgId);
+
   const value = useMemo(
     () => ({
       currentProduct,
       setCurrentProduct,
       productsList,
       updateProductList,
-      loadAllProducts
+      loadAllProducts,
+      hasLoadedProducts
     }),
-    [currentProduct, productsList, updateProductList, loadAllProducts]
+    [currentProduct, productsList, updateProductList, loadAllProducts, hasLoadedProducts]
   );
 
   return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;

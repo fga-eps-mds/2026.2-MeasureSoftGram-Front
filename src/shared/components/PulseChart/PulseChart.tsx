@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
@@ -58,8 +58,8 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     error,
   } = usePulseChartData(organizationId, productId);
 
-  const chartOptions = formatPulseChartOptions(filteredRepositories, PULSE_OPTIONS);
-
+  // refazer o gráfico (notMerge) a cada render, no meio da animação, faz o ECharts mexer em elementos já descartados
+  const chartOptions = useMemo(() => formatPulseChartOptions(filteredRepositories, PULSE_OPTIONS), [filteredRepositories]);
 
   if (isLoading) {
     return (

@@ -6,9 +6,12 @@ import {
   COLOR_TOKENS,
   PulseRepositoryData,
 } from '../formatPulseChart';
+import * as echarts from 'echarts';
 import { QUALITY_BANDS } from '../qualityBands';
 import { PULSE_POINTS_PER_MEASUREMENT } from '../toPulseSeries';
 
+
+const YEAR = 365 * 24 * 60 * 60 * 1000;
 
 describe('formatPulseChart Utility', () => {
   describe('getQualityStatus', () => {
@@ -54,16 +57,32 @@ describe('formatPulseChart Utility', () => {
           seriesIndex: 0,
           dimension: 0,
           pieces: [
-            { lt: ms(2), color: '#BE2E0E' },
+            { gte: ms(1) - YEAR, lt: ms(2), color: '#BE2E0E' },
             { gte: ms(2), lt: ms(3), color: '#F16141' },
             { gte: ms(3), lt: ms(4), color: '#EBA133' },
             { gte: ms(4), lt: ms(5), color: '#0DC889' },
-            { gte: ms(5), color: '#04724D' },
+            { gte: ms(5), lt: ms(5) + YEAR, color: '#04724D' },
           ],
         },
       ]);
       // a cor da série teria prioridade sobre o visualMap
       expect(options.series[0].lineStyle.color).toBeUndefined();
+    });
+
+    it('desenha no ECharts um repositório que trocou de faixa uma única vez', () => {
+      const repos: PulseRepositoryData[] = [
+        {
+          id: 1,
+          name: 'repo',
+          measurements: [0.85, 0.9, 0.5, 0.55].map((value, i) => ({ created_at: `2026-01-0${i + 1}T12:00:00Z`, value })),
+          releases: [],
+        },
+      ];
+      const chart = echarts.init(null as any, null, { renderer: 'svg', ssr: true, width: 800, height: 300 });
+
+      expect(() => chart.setOption(formatPulseChartOptions(repos) as any)).not.toThrow();
+      expect(chart.renderToSVGString()).toContain('linearGradient');
+      chart.dispose();
     });
 
     it('agrupa as medições seguidas da mesma faixa num único trecho', () => {

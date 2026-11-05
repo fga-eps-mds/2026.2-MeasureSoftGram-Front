@@ -28,13 +28,13 @@ export const handlers = [
   rest.post('*/v1/accounts/gitlab/validate/', (_req, res, ctx) => res(ctx.status(200), ctx.json({ valid: true }))),
   rest.post('*/v1/accounts/signin/', (_req, res, ctx) => res(ctx.status(201), ctx.json({}))),
   rest.delete('*/v1/accounts/logout/', (_req, res, ctx) => res(ctx.status(200), ctx.json({}))),
-  rest.get('*/v1/accounts/access-token', (_req, res, ctx) => res(ctx.status(200), ctx.json({ ...user, key: MOCK_TOKEN }))),
+  rest.get('*/v1/accounts/access-token/', (_req, res, ctx) => res(ctx.status(200), ctx.json({ ...user, key: MOCK_TOKEN }))),
   rest.get('*/v1/accounts/users/', (_req, res, ctx) =>
     res(ctx.status(200), ctx.json({ count: 1, next: null, previous: null, results: [user] }))
   ),
   rest.get('*/v1/accounts/github-organizations/', (_req, res, ctx) => res(ctx.status(200), ctx.json([]))),
   rest.get('*/v1/accounts/gitlab-namespaces/', (_req, res, ctx) => res(ctx.status(200), ctx.json([]))),
-  rest.get('*/v1/accounts/user-repos', (_req, res, ctx) => res(ctx.status(200), ctx.json({ total_count: 0, items: [] }))),
+  rest.get('*/v1/accounts/user-repos/', (_req, res, ctx) => res(ctx.status(200), ctx.json({ total_count: 0, items: [] }))),
   // getUserInfo: GET /v1/accounts/ (mantido apos os demais /accounts/ para nao capturar as rotas acima).
   rest.get('*/v1/accounts/', (_req, res, ctx) => res(ctx.status(200), ctx.json(user))),
 

@@ -325,7 +325,7 @@ describe('ProductQuery', () => {
 
     await productQuery.getReleaseAnalysisDataByReleaseId(organizationId, productId, releaseId);
     expect(api.get).toHaveBeenCalledWith(
-      `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data`
+      `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data/`
     );
   });
 

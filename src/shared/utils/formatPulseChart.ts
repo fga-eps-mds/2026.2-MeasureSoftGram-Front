@@ -173,6 +173,28 @@ function getTimeRange(repositories: PulseRepositoryData[]): { min?: number; max?
   return { min, max: max + (max - min) * TIME_AXIS_RIGHT_PADDING };
 }
 
+const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+
+/**
+ * Dá limites finitos ao primeiro e ao último trecho. Com uma só troca de faixa (dois trechos), os dois ficam abertos
+ * (`-∞..t` e `t..∞`), o visualMap não gera nenhuma parada de cor e o ECharts quebra ao pintar a linha
+ * ("Cannot read properties of undefined (reading 'coord')"). Folgar um ano além das medições não muda o desenho.
+ */
+export function withFiniteBandLimits(
+  pieces: ReturnType<typeof getBandTimePieces>,
+  sortedMeasurements: PulseMeasurement[]
+) {
+  if (pieces.length < 2) return pieces;
+  const first = new Date(sortedMeasurements[0].created_at).getTime();
+  const last = new Date(sortedMeasurements[sortedMeasurements.length - 1].created_at).getTime();
+
+  return pieces.map((piece, index) => {
+    if (index === 0) return { ...piece, gte: first - YEAR_MS };
+    if (index === pieces.length - 1) return { ...piece, lt: last + YEAR_MS };
+    return piece;
+  });
+}
+
 export function formatPulseChartOptions(
   repositories: PulseRepositoryData[],
   {
@@ -214,7 +236,7 @@ export function formatPulseChartOptions(
     const bandPieces = getBandTimePieces(sortedMeasurements);
     const changesBand = bandPieces.length > 1;
     if (changesBand) {
-      bandVisualMaps.push({ show: false, seriesIndex: index, dimension: 0, pieces: bandPieces });
+      bandVisualMaps.push({ show: false, seriesIndex: index, dimension: 0, pieces: withFiniteBandLimits(bandPieces, sortedMeasurements) });
     }
 
     const ts = sortedMeasurements.map((m) => new Date(m.created_at).getTime());
