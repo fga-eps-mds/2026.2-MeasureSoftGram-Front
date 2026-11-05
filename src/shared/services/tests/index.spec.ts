@@ -11,7 +11,7 @@ describe('Auth Services', () => {
 
   it('should getAccessToken with the right URL', async () => {
     await services.getAccessToken();
-    expect(api.get).toHaveBeenCalledWith('/v1/accounts/access-token');
+    expect(api.get).toHaveBeenCalledWith('/v1/accounts/access-token/');
   });
 
   afterEach(() => {

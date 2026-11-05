@@ -176,7 +176,7 @@ class ProductQuery {
   }
 
   async getReleaseAnalysisDataByReleaseId(organizationId: string, productId: string, releaseId: string) {
-    const url = `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data`;
+    const url = `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data/`;
     return api.get<any>(url);
   }
 

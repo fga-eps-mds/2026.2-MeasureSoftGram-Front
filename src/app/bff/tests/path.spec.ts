@@ -53,7 +53,7 @@ describe('/bff/[...path]', () => {
       expect(forwarded().url).toBe('http://service:8080/api/v1/organizations/1/products/');
     });
 
-    it('não acrescenta barra em rotas que o Django serve sem ela', async () => {
+    it('não acrescenta a barra final quando o cliente não a mandou', async () => {
       await call(GET, 'v1/accounts/access-token');
 
       expect(forwarded().url).toBe('http://service:8080/api/v1/accounts/access-token');

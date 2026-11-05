@@ -22,7 +22,7 @@ const isAllowedPath = (segments: string[]): boolean =>
   segments.every((segment) => segment !== '' && !['.', '..'].includes(segment) && !/[\\/]/.test(segment));
 
 const buildTarget = (segments: string[], request: NextRequest): string => {
-  // o Django exige a barra final de umas rotas e recusa em outras: o que o cliente mandou é o que segue
+  // o BFF não segue redirects (o Django responde 301 sem a barra final): o cliente deve mandar a URL já com a barra
   const { pathname, search } = new URL(request.url);
   const trailingSlash = pathname.endsWith('/') ? '/' : '';
 

@@ -14,7 +14,7 @@ export const getUserInfo = async (): Promise<Result<User>> => {
 
 export const getAccessToken = async (): Promise<Result<User>> => {
   try {
-    const response = await api.get('/v1/accounts/access-token');
+    const response = await api.get('/v1/accounts/access-token/');
 
     return { type: 'success', value: response?.data };
   } catch (err) {

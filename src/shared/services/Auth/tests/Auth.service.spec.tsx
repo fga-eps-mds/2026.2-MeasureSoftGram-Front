@@ -148,7 +148,7 @@ describe('Auth Service', () => {
 
       await getAccessToken();
 
-      expect(api.get).toHaveBeenCalledWith('/v1/accounts/access-token');
+      expect(api.get).toHaveBeenCalledWith('/v1/accounts/access-token/');
     });
   });
 });
