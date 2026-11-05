@@ -124,7 +124,7 @@ export default function DistributionHistogram({
       ),
     [entity]
   );
-  const option = useMemo(() => formatHistogramOptions(histogram, entity.name), [histogram, entity.name]);
+  const option = useMemo(() => formatHistogramOptions(histogram, entity), [histogram, entity]);
   const caption = histogram.unit
     ? 'Quantas análises caem em cada faixa de 0,10. A régua mostra as faixas A a E do Indicador Total da Qualidade.'
     : `Quantas análises caem em cada faixa de ${formatAxisValue(histogram.width)} de ${

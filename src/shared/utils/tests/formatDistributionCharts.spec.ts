@@ -1,4 +1,4 @@
-import { DistributionAnalysis, DistributionEntity } from '@customTypes/product';
+import { DistributionAnalysis, DistributionEntity, DistributionLevel } from '@customTypes/product';
 import { buildDensity, DensityPoint } from '../distributionDensity';
 import { buildHistogram } from '../distributionHistogram';
 import {
@@ -14,6 +14,7 @@ import {
   formatScatterOptions,
   getLevelBoxplotHeight,
   getLevelBoxplotRows,
+  getValueAxisName,
   OUTLIER_STYLE,
   outlierSymbolSize,
   renderHistogramBar
@@ -55,19 +56,53 @@ describe('renderHistogramBar', () => {
 
     expect(renderHistogramBar({} as never, api as never)).toEqual({
       type: 'rect',
-      shape: { x: 101, y: 160, width: 98, height: 40 },
-      style: { fill: DISTRIBUTION_COLORS.bar },
+      shape: { x: 100, y: 160, width: 100, height: 40 },
+      style: { fill: DISTRIBUTION_COLORS.bar, stroke: DISTRIBUTION_COLORS.barBorder, lineWidth: 1 },
       emphasis: { style: { fill: DISTRIBUTION_COLORS.barHover } }
     });
+  });
+
+  it('não deixa espaço entre as faixas vizinhas: uma termina onde a outra começa', () => {
+    const bar = (start: number, end: number) => {
+      const values = [start, end, 4];
+      const api = {
+        value: (dimension: number) => values[dimension],
+        coord: ([x, y]: number[]) => [x * 10, 200 - y * 10]
+      };
+      return renderHistogramBar({} as never, api as never) as unknown as { shape: { x: number; width: number } };
+    };
+
+    const first = bar(10, 20).shape;
+    expect(first.x + first.width).toBe(bar(20, 30).shape.x);
+  });
+
+  it('não desenha a faixa sem análises, para a borda não riscar o eixo', () => {
+    const values = [10, 20, 0];
+    const api = { value: (dimension: number) => values[dimension], coord: jest.fn() };
+
+    expect(renderHistogramBar({} as never, api as never)).toBeUndefined();
+  });
+});
+
+describe('getValueAxisName', () => {
+  it.each<[DistributionLevel, string, string]>([
+    ['tsqmi', 'TSQMI', 'Indicador Total da Qualidade (0–1)'],
+    ['characteristic', 'Reliability', 'Reliability (0–1)'],
+    ['subcharacteristic', 'Testing Status', 'Testing Status (0–1)'],
+    ['measure', 'Passed Tests', 'Passed Tests (0–1)'],
+    ['metric', 'total_issues', 'total_issues']
+  ])('no nível %s, %s vira "%s"', (level, name, axisName) => {
+    expect(getValueAxisName({ level, name })).toBe(axisName);
   });
 });
 
 describe('formatHistogramOptions', () => {
   it('nos valores de 0 a 1, desenha 10 faixas de 0,10 num eixo de 0 a 1', () => {
     const histogram = buildHistogram([0.52, 0.55, 0.61, 0.9], 'characteristic');
-    const option = formatHistogramOptions(histogram, 'Reliability');
+    const option = formatHistogramOptions(histogram, { level: 'characteristic', name: 'Reliability' });
 
-    expect(option.xAxis).toMatchObject({ min: 0, max: 1, interval: 0.1 });
+    expect(option.xAxis).toMatchObject({ min: 0, max: 1, interval: 0.1, name: 'Reliability (0–1)' });
+    expect(option.yAxis).toMatchObject({ name: 'Nº de análises (frequência)', nameLocation: 'middle' });
     expect(option.series[0].data).toHaveLength(10);
     expect(option.series[0].data[5]).toEqual([0.5, 0.6, 2]);
     expect(option.series[0].tooltip.formatter({ dataIndex: 5 })).toBe('0,50 a 0,60<br/><strong>2 análises</strong>');
@@ -78,9 +113,9 @@ describe('formatHistogramOptions', () => {
 
   it('numa métrica, o eixo segue a escala dela', () => {
     const histogram = buildHistogram([42, 44, 47, 55, 63], 'metric', 'INT');
-    const option = formatHistogramOptions(histogram, 'total_issues');
+    const option = formatHistogramOptions(histogram, { level: 'metric', name: 'total_issues' });
 
-    expect(option.xAxis).toMatchObject({ min: 40, max: 65, interval: 5 });
+    expect(option.xAxis).toMatchObject({ min: 40, max: 65, interval: 5, name: 'total_issues' });
     expect(option.series[0].data).toEqual([
       [40, 45, 2],
       [45, 50, 1],
@@ -99,9 +134,9 @@ describe('formatDensityOptions', () => {
 
   it('usa o mesmo eixo e as mesmas margens do histograma', () => {
     const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
-    const bars = formatHistogramOptions(histogram, 'TSQMI');
+    const bars = formatHistogramOptions(histogram, { level: 'tsqmi', name: 'TSQMI' });
 
-    expect(option.xAxis).toEqual(bars.xAxis);
+    expect(option.xAxis).toMatchObject({ min: bars.xAxis.min, max: bars.xAxis.max, interval: bars.xAxis.interval });
     expect(option.grid).toMatchObject({ left: bars.grid.left, right: bars.grid.right });
   });
 
