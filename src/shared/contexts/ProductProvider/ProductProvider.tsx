@@ -17,6 +17,8 @@ export interface IProductContext {
   productsList?: Product[];
   updateProductList: (products: Product[]) => void;
   loadAllProducts: () => Promise<void>;
+  /** A lista de produtos da organização atual já chegou (ou não há organização). */
+  hasLoadedProducts: boolean;
 }
 
 export const ProductContext = createContext<IProductContext | undefined>(undefined);
@@ -105,15 +107,18 @@ export function ProductProvider({ children }: Props) {
     }
   }, [currentProduct, setStoredProductId]);
 
+  const hasLoadedProducts = loadedOrgId !== undefined && loadedOrgId === String(currentOrgId);
+
   const value = useMemo(
     () => ({
       currentProduct,
       setCurrentProduct,
       productsList,
       updateProductList,
-      loadAllProducts
+      loadAllProducts,
+      hasLoadedProducts
     }),
-    [currentProduct, productsList, updateProductList, loadAllProducts]
+    [currentProduct, productsList, updateProductList, loadAllProducts, hasLoadedProducts]
   );
 
   return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;

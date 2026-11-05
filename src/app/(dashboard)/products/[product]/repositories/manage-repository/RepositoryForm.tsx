@@ -43,8 +43,8 @@ const RepositoryForm: React.FC = () => {
   const { terms } = useProviderTerms();
   const router = useRouter();
   const { handleRepositoryAction } = useQuery();
-  const { currentOrganization } = useOrganizationContext();
-  const { currentProduct } = useProductContext();
+  const { currentOrganization, organizationList, hasFetched } = useOrganizationContext();
+  const { currentProduct, productsList, hasLoadedProducts } = useProductContext();
   const { t } = useTranslation('repositories');
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -68,9 +68,21 @@ const RepositoryForm: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
+  // Só decide depois de a organização e o produto terminarem de carregar: ao abrir a URL direto
+  // (`manage-repository/?id=`) os dois chegam vazios no primeiro render, e isso não é "sem organização".
+  // Cada contexto escolhe o atual num efeito depois de a lista chegar, então "lista carregada" ainda não basta:
+  // com itens na lista, falta o atual ter sido escolhido.
+  const isOrganizationReady = organizationList.length === 0 || !!currentOrganization?.id;
+  const isProductReady = productsList?.length === 0 || !!currentProduct?.id;
+  const isContextReady =
+    hasFetched && isOrganizationReady && (organizationList.length === 0 || (hasLoadedProducts && isProductReady));
+
   useEffect(() => {
+    if (!isContextReady) return;
+
     if (!currentOrganization?.id || !currentProduct?.id) {
       void router.push('/home');
+      return;
     }
 
     const repositoryId = router.query.id as string;
@@ -96,7 +108,7 @@ const RepositoryForm: React.FC = () => {
       };
       void fetchRepositoryData();
     }
-  }, [router.query.id, currentOrganization?.id, currentProduct?.id, router]);
+  }, [isContextReady, router.query.id, currentOrganization?.id, currentProduct?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,12 +195,6 @@ const RepositoryForm: React.FC = () => {
     setErrorMessage(errorMsg);
     setOpenSnackbar(true);
   }
-
-  useEffect(() => {
-    if (!currentOrganization?.id || !currentProduct?.id) {
-      void router.push('/home');
-    }
-  }, [currentOrganization?.id, currentProduct?.id, router]);
 
   return (
     <Container>
