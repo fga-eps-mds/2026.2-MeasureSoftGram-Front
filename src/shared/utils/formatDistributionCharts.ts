@@ -186,7 +186,7 @@ export function formatDensityOptions(
   points: DensityPoint[],
   histogram: Histogram,
   median: number | null,
-  entityName: string
+  entity: Pick<DistributionEntity, 'level' | 'name'>
 ) {
   const peak = points.reduce((top, point) => (point.y > top.y ? point : top), points[0]);
   const medianLabel = formatMedianLabel(median);
@@ -198,7 +198,7 @@ export function formatDensityOptions(
     aria: {
       enabled: true,
       label: {
-        description: `Curva de densidade de ${entityName}, de ${formatAxisValue(histogram.min)} a ${formatAxisValue(
+        description: `Curva de densidade de ${entity.name}, de ${formatAxisValue(histogram.min)} a ${formatAxisValue(
           histogram.max
         )}, com o pico em ${formatStatistic(peak.x)}.${medianSentence}`
       }
@@ -217,10 +217,13 @@ export function formatDensityOptions(
       right: HISTOGRAM_GRID_SIDES.right,
       data: hasMedian ? ['Densidade', medianLabel] : ['Densidade']
     },
-    grid: { ...HISTOGRAM_GRID_SIDES, top: 40, bottom: 32 },
-    xAxis: histogramValueAxis(histogram),
+    grid: { ...HISTOGRAM_GRID_SIDES, top: 40, bottom: HISTOGRAM_GRID_BOTTOM },
+    xAxis: histogramValueAxis(histogram, getValueAxisName(entity)),
     yAxis: {
       type: 'value',
+      ...AXIS_NAME,
+      name: 'Densidade estimada',
+      nameGap: Y_AXIS_NAME_GAP,
       axisLabel: { show: false },
       axisTick: { show: false },
       splitLine: { show: true, ...SPLIT_LINE }

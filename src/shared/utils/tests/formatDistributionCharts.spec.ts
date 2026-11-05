@@ -131,17 +131,38 @@ describe('formatDensityOptions', () => {
   const values = [0.31, 0.52, 0.55, 0.56, 0.6, 0.9];
   const histogram = buildHistogram(values, 'tsqmi');
   const points = buildDensity(values, { min: 0, max: 1, iqr: 0.0875 }) as DensityPoint[];
+  const TSQMI = { level: 'tsqmi', name: 'TSQMI' } as const;
+
+  it.each<[DistributionLevel, string, string]>([
+    ['tsqmi', 'TSQMI', 'Indicador Total da Qualidade (0–1)'],
+    ['characteristic', 'Reliability', 'Reliability (0–1)'],
+    ['subcharacteristic', 'Testing Status', 'Testing Status (0–1)'],
+    ['measure', 'Passed Tests', 'Passed Tests (0–1)'],
+    ['metric', 'total_issues', 'total_issues']
+  ])('no nível %s, os eixos de %s são "%s" e "Densidade estimada"', (level, name, axisName) => {
+    const option = formatDensityOptions(points, histogram, 0.555, { level, name });
+
+    expect(option.xAxis).toMatchObject({ name: axisName, axisLabel: { formatter: expect.any(Function) } });
+    expect(option.yAxis).toMatchObject({ name: 'Densidade estimada', axisLabel: { show: false } });
+  });
+
+  it('mostra a escala do eixo x com os mesmos rótulos do histograma', () => {
+    const { xAxis } = formatDensityOptions(points, histogram, 0.555, TSQMI);
+
+    expect(xAxis.axisLabel).not.toHaveProperty('show', false);
+    expect(xAxis.axisLabel.formatter(0.3)).toBe('0,3');
+  });
 
   it('usa o mesmo eixo e as mesmas margens do histograma', () => {
-    const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
-    const bars = formatHistogramOptions(histogram, { level: 'tsqmi', name: 'TSQMI' });
+    const option = formatDensityOptions(points, histogram, 0.555, TSQMI);
+    const bars = formatHistogramOptions(histogram, TSQMI);
 
-    expect(option.xAxis).toMatchObject({ min: bars.xAxis.min, max: bars.xAxis.max, interval: bars.xAxis.interval });
-    expect(option.grid).toMatchObject({ left: bars.grid.left, right: bars.grid.right });
+    expect(option.xAxis).toEqual(bars.xAxis);
+    expect(option.grid).toMatchObject({ left: bars.grid.left, right: bars.grid.right, bottom: bars.grid.bottom });
   });
 
   it('desenha a curva com a área preenchida em cor clara', () => {
-    const [curve] = formatDensityOptions(points, histogram, 0.555, 'TSQMI').series;
+    const [curve] = formatDensityOptions(points, histogram, 0.555, TSQMI).series;
 
     expect(curve).toMatchObject({
       name: 'Densidade',
@@ -154,7 +175,7 @@ describe('formatDensityOptions', () => {
   });
 
   it('marca a mediana numa linha vertical, com o valor na legenda (CA5)', () => {
-    const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+    const option = formatDensityOptions(points, histogram, 0.555, TSQMI);
 
     expect(option.legend.data).toEqual(['Densidade', 'Mediana (0,56)']);
     expect(option.series[1]).toMatchObject({ name: 'Mediana (0,56)', data: [] });
@@ -162,14 +183,14 @@ describe('formatDensityOptions', () => {
   });
 
   it('sem mediana, só a curva', () => {
-    const option = formatDensityOptions(points, histogram, null, 'TSQMI');
+    const option = formatDensityOptions(points, histogram, null, TSQMI);
 
     expect(option.legend.data).toEqual(['Densidade']);
     expect(option.series).toHaveLength(1);
   });
 
   it('esconde os rótulos e as marcas do eixo y, mantendo a grade, como na tela de referência', () => {
-    const { yAxis } = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+    const { yAxis } = formatDensityOptions(points, histogram, 0.555, TSQMI);
 
     expect(yAxis.axisLabel).toMatchObject({ show: false });
     expect(yAxis.axisTick).toMatchObject({ show: false });
@@ -177,7 +198,7 @@ describe('formatDensityOptions', () => {
   });
 
   it('descreve a curva no texto acessível e mostra o valor e a densidade no tooltip', () => {
-    const option = formatDensityOptions(points, histogram, 0.555, 'TSQMI');
+    const option = formatDensityOptions(points, histogram, 0.555, TSQMI);
 
     expect(option.aria.label.description).toMatch(
       /^Curva de densidade de TSQMI, de 0 a 1, com o pico em 0,5\d\. Mediana \(0,56\)\.$/
