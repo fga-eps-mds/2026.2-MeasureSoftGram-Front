@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useParams, usePathname, useRouter as useNextRouter, useSearchParams } from 'next/navigation';
+import { stripTrailingSlashes } from '../utils/stripTrailingSlashes';
 
 type Query = Record<string, string | string[] | undefined>;
 
@@ -13,7 +14,7 @@ const decode = (value: string) => {
   }
 };
 
-const withoutTrailingSlash = (path: string) => (path.length > 1 ? path.replace(/\/+$/, '') : path);
+const withoutTrailingSlash = (path: string) => (path.length > 1 ? stripTrailingSlashes(path) : path);
 
 /** Parâmetros da rota (`[product]`) e query string num objeto só, como o `router.query` do Pages Router. */
 export function useRouteQuery(): Query {

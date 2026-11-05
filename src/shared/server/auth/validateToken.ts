@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { stripTrailingSlashes } from '../../utils/stripTrailingSlashes';
 
 export interface ServiceUser {
   username: string;
@@ -15,7 +16,7 @@ const CACHE_MAX_ENTRIES = 500;
 const cache = new Map<string, { user: ServiceUser; expiresAt: number }>();
 
 /** Lida em execução (não fica fixada no build), para o mesmo build servir qualquer ambiente. */
-export const getServiceUrl = (): string => (process.env.SERVICE_URL || DEFAULT_SERVICE_URL).replace(/\/+$/, '');
+export const getServiceUrl = (): string => stripTrailingSlashes(process.env.SERVICE_URL || DEFAULT_SERVICE_URL);
 
 const cacheKey = (token: string) => createHash('sha256').update(token).digest('hex');
 

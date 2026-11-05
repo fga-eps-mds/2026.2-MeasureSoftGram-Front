@@ -1,3 +1,5 @@
+import { stripTrailingSlashes } from '../../utils/stripTrailingSlashes';
+
 /**
  * Rotas que abrem sem sessão. Toda rota que não está aqui exige login: uma rota nova nasce protegida.
  */
@@ -6,7 +8,7 @@ export const PUBLIC_PREFIXES = ['/auth/'];
 
 /** Tira a barra final (o `trailingSlash` do Next a acrescenta), mantendo a raiz. */
 export const normalizePath = (pathname: string): string =>
-  pathname.length > 1 ? pathname.replace(/\/+$/, '') || '/' : pathname;
+  pathname.length > 1 ? stripTrailingSlashes(pathname) || '/' : pathname;
 
 export const isPublicPath = (pathname: string): boolean => {
   const path = normalizePath(pathname);

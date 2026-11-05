@@ -12,7 +12,8 @@ const loaded: Record<string, Promise<Resources>> = { en: Promise.resolve(en) };
 
 /** As traduções de um idioma, baixadas uma vez só (um chunk do webpack por idioma, exceto `en`). */
 export function loadLanguage(language: string): Promise<Resources> {
-  if (loaded[language]) return loaded[language];
+  const cached = loaded[language];
+  if (cached !== undefined) return cached;
   const loader = LOADERS[language];
   if (!loader) return Promise.resolve({});
   loaded[language] = loader()
