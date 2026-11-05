@@ -7,7 +7,6 @@ const nextConfig = {
     styledComponents: true,
   },
   env: {
-    SERVICE_URL: process.env.SERVICE_URL,
     // Compatibilidade com arquivos .env antigos durante a migracao para os
     // nomes NEXT_PUBLIC_* usados explicitamente pelo codigo do navegador.
     NEXT_PUBLIC_LOGIN_REDIRECT_URL:
@@ -21,6 +20,9 @@ const nextConfig = {
     tsconfigPath: './tsconfig.json'
   },
   trailingSlash: true,
+  // o /bff repassa ao Service rotas com e sem barra final (`/v1/accounts/access-token`); o redirecionamento
+  // automático do Next acrescentaria a barra e o Django responderia 404. O proxy.ts normaliza o caminho.
+  skipTrailingSlashRedirect: true,
   // o `next dev` guardava só 2 páginas compiladas e descartava as paradas há 25 s: voltar para uma aba recompilava
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,

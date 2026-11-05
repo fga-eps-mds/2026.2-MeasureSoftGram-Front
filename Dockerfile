@@ -13,17 +13,13 @@
 FROM node:20-alpine AS builder
 
 # build-args inlined no bundle (next.config `env` + prefixo NEXT_PUBLIC_,
-# avaliados em build-time). Os defaults sao de desenvolvimento; cada ambiente
-# sobrescreve via --build-arg (ver .github/workflows/docker-publish.yml).
-# NEXT_PUBLIC_API_URL e a baseURL do axios no browser (src/shared/services/
-# api.ts); sem ela as chamadas de API caem no proprio dominio do front.
-ARG SERVICE_URL=http://localhost:8080/api
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080/api
+# avaliados em build-time). Cada ambiente sobrescreve via --build-arg (ver
+# .github/workflows/docker-publish.yml).
+# A URL do Service NAO entra aqui: o browser fala so com o /bff do proprio Next
+# (src/shared/services/api.ts) e o servidor le SERVICE_URL em execucao.
 ARG NEXT_PUBLIC_LOGIN_REDIRECT_URL
 ARG NEXT_PUBLIC_GITHUB_CLIENT_ID
 ARG GITLAB_CLIENT_ID
-ENV SERVICE_URL=$SERVICE_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_LOGIN_REDIRECT_URL=$NEXT_PUBLIC_LOGIN_REDIRECT_URL
 ENV NEXT_PUBLIC_GITHUB_CLIENT_ID=$NEXT_PUBLIC_GITHUB_CLIENT_ID
 ENV GITLAB_CLIENT_ID=$GITLAB_CLIENT_ID
@@ -49,6 +45,9 @@ FROM node:20-alpine AS runner
 
 ENV NODE_ENV=production
 ENV PORT=3000
+# URL do Service vista pelo SERVIDOR do Next (proxy.ts, /bff). Lida em execucao: sobrescreva no compose.
+# O host do front precisa estar em ALLOWED_HOSTS do Service, senao o Django responde 400.
+ENV SERVICE_URL=http://service:8080/api
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN apk add --no-cache libc6-compat && npm install -g pnpm@9.0.0

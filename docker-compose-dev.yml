@@ -10,6 +10,8 @@ services:
       - .:/usr/src/
       - /usr/src/node_modules
       - /usr/src/.next
+    environment:
+      SERVICE_URL: http://service:8080/api
     depends_on:
       - service
 
