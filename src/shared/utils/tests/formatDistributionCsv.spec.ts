@@ -254,6 +254,8 @@ describe('formatDistributionCsv', () => {
         ['Limite superior', 0.73125],
         ['Discrepantes', 2],
         ['Média', 0.5716666],
+        ['Desvio padrão', 0.1899],
+        ['Variância', 0.0361],
         ['Assimetria', 0.48]
       ]);
     });
@@ -263,6 +265,22 @@ describe('formatDistributionCsv', () => {
 
       expect(chart.rows.find((row) => row.statistic === 'Assimetria')?.value).toBeNull();
       expect(toCsv(chart).split('\r\n').at(-1)).toBe('R2,MeasureSoftGram-Service,TSQMI,TSQMI,Assimetria,');
+    });
+
+    it('com menos de 2 análises, o desvio padrão e a variância ficam vazios', () => {
+      const lines = toCsv(
+        formatSummaryCsv(
+          distribution({
+            main: {
+              ...entity('tsqmi', 'TSQMI', 'tsqmi', [0.5]),
+              summary: { ...summary, count: 1, std: null, variance: null }
+            }
+          })
+        )
+      ).split('\r\n');
+
+      expect(lines).toContain('R2,MeasureSoftGram-Service,TSQMI,TSQMI,Desvio padrão,');
+      expect(lines).toContain('R2,MeasureSoftGram-Service,TSQMI,TSQMI,Variância,');
     });
   });
 

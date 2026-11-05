@@ -251,6 +251,16 @@ describe('<DistributionDashboard />', () => {
     );
   });
 
+  it('estica a dispersão e o resumo até a altura da linha da grade (CA7)', () => {
+    render(<DistributionDashboard />);
+
+    expect(screen.getByTestId('distribution-grid')).toHaveStyle({ alignItems: 'stretch' });
+    // a célula também é grade: é ela que estica o cartão, que não define a própria altura
+    ['Dispersão das análises no tempo', 'Resumo estatístico e IQR'].forEach((name) => {
+      expect(card(name).parentElement).toHaveStyle({ display: 'grid' });
+    });
+  });
+
   it('desenha no boxplot a entidade e os filhos que vêm na resposta (CA6)', () => {
     render(<DistributionDashboard />);
 
@@ -348,7 +358,7 @@ describe('<DistributionDashboard />', () => {
         ['distribuicao', 'densidade', 120],
         ['distribuicao', 'boxplot', 2],
         ['distribuicao', 'dispersao', 6],
-        ['distribuicao', 'resumo', 12]
+        ['distribuicao', 'resumo', 14]
       ]);
       expect((downloadCsv as jest.Mock).mock.calls[0][1].rows[0]).toMatchObject({
         release: 'R2',

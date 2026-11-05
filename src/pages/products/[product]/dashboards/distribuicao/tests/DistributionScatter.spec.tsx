@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import DistributionScatter from '../DistributionScatter';
 import { entity } from './fixtures';
@@ -38,6 +38,8 @@ describe('<DistributionScatter />', () => {
     expect(chart().points).toHaveLength(4);
     expect(chart().outliers.map(([, value]: number[]) => value)).toEqual([0.31, 0.9]);
     expect(chart().legend).toEqual(['Análise', 'Valor discrepante', 'Q1 a Q3']);
+    // ao lado do resumo, o gráfico ocupa a altura que sobrar no cartão
+    expect(within(card).getByTestId('distribution-chart')).toHaveStyle({ minHeight: '320px', flexGrow: '1' });
     expect(card).toHaveTextContent('A faixa clara vai do Q1 ao Q3');
   });
 

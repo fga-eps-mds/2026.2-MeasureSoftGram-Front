@@ -173,7 +173,7 @@ const SUMMARY_CSV_COLUMNS: CsvColumn<SummaryCsvRow>[] = [
   { key: 'value', title: 'Valor' }
 ];
 
-/** CSV do resumo estatístico: uma linha por estatística da tela; a que o Service não calcula (assimetria) fica vazia. */
+/** CSV do resumo estatístico: uma linha por estatística da tela; a que o Service não calcula fica vazia. */
 export function formatSummaryCsv(distribution: AnalysisDistribution): CsvChart<SummaryCsvRow> {
   const filters = filterFields(distribution);
   const { summary } = distribution.entity;

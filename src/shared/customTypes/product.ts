@@ -419,6 +419,9 @@ export interface DistributionSummary {
   upper_limit: number | null;
   outliers: number;
   mean: number | null;
+  /** Amostrais (n − 1), como o DESVPAD.A e o VAR.A; null com menos de 2 análises. */
+  std: number | null;
+  variance: number | null;
   skewness: number | null;
 }
 

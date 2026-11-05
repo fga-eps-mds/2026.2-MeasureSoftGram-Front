@@ -14,6 +14,7 @@ import { BoxplotStats, getBoxplotStats, groupOutliers, OutlierGroup } from '@uti
 export const DISTRIBUTION_COLORS = {
   bar: '#7BA7D7',
   barHover: DASHBOARD_COLORS.planned,
+  barBorder: DASHBOARD_COLORS.planned,
   box: DASHBOARD_COLORS.primary,
   boxFill: DASHBOARD_COLORS.infoBackground,
   outlier: COLOR_TOKENS.warning,
@@ -40,18 +41,21 @@ export const OUTLIER_STYLE = {
   emphasis: { itemStyle: { color: DISTRIBUTION_COLORS.outlier } }
 };
 
-/** Cada faixa é [início, fim, análises]: um retângulo de início a fim, do zero até a contagem. */
+/**
+ * Cada faixa é [início, fim, análises]: um retângulo de início a fim, do zero até a contagem, sem espaço entre as
+ * vizinhas; a borda fina as separa. Uma faixa sem análises não desenha nada, senão a borda riscaria o eixo.
+ */
 export function renderHistogramBar(
   _params: CustomSeriesRenderItemParams,
   api: CustomSeriesRenderItemAPI
 ): CustomSeriesRenderItemReturn {
+  if (!Number(api.value(2))) return undefined;
   const [left, top] = api.coord([Number(api.value(0)), Number(api.value(2))]);
   const [right, bottom] = api.coord([Number(api.value(1)), 0]);
   return {
     type: 'rect',
-    // 1px de folga de cada lado separa as barras vizinhas
-    shape: { x: left + 1, y: top, width: Math.max(right - left - 2, 1), height: bottom - top },
-    style: { fill: DISTRIBUTION_COLORS.bar },
+    shape: { x: left, y: top, width: right - left, height: bottom - top },
+    style: { fill: DISTRIBUTION_COLORS.bar, stroke: DISTRIBUTION_COLORS.barBorder, lineWidth: 1 },
     emphasis: { style: { fill: DISTRIBUTION_COLORS.barHover } }
   };
 }
@@ -74,7 +78,7 @@ export function formatBoxTooltip(stats: BoxplotStats, title = 'Boxplot'): string
 }
 
 /** Altura do histograma das análises. */
-export const HISTOGRAM_CHART_HEIGHT = 280;
+export const HISTOGRAM_CHART_HEIGHT = 296;
 
 /**
  * Margens do grid do histograma, em px, com o containLabel desligado: a régua A a E, desenhada fora do ECharts, usa as
@@ -82,10 +86,28 @@ export const HISTOGRAM_CHART_HEIGHT = 280;
  */
 export const HISTOGRAM_GRID_SIDES = { left: 56, right: 24 };
 
+/** Margem de baixo do grid do histograma: os rótulos e o nome do eixo x. */
+const HISTOGRAM_GRID_BOTTOM = 48;
+
+/** Nome de um eixo, centralizado ao longo dele e fora dos rótulos. */
+const AXIS_NAME = { nameLocation: 'middle', nameTextStyle: AXIS_LABEL };
+
+/** Afastamento do nome do eixo y: à esquerda dos rótulos do histograma, dentro da margem do grid. */
+const Y_AXIS_NAME_GAP = 36;
+
+const INDICATOR_AXIS_NAME = 'Indicador Total da Qualidade (0–1)';
+
+/** Nome do eixo de valores: o TSQMI pelo nome na tela, os outros níveis de 0 a 1 com a escala, a métrica só pelo nome. */
+export function getValueAxisName({ level, name }: Pick<DistributionEntity, 'level' | 'name'>): string {
+  if (level === 'tsqmi') return INDICATOR_AXIS_NAME;
+  return isUnitScale(level) ? `${name} (0–1)` : name;
+}
+
 /** Eixo x de valor de um quadro alinhado ao histograma: o mesmo início, fim e intervalo das faixas. */
-function histogramValueAxis(histogram: Histogram) {
+function histogramValueAxis(histogram: Histogram, name?: string) {
   return {
     type: 'value',
+    ...(name ? { ...AXIS_NAME, name, nameGap: 28 } : {}),
     min: histogram.min,
     max: histogram.max,
     interval: histogram.width,
@@ -99,7 +121,7 @@ function histogramValueAxis(histogram: Histogram) {
  * Histograma das análises da entidade (CA4): uma barra por faixa de valor, do início ao fim dela, com a quantidade de
  * análises. O eixo x é o das faixas; nos valores de 0 a 1, a régua A a E fica abaixo dele, fora do gráfico.
  */
-export function formatHistogramOptions(histogram: Histogram, entityName: string) {
+export function formatHistogramOptions(histogram: Histogram, entity: Pick<DistributionEntity, 'level' | 'name'>) {
   const { bins } = histogram;
   const total = bins.reduce((sum, bin) => sum + bin.count, 0);
   const filled = bins
@@ -112,18 +134,19 @@ export function formatHistogramOptions(histogram: Histogram, entityName: string)
     aria: {
       enabled: true,
       label: {
-        description: `Histograma de ${entityName}: ${formatAnalysisCount(total)} em faixas de ${formatAxisValue(
+        description: `Histograma de ${entity.name}: ${formatAnalysisCount(total)} em faixas de ${formatAxisValue(
           histogram.width
         )}. ${filled}.`
       }
     },
     tooltip: { trigger: 'item', confine: true },
-    grid: { ...HISTOGRAM_GRID_SIDES, top: 32, bottom: 32 },
-    xAxis: histogramValueAxis(histogram),
+    grid: { ...HISTOGRAM_GRID_SIDES, top: 32, bottom: HISTOGRAM_GRID_BOTTOM },
+    xAxis: histogramValueAxis(histogram, getValueAxisName(entity)),
     yAxis: {
       type: 'value',
-      name: 'Análises',
-      nameTextStyle: AXIS_LABEL,
+      ...AXIS_NAME,
+      name: 'Nº de análises (frequência)',
+      nameGap: Y_AXIS_NAME_GAP,
       minInterval: 1,
       axisLabel: { ...AXIS_LABEL, formatter: formatCount },
       splitLine: SPLIT_LINE
@@ -163,7 +186,7 @@ export function formatDensityOptions(
   points: DensityPoint[],
   histogram: Histogram,
   median: number | null,
-  entityName: string
+  entity: Pick<DistributionEntity, 'level' | 'name'>
 ) {
   const peak = points.reduce((top, point) => (point.y > top.y ? point : top), points[0]);
   const medianLabel = formatMedianLabel(median);
@@ -175,7 +198,7 @@ export function formatDensityOptions(
     aria: {
       enabled: true,
       label: {
-        description: `Curva de densidade de ${entityName}, de ${formatAxisValue(histogram.min)} a ${formatAxisValue(
+        description: `Curva de densidade de ${entity.name}, de ${formatAxisValue(histogram.min)} a ${formatAxisValue(
           histogram.max
         )}, com o pico em ${formatStatistic(peak.x)}.${medianSentence}`
       }
@@ -194,10 +217,13 @@ export function formatDensityOptions(
       right: HISTOGRAM_GRID_SIDES.right,
       data: hasMedian ? ['Densidade', medianLabel] : ['Densidade']
     },
-    grid: { ...HISTOGRAM_GRID_SIDES, top: 40, bottom: 32 },
-    xAxis: histogramValueAxis(histogram),
+    grid: { ...HISTOGRAM_GRID_SIDES, top: 40, bottom: HISTOGRAM_GRID_BOTTOM },
+    xAxis: histogramValueAxis(histogram, getValueAxisName(entity)),
     yAxis: {
       type: 'value',
+      ...AXIS_NAME,
+      name: 'Densidade estimada',
+      nameGap: Y_AXIS_NAME_GAP,
       axisLabel: { show: false },
       axisTick: { show: false },
       splitLine: { show: true, ...SPLIT_LINE }
@@ -236,7 +262,7 @@ export function formatDensityOptions(
   };
 }
 
-/** Altura da dispersão no tempo, ao lado do resumo estatístico. */
+/** Altura mínima da dispersão no tempo: ao lado do resumo estatístico, ela cresce até a altura dele. */
 export const SCATTER_CHART_HEIGHT = 320;
 
 /** Discrepantes listados no texto acessível; os outros entram só na contagem. */
