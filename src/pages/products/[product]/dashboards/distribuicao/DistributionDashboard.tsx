@@ -35,9 +35,13 @@ function formatReleaseDay(date: Date | string): string {
   return `${day}/${month}`;
 }
 
+/** Cada célula também é grade, para o cartão esticar até a altura da linha sem alargar a coluna. */
+const GRID_CELL = { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', minWidth: 0 };
+
 /**
  * Grade da referência (CA4 a CA8): histograma e densidade lado a lado, boxplot na largura toda, dispersão e resumo
- * lado a lado. Em tela estreita, uma coluna na ordem dos quadros, sem as áreas vazias.
+ * lado a lado, com os cartões de cada linha na mesma altura. Em tela estreita, uma coluna na ordem dos quadros, sem as
+ * áreas vazias.
  */
 function DistributionGrid({
   histogram,
@@ -60,7 +64,7 @@ function DistributionGrid({
       aria-busy={busy}
       display="grid"
       gap="24px"
-      alignItems="start"
+      alignItems="stretch"
       sx={{
         gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' },
         gridTemplateAreas: { lg: '"hist dens" "box box" "disp summary"' },
@@ -68,11 +72,11 @@ function DistributionGrid({
         transition: 'opacity 150ms'
       }}
     >
-      <Box sx={{ gridArea: { lg: 'hist' }, minWidth: 0 }}>{histogram}</Box>
-      <Box sx={{ gridArea: { lg: 'dens' }, minWidth: 0 }}>{density}</Box>
-      <Box sx={{ gridArea: { lg: 'box' }, minWidth: 0 }}>{boxplot}</Box>
-      <Box sx={{ gridArea: { lg: 'disp' }, minWidth: 0 }}>{scatter}</Box>
-      <Box sx={{ gridArea: { lg: 'summary' }, minWidth: 0 }}>{summary}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'hist' } }}>{histogram}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'dens' } }}>{density}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'box' } }}>{boxplot}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'disp' } }}>{scatter}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'summary' } }}>{summary}</Box>
     </Box>
   );
 }

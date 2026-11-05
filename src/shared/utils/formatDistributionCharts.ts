@@ -262,7 +262,7 @@ export function formatDensityOptions(
   };
 }
 
-/** Altura da dispersão no tempo, ao lado do resumo estatístico. */
+/** Altura mínima da dispersão no tempo: ao lado do resumo estatístico, ela cresce até a altura dele. */
 export const SCATTER_CHART_HEIGHT = 320;
 
 /** Discrepantes listados no texto acessível; os outros entram só na contagem. */

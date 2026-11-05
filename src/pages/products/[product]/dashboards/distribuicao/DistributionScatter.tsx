@@ -37,7 +37,7 @@ export default function DistributionScatter({
       status="ready"
       headerAction={csv && <ExportCsvButton dashboard={DISTRIBUTION_CSV.dashboard} chart={csv} />}
     >
-      <DistributionChart option={option} height={SCATTER_CHART_HEIGHT} />
+      <DistributionChart option={option} height={SCATTER_CHART_HEIGHT} fill />
       <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
         Cada ponto é uma análise, na data em que foi feita. A faixa clara vai do Q1 ao Q3, onde ficam as 50% análises do
         meio, e a linha tracejada marca a mediana.
