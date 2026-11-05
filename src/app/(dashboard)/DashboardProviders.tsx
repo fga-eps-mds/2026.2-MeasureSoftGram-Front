@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { AuthProvider } from '@contexts/Auth';
 import { OrganizationProvider } from '@contexts/OrganizationProvider';
 import { RepositoryProvider } from '@contexts/RepositoryProvider';
@@ -13,8 +13,19 @@ interface Props {
   loginAt: number | null;
 }
 
-/** Contextos que só existem com sessão: as páginas públicas não os montam. */
+const subscribe = () => () => undefined;
+
+/**
+ * Contextos que só existem com sessão: as páginas públicas não os montam.
+ *
+ * O conteúdo só é montado no navegador, depois da hidratação. O idioma salvo (localStorage) só é conhecido ali, e o
+ * HTML do servidor sai em inglês: hidratar o dashboard em português dava erro de hidratação, e o ECharts era
+ * inicializado duas vezes quando o React refazia a árvore. A proteção de rota continua no proxy.ts.
+ */
 export default function DashboardProviders({ children, initialUser, provider, loginAt }: Props) {
+  const isClient = useSyncExternalStore(subscribe, () => true, () => false);
+  if (!isClient) return null;
+
   return (
     <AuthProvider initialUser={initialUser} provider={provider} loginAt={loginAt}>
       <OrganizationProvider>
