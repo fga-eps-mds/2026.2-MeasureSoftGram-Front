@@ -90,3 +90,13 @@ export function useRouter() {
     [router, query, path, search]
   );
 }
+
+/**
+ * Só a navegação (`push`, `replace`, `back`), sem ler a URL. Não usa `useSearchParams`, que obriga a página estática
+ * a ter um Suspense acima e a deixa sem conteúdo no HTML: serve a landing e as páginas públicas.
+ */
+export function useNavigation() {
+  const router = useNextRouter();
+
+  return useMemo(() => ({ push: router.push, replace: router.replace, back: router.back }), [router]);
+}

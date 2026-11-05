@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Box } from '@mui/material';
 import { LandingHeader } from './components/LandingHeader';
 import { HeroSection } from './components/HeroSection';
@@ -12,26 +12,16 @@ import { CommunitySection } from './components/CommunitySection';
 import { LandingFooter } from './components/LandingFooter';
 
 const Landing: React.FC = () => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <Box component="main" sx={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
-      {mounted && (
-        <>
-          <LandingHeader />
-          <HeroSection />
-          <HowItWorksSection />
-          <ValuePropsSection />
-          <IntegrationsSection />
-          <PublicationsSection />
-          <CommunitySection />
-          <LandingFooter />
-        </>
-      )}
+      <LandingHeader />
+      <HeroSection />
+      <HowItWorksSection />
+      <ValuePropsSection />
+      <IntegrationsSection />
+      <PublicationsSection />
+      <CommunitySection />
+      <LandingFooter />
     </Box>
   );
 };

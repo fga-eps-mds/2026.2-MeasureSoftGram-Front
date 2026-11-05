@@ -3,13 +3,13 @@
 import React from 'react';
 import { Button, Box, Typography } from '@mui/material';
 import { SentimentDissatisfied } from '@mui/icons-material';
-import { useRouter } from '@hooks/useRouter';
+import { useNavigation } from '@hooks/useRouter';
 import { AuthLayout } from '@layouts/auth';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
 
 const AuthError: React.FC = () => {
-  const router = useRouter();
+  const router = useNavigation();
 
   return (
     <AuthLayout>

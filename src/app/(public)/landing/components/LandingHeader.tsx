@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { useRouter } from '@hooks/useRouter';
+import { useNavigation } from '@hooks/useRouter';
 import { useTranslation } from 'react-i18next';
 import { AppBar, Toolbar, Box, Button, Container, Link as MuiLink } from '@mui/material';
 import MSGButton from '../../../../components/idv/buttons/MSGButton';
@@ -10,7 +10,7 @@ const LOGO_SOURCE = '/images/svg/logo.svg';
 
 export const LandingHeader: React.FC = () => {
   const { t } = useTranslation('landing');
-  const router = useRouter();
+  const router = useNavigation();
 
   return (
     <AppBar

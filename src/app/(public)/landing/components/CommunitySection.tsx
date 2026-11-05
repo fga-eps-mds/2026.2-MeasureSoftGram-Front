@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from '@hooks/useRouter';
+import { useNavigation } from '@hooks/useRouter';
 import { useTranslation } from 'react-i18next';
 import { Grid, Button } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -11,7 +11,7 @@ import { FeatureCard } from './FeatureCard';
 
 export const CommunitySection: React.FC = () => {
   const { t } = useTranslation('landing');
-  const router = useRouter();
+  const router = useNavigation();
 
   const cards = [
     {

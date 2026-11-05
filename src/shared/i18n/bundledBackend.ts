@@ -1,27 +1,27 @@
 import type { BackendModule, ReadCallback } from 'i18next';
+import en from './locales/en';
 
 type Resources = Record<string, object>;
 
+// `en` vai no bundle principal (é o idioma do HTML do servidor); só os demais idiomas viram chunk
 const LOADERS: Record<string, () => Promise<{ default: Resources }>> = {
-  en: () => import('./locales/en'),
   pt: () => import('./locales/pt')
 };
 
-const loaded: Record<string, Promise<Resources>> = {};
+const loaded: Record<string, Promise<Resources>> = { en: Promise.resolve(en) };
 
-/** As traduções de um idioma, baixadas uma vez só (um chunk do webpack por idioma). */
+/** As traduções de um idioma, baixadas uma vez só (um chunk do webpack por idioma, exceto `en`). */
 export function loadLanguage(language: string): Promise<Resources> {
+  if (loaded[language]) return loaded[language];
   const loader = LOADERS[language];
   if (!loader) return Promise.resolve({});
-  if (!loaded[language]) {
-    loaded[language] = loader()
-      .then((module) => module.default)
-      .catch((error) => {
-        // sem rede agora: a próxima leitura tenta de novo
-        delete loaded[language];
-        throw error;
-      });
-  }
+  loaded[language] = loader()
+    .then((module) => module.default)
+    .catch((error) => {
+      // sem rede agora: a próxima leitura tenta de novo
+      delete loaded[language];
+      throw error;
+    });
   return loaded[language];
 }
 

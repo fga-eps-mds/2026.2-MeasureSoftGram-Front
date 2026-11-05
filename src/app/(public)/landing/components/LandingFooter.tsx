@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { useRouter } from '@hooks/useRouter';
+import { useNavigation } from '@hooks/useRouter';
 import { useTranslation } from 'react-i18next';
 import { Box, Container, Typography, Stack, Link as MuiLink } from '@mui/material';
 import { EXTERNAL_LINKS, APP_ENTRY_ROUTE } from '../constants';
@@ -9,7 +9,7 @@ const LOGO_SOURCE = '/images/svg/logo_white.svg';
 
 export const LandingFooter: React.FC = () => {
   const { t } = useTranslation('landing');
-  const router = useRouter();
+  const router = useNavigation();
 
   return (
     <Box component="footer" sx={{ backgroundColor: '#2B4D6F', color: '#ffffff', py: 5 }}>
