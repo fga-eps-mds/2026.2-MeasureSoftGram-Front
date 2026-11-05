@@ -10,7 +10,6 @@ jest.mock('@hooks/useRouter', () => ({
   useRouter: () => ({ query: { product: '1-2-Produto' }, push: mockPush })
 }));
 jest.mock('@components/Layout', () => ({ __esModule: true, default: (page: React.ReactNode) => page }));
-jest.mock('@hooks/useRequireAuth', () => ({ __esModule: true, default: jest.fn() }));
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({ terms: { repository: 'repositório', repositories: 'repositórios' } })
 }));

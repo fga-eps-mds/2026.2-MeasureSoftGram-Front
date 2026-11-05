@@ -6,8 +6,6 @@ jest.mock('@services/Auth', () => ({
   getAccessToken: jest.fn().mockResolvedValue({ type: 'success', value: { key: 'testKey' } })
 }));
 
-jest.mock('@hooks/useRequireAuth', () => jest.fn());
-
 describe('ProfileConfig', () => {
   it('should render successfully', () => {
     const { container } = render(<ProfileConfig />);

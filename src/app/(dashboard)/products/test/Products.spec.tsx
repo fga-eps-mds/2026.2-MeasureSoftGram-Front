@@ -8,7 +8,6 @@ import { useProductContext } from '@contexts/ProductProvider';
 import { useAuth } from '@contexts/Auth';
 import { useRouter } from '@hooks/useRouter';
 import { toast } from 'react-toastify';
-import { OAUTH_STATE_KEY } from '@services/Auth/oauthState';
 import { SWRConfig } from 'swr';
 import Products from '../Products';
 import { normalizeRepoUrl } from '../hooks/useImportRepos';
@@ -36,7 +35,6 @@ const mockFetchOrgs = jest.fn();
 const mockSetCurrentOrgs = jest.fn();
 const mockUpdateProductList = jest.fn();
 const mockSetCurrentProduct = jest.fn();
-const mockSignInWithGithub = jest.fn();
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 
@@ -46,11 +44,7 @@ describe('Products Component', () => {
     localStorage.clear();
     
     (useRouter as jest.Mock).mockReturnValue({ query: {}, push: mockPush, replace: mockReplace });
-    (useAuth as jest.Mock).mockReturnValue({
-      provider: 'github',
-      isProviderReady: true,
-      signInWithGithub: mockSignInWithGithub
-    });
+    (useAuth as jest.Mock).mockReturnValue({ provider: 'github' });
     
     (useOrganizationContext as jest.Mock).mockReturnValue({
       organizationList: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }],
@@ -101,17 +95,6 @@ describe('Products Component', () => {
     });
     
     expect(await screen.findByText('Org 1')).toBeInTheDocument();
-  });
-
-  it('does not exchange a code received in the URL', async () => {
-    (useRouter as jest.Mock).mockReturnValue({ query: { code: '123' }, push: mockPush, replace: mockReplace });
-
-    renderProducts();
-
-    await waitFor(() => {
-      expect(organizationQuery.getGithubOrganizations).toHaveBeenCalled();
-    });
-    expect(mockSignInWithGithub).not.toHaveBeenCalled();
   });
 
   it('handles github org selection, imports and lists repos', async () => {
@@ -508,7 +491,7 @@ describe('Products Component', () => {
       jest.restoreAllMocks();
     });
 
-    it('volta para Produtos pelo fluxo com state e com os escopos do login', async () => {
+    it('leva ao servidor, que guarda o state e volta para Produtos, pedindo a escolha da conta', async () => {
       (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValueOnce({
         type: 'success',
         value: [{ id: 'org-1', name: 'Org 1', key: 'org-1', github_org_name: 'org-1' }]
@@ -521,35 +504,7 @@ describe('Products Component', () => {
       renderProducts();
       fireEvent.click(await screen.findByText('Autorizar GitHub'));
 
-      const stored = JSON.parse(sessionStorage.getItem(OAUTH_STATE_KEY) as string);
-      const url = new URL((window.location.assign as jest.Mock).mock.calls[0][0]);
-      expect(stored).toMatchObject({ provider: 'github', returnTo: '/products' });
-      expect(url.origin + url.pathname).toBe('https://github.com/login/oauth/authorize');
-      expect(url.searchParams.get('state')).toBe(stored.nonce);
-      expect(url.searchParams.get('scope')).toBe('repo read:org user');
-      expect(url.searchParams.has('redirect_uri')).toBe(true);
-    });
-
-    it('avisa e não sai do site quando não consegue guardar o state', async () => {
-      (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValueOnce({
-        type: 'success',
-        value: [{ id: 'org-1', name: 'Org 1', key: 'org-1', github_org_name: 'org-1' }]
-      });
-      (organizationQuery.getGithubRepos as jest.Mock).mockResolvedValueOnce({
-        type: 'error',
-        error: { response: { status: 409 } }
-      });
-      jest.spyOn(console, 'error').mockImplementation(() => undefined);
-
-      renderProducts();
-      const button = await screen.findByText('Autorizar GitHub');
-      jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-        throw new Error('blocked');
-      });
-      fireEvent.click(button);
-
-      expect(window.location.assign).not.toHaveBeenCalled();
-      expect(toast.error).toHaveBeenCalledWith('Não foi possível iniciar a autorização do GitHub.');
+      expect(window.location.assign).toHaveBeenCalledWith('/auth/oauth/github?returnTo=%2Fproducts&reauthorize=1');
     });
   });
 
@@ -598,42 +553,9 @@ describe('Products Component', () => {
     });
   });
 
-  describe('leitura do provider salvo', () => {
-    it('não busca organizações enquanto o provider não foi lido e busca uma vez depois', async () => {
-      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials', isProviderReady: false });
-
-      const { rerender } = renderProducts();
-      await act(async () => {});
-      expect(organizationQuery.getGithubOrganizations).not.toHaveBeenCalled();
-      expect(organizationQuery.getGitLabNamespaces).not.toHaveBeenCalled();
-
-      (useAuth as jest.Mock).mockReturnValue({ provider: 'github', isProviderReady: true });
-      rerender(withSWR(<Products />));
-
-      await waitFor(() => {
-        expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    it('mostra um único toast de token inválido quando o provider muda de provisório para github', async () => {
-      (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
-        type: 'error',
-        error: { response: { status: 409 } }
-      });
-      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials', isProviderReady: false });
-
-      const { rerender } = renderProducts();
-      (useAuth as jest.Mock).mockReturnValue({ provider: 'github', isProviderReady: true });
-      rerender(withSWR(<Products />));
-
-      expect(await screen.findByText('Autorizar GitHub')).toBeInTheDocument();
-      expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
-      expect(toast.error).toHaveBeenCalledTimes(1);
-      expect(toast.error).toHaveBeenCalledWith('Token do GitHub expirado ou inválido.');
-    });
-
+  describe('provider da sessão', () => {
     it('usa as organizações do GitHub para quem entrou por credenciais', async () => {
-      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials', isProviderReady: true });
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'credentials' });
 
       renderProducts();
 
@@ -643,18 +565,25 @@ describe('Products Component', () => {
       expect(organizationQuery.getGitLabNamespaces).not.toHaveBeenCalled();
       expect(await screen.findByText('Org 1')).toBeInTheDocument();
     });
+
+    it('busca as organizações uma vez só e mostra um único toast de token inválido', async () => {
+      (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
+        type: 'error',
+        error: { response: { status: 409 } }
+      });
+
+      renderProducts();
+
+      expect(await screen.findByText('Autorizar GitHub')).toBeInTheDocument();
+      expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledTimes(1);
+      expect(toast.error).toHaveBeenCalledWith('Token do GitHub expirado ou inválido.');
+    });
   });
 
   describe('GitLab Provider in Products Component', () => {
-    const mockSignInWithGitlab = jest.fn();
-
     beforeEach(() => {
-      (useAuth as jest.Mock).mockReturnValue({
-        provider: 'gitlab',
-        isProviderReady: true,
-        signInWithGithub: mockSignInWithGithub,
-        signInWithGitlab: mockSignInWithGitlab
-      });
+      (useAuth as jest.Mock).mockReturnValue({ provider: 'gitlab' });
 
       (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValue({
         type: 'success',
@@ -806,14 +735,10 @@ describe('Products Component', () => {
         fireEvent.click(authBtn);
       });
 
-      const stored = JSON.parse(sessionStorage.getItem(OAUTH_STATE_KEY) as string);
-      const url = new URL((window.location.assign as jest.Mock).mock.calls[0][0]);
+      const assigned = (window.location.assign as jest.Mock).mock.calls[0][0];
       window.location = originalLocation;
 
-      expect(stored).toMatchObject({ provider: 'gitlab', returnTo: '/products' });
-      expect(url.origin + url.pathname).toBe('https://gitlab.com/oauth/authorize');
-      expect(url.searchParams.get('state')).toBe(stored.nonce);
-      expect(url.searchParams.get('scope')).toBe('read_user openid profile email read_api');
+      expect(assigned).toBe('/auth/oauth/gitlab?returnTo=%2Fproducts&reauthorize=1');
     });
 
     it('pagina os projetos do gitlab pelo total de páginas que o service repassa', async () => {

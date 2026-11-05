@@ -20,8 +20,6 @@ jest.mock('@hooks/useRouter', () => ({
   }),
 }));
 
-jest.mock('@hooks/useRequireAuth', () => () => ({}));
-
 const mockUseRequest = jest.fn();
 jest.mock('@hooks/useRequest', () => ({
   useRequest: (req: any) => mockUseRequest(req),

@@ -7,7 +7,6 @@ import { useQuery } from '../hooks/useQuery';
 import Repository from '../Repository';
 
 jest.mock('@hooks/useRouter', () => ({ useRouter: () => ({ query: { product: '1-2-Produto', repository: '7-api' } }) }));
-jest.mock('@hooks/useRequireAuth', () => ({ __esModule: true, default: jest.fn() }));
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({ terms: { Repository: 'Repositório', repository: 'repositório', providerName: 'GitHub' } }),
 }));

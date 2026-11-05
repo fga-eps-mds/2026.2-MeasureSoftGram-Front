@@ -7,7 +7,7 @@ import { EXTERNAL_LINKS } from '../constants';
 const mockPush = jest.fn();
 
 jest.mock('@hooks/useRouter', () => ({
-  useRouter: () => ({
+  useNavigation: () => ({
     push: mockPush,
     pathname: '/',
     query: {},

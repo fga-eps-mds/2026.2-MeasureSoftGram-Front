@@ -7,7 +7,6 @@ import TemporalDashboard from '../TemporalDashboard';
 
 jest.mock('@hooks/useRouter', () => ({ useRouter: () => ({ query: { product: '1-2-Produto' } }) }));
 jest.mock('@components/Layout', () => ({ __esModule: true, default: (page: React.ReactNode) => page }));
-jest.mock('@hooks/useRequireAuth', () => ({ __esModule: true, default: jest.fn() }));
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({
     terms: { Repository: 'Repositório', repository: 'repositório', repositories: 'repositórios' },

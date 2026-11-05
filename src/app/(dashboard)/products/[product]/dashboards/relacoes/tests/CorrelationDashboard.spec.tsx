@@ -17,7 +17,6 @@ const mutate = jest.fn();
 
 jest.mock('@hooks/useRouter', () => ({ useRouter: () => ({ query: { product: '1-2-Produto' }, push }) }));
 jest.mock('@components/Layout', () => ({ __esModule: true, default: (page: React.ReactNode) => page }));
-jest.mock('@hooks/useRequireAuth', () => ({ __esModule: true, default: jest.fn() }));
 jest.mock('@hooks/useRequest', () => ({ useRequest: jest.fn() }));
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
 jest.mock('@hooks/useProviderTerms', () => ({

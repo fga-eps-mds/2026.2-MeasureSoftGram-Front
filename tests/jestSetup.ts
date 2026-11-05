@@ -33,5 +33,6 @@ jest.mock('react-i18next', () => ({
 
 // quem precisa de outra rota troca a implementação (ver tests/helper/router.ts) ou mocka o módulo no próprio spec
 jest.mock('@hooks/useRouter', () => ({
-  useRouter: jest.fn(() => createMockedRoute({ layer: undefined, product: undefined }))
+  useRouter: jest.fn(() => createMockedRoute({ layer: undefined, product: undefined })),
+  useNavigation: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }))
 }));
