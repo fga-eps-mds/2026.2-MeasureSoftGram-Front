@@ -96,7 +96,6 @@ function HeaderUserMenu() {
   );
 }
 
-// páginas que abrem sem o breadcrumb
 const ROUTES_WITHOUT_BREADCRUMB = ['/home', '/about'];
 
 function Layout({ children, rightSide, disableBreadcrumb = false }: Props) {

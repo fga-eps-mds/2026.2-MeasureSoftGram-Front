@@ -15,7 +15,6 @@ const CACHE_MAX_ENTRIES = 500;
 
 const cache = new Map<string, { user: ServiceUser; expiresAt: number }>();
 
-/** Lida em execução (não fica fixada no build), para o mesmo build servir qualquer ambiente. */
 export const getServiceUrl = (): string => stripTrailingSlashes(process.env.SERVICE_URL || DEFAULT_SERVICE_URL);
 
 const cacheKey = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -32,12 +31,8 @@ const remember = (key: string, user: ServiceUser, now: number) => {
   cache.set(key, { user, expiresAt: now + VALIDATION_CACHE_TTL_MS });
 };
 
-/**
- * O token do Service é opaco e não expira lá, então a única validação real é perguntar a ele (`GET /v1/accounts/`).
- * - 401/403: o token foi rejeitado (`invalid`).
- * - Qualquer outra falha (Service fora do ar, timeout, 5xx): `unavailable`. Indisponibilidade não pode deslogar ninguém.
- * Token válido fica 60 s em cache (pela chave SHA-256), senão cada prefetch do menu geraria uma chamada ao Service.
- */
+// O token do Service é opaco e não expira, então só ele pode validar. Indisponibilidade não pode deslogar ninguém,
+// e o cache evita uma chamada ao Service a cada prefetch do menu.
 export async function validateToken(token: string): Promise<TokenValidation> {
   const now = Date.now();
   const key = cacheKey(token);

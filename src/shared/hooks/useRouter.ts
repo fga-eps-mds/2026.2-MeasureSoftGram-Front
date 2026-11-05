@@ -16,7 +16,6 @@ const decode = (value: string) => {
 
 const withoutTrailingSlash = (path: string) => (path.length > 1 ? stripTrailingSlashes(path) : path);
 
-/** Parâmetros da rota (`[product]`) e query string num objeto só, como o `router.query` do Pages Router. */
 export function useRouteQuery(): Query {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -30,7 +29,6 @@ export function useRouteQuery(): Query {
       else query[key] = Array.isArray(current) ? [...current, value] : [current, value];
     });
 
-    // o parâmetro da rota prevalece sobre a query string de mesmo nome
     Object.entries(params ?? {}).forEach(([key, value]) => {
       query[key] = Array.isArray(value) ? value.map(decode) : decode(value as string);
     });
@@ -39,7 +37,6 @@ export function useRouteQuery(): Query {
   }, [params, searchParams]);
 }
 
-/** Caminho atual, sem a barra final (o `trailingSlash` do Next a acrescenta) e sem query. */
 export function useRoutePath(): string {
   return withoutTrailingSlash(usePathname() ?? '/');
 }
@@ -47,7 +44,6 @@ export function useRoutePath(): string {
 const STATIC_RELEASE_SEGMENTS = ['create'];
 const STATIC_REPOSITORY_SEGMENTS = ['create', 'manage-repository'];
 
-/** Troca os valores dinâmicos do caminho pelo nome do parâmetro: `/products/1-2-x/releases/3` vira `/products/[product]/releases/[release]`. */
 export function toRoutePattern(path: string): string {
   const segments = path.split('/');
 
@@ -65,10 +61,7 @@ export function toRoutePattern(path: string): string {
   return segments.join('/');
 }
 
-/**
- * Mesma forma do `useRouter` do Pages Router (`query`, `pathname`, `asPath`, `isReady`), em cima do `next/navigation`.
- * `push` e `replace` não devolvem mais uma Promise: não dá para esperar a navegação terminar.
- */
+// `push` e `replace` não devolvem mais uma Promise: não dá para esperar a navegação terminar.
 export function useRouter() {
   const router = useNextRouter();
   const query = useRouteQuery();
@@ -92,10 +85,7 @@ export function useRouter() {
   );
 }
 
-/**
- * Só a navegação (`push`, `replace`, `back`), sem ler a URL. Não usa `useSearchParams`, que obriga a página estática
- * a ter um Suspense acima e a deixa sem conteúdo no HTML: serve a landing e as páginas públicas.
- */
+// Sem `useSearchParams`, que tiraria o conteúdo do HTML das páginas estáticas.
 export function useNavigation() {
   const router = useNextRouter();
 

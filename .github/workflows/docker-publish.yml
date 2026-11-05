@@ -37,7 +37,6 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/front:sha-${{ steps.vars.outputs.short_sha }}
           # Estes valores sao inlinados no bundle em build-time (Next.js), entao
           # PRECISAM existir aqui, nao adianta injetar no container em runtime.
-          # SERVICE_URL e a excecao: o servidor a le em execucao (compose do deploy).
           # Configurados como Repository Variables (Settings > Secrets and
           # variables > Actions > Variables). Sao publicos (client_id aparece na
           # URL de OAuth; URLs sao publicas), por isso variables e nao secrets.

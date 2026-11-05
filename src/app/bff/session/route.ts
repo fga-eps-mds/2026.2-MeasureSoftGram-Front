@@ -31,10 +31,6 @@ const serviceErrorMessage = async (response: Response): Promise<string> => {
   }
 };
 
-/**
- * Login: troca o `code` do provedor pelo token do Service e grava a sessão em cookie HttpOnly.
- * Corpo: `{ state, code }` no retorno com sucesso, ou `{ state, error }` quando o usuário cancelou no provedor.
- */
 export async function POST(request: NextRequest) {
   if (!isSameOrigin(request.headers, request.url)) return json({ error: 'forbidden' }, 403);
 
@@ -54,7 +50,6 @@ export async function POST(request: NextRequest) {
   const returnTo = sanitizeReturnTo(context.returnTo);
 
   if (body?.error) {
-    // reautorização cancelada: a sessão continua e a pessoa volta para onde estava
     const hasSession = Boolean(request.cookies.get(TOKEN_COOKIE)?.value);
     return respond({
       outcome: body.error === 'access_denied' ? 'cancelled' : 'provider_error',
@@ -92,7 +87,6 @@ export async function POST(request: NextRequest) {
   return response;
 }
 
-/** Logout: encerra o token no Service e apaga os cookies, mesmo que o Service não responda. */
 export async function DELETE(request: NextRequest) {
   if (!isSameOrigin(request.headers, request.url)) return json({ error: 'forbidden' }, 403);
 

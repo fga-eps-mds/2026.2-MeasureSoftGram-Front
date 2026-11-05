@@ -23,9 +23,7 @@ const Auth: React.FC = () => {
     return () => window.removeEventListener('pageshow', enableButtons);
   }, []);
 
-  // Quem valida o client id, guarda o state e leva ao provedor é o servidor (/auth/oauth/[provider]).
-  // O provedor sempre volta para a origem do callback, e o cookie do state é de quem o gravou: por isso o login começa
-  // nessa origem (ex.: localhost x 127.0.0.1).
+  // O provedor sempre volta para a origem do callback, e o cookie do state só vale na origem que o gravou.
   const startOAuthLogin = (provider: OAuthProvider) => {
     setLoadingProvider(provider);
 

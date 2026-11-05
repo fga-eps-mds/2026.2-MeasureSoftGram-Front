@@ -164,7 +164,6 @@ describe('/bff/[...path]', () => {
       expect(response.headers.get('x-total-count')).toBe('42');
       expect(response.headers.get('x-total-pages')).toBe('5');
       expect(response.headers.get('content-type')).toBe('application/json');
-      // cookies do Service não chegam ao navegador
       expect(response.headers.get('set-cookie')).toBeNull();
     });
 

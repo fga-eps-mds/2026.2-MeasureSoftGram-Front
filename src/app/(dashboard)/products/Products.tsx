@@ -356,13 +356,11 @@ const Products: React.FC = () => {
     }
   };
 
-  // O servidor guarda o state e leva ao provedor; o callback renova o token e volta para esta tela.
   const handleReauthorize = () => {
     const targetProvider = provider === 'gitlab' ? 'gitlab' : 'github';
     window.location.assign(`/auth/oauth/${targetProvider}?returnTo=${encodeURIComponent('/products')}&reauthorize=1`);
   };
 
-  // o provider vem da sessão no servidor, então já é o real no primeiro render
   useEffect(() => {
     let ativo = true;
     void loadProviderNamespaces(() => ativo);

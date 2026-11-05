@@ -58,8 +58,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     error,
   } = usePulseChartData(organizationId, productId);
 
-  // Memoizado: uma opção nova a cada render refazia o gráfico (notMerge) no meio da animação anterior, e o ECharts
-  // quebrava ao mexer em elementos já descartados. Trocar organização ou produto re-renderiza este componente.
+  // refazer o gráfico (notMerge) a cada render, no meio da animação, faz o ECharts mexer em elementos já descartados
   const chartOptions = useMemo(() => formatPulseChartOptions(filteredRepositories, PULSE_OPTIONS), [filteredRepositories]);
 
   if (isLoading) {

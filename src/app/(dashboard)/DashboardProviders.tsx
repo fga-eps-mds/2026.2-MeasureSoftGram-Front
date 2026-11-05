@@ -15,13 +15,8 @@ interface Props {
 
 const subscribe = () => () => undefined;
 
-/**
- * Contextos que só existem com sessão: as páginas públicas não os montam.
- *
- * O conteúdo só é montado no navegador, depois da hidratação. O idioma salvo (localStorage) só é conhecido ali, e o
- * HTML do servidor sai em inglês: hidratar o dashboard em português dava erro de hidratação, e o ECharts era
- * inicializado duas vezes quando o React refazia a árvore. A proteção de rota continua no proxy.ts.
- */
+// O idioma salvo só é conhecido no navegador e o HTML do servidor sai em inglês: montar depois da hidratação evita
+// a divergência.
 export default function DashboardProviders({ children, initialUser, provider, loginAt }: Props) {
   const isClient = useSyncExternalStore(subscribe, () => true, () => false);
   if (!isClient) return null;

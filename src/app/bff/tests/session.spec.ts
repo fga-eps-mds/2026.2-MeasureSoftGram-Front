@@ -17,7 +17,6 @@ const post = (body: object | null, { cookies = '', origin = ORIGIN }: { cookies?
     })
   );
 
-// cookie do state como o /auth/oauth/[provider] o grava
 const pendingLogin = (provider: 'github' | 'gitlab' = 'github', returnTo: string | null = null, now = Date.now()) => {
   const { nonce, cookieValue } = serializeState({ provider, returnTo }, undefined, now);
   return { nonce, cookie: `msgram_oauth_state=${cookieValue}` };

@@ -5,7 +5,6 @@ export const OAUTH_STATE_COOKIE = 'msgram_oauth_state';
 
 export const SESSION_COOKIES = [TOKEN_COOKIE, PROVIDER_COOKIE, LOGIN_AT_COOKIE];
 
-/** Limite da sessão (o aviso de 1h50 do AuthProvider conta a partir daqui). */
 export const SESSION_MAX_AGE_SECONDS = 2 * 60 * 60;
 export const OAUTH_STATE_MAX_AGE_SECONDS = 10 * 60;
 

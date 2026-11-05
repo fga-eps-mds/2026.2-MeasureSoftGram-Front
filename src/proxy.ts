@@ -8,15 +8,7 @@ const HOME = '/home/';
 const LOGIN = '/auth';
 const OAUTH_CALLBACK = '/auth/callback/';
 
-/**
- * Decide o acesso antes de renderizar:
- * - rota privada sem sessão válida vai para `/auth?returnTo=<rota>`;
- * - `/` e `/auth` com sessão válida vão direto para o destino;
- * - o retorno do provedor (`/?code=...`) nunca mostra a landing.
- * Service fora do ar ou lento não derruba a sessão: a requisição passa.
- */
 export async function proxy(request: NextRequest) {
-  // no modo mock não há login nem Service para consultar
   if (isMockingEnabled()) return NextResponse.next();
 
   const { pathname, search, searchParams } = request.nextUrl;

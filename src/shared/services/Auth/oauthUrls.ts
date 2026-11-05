@@ -1,5 +1,3 @@
-// Montagem das URLs de autorização dos provedores. Sem dependências, para valer no servidor e no navegador.
-
 const buildGithubAuthUrl = (state: string, prompt?: string) => {
   const params = new URLSearchParams({
     client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || '',

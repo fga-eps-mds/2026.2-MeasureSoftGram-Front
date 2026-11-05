@@ -3,7 +3,6 @@ import { clearSessionCookies, isSecureRequest, TOKEN_COOKIE } from '../../../sha
 import { isSameOrigin } from '../../../shared/server/auth/origin';
 import { getServiceUrl } from '../../../shared/server/auth/validateToken';
 
-// o token vem do cookie a cada requisição: nada aqui pode ser estático ou ficar em cache
 export const dynamic = 'force-dynamic';
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -17,7 +16,6 @@ interface Context {
 
 const json = (body: object, status: number) => NextResponse.json(body, { status });
 
-/** Só `v1/...`, sem `..` nem separadores escondidos dentro de um segmento. */
 const isAllowedPath = (segments: string[]): boolean =>
   segments.length > 1 &&
   segments[0] === 'v1' &&

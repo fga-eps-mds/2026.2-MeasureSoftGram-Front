@@ -17,7 +17,6 @@ services:
     env_file:
       - .env
     environment:
-      # lida em execucao pelo servidor do Next (proxy.ts e /bff); nao e mais fixada no build
       SERVICE_URL: ${SERVICE_URL:-http://service:8080/api}
     extra_hosts:
       - "host.docker.internal:host-gateway"

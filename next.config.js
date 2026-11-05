@@ -20,8 +20,7 @@ const nextConfig = {
     tsconfigPath: './tsconfig.json'
   },
   trailingSlash: true,
-  // o /bff repassa ao Service rotas com e sem barra final (`/v1/accounts/access-token`); o redirecionamento
-  // automático do Next acrescentaria a barra e o Django responderia 404. O proxy.ts normaliza o caminho.
+  // o /bff repassa rotas do Django sem barra final (`/v1/accounts/access-token`), que o redirecionamento quebraria
   skipTrailingSlashRedirect: true,
   // o `next dev` guardava só 2 páginas compiladas e descartava as paradas há 25 s: voltar para uma aba recompilava
   onDemandEntries: {

@@ -55,7 +55,6 @@ export default defineConfig([
       'react-hooks/purity': 'off',
       'react-hooks/immutability': 'off',
       'react-hooks/incompatible-library': 'off',
-      // os specs mocam componentes com funções anônimas
       'react/display-name': 'off',
       'jest/no-alias-methods': 'off',
       'jest/no-identical-title': 'off',

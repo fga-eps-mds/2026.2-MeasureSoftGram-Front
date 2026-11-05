@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { takeFlashMessage } from '../../utils/flashMessage';
 
-/** Mostra o toast guardado antes da última recarga (boas-vindas, "Volte logo", sessão expirada). */
 export default function FlashMessage() {
   const pathname = usePathname();
 

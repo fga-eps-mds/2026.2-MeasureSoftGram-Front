@@ -19,7 +19,6 @@ export const isOAuthProvider = (value: unknown): value is OAuthProvider => value
 
 export const generateNonce = () => randomBytes(NONCE_BYTES).toString('hex');
 
-/** Valor do cookie do state: o contexto do login e o nonce, que também vai na URL do provedor. */
 export const serializeState = (context: OAuthStateContext, nonce = generateNonce(), now = Date.now()) => {
   const stored: StoredOAuthState = { ...context, nonce, expiresAt: now + OAUTH_STATE_TTL_MS };
   return { nonce, cookieValue: Buffer.from(JSON.stringify(stored)).toString('base64url') };
@@ -31,10 +30,6 @@ const safeEqual = (a: string, b: string) => {
   return left.length === right.length && timingSafeEqual(left, right);
 };
 
-/**
- * Confere o state devolvido pelo provedor com o cookie. Devolve o contexto do login, ou null se o cookie falta,
- * está corrompido, expirou ou o state não confere. O cookie é de uso único: quem chama sempre o apaga.
- */
 export const verifyState = (
   cookieValue: string | undefined,
   received: string | null | undefined,

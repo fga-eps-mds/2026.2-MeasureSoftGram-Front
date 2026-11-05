@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { setFlashMessage } from '../utils/flashMessage';
 
-// Todas as chamadas passam pelo /bff do próprio Next, que lê o token do cookie HttpOnly e o repassa ao Service.
-// O navegador nunca vê o token.
+// O /bff lê o token do cookie HttpOnly e o repassa ao Service: o navegador nunca vê o token.
 export const API_BASE_URL = '/bff';
 
 const api = axios.create({
@@ -16,7 +15,6 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       const { pathname, search } = window.location;
 
-      // o /bff já apagou os cookies; falta voltar ao login guardando a rota atual
       if (!pathname.startsWith('/auth')) {
         setFlashMessage({ type: 'warning', text: 'Sua sessão expirou. Entre novamente.' });
         const returnTo = encodeURIComponent(pathname + search);

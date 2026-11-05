@@ -7,9 +7,8 @@ import bundledBackend from './bundledBackend';
 import en from './locales/en';
 import { DEFAULT_LANGUAGE, i18nConfig } from './config';
 
-// sem idioma salvo o app abre em inglês; o salvo é lido depois da hidratação, para o HTML do servidor e o primeiro
-// render do navegador saírem iguais. O `en` entra já carregado (init síncrono): sem isso o HTML do servidor sairia com
-// as chaves cruas (`repo-button`), porque o backend só responde de forma assíncrona. Os outros idiomas vêm do backend.
+// O idioma salvo é lido depois da hidratação, para o HTML e o primeiro render saírem iguais. O `en` entra carregado
+// porque o backend é assíncrono, e o HTML do servidor sairia com as chaves cruas.
 const i18n = i18next.createInstance();
 void i18n
   .use(bundledBackend)

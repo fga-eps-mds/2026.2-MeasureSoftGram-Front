@@ -70,7 +70,6 @@ describe('formatPulseChart Utility', () => {
     });
 
     it('desenha no ECharts um repositório que trocou de faixa uma única vez', () => {
-      // dois trechos abertos (-∞..t e t..∞) não geravam parada de cor e o ECharts quebrava em "reading 'coord'"
       const repos: PulseRepositoryData[] = [
         {
           id: 1,

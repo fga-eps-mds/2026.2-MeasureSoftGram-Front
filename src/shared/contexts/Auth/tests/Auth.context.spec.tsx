@@ -13,7 +13,6 @@ jest.mock('react-toastify', () => ({
   toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn(), info: jest.fn() }
 }));
 
-// Mock simples do ConfirmModal para focar na lógica do contexto
 jest.mock(
   '@components/ConfirmModal/ConfirmModal',
   () =>

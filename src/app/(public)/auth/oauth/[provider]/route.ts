@@ -16,7 +16,6 @@ interface Context {
 const clientIdOf = (provider: OAuthProvider) =>
   provider === 'github' ? process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID : process.env.GITLAB_CLIENT_ID;
 
-// Pergunta ao Service se o client id configurado é válido, antes de mandar a pessoa ao provedor.
 async function isClientIdValid(provider: OAuthProvider, clientId: string): Promise<boolean> {
   const response = await fetch(`${getServiceUrl()}/v1/accounts/${provider}/validate/`, {
     method: 'POST',
@@ -30,10 +29,6 @@ async function isClientIdValid(provider: OAuthProvider, clientId: string): Promi
   return data?.valid === true;
 }
 
-/**
- * Início do login: valida o client id, grava o `state` em cookie HttpOnly (10 min, uso único) e redireciona para o
- * provedor. Qualquer falha leva a /auth/error. `?returnTo=` guarda o destino depois do login (ou da reautorização).
- */
 export async function GET(request: NextRequest, { params }: Context) {
   const { provider } = await params;
   const toErrorPage = () => NextResponse.redirect(new URL(ERROR_PAGE, request.url));
@@ -53,7 +48,6 @@ export async function GET(request: NextRequest, { params }: Context) {
   const returnTo = sanitizeReturnTo(searchParams.get('returnTo'));
   const { nonce, cookieValue } = serializeState({ provider, returnTo });
 
-  // reautorização (volta com returnTo) pede a escolha da conta no GitHub
   let authUrl: string;
   if (provider === 'gitlab') authUrl = getGitlabAuthUrl(nonce);
   else authUrl = searchParams.get('reauthorize') === '1' ? getGithubReauthorizeUrl(nonce) : getGithubAuthUrl(nonce);

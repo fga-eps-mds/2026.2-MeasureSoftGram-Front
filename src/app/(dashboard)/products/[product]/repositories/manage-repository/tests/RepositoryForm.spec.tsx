@@ -55,7 +55,6 @@ jest.mock('@contexts/RepositoryProvider', () => ({
 const organization = { id: '1' };
 const product = { id: '1', name: 'MeasureSoftGram' };
 
-// contextos carregados, com organização e produto escolhidos; cada teste troca só o que precisa
 const mockContexts = (
   organizationContext: Record<string, unknown> = {},
   productContext: Record<string, unknown> = {}
@@ -87,18 +86,11 @@ describe('RepositoryForm', () => {
 
     expect(screen.getByTestId('repo-name-input')).toBeInTheDocument();
 
-    await waitFor(() => {
-      // expect(a).toHaveValue('Test Repo');
-    });
 
     const t = jest.fn();
     t.mockReturnValue("bar");
 
-    // const nameInput = getByLabelText(/Nome do Repositório/i);
-    // fireEvent.change(nameInput, { target: { value: 'New Repo Name' } });
-    // expect(nameInput).toHaveValue('New Repo Name');
 
-    // expect(getByText(/Editar Repositório/i)).toBeInTheDocument();
   });
 
   it('Deve salvar a edição e voltar para a lista de repositórios', async () => {

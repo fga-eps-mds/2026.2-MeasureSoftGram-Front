@@ -17,7 +17,6 @@ export interface IProductContext {
   productsList?: Product[];
   updateProductList: (products: Product[]) => void;
   loadAllProducts: () => Promise<void>;
-  /** A lista de produtos da organização atual já chegou (ou não há organização). */
   hasLoadedProducts: boolean;
 }
 

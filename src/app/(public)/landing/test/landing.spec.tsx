@@ -63,7 +63,6 @@ describe('Landing', () => {
     expect(resolvedMeta.heroTitle).toBe(HERO_TITLE);
     expect(resolvedMeta.heroTitle).not.toContain(HERO_KEY_PREFIX);
 
-    // og:image precisa ser uma URL absoluta para o crawler buscar a imagem.
     expect(resolvedMeta.ogImage).toBe(OG_IMAGE);
   });
 
@@ -74,7 +73,6 @@ describe('Landing', () => {
     expect(resolvedMeta.metaDescription).toBe(
       'Meca a qualidade do seu software de forma objetiva, com base em metricas coletadas do seu proprio pipeline.'
     );
-    // heroTitle nao existe nas traducoes: usa o metaTitle como fallback.
     expect(resolvedMeta.heroTitle).toBe('MeasureSoftGram');
     expect(resolvedMeta.ogImage).toBe(OG_IMAGE);
   });

@@ -68,10 +68,8 @@ const RepositoryForm: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  // Só decide depois de a organização e o produto terminarem de carregar: ao abrir a URL direto
-  // (`manage-repository/?id=`) os dois chegam vazios no primeiro render, e isso não é "sem organização".
-  // Cada contexto escolhe o atual num efeito depois de a lista chegar, então "lista carregada" ainda não basta:
-  // com itens na lista, falta o atual ter sido escolhido.
+  // Os contextos chegam vazios no primeiro render e escolhem o item atual num efeito depois de a lista carregar:
+  // até lá, vazio não significa "sem organização".
   const isOrganizationReady = organizationList.length === 0 || !!currentOrganization?.id;
   const isProductReady = productsList?.length === 0 || !!currentProduct?.id;
   const isContextReady =

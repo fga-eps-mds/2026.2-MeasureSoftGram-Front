@@ -24,10 +24,8 @@ const LEGACY_STORAGE_KEYS = ['token', 'session', 'provider', 'login_timestamp'];
 
 interface AuthProviderProps {
   children: React.ReactNode;
-  /** Usuário lido no servidor, que já chega no HTML. */
   initialUser?: User | null;
   provider?: Providers;
-  /** Instante do login (ms), que dá partida no aviso de expiração. */
   loginAt?: number | null;
 }
 
@@ -60,10 +58,6 @@ export const AuthProvider = ({ children, initialUser = null, provider = 'credent
     };
   }, [initialUser]);
 
-  /**
-   * Encerra a sessão no servidor e recarrega a página inteira em "/", sem estado velho de usuário na memória.
-   * O aviso aparece depois da recarga (ver FlashMessage).
-   */
   const logout = useCallback(async (message: string = 'Volte logo para acompanhar seus produtos!', type: 'success' | 'warning' = 'success') => {
     if (loggingOutRef.current) return;
     loggingOutRef.current = true;
@@ -74,7 +68,6 @@ export const AuthProvider = ({ children, initialUser = null, provider = 'credent
   }, []);
 
   useEffect(() => {
-    // Só monitora com login feito agora; no modo mock não há horário de login
     if (!loginAt) return;
 
     const checkSessionTime = () => {

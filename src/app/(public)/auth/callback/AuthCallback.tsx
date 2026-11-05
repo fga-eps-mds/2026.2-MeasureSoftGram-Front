@@ -17,7 +17,6 @@ interface SessionResponse {
   message?: string;
 }
 
-/** Decide o aviso e o destino a partir da resposta do servidor. */
 export function resolveCallbackResult(status: number, data: SessionResponse) {
   if (data.error === 'invalid_state') {
     return { flash: { type: 'error', text: OAUTH_REJECTED_MESSAGE }, destination: ERROR_PAGE } as const;
@@ -36,10 +35,6 @@ export function resolveCallbackResult(status: number, data: SessionResponse) {
   return { flash: { type: 'error', text: `Erro ao realizar login: ${reason}` }, destination: LOGIN_PAGE } as const;
 }
 
-/**
- * Retorno do provedor (`/?code&state` chega aqui pelo proxy). Mostra só um loading, sem botões: uma única chamada ao
- * servidor confere o state, troca o code e grava a sessão, e a navegação vai direto para o destino.
- */
 const AuthCallback: React.FC = () => {
   const started = useRef(false);
 

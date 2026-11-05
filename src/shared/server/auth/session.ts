@@ -11,17 +11,12 @@ export interface ServerSession {
   /** null quando o Service não respondeu: o cliente busca o usuário depois. */
   user: Record<string, any> | null;
   provider: SessionProvider;
-  /** Instante do login (ms), de onde conta o aviso de expiração. */
   loginAt: number | null;
 }
 
 const toProvider = (value: string | undefined): SessionProvider =>
   value === 'github' || value === 'gitlab' ? value : 'credentials';
 
-/**
- * Sessão da requisição, lida do cookie. Devolve null sem cookie ou com token rejeitado.
- * Com NEXT_PUBLIC_API_MOCKING=enabled devolve o usuário da fixture, sem chamar o Service.
- */
 export const getSession = cache(async (): Promise<ServerSession | null> => {
   if (isMockingEnabled()) {
     return { user: fixtureUser, provider: 'credentials', loginAt: null };

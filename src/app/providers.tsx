@@ -15,7 +15,6 @@ const isMockingEnabled = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled';
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [mockingReady, setMockingReady] = useState(!isMockingEnabled);
 
-  // Sobe o worker MSW (client-only) antes de renderizar.
   useEffect(() => {
     if (!isMockingEnabled) return;
     import('../mocks/initMocks')
@@ -24,7 +23,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       .finally(() => setMockingReady(true));
   }, []);
 
-  // No modo mock, espera o worker MSW estar pronto antes de montar a aplicacao.
   if (!mockingReady) return null;
 
   return (
