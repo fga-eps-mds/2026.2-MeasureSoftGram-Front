@@ -24,6 +24,8 @@ function summary(values: Partial<DistributionSummary>): DistributionSummary {
     upper_limit: null,
     outliers: 0,
     mean: null,
+    std: null,
+    variance: null,
     skewness: null,
     ...values
   };

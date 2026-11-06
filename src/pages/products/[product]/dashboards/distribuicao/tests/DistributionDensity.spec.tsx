@@ -1,6 +1,7 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { DistributionLevel } from '@customTypes/product';
 import DistributionDensity from '../DistributionDensity';
 import { entity } from './fixtures';
 
@@ -38,6 +39,17 @@ describe('<DistributionDensity />', () => {
     expect(chart().legend).toEqual(['Densidade', 'Mediana (0,56)']);
     expect(chart().curve[0][0]).toBe(0);
     expect(card).toHaveTextContent('A área sob a curva soma 1');
+    expect(within(card).getByRole('list', { name: 'Faixas de qualidade de A a E' })).toBeInTheDocument();
+  });
+
+  it.each<[DistributionLevel, string]>([
+    ['characteristic', 'Reliability'],
+    ['subcharacteristic', 'Testing Status'],
+    ['measure', 'Passed Tests']
+  ])('no nível %s, de 0 a 1, também tem a régua A a E', (level, name) => {
+    render(<DistributionDensity entity={entity(name, name, level)} />);
+
+    expect(screen.getByRole('list', { name: 'Faixas de qualidade de A a E' })).toBeInTheDocument();
   });
 
   it('numa métrica, segue a escala dela, como o histograma', () => {
@@ -47,6 +59,7 @@ describe('<DistributionDensity />', () => {
 
     expect(chart().xAxis).toMatchObject({ min: 40, max: 65, interval: 5 });
     expect(chart().curve.at(-1)[0]).toBe(65);
+    expect(screen.queryByRole('list', { name: 'Faixas de qualidade de A a E' })).not.toBeInTheDocument();
   });
 
   it('numa métrica, não mostra os rótulos do eixo y, que repetiam "0", e o texto acessível continua descrevendo a curva', () => {

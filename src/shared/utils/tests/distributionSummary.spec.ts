@@ -23,6 +23,8 @@ const summary: DistributionSummary = {
   upper_limit: 0.805,
   outliers: 3,
   mean: 0.5512345,
+  std: 0.1234567,
+  variance: 0.0152416,
   skewness: -0.1634
 };
 
@@ -40,18 +42,21 @@ const empty: DistributionSummary = {
   upper_limit: null,
   outliers: 0,
   mean: null,
+  std: null,
+  variance: null,
   skewness: null
 };
 
 describe('formatStatistic', () => {
-  it.each<[number | null, string]>([
+  it.each<[number | null | undefined, string]>([
     [0.5512345, '0,55'],
     [0.125, '0,13'],
     [12, '12,00'],
     [1284.5, '1.284,50'],
     [-0.1634, '-0,16'],
     [-0.001, '0,00'],
-    [null, '—']
+    [null, '—'],
+    [undefined, '—']
   ])('%p vira %p', (value, text) => {
     expect(formatStatistic(value)).toBe(text);
   });
@@ -66,7 +71,7 @@ describe('formatAnalysisCount', () => {
 });
 
 describe('getSummaryRows', () => {
-  it('traz as 12 linhas da referência com duas casas e o IQR destacado', () => {
+  it('traz as 14 linhas da referência com duas casas e o IQR destacado', () => {
     expect(getSummaryRows(summary)).toEqual([
       { label: 'Análises', value: '60' },
       { label: 'Mínimo', value: '0,20' },
@@ -79,6 +84,8 @@ describe('getSummaryRows', () => {
       { label: 'Limite superior', value: '0,81' },
       { label: 'Discrepantes', value: '3' },
       { label: 'Média', value: '0,55' },
+      { label: 'Desvio padrão', value: '0,12' },
+      { label: 'Variância', value: '0,02' },
       { label: 'Assimetria', value: '-0,16' }
     ]);
   });
@@ -86,7 +93,16 @@ describe('getSummaryRows', () => {
   it('mostra "—" no que o Service devolve null', () => {
     const values = getSummaryRows(empty).map((row) => row.value);
 
-    expect(values).toEqual(['0', '—', '—', '—', '—', '—', '—', '—', '—', '0', '—', '—']);
+    expect(values).toEqual(['0', '—', '—', '—', '—', '—', '—', '—', '—', '0', '—', '—', '—', '—']);
+  });
+
+  it('mostra "—" no desvio padrão e na variância de um Service que ainda não devolve os campos', () => {
+    const older = { ...summary, std: undefined, variance: undefined } as unknown as DistributionSummary;
+
+    expect(getSummaryRows(older).filter((row) => /Desvio|Variância/.test(row.label))).toEqual([
+      { label: 'Desvio padrão', value: '—' },
+      { label: 'Variância', value: '—' }
+    ]);
   });
 });
 

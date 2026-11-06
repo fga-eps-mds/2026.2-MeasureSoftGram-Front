@@ -123,6 +123,8 @@ export const summary: DistributionSummary = {
   upper_limit: 0.73125,
   outliers: 2,
   mean: 0.5716666,
+  std: 0.1899,
+  variance: 0.0361,
   skewness: 0.48
 };
 
@@ -140,6 +142,8 @@ export const emptySummary: DistributionSummary = {
   upper_limit: null,
   outliers: 0,
   mean: null,
+  std: null,
+  variance: null,
   skewness: null
 };
 
