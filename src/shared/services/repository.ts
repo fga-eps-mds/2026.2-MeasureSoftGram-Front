@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import api from './api';
+import { stripTrailingSlashes } from '../utils/stripTrailingSlashes';
 
 interface RepositoryFormData {
   name: string;
@@ -19,6 +20,11 @@ interface HistoricalCharacteristicsProps {
 export type ResultSuccess<T> = { type: 'success'; value: T };
 export type ResultError = { type: 'error'; error: Error | AxiosError };
 export type Result<T> = ResultSuccess<T> | ResultError;
+
+// O badge vai para o README de terceiros, então a URL precisa ser a pública da API (o `/bff` exige o cookie de sessão).
+// Sem NEXT_PUBLIC_API_URL, assume a API na mesma origem, em /api, como no proxy da Platform.
+export const getPublicApiUrl = (): string =>
+  stripTrailingSlashes(process.env.NEXT_PUBLIC_API_URL || `${globalThis.location?.origin ?? ''}/api`);
 
 const buildRepositoryBasePath = (organizationId: string, productId: string, repositoryId: string): string =>
   `/v1/organizations/${organizationId}/products/${productId}/repositories/${repositoryId}`;
@@ -118,12 +124,12 @@ class Repository {
   getTsqmiBadgeUrl(props: HistoricalCharacteristicsProps) {
     const { organizationId, entity, productId, repositoryId } = props;
     const basePath = buildRepositoryBasePath(organizationId as string, productId as string, repositoryId as string);
-    return `${this.apiClient.getUri()}${basePath}/latest-values/${entity}/badge/`;
+    return `${getPublicApiUrl()}${basePath}/latest-values/${entity}/badge/`;
   }
 
   getCharacteristicBadgeUrl(organizationId: string, productId: string, repositoryId: string, characteristicKey: string) {
     const basePath = buildRepositoryBasePath(organizationId, productId, repositoryId);
-    return `${this.apiClient.getUri()}${basePath}/latest-values/characteristics/${characteristicKey}/badge/`;
+    return `${getPublicApiUrl()}${basePath}/latest-values/characteristics/${characteristicKey}/badge/`;
   }
 }
 

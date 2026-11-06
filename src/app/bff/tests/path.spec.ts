@@ -23,6 +23,11 @@ const call = (
   return handler(request, { params: Promise.resolve({ path: segments }) });
 };
 
+const headerOf = (headers: unknown, name: string): string | null => {
+  const entry = Object.entries(headers as Record<string, string>).find(([key]) => key.toLowerCase() === name);
+  return entry ? entry[1] : null;
+};
+
 const forwarded = () => ({ url: fetchMock.mock.calls[0][0] as string, init: fetchMock.mock.calls[0][1] as RequestInit });
 
 describe('/bff/[...path]', () => {
@@ -44,7 +49,9 @@ describe('/bff/[...path]', () => {
 
       expect(response.status).toBe(200);
       expect(forwarded().url).toBe('http://service:8080/api/v1/organizations/');
-      expect((forwarded().init.headers as Headers).get('authorization')).toBe('Token good');
+      expect(headerOf(forwarded().init.headers, 'authorization')).toBe('Token good');
+      // o Django em produção redireciona para https se não souber que o TLS termina na borda
+      expect(headerOf(forwarded().init.headers, 'x-forwarded-proto')).toBe('https');
     });
 
     it('preserva a barra final, que o Django exige', async () => {
@@ -110,7 +117,7 @@ describe('/bff/[...path]', () => {
     it('não repassa o cookie do navegador ao Service', async () => {
       await call(GET, 'v1/organizations/', { headers: { cookie: 'msgram_token=good; outro=1' } });
 
-      expect((forwarded().init.headers as Headers).get('cookie')).toBeNull();
+      expect(headerOf(forwarded().init.headers, 'cookie')).toBeNull();
     });
   });
 
@@ -132,7 +139,7 @@ describe('/bff/[...path]', () => {
       const { init } = forwarded();
       expect(init.method).toBe('POST');
       expect(Buffer.from(init.body as ArrayBuffer).toString()).toBe('{"name":"x"}');
-      expect((init.headers as Headers).get('content-type')).toBe('application/json');
+      expect(headerOf(init.headers, 'content-type')).toBe('application/json');
     });
 
     it('DELETE com Origin da própria aplicação passa', async () => {
@@ -165,6 +172,17 @@ describe('/bff/[...path]', () => {
       expect(response.headers.get('x-total-pages')).toBe('5');
       expect(response.headers.get('content-type')).toBe('application/json');
       expect(response.headers.get('set-cookie')).toBeNull();
+    });
+
+    it('repassa os cabeçalhos de paginação que o Service expõe', async () => {
+      fetchMock.mockResolvedValue(
+        upstreamResponse(200, '[]', { 'x-total': '9', 'x-total-pages': '3', 'x-page': '1', 'x-next-page': '2', 'x-outro': 'não' })
+      );
+
+      const response = await call(GET, 'v1/accounts/gitlab-namespaces/');
+
+      expect(['x-total', 'x-total-pages', 'x-page', 'x-next-page'].map((name) => response.headers.get(name))).toEqual(['9', '3', '1', '2']);
+      expect(response.headers.get('x-outro')).toBeNull();
     });
 
     it('responde 204 sem corpo', async () => {

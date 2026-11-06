@@ -5,6 +5,7 @@ import { getUserInfo } from '@services/Auth';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@components/ConfirmModal/ConfirmModal';
 import { setFlashMessage } from '../../utils/flashMessage';
+import { WELCOME_COOKIE } from '../../server/auth/cookies';
 
 export const authContextDefaultValues: authContextType = {
   session: null,
@@ -42,6 +43,13 @@ export const AuthProvider = ({ children, initialUser = null, provider = 'credent
   useEffect(() => {
     LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
   }, []);
+
+  useEffect(() => {
+    if (!user || !document.cookie.split('; ').includes(`${WELCOME_COOKIE}=1`)) return;
+
+    document.cookie = `${WELCOME_COOKIE}=; Max-Age=0; path=/`;
+    toast.success(`Bem vindo ao MeasureSoftGram ${user.username}!`);
+  }, [user]);
 
   // O servidor não conseguiu consultar o Service: o usuário é buscado aqui. Se o token foi rejeitado, o
   // interceptor do axios leva ao login.

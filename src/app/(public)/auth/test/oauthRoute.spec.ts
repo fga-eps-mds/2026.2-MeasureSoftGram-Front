@@ -10,7 +10,7 @@ const json = (status: number, body: object) => new Response(JSON.stringify(body)
 const call = (provider: string, query = '', headers: Record<string, string> = {}) =>
   GET(new NextRequest(`http://localhost:3000/auth/oauth/${provider}${query}`, { headers }), { params: Promise.resolve({ provider }) });
 
-const location = (response: Response) => new URL(response.headers.get('location') as string);
+const location = (response: Response) => new URL(response.headers.get('location') as string, 'http://localhost:3000');
 const stateCookie = (response: Response) =>
   response.headers.getSetCookie().find((cookie) => cookie.startsWith('msgram_oauth_state='));
 
@@ -85,7 +85,8 @@ describe('/auth/oauth/[provider]', () => {
   describe('falhas levam a /auth/error, sem gravar state', () => {
     const expectErrorPage = (response: Response) => {
       expect(response.status).toBe(307);
-      expect(location(response).pathname).toBe('/auth/error/');
+      // relativo: a origem do request é a interna do contêiner e não serve ao navegador
+      expect(response.headers.get('location')).toBe('/auth/error/');
       expect(stateCookie(response)).toBeUndefined();
     };
 

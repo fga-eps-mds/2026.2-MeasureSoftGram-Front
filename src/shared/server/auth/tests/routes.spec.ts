@@ -1,4 +1,6 @@
-import { isInternalPath, isPublicPath, normalizePath, sanitizeReturnTo } from '../routes';
+import fs from 'fs';
+import path from 'path';
+import { isInternalPath, isProtectedPath, isPublicPath, normalizePath, PROTECTED_ROUTES, sanitizeReturnTo } from '../routes';
 import { isSameOrigin } from '../origin';
 import { isSecureRequest, cookieOptions } from '../cookies';
 
@@ -28,6 +30,37 @@ describe('routes', () => {
         expect(isPublicPath(path)).toBe(false);
       }
     );
+  });
+
+  describe('isProtectedPath', () => {
+    it.each(['/home/', '/products', '/products/create', '/products/1-2-x/', '/products/1-2-x/releases/create', '/products/1-2-x/releases/7', '/products/1-2-x/dashboards/relacoes'])(
+      '%s é página protegida',
+      (p) => expect(isProtectedPath(p)).toBe(true)
+    );
+
+    it.each(['/nao-existe', '/authors', '/products/1-2-x/foo', '/products/1-2-x/dashboards', '/home/extra', '/products//releases'])(
+      '%s não é página',
+      (p) => expect(isProtectedPath(p)).toBe(false)
+    );
+
+    // mantém PROTECTED_ROUTES em sincronia com as páginas reais: uma página nova esquecida cairia no 404 sem login
+    it('cobre toda página de src/app/(dashboard)', () => {
+      const root = path.join(__dirname, '../../../../app/(dashboard)');
+      const pages: string[] = [];
+      const walk = (dir: string) =>
+        fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) walk(full);
+          else if (/^page\.tsx?$/.test(entry.name)) {
+            const route = '/' + path.relative(root, dir).split(path.sep).join('/');
+            pages.push(route.replace(/^\/\.$/, '/'));
+          }
+        });
+      walk(root);
+
+      expect(pages.length).toBeGreaterThan(0);
+      expect([...pages].sort()).toEqual([...PROTECTED_ROUTES].sort());
+    });
   });
 
   describe('isInternalPath', () => {

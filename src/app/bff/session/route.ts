@@ -8,12 +8,14 @@ import {
   OAUTH_STATE_COOKIE,
   PROVIDER_COOKIE,
   SESSION_MAX_AGE_SECONDS,
-  TOKEN_COOKIE
+  TOKEN_COOKIE,
+  WELCOME_COOKIE,
+  welcomeCookieOptions
 } from '../../../shared/server/auth/cookies';
 import { isSameOrigin } from '../../../shared/server/auth/origin';
 import { verifyState } from '../../../shared/server/auth/oauthState';
 import { sanitizeReturnTo } from '../../../shared/server/auth/routes';
-import { getServiceUrl } from '../../../shared/server/auth/validateToken';
+import { getServiceUrl, serviceFetch } from '../../../shared/server/auth/serviceFetch';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,11 +63,10 @@ export async function POST(request: NextRequest) {
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${getServiceUrl()}/v1/accounts/${context.provider}/login/`, {
+    upstream = await serviceFetch(`${getServiceUrl()}/v1/accounts/${context.provider}/login/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ code: body.code }),
-      cache: 'no-store'
+      body: JSON.stringify({ code: body.code })
     });
   } catch {
     return respond({ error: 'login_failed', message: 'Serviço indisponível.' }, 502);
@@ -83,6 +84,8 @@ export async function POST(request: NextRequest) {
   response.cookies.set(TOKEN_COOKIE, key, options);
   response.cookies.set(PROVIDER_COOKIE, context.provider, options);
   response.cookies.set(LOGIN_AT_COOKIE, String(Date.now()), options);
+  // com returnTo é reautorização de quem já estava dentro: sem boas-vindas
+  if (!returnTo) response.cookies.set(WELCOME_COOKIE, '1', welcomeCookieOptions(secure));
 
   return response;
 }
@@ -94,10 +97,9 @@ export async function DELETE(request: NextRequest) {
   const token = request.cookies.get(TOKEN_COOKIE)?.value;
 
   if (token) {
-    await fetch(`${getServiceUrl()}/v1/accounts/logout/`, {
+    await serviceFetch(`${getServiceUrl()}/v1/accounts/logout/`, {
       method: 'DELETE',
-      headers: { Authorization: `Token ${token}` },
-      cache: 'no-store'
+      headers: { Authorization: `Token ${token}` }
     }).catch(() => undefined);
   }
 

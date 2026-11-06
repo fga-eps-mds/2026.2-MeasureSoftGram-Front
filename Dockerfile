@@ -15,9 +15,12 @@ FROM node:20-alpine AS builder
 # build-args inlined no bundle (next.config `env` + prefixo NEXT_PUBLIC_,
 # avaliados em build-time). Cada ambiente sobrescreve via --build-arg (ver
 # .github/workflows/docker-publish.yml).
+# URL pública da API, usada nos badges dos READMEs; vazia = mesma origem do site, em /api
+ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_LOGIN_REDIRECT_URL
 ARG NEXT_PUBLIC_GITHUB_CLIENT_ID
 ARG GITLAB_CLIENT_ID
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_LOGIN_REDIRECT_URL=$NEXT_PUBLIC_LOGIN_REDIRECT_URL
 ENV NEXT_PUBLIC_GITHUB_CLIENT_ID=$NEXT_PUBLIC_GITHUB_CLIENT_ID
 ENV GITLAB_CLIENT_ID=$GITLAB_CLIENT_ID

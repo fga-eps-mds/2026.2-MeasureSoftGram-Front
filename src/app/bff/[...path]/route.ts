@@ -1,14 +1,15 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { clearSessionCookies, isSecureRequest, TOKEN_COOKIE } from '../../../shared/server/auth/cookies';
 import { isSameOrigin } from '../../../shared/server/auth/origin';
-import { getServiceUrl } from '../../../shared/server/auth/validateToken';
+import { getServiceUrl, serviceFetch } from '../../../shared/server/auth/serviceFetch';
 
 export const dynamic = 'force-dynamic';
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const FORWARDED_REQUEST_HEADERS = ['content-type', 'accept', 'accept-language'];
-const FORWARDED_RESPONSE_HEADERS = ['content-type', 'content-disposition'];
+// os mesmos que o Service expõe em CORS_EXPOSE_HEADERS: o Front pagina por eles
+const FORWARDED_RESPONSE_HEADERS = ['content-type', 'content-disposition', 'x-total', 'x-total-pages', 'x-next-page', 'x-page'];
 
 interface Context {
   params: Promise<{ path: string[] }>;
@@ -49,20 +50,19 @@ async function handle(request: NextRequest, { params }: Context) {
   const token = request.cookies.get(TOKEN_COOKIE)?.value;
   if (!token) return json({ detail: 'As credenciais de autenticação não foram fornecidas.' }, 401);
 
-  const headers = new Headers({ Authorization: `Token ${token}` });
+  const headers: Record<string, string> = { Authorization: `Token ${token}` };
   FORWARDED_REQUEST_HEADERS.forEach((name) => {
     const value = request.headers.get(name);
-    if (value) headers.set(name, value);
+    if (value) headers[name] = value;
   });
 
   let upstream: Response;
   try {
-    upstream = await fetch(buildTarget(segments, request), {
+    upstream = await serviceFetch(buildTarget(segments, request), {
       method: request.method,
       headers,
       body: WRITE_METHODS.has(request.method) ? await request.arrayBuffer() : undefined,
-      redirect: 'manual',
-      cache: 'no-store'
+      redirect: 'manual'
     });
   } catch {
     return json({ detail: 'Serviço indisponível.' }, 502);
@@ -73,6 +73,7 @@ async function handle(request: NextRequest, { params }: Context) {
     const value = upstream.headers.get(name);
     if (value) responseHeaders.set(name, value);
   });
+
   upstream.headers.forEach((value, name) => {
     if (name.toLowerCase().startsWith('x-total-')) responseHeaders.set(name, value);
   });

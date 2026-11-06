@@ -249,4 +249,39 @@ describe('AuthProvider', () => {
       expect(flash()).toEqual({ type: 'warning', text: 'Sua sessão expirou por segurança (limite de 2h).' });
     });
   });
+
+  describe('boas-vindas', () => {
+    afterEach(() => {
+      document.cookie = 'msgram_welcome=; Max-Age=0; path=/';
+    });
+
+    it('com o cookie do login, dá as boas-vindas uma vez e apaga o cookie', () => {
+      document.cookie = 'msgram_welcome=1; path=/';
+
+      const { rerender } = render(
+        <AuthProvider initialUser={user}>
+          <TestComponent />
+        </AuthProvider>
+      );
+      rerender(
+        <AuthProvider initialUser={user}>
+          <TestComponent />
+        </AuthProvider>
+      );
+
+      expect(toast.success).toHaveBeenCalledTimes(1);
+      expect(toast.success).toHaveBeenCalledWith('Bem vindo ao MeasureSoftGram alice!');
+      expect(document.cookie).not.toContain('msgram_welcome');
+    });
+
+    it('sem o cookie, não dá boas-vindas', () => {
+      render(
+        <AuthProvider initialUser={user}>
+          <TestComponent />
+        </AuthProvider>
+      );
+
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
-import { stripTrailingSlashes } from '../../utils/stripTrailingSlashes';
+import { getServiceUrl, serviceFetch } from './serviceFetch';
+
+export { getServiceUrl };
 
 export interface ServiceUser {
   username: string;
@@ -8,14 +10,11 @@ export interface ServiceUser {
 
 export type TokenValidation = { status: 'valid'; user: ServiceUser } | { status: 'invalid' } | { status: 'unavailable' };
 
-const DEFAULT_SERVICE_URL = 'http://localhost:8080/api';
 export const VALIDATION_TIMEOUT_MS = 3000;
 export const VALIDATION_CACHE_TTL_MS = 60 * 1000;
 const CACHE_MAX_ENTRIES = 500;
 
 const cache = new Map<string, { user: ServiceUser; expiresAt: number }>();
-
-export const getServiceUrl = (): string => stripTrailingSlashes(process.env.SERVICE_URL || DEFAULT_SERVICE_URL);
 
 const cacheKey = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -42,9 +41,8 @@ export async function validateToken(token: string): Promise<TokenValidation> {
   cache.delete(key);
 
   try {
-    const response = await fetch(`${getServiceUrl()}/v1/accounts/`, {
+    const response = await serviceFetch(`${getServiceUrl()}/v1/accounts/`, {
       headers: { Authorization: `Token ${token}`, Accept: 'application/json' },
-      cache: 'no-store',
       signal: AbortSignal.timeout(VALIDATION_TIMEOUT_MS)
     });
 

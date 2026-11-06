@@ -122,13 +122,12 @@ describe('proxy', () => {
       );
     });
 
-    it('uma rota nova nasce protegida', async () => {
-      expect(location(await call('/qualquer-rota-nova'))).toContain('/auth?returnTo=');
-    });
-
-    it('/authors não conta como pública só por começar com "auth"', async () => {
-      expect(location(await call('/authors/'))).toContain('/auth?returnTo=');
-    });
+    it.each(['/products/', '/products/1-2-x/dashboards/overview/', '/products/1-2-x/releases/create/'])(
+      '%s é página e exige login',
+      async (path) => {
+        expect(location(await call(path))).toContain('/auth?returnTo=');
+      }
+    );
 
     it('com token válido passa', async () => {
       const response = await call('/home/', 'good');
@@ -161,6 +160,38 @@ describe('proxy', () => {
       const response = await call('/home/', 'revoked', { 'x-forwarded-proto': 'https' });
 
       expect(response.headers.getSetCookie().every((cookie) => /; Secure/i.test(cookie))).toBe(true);
+    });
+  });
+
+  describe('caminhos que não são página', () => {
+    it.each(['/nao-existe/', '/authors/', '/products/1-2-x/foo/', '/home/extra/'])(
+      '%s segue para o 404 sem exigir login e sem chamar o Service',
+      async (path) => {
+        const response = await call(path);
+
+        expect(isPassThrough(response)).toBe(true);
+        expect(validateToken).not.toHaveBeenCalled();
+      }
+    );
+
+    it('com token também não consulta o Service', async () => {
+      expect(isPassThrough(await call('/nao-existe/', 'good'))).toBe(true);
+      expect(validateToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('boas-vindas', () => {
+    const welcome = (response: Response) => response.headers.getSetCookie().find((cookie) => cookie.startsWith('msgram_welcome='));
+
+    it('/ com token válido pede as boas-vindas, em cookie legível pelo cliente', async () => {
+      const cookie = welcome(await call('/', 'good'));
+
+      expect(cookie).toBeDefined();
+      expect(cookie).not.toMatch(/HttpOnly/i);
+    });
+
+    it('/auth com token válido não pede as boas-vindas', async () => {
+      expect(welcome(await call('/auth', 'good'))).toBeUndefined();
     });
   });
 

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { clearSessionCookies, isSecureRequest, TOKEN_COOKIE } from './shared/server/auth/cookies';
+import { clearSessionCookies, isSecureRequest, TOKEN_COOKIE, WELCOME_COOKIE, welcomeCookieOptions } from './shared/server/auth/cookies';
 import { isMockingEnabled } from './shared/server/auth/mocking';
-import { isPublicPath, normalizePath, sanitizeReturnTo } from './shared/server/auth/routes';
+import { isProtectedPath, isPublicPath, normalizePath, sanitizeReturnTo } from './shared/server/auth/routes';
 import { validateToken } from './shared/server/auth/validateToken';
 
 const HOME = '/home/';
@@ -36,7 +36,9 @@ export async function proxy(request: NextRequest) {
     const validation = await validateToken(token);
     if (validation.status === 'valid') {
       const destination = sanitizeReturnTo(searchParams.get('returnTo')) ?? HOME;
-      return NextResponse.redirect(new URL(destination, request.url));
+      const response = NextResponse.redirect(new URL(destination, request.url));
+      if (path === '/') response.cookies.set(WELCOME_COOKIE, '1', welcomeCookieOptions(secure));
+      return response;
     }
     if (validation.status === 'invalid') {
       const response = NextResponse.next();
@@ -45,6 +47,9 @@ export async function proxy(request: NextRequest) {
     }
     return NextResponse.next();
   }
+
+  // não é página: deixa o Next responder com o 404, sem mandar quem não está logado para o login
+  if (!isProtectedPath(path)) return NextResponse.next();
 
   if (!token) return redirectToLogin(false);
 

@@ -55,6 +55,26 @@ describe('/bff/session', () => {
       expect(cookieNamed(response, 'msgram_provider')).toMatch(/^msgram_provider=github;/);
       expect(cookieNamed(response, 'msgram_login_at')).toMatch(/^msgram_login_at=\d+;/);
       expect(stateConsumed(response)).toBe(true);
+      expect(fetchMock.mock.calls[0][1].headers['X-Forwarded-Proto']).toBe('https');
+    });
+
+    it('pede as boas-vindas no login, em cookie legível pelo cliente', async () => {
+      fetchMock.mockResolvedValue(json(200, { key: 'tok' }));
+      const { nonce, cookie } = pendingLogin('github');
+
+      const response = await post({ code: 'abc', state: nonce }, { cookies: cookie });
+
+      expect(cookieNamed(response, 'msgram_welcome')).toMatch(/^msgram_welcome=1;/);
+      expect(cookieNamed(response, 'msgram_welcome')).not.toMatch(/HttpOnly/i);
+    });
+
+    it('não pede boas-vindas na reautorização (com returnTo)', async () => {
+      fetchMock.mockResolvedValue(json(200, { key: 'tok' }));
+      const { nonce, cookie } = pendingLogin('github', '/products');
+
+      const response = await post({ code: 'abc', state: nonce }, { cookies: cookie });
+
+      expect(cookieNamed(response, 'msgram_welcome')).toBeUndefined();
     });
 
     it('usa o endpoint do GitLab quando o state é do GitLab', async () => {
@@ -248,7 +268,7 @@ describe('/bff/session', () => {
       expect(response.status).toBe(200);
       expect(fetchMock).toHaveBeenCalledWith(
         'http://service:8080/api/v1/accounts/logout/',
-        expect.objectContaining({ method: 'DELETE', headers: { Authorization: 'Token good' } })
+        expect.objectContaining({ method: 'DELETE', headers: { Authorization: 'Token good', 'X-Forwarded-Proto': 'https' } })
       );
       const cleared = setCookies(response).filter((cookie) => /Max-Age=0/i.test(cookie)).map((cookie) => cookie.split('=')[0]);
       expect(cleared).toEqual(['msgram_token', 'msgram_provider', 'msgram_login_at']);
