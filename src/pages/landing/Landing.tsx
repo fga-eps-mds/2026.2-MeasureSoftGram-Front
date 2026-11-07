@@ -4,6 +4,7 @@ import type { GetStaticProps } from 'next';
 import { Box } from '@mui/material';
 import { loadTranslations } from 'ni18n';
 import { NextPageWithLayout } from '@pages/_app.next';
+import AcademicNotice from '@components/AcademicNotice';
 import { ni18nConfig } from '../../../n18n.config';
 import { LandingHeader } from './components/LandingHeader';
 import { HeroSection } from './components/HeroSection';
@@ -60,6 +61,7 @@ const Landing: React.FC<LandingProps> = ({ meta }) => {
       <Box component="main" sx={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
         {mounted && (
           <>
+            <AcademicNotice variant="banner" />
             <LandingHeader />
             <HeroSection />
             <HowItWorksSection />
