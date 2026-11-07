@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
+import AcademicNotice from '@components/AcademicNotice';
 import { LandingHeader } from './components/LandingHeader';
 import { HeroSection } from './components/HeroSection';
 import { HowItWorksSection } from './components/HowItWorksSection';
@@ -14,6 +15,7 @@ import { LandingFooter } from './components/LandingFooter';
 const Landing: React.FC = () => {
   return (
     <Box component="main" sx={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
+      <AcademicNotice variant="banner" />
       <LandingHeader />
       <HeroSection />
       <HowItWorksSection />

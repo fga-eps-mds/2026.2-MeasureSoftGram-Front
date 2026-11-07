@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import { ACADEMIC_NOTICE_LEARN_MORE_URL } from '@components/AcademicNotice';
 import Landing from '../Landing';
 import { generateMetadata, getLandingMeta } from '../metadata';
 import { EXTERNAL_LINKS } from '../constants';
@@ -34,6 +35,19 @@ describe('Landing', () => {
     expect(screen.getByText('value.title')).toBeInTheDocument();
     expect(screen.getByText('publications.title')).toBeInTheDocument();
     expect(screen.getByText('community.title')).toBeInTheDocument();
+  });
+
+  it('exibe o aviso de ambiente academico no topo, antes do header', () => {
+    render(<Landing />);
+
+    const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
+    const header = screen.getByRole('banner');
+    // eslint-disable-next-line no-bitwise
+    expect(notice.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(notice).getByRole('link', { name: 'academicNotice.learnMore' })).toHaveAttribute(
+      'href',
+      ACADEMIC_NOTICE_LEARN_MORE_URL
+    );
   });
 
   it('o CTA principal do hero leva o usuario para /auth', () => {
