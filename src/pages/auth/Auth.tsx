@@ -8,6 +8,7 @@ import { createOAuthState } from '@services/Auth/oauthState';
 import { useRouter } from 'next/router';
 import { useAuth } from '@contexts/Auth';
 import { AuthLayout } from '@layouts/auth';
+import AcademicNotice from '@components/AcademicNotice';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
 
@@ -80,6 +81,8 @@ const Auth: NextPageWithLayout = () => {
             Venha conferir a saúde do seu produto de software
           </Typography>
         </Box>
+
+        <AcademicNotice variant="card" />
 
         <Button
           fullWidth

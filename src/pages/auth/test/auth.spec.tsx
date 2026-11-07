@@ -58,6 +58,22 @@ describe('Auth', () => {
     });
   });
 
+  describe('Aviso de ambiente acadêmico', () => {
+    it('Deve exibir o aviso antes dos botões de login', () => {
+      render(
+        <AuthProvider>
+          <Auth />
+        </AuthProvider>
+      );
+
+      const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
+      const githubButton = screen.getByRole('button', { name: /LOGIN COM GITHUB/i });
+      // eslint-disable-next-line no-bitwise
+      expect(notice.compareDocumentPosition(githubButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(notice.querySelectorAll('li')).toHaveLength(3);
+    });
+  });
+
   describe('Origem canônica do login', () => {
     const renderAuth = () =>
       render(
