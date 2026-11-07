@@ -41,6 +41,9 @@ import { useOverviewDashboard } from './useOverviewDashboard';
 const TITLE = '1. Visão Geral de Qualidade';
 const COLLECTION_GUIDE_URL = 'https://github.com/fga-eps-mds/MeasureSoftGram-Action';
 const SKELETON_BAR_WIDTHS = [300, 260, 230, 200, 170, 140];
+// o raio do radar é 72% do menor lado, então é a altura que limita o tamanho do círculo: em 300px ele ficava miúdo
+// ao lado do equalizador, que tem 15rem só de trilho (homologação do PO em 03/11/2026)
+const RADAR_HEIGHT = 480;
 
 type CardStatus = 'loading' | 'empty' | 'error' | 'ready';
 
@@ -341,7 +344,7 @@ const OverviewDashboard: NextPageWithLayout = () => {
               <ReactEcharts
                 option={formatRadarOptions(comparisons, selectedRepository?.repository_name ?? '', characteristicName)}
                 notMerge
-                style={{ height: 300, width: '100%' }}
+                style={{ height: RADAR_HEIGHT, width: '100%' }}
               />
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
                 Mesmos valores do realizado (Rd) do {terms.repository} {selectedRepository?.repository_name} na release{' '}

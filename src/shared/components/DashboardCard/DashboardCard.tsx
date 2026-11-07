@@ -20,6 +20,8 @@ export interface DashboardCardProps {
   emptyAction?: ReactNode;
   /** Título do estado de erro; o padrão serve para qualquer gráfico. */
   errorTitle?: string;
+  /** Corpo do erro. O padrão serve para falha de carregamento; dado inconsistente precisa de texto próprio. */
+  errorDescription?: string;
   /** Texto do selo de carregando, vazio ou erro, quando a tela pede um mais específico. */
   badgeLabel?: string;
   onRetry?: () => void;
@@ -59,6 +61,7 @@ export default function DashboardCard({
   emptyDescription,
   emptyAction,
   errorTitle = 'Não foi possível carregar este gráfico',
+  errorDescription = 'Tente de novo em alguns instantes. Se o problema continuar, avise o administrador do produto.',
   badgeLabel,
   onRetry,
   children
@@ -85,7 +88,7 @@ export default function DashboardCard({
           actionLabel={onRetry ? 'Tentar novamente' : undefined}
           onAction={onRetry}
         >
-          Tente de novo em alguns instantes. Se o problema continuar, avise o administrador do produto.
+          {errorDescription}
         </MSGAlert>
       );
     }
