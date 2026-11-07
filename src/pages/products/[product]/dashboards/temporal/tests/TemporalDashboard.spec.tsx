@@ -188,7 +188,20 @@ describe('<TemporalDashboard />', () => {
     expect(chart('Característica').getByTestId('echarts').textContent).toBe('Maintainability:1');
     expect(chart('Subcaracterísticas').getByTestId('echarts').textContent).toBe('Modifiability:1');
     expect(screen.getByRole('combobox', { name: 'Subcaracterística' }).textContent).toContain('Todas');
-    expect(chart('Métricas').getByText(/não têm métricas do repositório inteiro/)).toBeTruthy();
+    expect(chart('Métricas').getByText(/Sem valores de métricas das medidas neste repositório/)).toBeTruthy();
+  });
+
+  it('trata a falta de métricas como erro, porque os níveis acima são calculados a partir delas', () => {
+    render(<TemporalDashboard />);
+
+    chooseOption('Característica', 'Maintainability');
+
+    const metrics = chart('Métricas');
+    expect(metrics.getByText(/Sem valores de métricas/)).toBeTruthy();
+    expect(metrics.getByText(/os dados estão inconsistentes/)).toBeTruthy();
+    expect(metrics.getByRole('button', { name: 'Tentar novamente' })).toBeTruthy();
+    // a mensagem antiga mandava o usuário ao dashboard 5, que não exibe os valores coletados das métricas
+    expect(metrics.queryByText(/Distribuição/)).toBeNull();
   });
 
   it('mostra o eixo em dias e troca para meses', () => {
@@ -317,10 +330,11 @@ describe('<TemporalDashboard />', () => {
       render(<TemporalDashboard />);
       chooseOption('Característica', 'Maintainability');
 
-      // a medida da Maintainability não tem histórico, e ela não tem métricas do repositório inteiro
+      // a medida da Maintainability não tem histórico: sem dados, o botão fica desabilitado
       expect(exportButton('Medidas')).toBeDisabled();
-      expect(exportButton('Métricas')).toBeDisabled();
       expect(exportButton('Característica')).toBeEnabled();
+      // sem métricas o card vira erro, e gráfico com erro não oferece exportação
+      expect(chart('Métricas').queryByRole('button', { name: 'Exportar .csv' })).toBeNull();
       await exportAll();
 
       expect(zipChartNames()).toEqual(['caracteristicas', 'subcaracteristicas']);
