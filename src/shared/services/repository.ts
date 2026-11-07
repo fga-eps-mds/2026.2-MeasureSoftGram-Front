@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import api from './api';
+import { DemoData } from '@customTypes/demoData';
 
 interface RepositoryFormData {
   name: string;
@@ -112,6 +113,24 @@ class Repository {
       return await this.apiClient.get(`${basePath}/latest-values/${entity}/`);
     } catch {
       return undefined;
+    }
+  }
+
+  /**
+   * Dados de demonstração de um repositório sem coleta real (calculados na hora, nunca gravados).
+   * O Service responde 404 quando a demonstração está desligada no ambiente e 409 quando já há dados reais.
+   */
+  async getDemoData(organizationId: string, productId: string, repositoryId: string): Promise<Result<DemoData>> {
+    try {
+      const response = await this.apiClient.get<DemoData>(
+        `${buildRepositoryBasePath(organizationId, productId, repositoryId)}/demo-data/`
+      );
+      return { type: 'success', value: response.data };
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        return { type: 'error', error: err };
+      }
+      return { type: 'error', error: new Error('Failed to fetch demo data.') };
     }
   }
 

@@ -21,10 +21,12 @@ interface Props {
   pulse: ReturnType<typeof useRepositoryPulse>;
   /** O CSV das medições do período filtrado. */
   csv: CsvChart<RepositoryPulseCsvRow>;
+  /** Modo demonstração: o título avisa que os dados são fictícios. */
+  isDemo?: boolean;
 }
 
 /** Gráfico de pulso (metáfora do eletrocardiograma) de cada característica do repositório, como o pulso do produto. */
-export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
+export default function RepositoryPulseChart({ pulse, csv, isDemo = false }: Readonly<Props>) {
   const { terms } = useProviderTerms();
   const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS), [pulse.rows]);
 
@@ -35,7 +37,7 @@ export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
 
   return (
     <DashboardCard
-      title={TITLE}
+      title={isDemo ? `${TITLE} (demonstração — dados fictícios)` : TITLE}
       status={status}
       headerAction={
         <Box display="flex" alignItems="center" flexWrap="wrap" gap="12px">

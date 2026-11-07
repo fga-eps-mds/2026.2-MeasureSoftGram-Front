@@ -15,8 +15,10 @@ import { PULSE_CSV, formatRepositoryPulseCsv } from '@utils/formatPulseCsv';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 
 import Headers from './components/Header';
+import { DemoDataBanner, RepositoryEmptyState } from './components/DemoData';
 import RepositoryPulseChart from './components/RepositoryPulseChart';
 import TsqmiBadge from './components/TsqmiBadge';
+import { useDemoData } from './hooks/useDemoData';
 import { useQuery } from './hooks/useQuery';
 import { useRepositoryPulse } from './hooks/useRepositoryPulse';
 
@@ -31,12 +33,25 @@ const Repository: NextPageWithLayout = () => {
   const [organizationId, productId] = getPathId(query?.product as string);
   const [repositoryId] = getPathId((query?.repository as string) ?? '');
 
-  const pulse = useRepositoryPulse(organizationId, productId, repositoryId ? Number(repositoryId) : undefined);
-  // o CSV leva o que o card mostra: carregando ou com erro, não exporta nada
+  const demo = useDemoData(organizationId, productId, repositoryId);
+  const pulse = useRepositoryPulse(
+    organizationId,
+    productId,
+    repositoryId ? Number(repositoryId) : undefined,
+    demo.data?.historical_characteristics
+  );
+  // o CSV leva o que o card mostra: carregando ou com erro, não exporta nada; dados de demonstração também não
   const pulseCsv = formatRepositoryPulseCsv(
     currentRepository?.name ?? '',
-    pulse.isLoading || pulse.hasError ? [] : pulse.rows
+    pulse.isLoading || pulse.hasError || demo.isActive ? [] : pulse.rows
   );
+  // sem medições nem TSQMI depois de carregar: o repositório ainda não passou por uma coleta real (#150)
+  const hasNoData =
+    !demo.isActive &&
+    !pulse.isLoading &&
+    !pulse.hasError &&
+    !pulse.hasMeasurements &&
+    (latestTSQMI?.value === undefined || latestTSQMI?.value === null);
 
   if (repositoryNotFound) {
     return (
@@ -68,9 +83,24 @@ const Repository: NextPageWithLayout = () => {
               <ExportAllCsvButton dashboard={PULSE_CSV.repository} charts={[pulseCsv]} />
             </Box>
 
-            <TsqmiBadge latestTSQMI={latestTSQMI} latestTSQMIBadgeUrl={latestTSQMIBadgeUrl} />
+            {demo.data && (
+              <DemoDataBanner notice={demo.data.notice} tsqmi={demo.data.latest_tsqmi.value} onExit={demo.deactivate} />
+            )}
 
-            <RepositoryPulseChart pulse={pulse} csv={pulseCsv} />
+            {hasNoData ? (
+              <RepositoryEmptyState
+                repositoryTerm={terms.repository}
+                onShowDemo={() => void demo.activate()}
+                isLoadingDemo={demo.isLoading}
+                demoError={demo.error}
+              />
+            ) : (
+              <>
+                {/* a badge é sempre a real: no modo demonstração o TSQMI fictício fica na faixa de aviso */}
+                {!demo.isActive && <TsqmiBadge latestTSQMI={latestTSQMI} latestTSQMIBadgeUrl={latestTSQMIBadgeUrl} />}
+                <RepositoryPulseChart pulse={pulse} csv={pulseCsv} isDemo={demo.isActive} />
+              </>
+            )}
 
             {/* Lista de arquivos por medida: entra com a TASK23.01.03 */}
             <Box component="section" data-testid="repository-measures-section" />

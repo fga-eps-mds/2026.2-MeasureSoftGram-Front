@@ -11,8 +11,16 @@ const DAY = 24 * 60 * 60 * 1000;
 /**
  * Pulso das características do repositório (US07.01, CA3): uma faixa por característica, com todas as medições de
  * historical-values/characteristics, os marcadores das releases do repositório e o filtro de período.
+ *
+ * `demoHistory`: no modo demonstração, o histórico fictício vindo de demo-data substitui o real e as releases ficam
+ * de fora, porque não se aplicam a medições que não existem.
  */
-export function useRepositoryPulse(organizationId: string, productId: string, repositoryId?: number) {
+export function useRepositoryPulse(
+  organizationId: string,
+  productId: string,
+  repositoryId?: number,
+  demoHistory?: HistoricalValuesResponse
+) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -25,16 +33,20 @@ export function useRepositoryPulse(organizationId: string, productId: string, re
 
   const rows: PulseRepositoryData[] = useMemo(() => {
     // releases sem repositório escolhido valem para todos os repositórios do produto
-    const releases: PulseRelease[] = toReleaseArray(releasesRequest.data)
-      .filter((release) => !release.repositories_ids?.length || release.repositories_ids.includes(repositoryId ?? -1))
-      .map((release) => ({
-        name: release.release_name,
-        version: release.release_name,
-        start_at: String(release.start_at),
-        end_at: String(release.end_at)
-      }));
+    const releases: PulseRelease[] = demoHistory
+      ? []
+      : toReleaseArray(releasesRequest.data)
+          .filter(
+            (release) => !release.repositories_ids?.length || release.repositories_ids.includes(repositoryId ?? -1)
+          )
+          .map((release) => ({
+            name: release.release_name,
+            version: release.release_name,
+            start_at: String(release.start_at),
+            end_at: String(release.end_at)
+          }));
 
-    return (historyRequest.data?.results ?? [])
+    return ((demoHistory ?? historyRequest.data)?.results ?? [])
       .filter((characteristic) => characteristic.history.length > 0)
       .map((characteristic) => ({
         id: characteristic.key,
@@ -42,7 +54,7 @@ export function useRepositoryPulse(organizationId: string, productId: string, re
         measurements: characteristic.history,
         releases
       }));
-  }, [historyRequest.data, releasesRequest.data, repositoryId]);
+  }, [historyRequest.data, releasesRequest.data, repositoryId, demoHistory]);
 
   const filteredRows = useMemo(() => {
     if (!startDate && !endDate) return rows;
