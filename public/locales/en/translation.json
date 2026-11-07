@@ -12,5 +12,14 @@
   "select": {
     "no-options": "There are no available options"
   },
-  "warning": "Warning"
+  "warning": "Warning",
+  "academicNotice": {
+    "badge": "Academic environment",
+    "title": "Academic environment notice",
+    "summary": "MeasureSoftGram is a <strong>university project in an experimental stage</strong>. We offer no guarantees about the persistence or security of stored data. We strongly recommend <strong>not using real or confidential data, or tokens with sensitive permissions</strong> on this instance.",
+    "experimental": "MeasureSoftGram is a <strong>university project in an experimental stage</strong>.",
+    "noGuarantee": "We offer <strong>no guarantees about the persistence or security</strong> of stored data.",
+    "noRealData": "<strong>Do not use real or confidential data, or tokens</strong> with sensitive permissions on this instance.",
+    "learnMore": "Learn more"
+  }
 }
