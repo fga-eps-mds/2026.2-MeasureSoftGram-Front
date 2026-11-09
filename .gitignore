@@ -47,3 +47,8 @@ ref
 
 # Impede versionamento acidental do lockfile do yarn (MSG-28)
 yarn.lock
+
+# playwright (E2E)
+/playwright-report
+/test-results
+/blob-report
