@@ -13,8 +13,10 @@ import { PULSE_CSV, RepositoryPulseCsvRow } from '@utils/formatPulseCsv';
 import { useRepositoryPulse } from '../../hooks/useRepositoryPulse';
 
 const TITLE = 'Indicador das Características';
-// as recomendações do PO para o pulso (US06.01): sem linhas horizontais e com o nome de cada release uma vez só
-const PULSE_OPTIONS = { releaseLabels: 'first-row', horizontalLines: false } as const;
+// as recomendações do PO para o pulso (US06.01): sem linhas horizontais e com o nome de cada release uma vez só.
+// `releaseStartLabels: false` como no pulso do produto: o início de uma release cai no fim da anterior e as duas
+// etiquetas se sobrepunham, o que o PO leu como "sombra" do nome da release (homologação da US07.01 em 03/11/2026).
+const PULSE_OPTIONS = { releaseLabels: 'first-row', horizontalLines: false, releaseStartLabels: false } as const;
 
 interface Props {
   /** Os dados do pulso: a página os busca, para o botão do topo e o deste card usarem os mesmos. */
