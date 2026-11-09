@@ -110,11 +110,18 @@ const TemporalDashboard: NextPageWithLayout = () => {
       title: `Ainda não há valores das medidas escolhidas neste ${terms.repository}`,
       description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
     },
+    // o gráfico busca só as métricas com qualifier TRK, então medida cujas métricas são medidas por arquivo fica
+    // vazia aqui mesmo com a coleta em dia: o texto explica isso em vez de acusar falta de dado (ressalva do PO
+    // em 03/11/2026, que citava a Distribuição Estatística, onde esses valores também não aparecem)
     metrics: {
-      title: `${measures === 'all' ? 'As medidas' : 'As medidas escolhidas'} não têm métricas do ${
+      title: `Sem valores de métricas ${measures === 'all' ? 'das medidas' : 'das medidas escolhidas'} neste ${
         terms.repository
-      } inteiro`,
-      description: 'As métricas coletadas por arquivo estão no dashboard 5. Distribuição das Métricas.'
+      }`,
+      description:
+        `Este gráfico mostra só as métricas medidas no ${terms.repository} inteiro. As que são coletadas por ` +
+        'arquivo, como as do SonarQube, não aparecem aqui mesmo com a coleta em dia — as medidas acima já ' +
+        'resumem esses valores. Se os gráficos acima também estão vazios, rode a coleta do MeasureSoftGram ' +
+        `neste ${terms.repository}.`
     }
   };
 

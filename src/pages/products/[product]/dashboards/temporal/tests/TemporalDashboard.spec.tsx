@@ -188,7 +188,26 @@ describe('<TemporalDashboard />', () => {
     expect(chart('Característica').getByTestId('echarts').textContent).toBe('Maintainability:1');
     expect(chart('Subcaracterísticas').getByTestId('echarts').textContent).toBe('Modifiability:1');
     expect(screen.getByRole('combobox', { name: 'Subcaracterística' }).textContent).toContain('Todas');
-    expect(chart('Métricas').getByText(/não têm métricas do repositório inteiro/)).toBeTruthy();
+    expect(chart('Métricas').getByText(/Sem valores de métricas das medidas neste repositório/)).toBeTruthy();
+  });
+
+  it('explica que as métricas medidas por arquivo não entram no gráfico, em vez de acusar falta de dado', () => {
+    render(<TemporalDashboard />);
+
+    chooseOption('Característica', 'Maintainability');
+
+    const metrics = chart('Métricas');
+    expect(metrics.getByText(/Sem valores de métricas/)).toBeTruthy();
+    expect(metrics.getByText(/coletadas por arquivo/)).toBeTruthy();
+    // o gráfico busca só o qualifier TRK: vazio aqui não quer dizer que a coleta falhou, então segue aviso
+    expect(metrics.getByText('Sem dados')).toBeTruthy();
+    expect(metrics.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
+    // a mensagem antiga mandava o usuário ao dashboard 5, que não exibe os valores coletados das métricas
+    expect(metrics.queryByText(/Distribuição/)).toBeNull();
+
+    chooseOption('Medida', 'Non Complex File Density');
+    closeMenu();
+    expect(chart('Métricas').getByText(/Sem valores de métricas das medidas escolhidas/)).toBeTruthy();
   });
 
   it('mostra o eixo em dias e troca para meses', () => {
@@ -317,7 +336,7 @@ describe('<TemporalDashboard />', () => {
       render(<TemporalDashboard />);
       chooseOption('Característica', 'Maintainability');
 
-      // a medida da Maintainability não tem histórico, e ela não tem métricas do repositório inteiro
+      // a medida da Maintainability não tem histórico: sem dados, o botão fica desabilitado
       expect(exportButton('Medidas')).toBeDisabled();
       expect(exportButton('Métricas')).toBeDisabled();
       expect(exportButton('Característica')).toBeEnabled();
