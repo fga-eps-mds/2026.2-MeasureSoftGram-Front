@@ -324,11 +324,13 @@ test.describe('@US21.03-CA8 Resumo estatístico com duas casas, nota e assimetri
       card(page, SUMMARY).getByRole('button', { name: 'Exportar .csv' }).click()
     ]);
     expect(csv.suggestedFilename()).toMatch(/^msgram-distribuicao-resumo-\d{4}-\d{2}-\d{2}\.csv$/);
-    const lines = readFileSync((await csv.path()) ?? '', 'utf8')
-      .trim()
-      .split(/\r?\n/);
-    expect(lines[0]).toBe('Release,Repositório,Nível,Entidade,Estatística,Valor');
-    expect(lines).toContain('R2,MeasureSoftGram-Service,TSQMI,TSQMI,Desvio padrão,0.16177');
+    const content = readFileSync((await csv.path()) ?? '', 'utf8');
+    // o arquivo baixado começa com a marca de ordem de bytes, senão o Excel troca os acentos de "Característica"
+    expect(content.startsWith('\uFEFF')).toBe(true);
+    const lines = content.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+    // ponto e vírgula separando as colunas e vírgula na casa decimal, que é como o Excel em português abre e soma
+    expect(lines[0]).toBe('Release;Repositório;Nível;Entidade;Estatística;Valor');
+    expect(lines).toContain('R2;MeasureSoftGram-Service;TSQMI;TSQMI;Desvio padrão;0,16177');
     expect(lines).toHaveLength(15);
 
     const [zip] = await Promise.all([

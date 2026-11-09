@@ -43,25 +43,33 @@ describe('exportCsv', () => {
   });
 
   describe('toCsv', () => {
-    it('separa por vírgula, com o cabeçalho e os valores sem arredondar', () => {
+    // o Excel em português só abre em colunas com `;`, e aí a vírgula fica livre para a casa decimal
+    it('separa por ponto e vírgula, com o cabeçalho e os valores sem arredondar', () => {
       const rows: Row[] = [{ name: 'Reliability', value: 0.928211, ok: true }];
 
-      expect(toCsv({ columns, rows })).toBe('Nome,Valor,Ok\r\nReliability,0.928211,true');
+      expect(toCsv({ columns, rows })).toBe('Nome;Valor;Ok\r\nReliability;0,928211;true');
     });
 
-    it('escapa vírgula, aspas e quebra de linha e deixa vazio o valor nulo', () => {
+    it('escapa ponto e vírgula, aspas e quebra de linha e deixa vazio o valor nulo', () => {
       const rows: Row[] = [
-        { name: 'a, b', value: null, ok: false },
+        { name: 'a; b', value: null, ok: false },
         { name: 'diz "oi"', value: 1, ok: true },
         { name: 'linha\nnova', value: -0.5, ok: true }
       ];
 
       expect(toCsv({ columns, rows }).split('\r\n')).toEqual([
-        'Nome,Valor,Ok',
-        '"a, b",,false',
-        '"diz ""oi""",1,true',
-        '"linha\nnova",-0.5,true'
+        'Nome;Valor;Ok',
+        '"a; b";;false',
+        '"diz ""oi""";1;true',
+        '"linha\nnova";-0,5;true'
       ]);
+    });
+
+    // com `;` separando as colunas, a vírgula no texto não precisa mais de aspas
+    it('não escapa a vírgula, que agora é só casa decimal e texto comum', () => {
+      const rows: Row[] = [{ name: 'a, b', value: 0.5, ok: true }];
+
+      expect(toCsv({ columns, rows })).toBe('Nome;Valor;Ok\r\na, b;0,5;true');
     });
   });
 
@@ -69,13 +77,17 @@ describe('exportCsv', () => {
     expect(csvFileName('relacoes', 'matriz-correlacao')).toBe('msgram-relacoes-matriz-correlacao-2026-10-23.csv');
   });
 
-  it('baixa o CSV do gráfico e libera o link', async () => {
-    downloadCsv('relacoes', { name: 'matriz', columns, rows: [{ name: 'R', value: 1, ok: true }] });
+  // o arquivo começa com a marca de ordem de bytes, senão o Excel troca os acentos
+  it('baixa o CSV do gráfico com o BOM e libera o link', async () => {
+    downloadCsv('relacoes', { name: 'matriz', columns, rows: [{ name: 'Confiabilidade', value: 1, ok: true }] });
 
     expect(downloadedFiles()).toEqual(['msgram-relacoes-matriz-2026-10-23.csv']);
     const blob = createObjectURL.mock.calls[0][0];
     expect(blob.type).toBe('text/csv;charset=utf-8');
-    expect(await readBlob<string>(blob, 'text')).toBe('Nome,Valor,Ok\r\nR,1,true');
+    // decodificar UTF-8 descarta o BOM, ent\u00E3o s\u00E3o os tr\u00EAs primeiros bytes que provam que ele foi gravado
+    const bytes = new Uint8Array(await readBlob<ArrayBuffer>(blob, 'buffer'));
+    expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    expect(await readBlob<string>(blob, 'text')).toBe('Nome;Valor;Ok\r\nConfiabilidade;1;true');
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:csv');
   });
 
@@ -91,8 +103,9 @@ describe('exportCsv', () => {
       'msgram-relacoes-matriz-2026-10-23.csv',
       'msgram-relacoes-bolhas-2026-10-23.csv'
     ]);
+    // cada arquivo do .zip é aberto no Excel por conta própria, então cada um leva o seu BOM
     expect(await zip.file('msgram-relacoes-bolhas-2026-10-23.csv')?.async('string')).toBe(
-      'Nome,Valor,Ok\r\nM,0.5,false'
+      '\uFEFFNome;Valor;Ok\r\nM;0,5;false'
     );
   });
 });

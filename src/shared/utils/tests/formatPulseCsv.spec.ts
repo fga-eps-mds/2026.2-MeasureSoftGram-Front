@@ -25,10 +25,11 @@ describe('formatProductPulseCsv', () => {
 
     expect(chart.name).toBe(PULSE_CSV.pulse);
     expect(lines(chart)).toEqual([
-      'Repositório,Data,Valor,Grau',
-      'service,2026-10-01T12:00:00Z,0.55,C',
-      'service,2026-10-10T12:00:00Z,0.9,A',
-      '"front, web",2026-10-05T12:00:00Z,0.1234567,E'
+      'Repositório;Data;Valor;Grau',
+      'service;2026-10-01T12:00:00Z;0,55;C',
+      'service;2026-10-10T12:00:00Z;0,9;A',
+      // o nome com vírgula dispensa as aspas agora que o separador é o ponto e vírgula
+      'front, web;2026-10-05T12:00:00Z;0,1234567;E'
     ]);
   });
 
@@ -57,10 +58,10 @@ describe('formatRepositoryPulseCsv', () => {
 
     expect(chart.name).toBe(PULSE_CSV.pulse);
     expect(lines(chart)).toEqual([
-      'Repositório,Característica,Data,Valor,Grau',
-      'MeasureSoftGram-Front,Reliability,2026-10-01T00:00:00Z,0.19999,E',
-      'MeasureSoftGram-Front,Reliability,2026-10-02T00:00:00Z,0.2,D',
-      'MeasureSoftGram-Front,Maintainability,2026-10-03T00:00:00Z,1,A'
+      'Repositório;Característica;Data;Valor;Grau',
+      'MeasureSoftGram-Front;Reliability;2026-10-01T00:00:00Z;0,19999;E',
+      'MeasureSoftGram-Front;Reliability;2026-10-02T00:00:00Z;0,2;D',
+      'MeasureSoftGram-Front;Maintainability;2026-10-03T00:00:00Z;1;A'
     ]);
   });
 
