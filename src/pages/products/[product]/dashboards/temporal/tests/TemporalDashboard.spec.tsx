@@ -204,6 +204,10 @@ describe('<TemporalDashboard />', () => {
     expect(metrics.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
     // a mensagem antiga mandava o usuário ao dashboard 5, que não exibe os valores coletados das métricas
     expect(metrics.queryByText(/Distribuição/)).toBeNull();
+
+    chooseOption('Medida', 'Non Complex File Density');
+    closeMenu();
+    expect(chart('Métricas').getByText(/Sem valores de métricas das medidas escolhidas/)).toBeTruthy();
   });
 
   it('mostra o eixo em dias e troca para meses', () => {

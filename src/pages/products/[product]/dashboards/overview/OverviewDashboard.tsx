@@ -344,11 +344,7 @@ const OverviewDashboard: NextPageWithLayout = () => {
             <>
               <Box height={RADAR_HEIGHT}>
                 <ReactEcharts
-                  option={formatRadarOptions(
-                    comparisons,
-                    selectedRepository?.repository_name ?? '',
-                    characteristicName
-                  )}
+                  option={formatRadarOptions(comparisons, repositoryName, characteristicName)}
                   notMerge
                   style={{ height: '100%', width: '100%' }}
                 />
