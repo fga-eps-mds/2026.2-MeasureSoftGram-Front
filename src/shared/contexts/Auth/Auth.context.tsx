@@ -74,7 +74,8 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
     if (response.type === 'success') {
       setSession(response.value);
 
-      if (router?.pathname === '/' && !oauthRedirectRef.current) {
+      const isAtLanding = router?.pathname === '/' || router?.pathname === '/landing';
+      if (isAtLanding && !oauthRedirectRef.current) {
         await router.push('/home');
         toast.success(`Bem vindo ao MeasureSoftGram ${response?.value?.username}!`);
       }
