@@ -1,0 +1,86 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "repository": {
+    "id": 7,
+    "name": "MeasureSoftGram-Service"
+  },
+  "level": "metric",
+  "key": "sum_ci_feedback_times",
+  "period": {
+    "count": 8,
+    "first": "2026-08-18T10:00:00-03:00",
+    "last": "2026-10-10T10:00:00-03:00"
+  },
+  "entity": {
+    "key": "sum_ci_feedback_times",
+    "name": "sum_ci_feedback_times",
+    "level": "metric",
+    "metric_type": "FLOAT",
+    "analyses": [
+      {
+        "date": "2026-08-18T10:00:00-03:00",
+        "value": 310.5,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-08-25T10:00:00-03:00",
+        "value": 322,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-01T10:00:00-03:00",
+        "value": 298.25,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-08T10:00:00-03:00",
+        "value": 305,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-15T10:00:00-03:00",
+        "value": 340.75,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-22T10:00:00-03:00",
+        "value": 315,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-10-01T10:00:00-03:00",
+        "value": 301.5,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-10-10T10:00:00-03:00",
+        "value": 330,
+        "is_outlier": false
+      }
+    ],
+    "summary": {
+      "count": 8,
+      "min": 298.25,
+      "p10": 300.525,
+      "q1": 304.125,
+      "median": 312.75,
+      "q3": 324,
+      "p90": 333.225,
+      "max": 340.75,
+      "iqr": 19.875,
+      "lower_limit": 274.3125,
+      "upper_limit": 353.8125,
+      "outliers": 0,
+      "mean": 315.375,
+      "std": 14.73092,
+      "variance": 217,
+      "skewness": 0.645424
+    }
+  },
+  "children": []
+}

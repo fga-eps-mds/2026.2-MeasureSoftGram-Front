@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Regravar as baselines dos snapshots (baixe o artefato e2e-snapshots e commite)'
+        type: boolean
+        default: false
   # para o fluxo de release candidate chamar
   workflow_call:
 
@@ -40,7 +45,8 @@ jobs:
 
       # o build e o servidor sobem pelo webServer do playwright.config.ts
       - name: Rodar testes E2E
-        run: pnpm e2e
+        # as baselines dos snapshots são geradas aqui (Linux), nunca no Mac: com update_snapshots, o run regrava
+        run: pnpm e2e ${{ inputs.update_snapshots && '--update-snapshots' || '' }}
 
       - name: Publicar relatório do Playwright
         if: always()
@@ -49,3 +55,11 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+      - name: Publicar baselines dos snapshots
+        if: inputs.update_snapshots
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-snapshots
+          path: e2e/**/*-snapshots/
+          retention-days: 7

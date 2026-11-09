@@ -2,35 +2,35 @@
   "characteristic": [
     {
       "key": "reliability",
-      "name": "reliability"
+      "name": "Reliability"
     },
     {
       "key": "maintainability",
-      "name": "maintainability"
+      "name": "Maintainability"
     }
   ],
   "subcharacteristic": [
     {
       "key": "testing_status",
-      "name": "testing_status"
+      "name": "Testing Status"
     },
     {
       "key": "modifiability",
-      "name": "modifiability"
+      "name": "Modifiability"
     }
   ],
   "measure": [
     {
       "key": "passed_tests",
-      "name": "passed_tests"
+      "name": "Passed Tests"
     },
     {
       "key": "ci_feedback_time",
-      "name": "ci_feedback_time"
+      "name": "CI Feedback Time"
     },
     {
       "key": "non_complex_file_density",
-      "name": "non_complex_file_density"
+      "name": "Non Complex File Density"
     }
   ],
   "metric": [

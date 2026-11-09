@@ -128,6 +128,7 @@ Fora do CI, o `webServer` do `playwright.config.ts` reaproveita um servidor que 
 2. Descreva as respostas da página num módulo em `e2e/fixtures/<pagina>/`: JSONs no formato que o Service devolve e um objeto de handlers por cenário, com o caminho a partir de `/v1` como chave. O valor é o JSON da resposta, um `{ status, json, delayMs }` (ex.: `serverError`) ou uma função da URL, para escolher a resposta pela query.
 3. Escolha o cenário no `describe` com `test.use({ scenario })`; para trocar uma resposta no meio do teste (um erro depois do carregamento, por exemplo), use `api.set(caminho, resposta)`.
 4. Prefira seletores por papel e texto (`getByRole`, `getByText`) e os `data-testid` que a tela já tem; os gráficos são canvas, então verifique o resumo, os filtros, os estados do `DashboardCard` e os downloads.
+5. Snapshot visual (`toHaveScreenshot`) só onde o DOM não basta, e pulado fora do CI (`test.skip(!process.env.CI, ...)`): a baseline é gerada no Linux do CI, nunca no Mac. Para gerar ou regravar, rode o workflow "Testes E2E" à mão (`gh workflow run e2e.yml --ref <branch> -f update_snapshots=true`), baixe o artefato `e2e-snapshots` e commite as imagens em `e2e/*-snapshots/`.
 
 ```ts
 import { expect, test } from './support/fixtures';

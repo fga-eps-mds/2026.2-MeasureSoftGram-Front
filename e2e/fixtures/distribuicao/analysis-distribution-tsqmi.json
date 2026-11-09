@@ -34,17 +34,17 @@
       },
       {
         "date": "2026-09-01T10:00:00-03:00",
-        "value": 0.55,
-        "is_outlier": false
-      },
-      {
-        "date": "2026-09-08T10:00:00-03:00",
         "value": 0.56,
         "is_outlier": false
       },
       {
+        "date": "2026-09-08T10:00:00-03:00",
+        "value": 0.57,
+        "is_outlier": false
+      },
+      {
         "date": "2026-09-15T10:00:00-03:00",
-        "value": 0.58,
+        "value": 0.59,
         "is_outlier": false
       },
       {
@@ -54,7 +54,7 @@
       },
       {
         "date": "2026-10-01T10:00:00-03:00",
-        "value": 0.62,
+        "value": 0.64,
         "is_outlier": false
       },
       {
@@ -67,19 +67,19 @@
       "count": 8,
       "min": 0.31,
       "p10": 0.457,
-      "q1": 0.5425,
-      "median": 0.57,
-      "q3": 0.605,
-      "p90": 0.704,
+      "q1": 0.55,
+      "median": 0.58,
+      "q3": 0.61,
+      "p90": 0.718,
       "max": 0.9,
-      "iqr": 0.0625,
-      "lower_limit": 0.44875,
-      "upper_limit": 0.69875,
+      "iqr": 0.06,
+      "lower_limit": 0.46,
+      "upper_limit": 0.7,
       "outliers": 2,
-      "mean": 0.58,
-      "std": 0.161334,
-      "variance": 0.026029,
-      "skewness": 0.469369
+      "mean": 0.58625,
+      "std": 0.16177,
+      "variance": 0.02617,
+      "skewness": 0.434104
     }
   },
   "children": [
@@ -146,7 +146,7 @@
         "mean": 0.61375,
         "std": 0.133303,
         "variance": 0.01777,
-        "skewness": 0.574536
+        "skewness": 0.716572
       }
     },
     {
@@ -212,7 +212,7 @@
         "mean": 0.54625,
         "std": 0.189882,
         "variance": 0.036055,
-        "skewness": 0.386377
+        "skewness": 0.481896
       }
     }
   ]
