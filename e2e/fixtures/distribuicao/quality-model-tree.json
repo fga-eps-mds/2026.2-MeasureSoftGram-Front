@@ -1,0 +1,124 @@
+[
+  {
+    "id": null,
+    "type": "tsqmi",
+    "key": "tsqmi",
+    "name": "TSQMI",
+    "description": null,
+    "weight": null,
+    "children": [
+      {
+        "id": null,
+        "type": "characteristic",
+        "key": "reliability",
+        "name": "Reliability",
+        "description": null,
+        "weight": null,
+        "children": [
+          {
+            "id": null,
+            "type": "subcharacteristic",
+            "key": "testing_status",
+            "name": "Testing Status",
+            "description": null,
+            "weight": null,
+            "children": [
+              {
+                "id": null,
+                "type": "measure",
+                "key": "passed_tests",
+                "name": "Passed Tests",
+                "description": null,
+                "weight": null,
+                "min_threshold": 0,
+                "max_threshold": 1,
+                "children": [
+                  {
+                    "id": null,
+                    "type": "metric",
+                    "key": "tests",
+                    "name": "tests",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": null,
+                "type": "measure",
+                "key": "ci_feedback_time",
+                "name": "CI Feedback Time",
+                "description": null,
+                "weight": null,
+                "min_threshold": 0,
+                "max_threshold": 900,
+                "children": [
+                  {
+                    "id": null,
+                    "type": "metric",
+                    "key": "sum_ci_feedback_times",
+                    "name": "sum_ci_feedback_times",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  },
+                  {
+                    "id": null,
+                    "type": "metric",
+                    "key": "total_builds",
+                    "name": "total_builds",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": null,
+        "type": "characteristic",
+        "key": "maintainability",
+        "name": "Maintainability",
+        "description": null,
+        "weight": null,
+        "children": [
+          {
+            "id": null,
+            "type": "subcharacteristic",
+            "key": "modifiability",
+            "name": "Modifiability",
+            "description": null,
+            "weight": null,
+            "children": [
+              {
+                "id": null,
+                "type": "measure",
+                "key": "non_complex_file_density",
+                "name": "Non Complex File Density",
+                "description": null,
+                "weight": null,
+                "min_threshold": 0,
+                "max_threshold": 10,
+                "children": [
+                  {
+                    "id": null,
+                    "type": "metric",
+                    "key": "complexity",
+                    "name": "complexity",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

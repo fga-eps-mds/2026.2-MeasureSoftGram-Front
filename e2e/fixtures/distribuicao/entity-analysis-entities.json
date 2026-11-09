@@ -1,0 +1,46 @@
+{
+  "characteristic": [
+    {
+      "key": "reliability",
+      "name": "reliability"
+    },
+    {
+      "key": "maintainability",
+      "name": "maintainability"
+    }
+  ],
+  "subcharacteristic": [
+    {
+      "key": "testing_status",
+      "name": "testing_status"
+    },
+    {
+      "key": "modifiability",
+      "name": "modifiability"
+    }
+  ],
+  "measure": [
+    {
+      "key": "passed_tests",
+      "name": "passed_tests"
+    },
+    {
+      "key": "ci_feedback_time",
+      "name": "ci_feedback_time"
+    },
+    {
+      "key": "non_complex_file_density",
+      "name": "non_complex_file_density"
+    }
+  ],
+  "metric": [
+    {
+      "key": "sum_ci_feedback_times",
+      "name": "sum_ci_feedback_times"
+    },
+    {
+      "key": "total_builds",
+      "name": "total_builds"
+    }
+  ]
+}
