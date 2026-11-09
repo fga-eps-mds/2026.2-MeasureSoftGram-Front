@@ -34,10 +34,14 @@ async function choose(page: Page, label: string, option: string) {
   await page.getByRole('option', { name: option, exact: true }).click();
 }
 
-/** Abre a página e espera os quadros terminarem de carregar (sem aria-busy). */
+/**
+ * Abre a página com dados e espera os quadros carregarem: a linha do período só aparece com a distribuição pronta
+ * (a grade de esqueletos não tem aria-busy), e só depois os cliques nos filtros valem.
+ */
 async function openDistribution(page: Page) {
   await page.goto(DISTRIBUTION_PATH);
   await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
+  await expect(page.getByTestId('distribution-period')).toBeVisible();
   await expect(page.getByTestId('distribution-grid')).not.toHaveAttribute('aria-busy', 'true');
 }
 
