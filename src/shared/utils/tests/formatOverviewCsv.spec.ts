@@ -36,6 +36,19 @@ describe('getTotalItems', () => {
   it('deixa o valor indefinido enquanto os totais não chegam', () => {
     expect(getTotalItems(undefined, 'Repositórios').every((item) => item.value === undefined)).toBe(true);
   });
+
+  // o Service devolve 0 nos quatro níveis do modelo quando a release não tem configuração; ali o 0 não é medição
+  it('marca como não aplicável os totais do modelo quando a release não tem configuração', () => {
+    const totals = { ...summary().totals, characteristics: 0, subcharacteristics: 0, measures: 0, metrics: 0 };
+
+    expect(getTotalItems(totals, 'Repositórios').map((item) => item.value)).toEqual([null, null, null, null, 2, 1284]);
+  });
+
+  it('mantém o zero medido de verdade quando o modelo existe', () => {
+    const totals = { ...summary().totals, metrics: 0, repositories: 0, files: 0 };
+
+    expect(getTotalItems(totals, 'Repositórios').map((item) => item.value)).toEqual([3, 6, 10, 0, 0, 0]);
+  });
 });
 
 describe('formatTotalsCsv', () => {
@@ -56,6 +69,15 @@ describe('formatTotalsCsv', () => {
 
   it('não exporta os totais que ainda não chegaram', () => {
     expect(formatTotalsCsv(RELEASE, getTotalItems(undefined, 'Repositórios')).rows).toEqual([]);
+  });
+
+  // a linha existe, porque o total faz parte da release; o que não existe é a quantidade
+  it('exporta com a quantidade vazia o total que não se aplica à release', () => {
+    const totals = { ...summary().totals, characteristics: 0, subcharacteristics: 0, measures: 0, metrics: 0 };
+    const chart = formatTotalsCsv(RELEASE, getTotalItems(totals, 'Repositórios'));
+
+    expect(lines(chart).slice(1, 3)).toEqual(['2026.2 R2;Características;', '2026.2 R2;Subcaracterísticas;']);
+    expect(lines(chart)[5]).toBe('2026.2 R2;Repositórios;2');
   });
 });
 
