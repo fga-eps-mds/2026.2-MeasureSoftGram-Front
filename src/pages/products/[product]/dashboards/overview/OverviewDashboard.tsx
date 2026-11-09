@@ -16,13 +16,15 @@ import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import PlannedVsAccomplishedEqualizer from '@components/PlannedVsAccomplishedEqualizer';
 import { comparePlannedAccomplished } from '@utils/comparePlannedAccomplished';
 import {
+  TotalItem,
   formatRadarOptions,
   formatTotal,
   formatTsqmiBarOptions,
   getDefaultAnalysisRepository,
   getTotalItems,
   getTsqmiBars,
-  hasAccomplishedValues
+  hasAccomplishedValues,
+  hasQualityModel
 } from '@utils/formatOverviewCharts';
 import {
   OVERVIEW_CSV,
@@ -41,6 +43,8 @@ import { useOverviewDashboard } from './useOverviewDashboard';
 const TITLE = '1. Visão Geral de Qualidade';
 const COLLECTION_GUIDE_URL = 'https://github.com/fga-eps-mds/MeasureSoftGram-Action';
 const SKELETON_BAR_WIDTHS = [300, 260, 230, 200, 170, 140];
+/** Total que não se aplica à release, como o resumo estatístico e a matriz de correlação já fazem. */
+const TOTAL_NOT_APPLICABLE = '—';
 // o raio do radar é 72% do menor lado, então no card largo é a altura que limita o círculo: em 300px fixos ele
 // ficava miúdo ao lado do equalizador, que tem 15rem só de trilho (homologação do PO em 03/11/2026). No celular
 // quem limita é a largura, então crescer a altura só deixaria vão sobrando.
@@ -90,15 +94,8 @@ interface TotalsProps {
   onRetry: () => void;
 }
 
-function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
-  const { terms } = useProviderTerms();
-
-  if (error) {
-    return <DashboardCard title="Totais da release" status="error" onRetry={onRetry} />;
-  }
-
-  const items = getTotalItems(summary?.totals, terms.Repositories);
-
+/** A grade dos seis totais: cada quadro vira esqueleto enquanto o seu valor não chegou. */
+function TotalsGrid({ items }: { items: TotalItem[] }) {
   return (
     <Box
       display="grid"
@@ -112,7 +109,7 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
           data-testid="overview-total"
           sx={{ ...dashboardCardSx, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}
         >
-          {isLoading || item.value === undefined ? (
+          {item.value === undefined ? (
             <Box display="flex" flexDirection="column" gap="10px" paddingY="2px">
               <SkeletonBlock width={70} height={22} />
               <SkeletonBlock width={110} height={10} />
@@ -120,7 +117,7 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
           ) : (
             <>
               <Typography fontWeight="bold" fontSize="26px" lineHeight={1.2} color={DASHBOARD_COLORS.primary}>
-                {formatTotal(item.value)}
+                {item.value === null ? TOTAL_NOT_APPLICABLE : formatTotal(item.value)}
               </Typography>
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
                 {item.label}
@@ -130,6 +127,33 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
         </Paper>
       ))}
     </Box>
+  );
+}
+
+function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
+  const { terms } = useProviderTerms();
+  const items = getTotalItems(summary?.totals, terms.Repositories);
+  // sem o resumo não há número nenhum para mostrar: segue como carregando, com título, selo e mensagem, em vez da
+  // grade de esqueletos solta, que era o único bloco da tela sem os estados do CA5 da US07.01
+  const status = getStatus(error, isLoading || !summary, false);
+  const withoutQualityModel = !!summary && !hasQualityModel(summary.totals);
+
+  return (
+    <DashboardCard
+      title="Totais da release"
+      status={status}
+      loadingContent={<TotalsGrid items={getTotalItems(undefined, terms.Repositories)} />}
+      onRetry={onRetry}
+    >
+      {/* o travessão sozinho não explica por que não há o que contar; o aviso evita ler ausência como perda de dado */}
+      {withoutQualityModel && (
+        <MSGAlert severity="warning" title="Esta release não tem modelo de qualidade configurado">
+          {`Sem o modelo não há características, subcaracterísticas, medidas nem métricas para contar — por isso o
+            travessão. A contagem de ${terms.repositories} e de arquivos analisados não depende dele e segue valendo.`}
+        </MSGAlert>
+      )}
+      <TotalsGrid items={items} />
+    </DashboardCard>
   );
 }
 

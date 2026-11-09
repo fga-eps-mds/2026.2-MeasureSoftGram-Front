@@ -218,10 +218,41 @@ describe('<OverviewDashboard />', () => {
     );
     render(<OverviewDashboard />);
 
-    expect(screen.getAllByText('Carregando')).toHaveLength(2);
+    // os três blocos da tela avisam que estão carregando, inclusive os totais, que antes eram só uma grade
+    // de esqueletos sem título nem selo (CA5 da US07.01)
+    expect(screen.getAllByText('Carregando')).toHaveLength(3);
+    const totals = screen.getByRole('region', { name: 'Totais da release' });
+    expect(totals).toHaveTextContent('Carregando os dados da release');
     expect(screen.getAllByTestId('overview-total')[0]).not.toHaveTextContent('3');
     expect(screen.queryByTestId('echarts')).not.toBeInTheDocument();
     expect(screen.queryByTestId('equalizer')).not.toBeInTheDocument();
+  });
+
+  it('sem modelo de qualidade configurado, mostra travessão no lugar de zero e explica o motivo', () => {
+    const noModel = summary();
+    noModel.totals = { ...noModel.totals, characteristics: 0, subcharacteristics: 0, measures: 0, metrics: 0 };
+    (useOverviewDashboard as jest.Mock).mockReturnValue(dashboard({ summary: noModel }));
+    render(<OverviewDashboard />);
+
+    const totals = screen.getAllByTestId('overview-total');
+    // zero ali afirmaria que a release foi medida e não tem nenhuma característica, o que é diferente de não ter modelo
+    expect(totals.slice(0, 4).map((total) => total.textContent)).toEqual([
+      '—Características',
+      '—Subcaracterísticas',
+      '—Medidas',
+      '—Métricas'
+    ]);
+    // repositórios e arquivos não dependem da configuração: o Service os conta por consultas próprias
+    expect(totals[4]).toHaveTextContent('2');
+    expect(totals[5]).toHaveTextContent('1.284');
+    expect(screen.getByText('Esta release não tem modelo de qualidade configurado')).toBeInTheDocument();
+  });
+
+  it('com modelo configurado, não mostra o aviso nem travessão', () => {
+    render(<OverviewDashboard />);
+
+    expect(screen.queryByText('Esta release não tem modelo de qualidade configurado')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('overview-total')[0]).toHaveTextContent('3');
   });
 
   it('explica o que fazer, com o aviso do guia de IDV, quando a release não tem análises', () => {
