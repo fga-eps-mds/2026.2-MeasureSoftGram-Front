@@ -101,17 +101,12 @@ describe('<RepositoryPulseChart />', () => {
     expect(screen.getByText('A · Ótimo (0,80 a 1,00)')).toBeTruthy();
   });
 
+  // só o fim de cada release é etiquetado: o início cai no fim da anterior e os dois nomes se sobrepunham
   it('marca as releases do repositório, com o nome uma vez só e sem linhas horizontais', () => {
     renderChart();
 
     expect(screen.getByTestId('release-labels').textContent).toBe('v1 Release 1,todos|');
     expect(screen.getByTestId('horizontal-lines').textContent).toBe('false');
-  });
-
-  it('etiqueta só o fim da release, para o nome não sobrepor o da release anterior', () => {
-    renderChart();
-
-    expect(screen.getByTestId('release-labels').textContent).not.toContain('Início');
   });
 
   it('filtra as medições pelo período', () => {

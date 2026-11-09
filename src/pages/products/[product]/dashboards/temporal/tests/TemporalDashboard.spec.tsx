@@ -191,15 +191,17 @@ describe('<TemporalDashboard />', () => {
     expect(chart('Métricas').getByText(/Sem valores de métricas das medidas neste repositório/)).toBeTruthy();
   });
 
-  it('trata a falta de métricas como erro, porque os níveis acima são calculados a partir delas', () => {
+  it('explica que as métricas medidas por arquivo não entram no gráfico, em vez de acusar falta de dado', () => {
     render(<TemporalDashboard />);
 
     chooseOption('Característica', 'Maintainability');
 
     const metrics = chart('Métricas');
     expect(metrics.getByText(/Sem valores de métricas/)).toBeTruthy();
-    expect(metrics.getByText(/os dados estão inconsistentes/)).toBeTruthy();
-    expect(metrics.getByRole('button', { name: 'Tentar novamente' })).toBeTruthy();
+    expect(metrics.getByText(/coletadas por arquivo/)).toBeTruthy();
+    // o gráfico busca só o qualifier TRK: vazio aqui não quer dizer que a coleta falhou, então segue aviso
+    expect(metrics.getByText('Sem dados')).toBeTruthy();
+    expect(metrics.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
     // a mensagem antiga mandava o usuário ao dashboard 5, que não exibe os valores coletados das métricas
     expect(metrics.queryByText(/Distribuição/)).toBeNull();
   });
@@ -332,9 +334,8 @@ describe('<TemporalDashboard />', () => {
 
       // a medida da Maintainability não tem histórico: sem dados, o botão fica desabilitado
       expect(exportButton('Medidas')).toBeDisabled();
+      expect(exportButton('Métricas')).toBeDisabled();
       expect(exportButton('Característica')).toBeEnabled();
-      // sem métricas o card vira erro, e gráfico com erro não oferece exportação
-      expect(chart('Métricas').queryByRole('button', { name: 'Exportar .csv' })).toBeNull();
       await exportAll();
 
       expect(zipChartNames()).toEqual(['caracteristicas', 'subcaracteristicas']);

@@ -41,9 +41,10 @@ import { useOverviewDashboard } from './useOverviewDashboard';
 const TITLE = '1. Visão Geral de Qualidade';
 const COLLECTION_GUIDE_URL = 'https://github.com/fga-eps-mds/MeasureSoftGram-Action';
 const SKELETON_BAR_WIDTHS = [300, 260, 230, 200, 170, 140];
-// o raio do radar é 72% do menor lado, então é a altura que limita o tamanho do círculo: em 300px ele ficava miúdo
-// ao lado do equalizador, que tem 15rem só de trilho (homologação do PO em 03/11/2026)
-const RADAR_HEIGHT = 480;
+// o raio do radar é 72% do menor lado, então no card largo é a altura que limita o círculo: em 300px fixos ele
+// ficava miúdo ao lado do equalizador, que tem 15rem só de trilho (homologação do PO em 03/11/2026). No celular
+// quem limita é a largura, então crescer a altura só deixaria vão sobrando.
+const RADAR_HEIGHT = { xs: 320, sm: 400, md: 480 };
 
 type CardStatus = 'loading' | 'empty' | 'error' | 'ready';
 
@@ -341,11 +342,17 @@ const OverviewDashboard: NextPageWithLayout = () => {
           </Box>
           {hasAccomplishedValues(selectedRepository) ? (
             <>
-              <ReactEcharts
-                option={formatRadarOptions(comparisons, selectedRepository?.repository_name ?? '', characteristicName)}
-                notMerge
-                style={{ height: RADAR_HEIGHT, width: '100%' }}
-              />
+              <Box height={RADAR_HEIGHT}>
+                <ReactEcharts
+                  option={formatRadarOptions(
+                    comparisons,
+                    selectedRepository?.repository_name ?? '',
+                    characteristicName
+                  )}
+                  notMerge
+                  style={{ height: '100%', width: '100%' }}
+                />
+              </Box>
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
                 Mesmos valores do realizado (Rd) do {terms.repository} {selectedRepository?.repository_name} na release{' '}
                 {releaseName}.

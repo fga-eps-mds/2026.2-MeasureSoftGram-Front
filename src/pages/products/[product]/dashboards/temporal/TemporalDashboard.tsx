@@ -37,11 +37,10 @@ const CHARTS: { level: EvolutionLevel; title: string; label: string; normalized:
   { level: 'metrics', title: 'Métricas', label: 'métricas', normalized: false }
 ];
 
-function getStatus(data: EvolutionChartData, noDataAsError: boolean): 'loading' | 'error' | 'empty' | 'ready' {
+function getStatus(data: EvolutionChartData): 'loading' | 'error' | 'empty' | 'ready' {
   if (data.hasError) return 'error';
   if (data.isLoading) return 'loading';
-  if (data.series.length > 0) return 'ready';
-  return noDataAsError ? 'error' : 'empty';
+  return data.series.length === 0 ? 'empty' : 'ready';
 }
 
 interface EvolutionChartCardProps {
@@ -49,43 +48,28 @@ interface EvolutionChartCardProps {
   data: EvolutionChartData;
   granularity: TimeGranularity;
   csv: CsvChart<TemporalCsvRow>;
-  noDataTitle: string;
-  noDataDescription: string;
-  /** Ausência de dado que indica base inconsistente, e não um gráfico ainda vazio: vira erro em vez de aviso. */
-  noDataAsError?: boolean;
+  emptyTitle: string;
+  emptyDescription: string;
 }
 
-function EvolutionChartCard({
-  chart,
-  data,
-  granularity,
-  csv,
-  noDataTitle,
-  noDataDescription,
-  noDataAsError = false
-}: EvolutionChartCardProps) {
+function EvolutionChartCard({ chart, data, granularity, csv, emptyTitle, emptyDescription }: EvolutionChartCardProps) {
   const options = useMemo(
     () => formatTimeEvolutionOptions(data.series, granularity, chart.normalized),
     [data.series, granularity, chart.normalized]
   );
   const exportButton = <ExportCsvButton dashboard={TEMPORAL_CSV.dashboard} chart={csv} />;
 
-  const status = getStatus(data, noDataAsError);
-  // erro de base inconsistente, e não de carregamento: o texto é o do próprio nível, não o genérico de falha
-  const isNoDataError = status === 'error' && !data.hasError;
-
   return (
     <DashboardCard
       title={chart.title}
-      status={status}
+      status={getStatus(data)}
       headerAction={exportButton}
       emptyHeaderAction={exportButton}
       loadingContent={<SkeletonBlock width="100%" height={CHART_HEIGHT} />}
       loadingMessage={`Carregando a evolução das ${chart.label}…`}
-      emptyTitle={noDataTitle}
-      emptyDescription={noDataDescription}
-      errorTitle={isNoDataError ? noDataTitle : `Não foi possível carregar a evolução das ${chart.label}`}
-      errorDescription={isNoDataError ? noDataDescription : undefined}
+      emptyTitle={emptyTitle}
+      emptyDescription={emptyDescription}
+      errorTitle={`Não foi possível carregar a evolução das ${chart.label}`}
       onRetry={data.retry}
     >
       <ReactEcharts option={options} notMerge style={{ height: CHART_HEIGHT, width: '100%' }} />
@@ -108,13 +92,12 @@ const TemporalDashboard: NextPageWithLayout = () => {
   const csvs = Object.fromEntries(
     CHARTS.map(({ level }) => {
       const data = evolution.charts[level];
-      // só o gráfico pronto exporta, então aqui tanto faz se a ausência de dado vira aviso ou erro
-      const series = getStatus(data, false) === 'ready' ? data.series : [];
+      const series = getStatus(data) === 'ready' ? data.series : [];
       return [level, formatTemporalCsv(level, repositoryName, series, granularity)];
     })
   ) as Record<EvolutionLevel, CsvChart<TemporalCsvRow>>;
 
-  const noDataMessages: Record<EvolutionLevel, { title: string; description: string }> = {
+  const emptyMessages: Record<EvolutionLevel, { title: string; description: string }> = {
     characteristics: {
       title: `Ainda não há valores desta característica neste ${terms.repository}`,
       description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
@@ -127,17 +110,18 @@ const TemporalDashboard: NextPageWithLayout = () => {
       title: `Ainda não há valores das medidas escolhidas neste ${terms.repository}`,
       description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
     },
-    // sem métrica não pode haver medida, subcaracterística nem característica: o modelo é calculado de baixo para
-    // cima, então os gráficos acima com valor indicam base inconsistente (homologação do PO em 03/11/2026)
+    // o gráfico busca só as métricas com qualifier TRK, então medida cujas métricas são medidas por arquivo fica
+    // vazia aqui mesmo com a coleta em dia: o texto explica isso em vez de acusar falta de dado (ressalva do PO
+    // em 03/11/2026, que citava a Distribuição Estatística, onde esses valores também não aparecem)
     metrics: {
       title: `Sem valores de métricas ${measures === 'all' ? 'das medidas' : 'das medidas escolhidas'} neste ${
         terms.repository
       }`,
       description:
-        'As medidas, subcaracterísticas e características são calculadas a partir das métricas coletadas pelas ' +
-        'ferramentas de análise. Se os gráficos acima têm valores e este não, os dados estão inconsistentes: ' +
-        'confira a coleta do MeasureSoftGram neste ' +
-        `${terms.repository} e avise o administrador do produto.`
+        `Este gráfico mostra só as métricas medidas no ${terms.repository} inteiro. As que são coletadas por ` +
+        'arquivo, como as do SonarQube, não aparecem aqui mesmo com a coleta em dia — as medidas acima já ' +
+        'resumem esses valores. Se os gráficos acima também estão vazios, rode a coleta do MeasureSoftGram ' +
+        `neste ${terms.repository}.`
     }
   };
 
@@ -159,9 +143,8 @@ const TemporalDashboard: NextPageWithLayout = () => {
         data={evolution.charts[chart.level]}
         granularity={granularity}
         csv={csvs[chart.level]}
-        noDataTitle={noDataMessages[chart.level].title}
-        noDataDescription={noDataMessages[chart.level].description}
-        noDataAsError={chart.level === 'metrics'}
+        emptyTitle={emptyMessages[chart.level].title}
+        emptyDescription={emptyMessages[chart.level].description}
       />
     ));
   };
