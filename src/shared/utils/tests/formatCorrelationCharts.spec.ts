@@ -150,10 +150,11 @@ describe('formatCorrelationCharts', () => {
 
       expect(chart.name).toBe('matriz-correlacao');
       expect(toCsv(chart).split('\r\n')).toEqual([
-        'Repositório,Nível,Linha,Coluna,Coeficiente,p-valor,Significativo,Coeficiente aplicado,Releases',
-        'MeasureSoftGram-Service,Característica,Maintainability,Reliability,0.559,0.0104,sim,Spearman,20',
-        'MeasureSoftGram-Service,Característica,Functional Suitability,Reliability,-0.32,0.17,não,Spearman,20',
-        'MeasureSoftGram-Service,Característica,Functional Suitability,Maintainability,0.9282,3.7e-9,sim,Spearman,20'
+        'Repositório;Nível;Linha;Coluna;Coeficiente;p-valor;Significativo;Coeficiente aplicado;Releases',
+        'MeasureSoftGram-Service;Característica;Maintainability;Reliability;0,559;0,0104;sim;Spearman;20',
+        'MeasureSoftGram-Service;Característica;Functional Suitability;Reliability;-0,32;0,17;não;Spearman;20',
+        // a notação científica do p-valor também troca o ponto pela vírgula
+        'MeasureSoftGram-Service;Característica;Functional Suitability;Maintainability;0,9282;3,7e-9;sim;Spearman;20'
       ]);
     });
 
@@ -163,7 +164,7 @@ describe('formatCorrelationCharts', () => {
       });
 
       expect(toCsv(formatCorrelationCsv(data, 'matriz-bolhas')).split('\r\n')[1]).toBe(
-        'MeasureSoftGram-Service,Característica,Maintainability,Reliability,,,não,Spearman,20'
+        'MeasureSoftGram-Service;Característica;Maintainability;Reliability;;;não;Spearman;20'
       );
     });
   });

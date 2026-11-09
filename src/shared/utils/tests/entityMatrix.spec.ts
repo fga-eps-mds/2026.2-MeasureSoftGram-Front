@@ -283,7 +283,7 @@ describe('entityMatrix', () => {
 
       expect(noData).toMatchObject({ value: null, grade: null, tsqmi: 0.53, tsqmi_grade: 'C' });
       expect(toCsv({ columns: chart.columns, rows: [{ ...noData!, tsqmi_variation: null }] }).split('\r\n')[1]).toBe(
-        'R2,Medida,Front,CI Feedback Time,ci_feedback_time,Reliability › Maturity,100,,,0.53,C,'
+        'R2;Medida;Front;CI Feedback Time;ci_feedback_time;Reliability › Maturity;100;;;0,53;C;'
       );
     });
 
@@ -291,12 +291,12 @@ describe('entityMatrix', () => {
       const matrix = firstRelease();
 
       expect(toCsv(formatEntityHeatmapCsv(matrix)).split('\r\n')[1]).toBe(
-        'R2,Medida,api,Passed Tests,passed_tests,Reliability › Testing Status,33,0.9,A,0.6,B,'
+        'R2;Medida;api;Passed Tests;passed_tests;Reliability › Testing Status;33;0,9;A;0,6;B;'
       );
       expect(toCsv(formatEntityRankingCsv(matrix, getWorstPairs(getPairs(matrix)))).split('\r\n')).toEqual([
-        'Release,Nível,Posição,Repositório,Entidade,Chave da entidade,Valor,Grau,Variação',
-        'R2,Medida,1,api,Test Coverage,test_coverage,0.4,C,',
-        'R2,Medida,2,api,Passed Tests,passed_tests,0.9,A,'
+        'Release;Nível;Posição;Repositório;Entidade;Chave da entidade;Valor;Grau;Variação',
+        'R2;Medida;1;api;Test Coverage;test_coverage;0,4;C;',
+        'R2;Medida;2;api;Passed Tests;passed_tests;0,9;A;'
       ]);
       expect(formatEntityContributionCsv(matrix, getContributions(getPairs(matrix))).rows).toEqual([]);
     });

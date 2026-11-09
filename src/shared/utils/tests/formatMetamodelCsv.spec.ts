@@ -92,15 +92,15 @@ describe('formatMetamodelCsv', () => {
 
     expect(chart.name).toBe(METAMODEL_CSV.tree);
     expect(lines(chart)).toEqual([
-      'Release,Nível,Chave,Nome,Entidade pai,Peso (%),Mínimo,Máximo',
-      '2026.2 R2,TSQMI,tsqmi,TSQMI,,,,',
-      '2026.2 R2,Característica,maintainability,Maintainability,TSQMI,33.333333333333336,,',
-      '2026.2 R2,Subcaracterística,modifiability,Modifiability,Maintainability,60,,',
-      '2026.2 R2,Medida,density_non_complex,Densidade de arquivos não complexos,Modifiability,34.5,0,10',
-      '2026.2 R2,Métrica,ncloc,ncloc,Densidade de arquivos não complexos,,,',
-      '2026.2 R2,Métrica,complexity,complexity,Densidade de arquivos não complexos,,,',
-      '2026.2 R2,Medida,density_commented,Densidade de arquivos comentados,Modifiability,65.5,10,',
-      '2026.2 R2,Métrica,ncloc,ncloc,Densidade de arquivos comentados,,,'
+      'Release;Nível;Chave;Nome;Entidade pai;Peso (%);Mínimo;Máximo',
+      '2026.2 R2;TSQMI;tsqmi;TSQMI;;;;',
+      '2026.2 R2;Característica;maintainability;Maintainability;TSQMI;33,333333333333336;;',
+      '2026.2 R2;Subcaracterística;modifiability;Modifiability;Maintainability;60;;',
+      '2026.2 R2;Medida;density_non_complex;Densidade de arquivos não complexos;Modifiability;34,5;0;10',
+      '2026.2 R2;Métrica;ncloc;ncloc;Densidade de arquivos não complexos;;;',
+      '2026.2 R2;Métrica;complexity;complexity;Densidade de arquivos não complexos;;;',
+      '2026.2 R2;Medida;density_commented;Densidade de arquivos comentados;Modifiability;65,5;10;',
+      '2026.2 R2;Métrica;ncloc;ncloc;Densidade de arquivos comentados;;;'
     ]);
   });
 

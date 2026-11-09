@@ -44,13 +44,13 @@ describe('formatTotalsCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.totals);
     expect(lines(chart)).toEqual([
-      'Release,Total,Quantidade',
-      '2026.2 R2,Características,3',
-      '2026.2 R2,Subcaracterísticas,6',
-      '2026.2 R2,Medidas,10',
-      '2026.2 R2,Métricas,14',
-      '2026.2 R2,Repositórios,2',
-      '2026.2 R2,Arquivos analisados,1284'
+      'Release;Total;Quantidade',
+      '2026.2 R2;Características;3',
+      '2026.2 R2;Subcaracterísticas;6',
+      '2026.2 R2;Medidas;10',
+      '2026.2 R2;Métricas;14',
+      '2026.2 R2;Repositórios;2',
+      '2026.2 R2;Arquivos analisados;1284'
     ]);
   });
 
@@ -65,9 +65,9 @@ describe('formatIndicatorCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.indicator);
     expect(lines(chart)).toEqual([
-      'Release,Repositório,Indicador,Grau',
-      '2026.2 R2,service,0.81,A',
-      '2026.2 R2,front,0.72,B'
+      'Release;Repositório;Indicador;Grau',
+      '2026.2 R2;service;0,81;A',
+      '2026.2 R2;front;0,72;B'
     ]);
   });
 
@@ -95,16 +95,16 @@ describe('formatPlannedAccomplishedCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.plannedAccomplished);
     expect(lines(chart)).toEqual([
-      'Release,Repositório,Característica,Planejado (Rp),Realizado (Rd),Diferença,Desvio geral',
-      '2026.2 R2,service,Nome reliability,0.7,0.74,-0.040000000000000036,0.05',
-      '2026.2 R2,service,Nome maintainability,0.8,0.78,0.020000000000000018,0.05'
+      'Release;Repositório;Característica;Planejado (Rp);Realizado (Rd);Diferença;Desvio geral',
+      '2026.2 R2;service;Nome reliability;0,7;0,74;-0,040000000000000036;0,05',
+      '2026.2 R2;service;Nome maintainability;0,8;0,78;0,020000000000000018;0,05'
     ]);
   });
 
   it('deixa vazios o realizado e a diferença da característica sem análise', () => {
     const chart = formatPlannedAccomplishedCsv(RELEASE, 'front', comparisonsOf('front'), 0.2, nameOf);
 
-    expect(lines(chart)[2]).toBe('2026.2 R2,front,Nome maintainability,0.8,,,0.2');
+    expect(lines(chart)[2]).toBe('2026.2 R2;front;Nome maintainability;0,8;;;0,2');
   });
 
   it('deixa vazio o desvio geral quando o Service não o envia', () => {
@@ -113,10 +113,10 @@ describe('formatPlannedAccomplishedCsv', () => {
     expect(chart.rows.every((row) => row.normDiff === null)).toBe(true);
   });
 
-  it('escapa vírgula e aspas no nome do repositório', () => {
-    const chart = formatPlannedAccomplishedCsv(RELEASE, 'a,"b"', comparisonsOf('service'), 0, nameOf);
+  it('escapa ponto e vírgula e aspas no nome do repositório', () => {
+    const chart = formatPlannedAccomplishedCsv(RELEASE, 'a;"b"', comparisonsOf('service'), 0, nameOf);
 
-    expect(lines(chart)[1].startsWith('2026.2 R2,"a,""b""",')).toBe(true);
+    expect(lines(chart)[1].startsWith('2026.2 R2;"a;""b""";')).toBe(true);
   });
 });
 
@@ -126,15 +126,15 @@ describe('formatRadarCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.radar);
     expect(lines(chart)).toEqual([
-      'Release,Repositório,Característica,Valor',
-      '2026.2 R2,service,Nome reliability,0.74',
-      '2026.2 R2,service,Nome maintainability,0.78'
+      'Release;Repositório;Característica;Valor',
+      '2026.2 R2;service;Nome reliability;0,74',
+      '2026.2 R2;service;Nome maintainability;0,78'
     ]);
   });
 
   it('deixa o valor vazio no eixo sem realizado, como o radar sem ponto', () => {
     const chart = formatRadarCsv(RELEASE, 'front', comparisonsOf('front'), nameOf);
 
-    expect(lines(chart)[2]).toBe('2026.2 R2,front,Nome maintainability,');
+    expect(lines(chart)[2]).toBe('2026.2 R2;front;Nome maintainability;');
   });
 });
