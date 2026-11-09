@@ -116,7 +116,14 @@ function TotalsGrid({ items }: { items: TotalItem[] }) {
             </Box>
           ) : (
             <>
-              <Typography fontWeight="bold" fontSize="26px" lineHeight={1.2} color={DASHBOARD_COLORS.primary}>
+              {/* o leitor de tela anuncia "travessão" ou pula o glifo; o rótulo diz o que o travessão significa */}
+              <Typography
+                fontWeight="bold"
+                fontSize="26px"
+                lineHeight={1.2}
+                color={DASHBOARD_COLORS.primary}
+                aria-label={item.value === null ? 'Não se aplica' : undefined}
+              >
                 {item.value === null ? TOTAL_NOT_APPLICABLE : formatTotal(item.value)}
               </Typography>
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
@@ -134,7 +141,7 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
   const { terms } = useProviderTerms();
   const items = getTotalItems(summary?.totals, terms.Repositories);
   // sem o resumo não há número nenhum para mostrar: segue como carregando, com título, selo e mensagem, em vez da
-  // grade de esqueletos solta, que era o único bloco da tela sem os estados do CA5 da US07.01
+  // grade de esqueletos solta, que era o único bloco da tela sem os estados do CA4 da US07.01
   const status = getStatus(error, isLoading || !summary, false);
   const withoutQualityModel = !!summary && !hasQualityModel(summary.totals);
 
@@ -148,8 +155,8 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
       {/* o travessão sozinho não explica por que não há o que contar; o aviso evita ler ausência como perda de dado */}
       {withoutQualityModel && (
         <MSGAlert severity="warning" title="Esta release não tem modelo de qualidade configurado">
-          {`Sem o modelo não há características, subcaracterísticas, medidas nem métricas para contar — por isso o
-            travessão. A contagem de ${terms.repositories} e de arquivos analisados não depende dele e segue valendo.`}
+          {'Sem o modelo não há características, subcaracterísticas, medidas nem métricas para contar — por isso o ' +
+            `travessão. A contagem de ${terms.repositories} e de arquivos analisados não depende dele e segue valendo.`}
         </MSGAlert>
       )}
       <TotalsGrid items={items} />

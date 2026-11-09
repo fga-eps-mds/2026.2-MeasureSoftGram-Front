@@ -219,7 +219,7 @@ describe('<OverviewDashboard />', () => {
     render(<OverviewDashboard />);
 
     // os três blocos da tela avisam que estão carregando, inclusive os totais, que antes eram só uma grade
-    // de esqueletos sem título nem selo (CA5 da US07.01)
+    // de esqueletos sem título nem selo (CA4 da US07.01)
     expect(screen.getAllByText('Carregando')).toHaveLength(3);
     const totals = screen.getByRole('region', { name: 'Totais da release' });
     expect(totals).toHaveTextContent('Carregando os dados da release');
