@@ -109,6 +109,44 @@ O dashboard "3. Estrutura das Medidas e Indicadores (Metamodelo)" exporta a árv
 
 Os gráficos de pulso (`formatProductPulseCsv` e `formatRepositoryPulseCsv`, em `src/shared/utils/formatPulseCsv.ts`) exportam as medições do período filtrado, em ordem de data, com o grau (A a E) da faixa do valor. O pulso do produto usa o botão dentro de `PulseChartFilters` (`exportAction`); o da tela do repositório fica no card e, junto com o `.zip` do topo, usa o mesmo `useRepositoryPulse`, que a página busca e passa ao card.
 
+## Testes E2E
+
+Os testes de ponta a ponta usam o [Playwright](https://playwright.dev) só com Chromium e ficam em `e2e/**/*.e2e.ts`, fora do `src/` (o Jest, o `next lint` e o Sonar não os veem). Eles rodam contra a API simulada no navegador (`page.route`), sem Service nem MSW: o build sobe sem `NEXT_PUBLIC_API_MOCKING`, o `NEXT_PUBLIC_API_URL` aponta para o próprio servidor de teste e uma chamada a `/api/v1` sem handler faz o teste falhar.
+
+```bash
+pnpm exec playwright install chromium   # uma vez, baixa o navegador
+pnpm e2e                                # build + next start + testes
+pnpm e2e:ui                             # modo interativo
+pnpm e2e --grep @US21.03                # só os testes de uma história
+```
+
+Fora do CI, o `webServer` do `playwright.config.ts` reaproveita um servidor que já esteja de pé em `http://localhost:3000`. O relatório fica em `playwright-report/` (`pnpm exec playwright show-report`); no CI, o workflow `e2e.yml` publica essa pasta como artefato do run, a evidência que vai na issue de aceitação.
+
+### Como escrever um cenário
+
+1. Importe `test` e `expect` de `e2e/support/fixtures.ts`. Esse teste base semeia a sessão fake (as mesmas chaves do `src/mocks/initMocks.ts`) e simula a API com os handlers comuns de `e2e/fixtures/common.ts`.
+2. Descreva as respostas da página num módulo em `e2e/fixtures/<pagina>/`: JSONs no formato que o Service devolve e um objeto de handlers por cenário, com o caminho a partir de `/v1` como chave. O valor é o JSON da resposta, um `{ status, json, delayMs }` (ex.: `serverError`) ou uma função da URL, para escolher a resposta pela query.
+3. Escolha o cenário no `describe` com `test.use({ scenario })`; para trocar uma resposta no meio do teste (um erro depois do carregamento, por exemplo), use `api.set(caminho, resposta)`.
+4. Prefira seletores por papel e texto (`getByRole`, `getByText`) e os `data-testid` que a tela já tem; os gráficos são canvas, então verifique o resumo, os filtros, os estados do `DashboardCard` e os downloads.
+
+```ts
+import { expect, test } from './support/fixtures';
+import { comDados, DISTRIBUTION_PATH } from './fixtures/distribuicao';
+
+test.describe('@US21.03-CA8 Resumo com desvio padrão e variância', () => {
+  test.use({ scenario: comDados });
+
+  test('lista o desvio padrão e a variância', async ({ page }) => {
+    await page.goto(DISTRIBUTION_PATH);
+    await expect(page.getByRole('region', { name: 'Resumo estatístico e IQR' })).toContainText('Desvio padrão');
+  });
+});
+```
+
+### Convenção de tags
+
+O título do `describe` leva a história e o critério de aceitação: `@US21.03-CA8 <frase do critério>`. Assim `pnpm e2e --grep @US21.03` roda a história inteira, `--grep @US21.03-CA8` roda um critério, e o relatório mostra o critério ao lado do resultado. Um critério que não dá para automatizar fica marcado como manual na issue de aceitação, com o motivo.
+
 ## Licença
 
 Este projeto é distribuído sob a licença [GNU AGPL-3.0](./LICENSE).
