@@ -1,0 +1,56 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "repository": {
+    "id": 9,
+    "name": "MeasureSoftGram-Front"
+  },
+  "level": "tsqmi",
+  "key": "tsqmi",
+  "period": {
+    "count": 2,
+    "first": "2026-08-18T10:00:00-03:00",
+    "last": "2026-08-25T10:00:00-03:00"
+  },
+  "entity": {
+    "key": "tsqmi",
+    "name": "TSQMI",
+    "level": "tsqmi",
+    "metric_type": null,
+    "analyses": [
+      {
+        "date": "2026-08-18T10:00:00-03:00",
+        "value": 0.52,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-08-25T10:00:00-03:00",
+        "value": 0.64,
+        "is_outlier": false
+      }
+    ],
+    "summary": {
+      "count": 2,
+      "min": 0.52,
+      "p10": 0.532,
+      "q1": 0.55,
+      "median": 0.58,
+      "q3": 0.61,
+      "p90": 0.628,
+      "max": 0.64,
+      "iqr": 0.06,
+      "lower_limit": 0.46,
+      "upper_limit": 0.7,
+      "outliers": 0,
+      "mean": 0.58,
+      "std": 0.084853,
+      "variance": 0.0072,
+      "skewness": null
+    }
+  },
+  "children": []
+}

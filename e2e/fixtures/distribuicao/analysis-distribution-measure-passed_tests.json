@@ -79,75 +79,8 @@
       "mean": 0.8025,
       "std": 0.052304,
       "variance": 0.002736,
-      "skewness": -0.13208
+      "skewness": -0.164733
     }
   },
-  "children": [
-    {
-      "key": "tests",
-      "name": "tests",
-      "level": "metric",
-      "metric_type": "INT",
-      "analyses": [
-        {
-          "date": "2026-08-18T10:00:00-03:00",
-          "value": 180,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-08-25T10:00:00-03:00",
-          "value": 184,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-09-01T10:00:00-03:00",
-          "value": 190,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-09-08T10:00:00-03:00",
-          "value": 191,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-09-15T10:00:00-03:00",
-          "value": 195,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-09-22T10:00:00-03:00",
-          "value": 199,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-10-01T10:00:00-03:00",
-          "value": 204,
-          "is_outlier": false
-        },
-        {
-          "date": "2026-10-10T10:00:00-03:00",
-          "value": 210,
-          "is_outlier": false
-        }
-      ],
-      "summary": {
-        "count": 8,
-        "min": 180,
-        "p10": 182.8,
-        "q1": 188.5,
-        "median": 193,
-        "q3": 200.25,
-        "p90": 205.8,
-        "max": 210,
-        "iqr": 11.75,
-        "lower_limit": 170.875,
-        "upper_limit": 217.875,
-        "outliers": 0,
-        "mean": 194.125,
-        "std": 10.020515,
-        "variance": 100.410714,
-        "skewness": 0.170516
-      }
-    }
-  ]
+  "children": []
 }

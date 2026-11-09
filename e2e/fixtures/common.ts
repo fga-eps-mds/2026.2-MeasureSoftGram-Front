@@ -11,7 +11,7 @@ export const PRODUCT_ID = 1;
 export const PRODUCT_PATH = `/products/${ORGANIZATION_ID}-${PRODUCT_ID}-MeasureSoftGram`;
 export const PRODUCT_API = `/v1/organizations/${ORGANIZATION_ID}/products/${PRODUCT_ID}`;
 
-const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
+export const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
 
 /** O que o layout, o AuthContext e os providers pedem em qualquer página do produto. */
 export const common: ApiHandlers = {
@@ -22,5 +22,8 @@ export const common: ApiHandlers = {
   [`${PRODUCT_API}/`]: products.results[0],
   [`${PRODUCT_API}/repositories/`]: repositories,
   [`${PRODUCT_API}/repositories-tsqmi-latest-values/`]: EMPTY_PAGE,
-  [`${PRODUCT_API}/current/release-config/`]: releaseConfig
+  [`${PRODUCT_API}/current/release-config/`]: releaseConfig,
+  // a Visão Geral do produto, de onde o menu leva aos dashboards
+  [`${PRODUCT_API}/repositories-tsqmi-historical-values/`]: EMPTY_PAGE,
+  [`${PRODUCT_API}/repositories-tsqmi-release-history/`]: { releases: [], repositories: [] }
 };
