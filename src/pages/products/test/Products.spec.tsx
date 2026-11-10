@@ -675,6 +675,11 @@ describe('Products Component', () => {
         value: [{ id: 'org-gl-1', name: 'GitLab Group 1', key: 'gitlab-group-1' }]
       });
 
+      (organizationQuery.importGitlabGroup as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: { id: 'org-gl-1' }
+      });
+
       (organizationQuery.getGitLabProjects as jest.Mock).mockResolvedValue({
         type: 'success',
         value: {
@@ -892,6 +897,65 @@ describe('Products Component', () => {
         expect(organizationQuery.createOrganization).toHaveBeenCalledWith({ name: 'GitLab Group 1' });
       });
     });
+
+    it('usa o id do grupo importado mesmo quando já existe organização com o mesmo nome', async () => {
+      (organizationQuery.importGitlabGroup as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: { id: 'org-gl-import' }
+      });
+
+      renderProducts();
+
+      await waitFor(() => {
+        expect(organizationQuery.importGitlabGroup).toHaveBeenCalledWith(101);
+        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-gl-import', 101, 'group', 1, '', 'prod-gl-1');
+      });
+    });
+
+    it('seleciona o grupo, e não o usuário, quando os dois têm o mesmo nome', async () => {
+      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [
+          { id: 7, name: 'joao', full_path: 'joao', avatar_url: '', description: '', kind: 'user' },
+          { id: 8, name: 'joao', full_path: 'joao', avatar_url: '', description: 'Grupo', kind: 'group' }
+        ]
+      });
+      (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [{ id: 'org-joao', name: 'joao', key: 'joao' }]
+      });
+      (organizationQuery.importGitlabGroup as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: { id: 'org-grupo' }
+      });
+
+      renderProducts();
+      await waitFor(() => {
+        expect(screen.getByLabelText('Grupos do GitLab')).toBeInTheDocument();
+      });
+      await act(async () => {
+        fireEvent.mouseDown(screen.getByLabelText('Grupos do GitLab'));
+      });
+      const options = await screen.findAllByRole('option');
+      await act(async () => { fireEvent.click(options[1]); });
+
+      await waitFor(() => {
+        expect(organizationQuery.importGitlabGroup).toHaveBeenCalledWith(8);
+        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-grupo', 8, 'group', 1, '', 'prod-gl-1');
+      });
+    });
+  });
+
+  it('reaproveita a organização do GitHub pelo nome sem chamar a importação', async () => {
+    // zera filas de mockResolvedValueOnce de testes anteriores
+    (organizationQuery.getAllOrganization as jest.Mock).mockReset().mockResolvedValue({
+      type: 'success',
+      value: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }]
+    });
+    renderProducts();
+
+    expect(await screen.findByText('Repo 1')).toBeInTheDocument();
+    expect(organizationQuery.importOrganization).not.toHaveBeenCalled();
   });
 });
 

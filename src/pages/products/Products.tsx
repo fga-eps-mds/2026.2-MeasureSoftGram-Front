@@ -75,7 +75,8 @@ const Products: NextPageWithLayout = () => {
   const { setCurrentProduct, updateProductList, currentProduct } = useProductContext();
 
   const [providerNamespaces, setProviderNamespaces] = useState<ProviderNamespaceItem[]>([]);
-  const [selectedOrgName, setSelectedOrgName] = useState<string>('');
+  // id do namespace do provedor (não o nome: usuário e grupo do GitLab podem ter o mesmo nome)
+  const [selectedNamespaceId, setSelectedNamespaceId] = useState<string>('');
   const [selectedOrgDbId, setSelectedOrgDbId] = useState<string>('');
 
   const [products, setProducts] = useState<ProductType[]>([]);
@@ -95,7 +96,7 @@ const Products: NextPageWithLayout = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [search, tabValue, selectedOrgName, provider, selectedProductId]);
+  }, [search, tabValue, selectedNamespaceId, provider, selectedProductId]);
 
   // a busca vai para o servidor só quando a pessoa para de digitar
   useEffect(() => {
@@ -106,8 +107,8 @@ const Products: NextPageWithLayout = () => {
   const lastLoadedProductIdRef = useRef<string>('');
 
   const currentNamespace = useMemo(
-    () => providerNamespaces.find(ns => ns.name === selectedOrgName || ns.full_path === selectedOrgName),
-    [providerNamespaces, selectedOrgName]
+    () => providerNamespaces.find(ns => String(ns.id) === selectedNamespaceId),
+    [providerNamespaces, selectedNamespaceId]
   );
 
   const importList = useImportList({
@@ -158,18 +159,18 @@ const Products: NextPageWithLayout = () => {
     return null;
   };
 
-  const resolveDefaultOrgName = async (namespaces: ProviderNamespaceItem[]): Promise<string> => {
-    if (namespaces.length === 0) return '';
+  const resolveDefaultNamespace = async (namespaces: ProviderNamespaceItem[]): Promise<ProviderNamespaceItem | undefined> => {
+    if (namespaces.length === 0) return undefined;
     const targetOrg = await resolveTargetOrg();
     if (targetOrg) {
       const matchGo = namespaces.find(go =>
         isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
       );
       if (matchGo) {
-        return matchGo.name;
+        return matchGo;
       }
     }
-    return namespaces[0].name;
+    return namespaces[0];
   };
 
   // Busca as organizações/namespaces do provedor e converte para o formato único da tela.
@@ -230,9 +231,9 @@ const Products: NextPageWithLayout = () => {
 
       setProviderNamespaces(res.value);
       if (res.value.length === 0) return;
-      const defaultName = await resolveDefaultOrgName(res.value);
+      const defaultNamespace = await resolveDefaultNamespace(res.value);
       if (!estaAtivo()) return;
-      setSelectedOrgName(defaultName);
+      setSelectedNamespaceId(defaultNamespace ? String(defaultNamespace.id) : '');
     } catch (error) {
       if (!estaAtivo()) return;
       console.error(error);
@@ -279,12 +280,9 @@ const Products: NextPageWithLayout = () => {
     return importResult.value.id;
   };
 
-  const importOrg = async (orgName: string): Promise<string> => {
-    if (provider !== 'gitlab') return importGithubOrg(orgName);
-    const group = providerNamespaces.find(
-      ns => ns.kind === 'group' && (ns.name === orgName || ns.full_path === orgName)
-    );
-    return group ? importGitlabGroupOrg(group.id) : importGitlabPersonalOrg(orgName);
+  const importOrg = async (ns: ProviderNamespaceItem): Promise<string> => {
+    if (provider !== 'gitlab') return importGithubOrg(ns.name);
+    return ns.kind === 'group' ? importGitlabGroupOrg(ns.id) : importGitlabPersonalOrg(ns.name);
   };
 
   const handleSelectOrgRef = useRef<boolean>(false);
@@ -306,21 +304,19 @@ const Products: NextPageWithLayout = () => {
     }
   };
 
-  const handleSelectOrganization = async (orgName: string) => {
-    if (!orgName) return;
+  const handleSelectOrganization = async (ns: ProviderNamespaceItem) => {
     if (handleSelectOrgRef.current) return;
     handleSelectOrgRef.current = true;
     setLoadingProducts(true);
     setProducts([]);
     try {
-      let orgDbId = await getBackendOrgId(orgName);
-
+      // GitLab sempre importa (POST idempotente): reaproveitar a org pelo nome deixa a pessoa de fora do grupo
+      const orgDbId = provider === 'gitlab'
+        ? await importOrg(ns)
+        : (await getBackendOrgId(ns.name)) || (await importOrg(ns));
       if (!orgDbId) {
-        orgDbId = await importOrg(orgName);
-        if (!orgDbId) {
-          toast.error(`Erro ao importar ${terms.organization} no MeasureSoftGram.`);
-          return;
-        }
+        toast.error(`Erro ao importar ${terms.organization} no MeasureSoftGram.`);
+        return;
       }
 
       setSelectedOrgDbId(orgDbId);
@@ -384,10 +380,10 @@ const Products: NextPageWithLayout = () => {
   }, [provider, isProviderReady]);
 
   useEffect(() => {
-    if (selectedOrgName) {
-      void handleSelectOrganization(selectedOrgName);
+    if (currentNamespace) {
+      void handleSelectOrganization(currentNamespace);
     }
-  }, [selectedOrgName]);
+  }, [currentNamespace?.id, provider]);
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
@@ -396,11 +392,11 @@ const Products: NextPageWithLayout = () => {
         isSameGithubOrg(go.name, currentOrganization?.name, currentOrganization?.key, (currentOrganization as any)?.github_org_name)
       );
       if (matchGo) {
-        if (matchGo.name !== selectedOrgName) {
-          setSelectedOrgName(matchGo.name);
+        if (String(matchGo.id) !== selectedNamespaceId) {
+          setSelectedNamespaceId(String(matchGo.id));
         }
-      } else if (selectedOrgName !== '') {
-        setSelectedOrgName('');
+      } else if (selectedNamespaceId !== '') {
+        setSelectedNamespaceId('');
         setProducts([]);
         setSelectedProductId('');
       }
@@ -582,12 +578,12 @@ const Products: NextPageWithLayout = () => {
                 </InputLabel>
                 <Select
                   labelId="org-select-label"
-                  value={selectedOrgName}
+                  value={selectedNamespaceId}
                   label={`${terms.Organizations} do ${terms.providerName}`}
-                  onChange={(e) => setSelectedOrgName(e.target.value)}
+                  onChange={(e) => setSelectedNamespaceId(e.target.value)}
                 >
                   {providerNamespaces.map((o) => (
-                    <MenuItem key={o.id} value={o.name}>
+                    <MenuItem key={o.id} value={String(o.id)}>
                       <strong>{o.name}</strong> {o.description ? `(${o.description})` : ''}
                     </MenuItem>
                   ))}

@@ -34,7 +34,7 @@ function UserMenu({ username }: Props) {
     <>
       <SideMenuItem
         startIcon={<Avatar sx={{ width: 34, height: 34, backgroundColor: '#000' }} />}
-        text={username ?? '???'}
+        text={username || 'Usuário'}
         tooltip={t("tooltip.user-menu")}
         endIcon={<FiChevronRight fontSize={28} />}
         onClick={handleClick}
