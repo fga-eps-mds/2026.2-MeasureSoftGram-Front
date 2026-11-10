@@ -641,16 +641,13 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
     test.describe('erro na lista de repositórios', () => {
       test.use({ scenario: temporal.erroRepositorios });
 
-      test.fixme(
-        'mostra o erro com "Tentar novamente" (bug: a tela diz "Este produto ainda não tem repositórios")',
-        async ({ page }) => {
-          await page.goto(temporal.TEMPORAL_PATH);
-          await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
-          await expect(page.getByRole('alert')).toBeVisible();
-          await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
-          await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
-        }
-      );
+      test('mostra o erro com "Tentar novamente"', async ({ page }) => {
+        await page.goto(temporal.TEMPORAL_PATH);
+        await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
+        await expect(page.getByRole('alert')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
+        await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
+      });
     });
   });
 
