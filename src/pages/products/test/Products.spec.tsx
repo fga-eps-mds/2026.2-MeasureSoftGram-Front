@@ -1024,7 +1024,7 @@ describe('Products Component', () => {
       renderProducts();
 
       await waitFor(() => expect(organizationQuery.getGitLabNamespaces).toHaveBeenCalled());
-      await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+      await act(async () => { await new Promise(r => { setTimeout(r, 50); }); });
       // o grupo 99 saiu da lista: casar pelo nome levaria ao grupo 8, que é outro grupo
       expect(organizationQuery.importGitlabGroup).not.toHaveBeenCalledWith(8);
     });
