@@ -26,6 +26,7 @@ import getLayout from "@components/Layout";
 import useRequireAuth from "@hooks/useRequireAuth";
 import { toast } from "react-toastify";
 import { organizationQuery, Result, ResultError } from "@services/organization";
+import { Organization } from "@customTypes/organization";
 import type { AxiosError } from 'axios';
 import { useRouter } from "next/router";
 import { productQuery } from "@services/product";
@@ -160,7 +161,7 @@ const Products: NextPageWithLayout = () => {
   };
 
   // GitLab: org de grupo casa pelo gitlab_group_id; sem ele, casa pelo nome preferindo o espaço pessoal homônimo
-  const findNamespaceOfOrg = (namespaces: ProviderNamespaceItem[], org: any) => {
+  const findNamespaceOfOrg = (namespaces: ProviderNamespaceItem[], org: Organization | null | undefined) => {
     if (provider === 'gitlab' && org?.gitlab_group_id) {
       return namespaces.find(go => go.kind === 'group' && String(go.id) === String(org.gitlab_group_id));
     }
@@ -276,7 +277,10 @@ const Products: NextPageWithLayout = () => {
     }
     const res = await organizationQuery.getAllOrganization();
     if (res.type !== 'success') return '';
-    const found = res.value.find((o: any) => o.name?.toLowerCase() === orgName.toLowerCase());
+    // org de grupo nunca é o espaço pessoal, mesmo com o mesmo nome
+    const found = res.value.find((o: Organization) =>
+      !o.gitlab_group_id && o.name?.toLowerCase() === orgName.toLowerCase()
+    );
     return found?.id ? String(found.id) : '';
   };
 

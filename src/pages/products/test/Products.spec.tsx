@@ -976,9 +976,18 @@ describe('Products Component', () => {
           { id: 8, name: 'joao', full_path: 'joao', avatar_url: '', description: 'Grupo', kind: 'group' }
         ]
       });
-      (organizationQuery.createOrganization as jest.Mock).mockResolvedValueOnce({
+      // nome de org é único no Service: com a org do grupo "joao" já existente, o POST da pessoal falha
+      (organizationQuery.createOrganization as jest.Mock).mockReset().mockResolvedValue({
+        type: 'error',
+        error: new Error('Organization with this name already exists.')
+      });
+      // a org do grupo vem primeiro: o fallback por nome não pode escolhê-la para o espaço pessoal
+      (organizationQuery.getAllOrganization as jest.Mock).mockReset().mockResolvedValue({
         type: 'success',
-        value: { id: 'org-joao' }
+        value: [
+          { id: 'org-grupo', name: 'joao', key: 'joao-grupo', gitlab_group_id: 8 },
+          { id: 'org-joao', name: 'joao', key: 'joao', gitlab_group_id: null }
+        ]
       });
       (useOrganizationContext as jest.Mock).mockReturnValue({
         organizationList: [{ id: 'org-joao', name: 'joao', key: 'joao', gitlab_group_id: null }],
@@ -994,6 +1003,30 @@ describe('Products Component', () => {
         expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-joao', 5, 'user', 1, '', 'prod-gl-1');
       });
       expect(organizationQuery.importGitlabGroup).not.toHaveBeenCalled();
+      expect(organizationQuery.getGitLabProjects).not.toHaveBeenCalledWith('org-grupo', 5, 'user', 1, '', 'prod-gl-1');
+    });
+
+    it('não cai no grupo pelo nome quando o grupo da organização atual não está mais na lista', async () => {
+      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [
+          { id: 5, name: 'joao', full_path: 'joao', avatar_url: '', description: '', kind: 'user' },
+          { id: 8, name: 'time', full_path: 'time', avatar_url: '', description: 'Grupo', kind: 'group' }
+        ]
+      });
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        organizationList: [{ id: 'org-time', name: 'time', key: 'time', gitlab_group_id: 99 }],
+        currentOrganization: { id: 'org-time', name: 'time', key: 'time', gitlab_group_id: 99 },
+        setCurrentOrganizations: mockSetCurrentOrgs,
+        fetchOrganizations: mockFetchOrgs
+      });
+
+      renderProducts();
+
+      await waitFor(() => expect(organizationQuery.getGitLabNamespaces).toHaveBeenCalled());
+      await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+      // o grupo 99 saiu da lista: casar pelo nome levaria ao grupo 8, que é outro grupo
+      expect(organizationQuery.importGitlabGroup).not.toHaveBeenCalledWith(8);
     });
   });
 
