@@ -127,14 +127,27 @@ test.describe('@US21.01-CA3 Nome e peso em cada nó, referência nas medidas e d
       .forEach((row) => expect([row[6], row[7]], `referência de ${row[3]}`).not.toContain(''));
   });
 
-  test('desenho com a árvore toda aberta: peso em cada nó e mínimo e máximo nas medidas (snapshot)', async ({
-    page
-  }) => {
-    test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
-    await openMetamodelo(page);
-    await card(page).getByRole('button', { name: 'Expandir tudo' }).click();
-    await expect(card(page).getByRole('button', { name: 'Recolher tudo' })).toBeVisible();
-    await expect(chartArea(page)).toHaveScreenshot('arvore-r2-expandida.png');
+  test.describe('com a tela larga', () => {
+    // aberta, a árvore passa da largura do card, que rola por dentro; com a tela larga, as medidas cabem na foto
+    test.use({ viewport: { width: 2400, height: 900 } });
+
+    test('desenho com a árvore toda aberta: peso em cada nó e mínimo e máximo nas medidas (snapshot)', async ({
+      page
+    }) => {
+      test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
+      await openMetamodelo(page);
+      await card(page).getByRole('button', { name: 'Expandir tudo' }).click();
+      await expect(card(page).getByRole('button', { name: 'Recolher tudo' })).toBeVisible();
+      // o canvas só acompanha a nova largura da área depois de um quadro
+      await expect
+        .poll(() =>
+          chartArea(page).evaluate(
+            (element) => (element.querySelector('canvas')?.clientWidth ?? 0) >= element.clientWidth - 1
+          )
+        )
+        .toBe(true);
+      await expect(chartArea(page)).toHaveScreenshot('arvore-r2-expandida.png');
+    });
   });
 
   // o clique cai num nó desenhado em canvas: a posição não está no DOM
