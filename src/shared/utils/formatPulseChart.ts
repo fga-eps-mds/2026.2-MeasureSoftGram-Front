@@ -403,6 +403,9 @@ export function formatPulseChartOptions(
 
   return {
     height: totalHeight,
+    // No ECharts 5.6, a animação de entrada termina com o recorte na borda da faixa e perde o `clip: false` da série:
+    // os picos que passam de 0 ou de 1 saíam cortados até o gráfico ser redesenhado.
+    animation: false,
     axisPointer: {
       link: [{ xAxisIndex: 'all' }],
       lineStyle: {

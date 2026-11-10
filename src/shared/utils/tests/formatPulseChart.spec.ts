@@ -397,6 +397,8 @@ describe('formatPulseChart Utility', () => {
         const options: any = formatPulseChartOptions([repoWithReleases]);
 
         expect(options.series[0].clip).toBe(false);
+        // com a animação de entrada, o ECharts 5.6 corta os picos no primeiro desenho
+        expect(options.animation).toBe(false);
         expect(options.series[0].data).toHaveLength(3 * PULSE_POINTS_PER_MEASUREMENT);
       });
 
