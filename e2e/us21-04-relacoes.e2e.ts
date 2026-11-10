@@ -143,7 +143,8 @@ test.describe('@US21.04-CA2 Escolha do repositório e do nível, que atualiza os
     );
     await expect(page.getByTestId('correlation-info')).toHaveText(
       '20 releases de MeasureSoftGram-Front · 3 subcaracterísticas · coeficiente aplicado: Spearman ' +
-        '(distribuição não normal em 2 de 3 subcaracterísticas) · 2 releases deixadas de fora por falta de valor'
+        '(distribuição não normal em 2 de 3 subcaracterísticas: Testing Status e Functional Completeness) · ' +
+        '2 releases deixadas de fora por falta de valor'
     );
     await expect(card(page, MATRIX)).toHaveCount(0);
     await expectChartDrawn(
@@ -164,8 +165,37 @@ test.describe('@US21.04-CA3 Releases usadas, entidades, coeficiente, colunas nã
     await openCorrelation(page);
     await expect(page.getByTestId('correlation-info')).toHaveText(
       '20 releases de MeasureSoftGram-Service · 3 características · coeficiente aplicado: Spearman ' +
-        '(distribuição não normal em 3 de 3 características) · 2 releases deixadas de fora por falta de valor'
+        '(distribuição não normal em 3 de 3 características: Reliability, Maintainability e Functional Suitability) · ' +
+        '2 releases deixadas de fora por falta de valor'
     );
+  });
+
+  test('"Ver releases da análise" mostra cada release com o valor das características e se entrou na RD', async ({
+    page
+  }) => {
+    await openCorrelation(page);
+    await page.getByRole('button', { name: 'Ver releases da análise' }).click();
+    const table = page.getByRole('table', { name: 'Releases da análise de MeasureSoftGram-Service' });
+    const row = (index: number) => table.getByRole('row').nth(index).getByRole('cell');
+    await expect(table.getByRole('row')).toHaveCount(23);
+    await expect(row(1)).toHaveText([
+      'R1',
+      '5 jan a 18 jan',
+      '—',
+      '—',
+      '—',
+      'Fora: sem valor de Reliability, Maintainability e Functional Suitability'
+    ]);
+    await expect(row(2)).toHaveText([
+      'R2',
+      '19 jan a 1 fev',
+      '0,60',
+      '0,60',
+      '—',
+      'Fora: sem valor de Functional Suitability'
+    ]);
+    await expect(row(3)).toHaveText(['R3', '2 fev a 15 fev', '0,63', '0,63', '0,45', 'Usada']);
+    await expect(table.getByRole('cell', { name: 'Usada', exact: true })).toHaveCount(20);
   });
 });
 
@@ -284,9 +314,19 @@ test.describe('@US21.04-CA7 "Exportar .csv" por matriz e .zip no topo, seguindo 
     expect(date).toBeTruthy();
     const zip = await JSZip.loadAsync(readFileSync((await download.path()) ?? ''));
     const names = [`msgram-relacoes-matriz-correlacao-${date}.csv`, `msgram-relacoes-matriz-bolhas-${date}.csv`];
-    expect(Object.keys(zip.files).sort()).toEqual([...names].sort());
+    const rd = `msgram-relacoes-dados-rd-${date}.csv`;
+    expect(Object.keys(zip.files).sort()).toEqual([...names, rd].sort());
     const files = await Promise.all(names.map((name) => zip.file(name)?.async('string') ?? ''));
     files.forEach((content) => expect(csvLines(content)).toEqual(subRows));
+    // a RD vai sem arredondar, uma linha por release, para recalcular os coeficientes
+    const rdLines = csvLines((await zip.file(rd)?.async('string')) ?? '');
+    expect(rdLines).toHaveLength(23);
+    expect(rdLines.slice(0, 4)).toEqual([
+      'Release;Início;Fim;Testing Status;Modifiability;Functional Completeness;Situação',
+      'R1;05/01/2026;18/01/2026;;;;Fora: sem valor de Testing Status, Modifiability e Functional Completeness',
+      'R2;19/01/2026;01/02/2026;0,6;;0,6;Fora: sem valor de Modifiability',
+      'R3;02/02/2026;15/02/2026;0,63;0,57;0,8;Usada'
+    ]);
   });
 });
 
