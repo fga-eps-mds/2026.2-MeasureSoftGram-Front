@@ -273,6 +273,29 @@ describe('<TemporalDashboard />', () => {
     expect(screen.queryByRole('region', { name: 'Característica' })).toBeNull();
   });
 
+  // a lista falha e chega vazia, então a tela acusava produto sem repositório e escondia o erro, sem dar a saída
+  // do "Tentar novamente" que o CA4 da US07.01 exige (falha achada pelos E2E da @LuizaMaluf, no Front#128)
+  it('mostra o erro da lista de repositórios, e não o estado vazio do produto', () => {
+    responses = (request) =>
+      request.url.endsWith('/repositories/') ? { error: new Error('falhou') } : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+
+    expect(screen.getByText('Não foi possível carregar os repositórios do produto')).toBeTruthy();
+    expect(screen.queryByText('Este produto ainda não tem repositórios')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Característica' })).toBeNull();
+  });
+
+  it('refaz a busca da lista de repositórios pelo "Tentar novamente"', () => {
+    responses = (request) =>
+      request.url.endsWith('/repositories/') ? { error: new Error('falhou') } : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    expect(mutate).toHaveBeenCalled();
+  });
+
   describe('exportação de CSV', () => {
     it('exporta o gráfico da característica com um ponto por dia, sem arredondar', () => {
       render(<TemporalDashboard />);
