@@ -922,6 +922,14 @@ describe('Products Component', () => {
         value: { id: 'org-joao-pessoal', name: 'joao-7', gitlab_user_id: 7 }
       });
 
+      // primeiro acesso: ainda não há organização atual, e o namespace padrão vem da lista do provedor
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        organizationList: [],
+        currentOrganization: undefined,
+        setCurrentOrganizations: mockSetCurrentOrgs,
+        fetchOrganizations: mockFetchOrgs
+      });
+
       renderProducts();
 
       await waitFor(() => {
@@ -942,6 +950,14 @@ describe('Products Component', () => {
       (organizationQuery.importGitlabPersonal as jest.Mock).mockResolvedValue({
         type: 'success',
         value: { id: 'org-joao-7', name: 'joao-7', gitlab_user_id: 7 }
+      });
+
+      // primeiro acesso: ainda não há organização atual, e o namespace padrão vem da lista do provedor
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        organizationList: [],
+        currentOrganization: undefined,
+        setCurrentOrganizations: mockSetCurrentOrgs,
+        fetchOrganizations: mockFetchOrgs
       });
 
       renderProducts();
@@ -1122,8 +1138,8 @@ describe('Products Component', () => {
 
       renderProducts();
 
-      await waitFor(() => expect(organizationQuery.getGitLabNamespaces).toHaveBeenCalled());
-      await act(async () => { await new Promise(r => { setTimeout(r, 50); }); });
+      // sem o grupo 99, cai no primeiro espaço (o pessoal): espera essa importação antes da asserção negativa
+      await waitFor(() => expect(organizationQuery.importGitlabPersonal).toHaveBeenCalled());
       // o grupo 99 saiu da lista: casar pelo nome levaria ao grupo 8, que é outro grupo
       expect(organizationQuery.importGitlabGroup).not.toHaveBeenCalledWith(8);
     });

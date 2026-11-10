@@ -142,7 +142,7 @@ const Products: NextPageWithLayout = () => {
     !!repo.url && (importedUrls.has(normalizeRepoUrl(repo.url)) ||
       pendingImports.has(`${importScope}|${normalizeRepoUrl(repo.url)}`));
 
-  const resolveTargetOrg = async (): Promise<any> => {
+  const resolveTargetOrg = async (): Promise<Organization | null> => {
     if (currentOrganization) return currentOrganization;
     const savedOrgId = localStorage.getItem('selectedOrgId');
     if (!savedOrgId) return null;
@@ -257,7 +257,7 @@ const Products: NextPageWithLayout = () => {
   const getBackendOrgId = async (orgName: string): Promise<string> => {
     const res = await organizationQuery.getAllOrganization();
     if (res.type !== 'success') return '';
-    const match = res.value.find((o: any) =>
+    const match = res.value.find((o) =>
       isSameGithubOrg(orgName, o.name, o.key, o.github_org_name)
     );
     return match?.id || '';
