@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { EMPTY_PAGE, ORGANIZATION_ID, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
 import releaseRepositories from './release-repositories.json';
 import tree from './quality-model-tree.json';
 import entities from './entity-analysis-entities.json';
@@ -108,9 +108,4 @@ export const semRelease: ApiHandlers = {
 export const erro500: ApiHandlers = {
   ...comDados,
   [DISTRIBUTION_API.distribution]: serverError
-};
-
-/** Organização sem produto: o menu lateral fica sem os itens do produto. */
-export const semProduto: ApiHandlers = {
-  [`/v1/organizations/${ORGANIZATION_ID}/products/`]: EMPTY_PAGE
 };

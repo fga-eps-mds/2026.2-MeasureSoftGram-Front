@@ -1,4 +1,4 @@
-import { ApiHandlers, Handler, serverError } from '../../support/api';
+import { ApiHandlers, serverError } from '../../support/api';
 import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
 import releaseRepositories from '../distribuicao/release-repositories.json';
 import summary from './summary.json';
@@ -63,18 +63,8 @@ export const comDados: ApiHandlers = {
   [OVERVIEW_API.analysis(2)]: analysisData
 };
 
-const slow = (handler: Handler) => (url: URL) => {
-  const json = typeof handler === 'function' ? handler(url) : handler;
-  return json === undefined ? undefined : { status: 200, json, delayMs: 2000 };
-};
-
-/** Os três pedidos dos cards demoram 2 s, para ver o estado "Carregando" (CA4). */
-export const carregando: ApiHandlers = {
-  ...comDados,
-  [OVERVIEW_API.summary]: slow(comDados[OVERVIEW_API.summary]),
-  [OVERVIEW_API.characteristics]: slow(comDados[OVERVIEW_API.characteristics]),
-  [OVERVIEW_API.analysis(2)]: slow(analysisData)
-};
+/** Os pedidos dos três cards, que o teste segura (api.hold) para ver o estado "Carregando" com comDados (CA4). */
+export const carregando = [OVERVIEW_API.summary, OVERVIEW_API.characteristics, OVERVIEW_API.analysis(2)];
 
 /** Nenhum repositório tem análise na R2: sem indicador e sem realizado (CA4). */
 export const semAnalise: ApiHandlers = {

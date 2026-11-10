@@ -1,28 +1,10 @@
-import { expect, Page, Request, test as base } from '@playwright/test';
-import { common, PRODUCT_PATH } from './fixtures/common';
+import { Page, Request } from '@playwright/test';
+import { expect, test } from './support/fixtures';
+import { PRODUCT_PATH } from './fixtures/common';
 import { GITLAB_TOKEN, LOGIN_API, login400, login502, loginOk, validateFalha } from './fixtures/login-gitlab';
-import { ApiHandlers, MockApi, mockApi } from './support/api';
 
-/**
- * O login começa sem sessão: o teste base de support/fixtures.ts sem o seedSession. Simula a API com os handlers comuns
- * mais os do cenário e, no fim, falha se alguma rota foi pedida sem handler.
- */
-const test = base.extend<{ scenario: ApiHandlers; api: MockApi }>({
-  scenario: [{}, { option: true }],
-  api: [
-    async ({ page, scenario }, use) => {
-      const api = await mockApi(page, { ...common, ...scenario });
-      await use(api);
-      expect(api.unhandled, 'rotas da API pedidas sem handler').toEqual([]);
-    },
-    { auto: true }
-  ]
-});
-
-// sem idioma salvo o app abre em inglês; os critérios estão em português
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
-});
+// o login começa sem sessão
+test.use({ session: false });
 
 const USERNAME = 'usuario-mock';
 const EXPIRED = 'Sua sessão expirou. Por favor, faça login novamente!';
