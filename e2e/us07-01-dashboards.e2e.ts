@@ -367,18 +367,15 @@ test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica,
   test.describe('característica que troca de faixa uma vez só', () => {
     test.use({ scenario: repositorio.umaTrocaDeFaixa });
 
-    test.fixme(
-      'o pulso é desenhado e o período pode ser trocado (bug: com uma única troca de faixa, o ECharts lança "Cannot read properties of undefined (reading \'coord\')" e o pulso fica sem linha; se a troca aparece ao mudar o período ou no "Tentar novamente", a tela vira "Application error")',
-      async ({ page }) => {
-        const errors: string[] = [];
-        page.on('pageerror', (error) => errors.push(error.message));
-        await openRepository(page);
-        await page.getByLabel('De', { exact: true }).fill('2026-09-01');
-        await expect(pulseValues(page).first()).toHaveText('0.660');
-        await expect(exportButton(page, PULSE)).toBeEnabled();
-        expect(errors).toEqual([]);
-      }
-    );
+    test('o pulso é desenhado e o período pode ser trocado', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      await openRepository(page);
+      await page.getByLabel('De', { exact: true }).fill('2026-09-01');
+      await expect(pulseValues(page)).toHaveText(['0.660']);
+      await expect(exportButton(page, PULSE)).toBeEnabled();
+      expect(errors).toEqual([]);
+    });
   });
 
   // os marcadores das releases e as cores do pulso só aparecem no desenho do canvas; a baseline é gerada no CI
@@ -612,16 +609,13 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
     test.describe('erro na lista de repositórios', () => {
       test.use({ scenario: temporal.erroRepositorios });
 
-      test.fixme(
-        'mostra o erro com "Tentar novamente" (bug: a tela diz "Este produto ainda não tem repositórios")',
-        async ({ page }) => {
-          await page.goto(temporal.TEMPORAL_PATH);
-          await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
-          await expect(page.getByRole('alert')).toBeVisible();
-          await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
-          await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
-        }
-      );
+      test('mostra o erro com "Tentar novamente"', async ({ page }) => {
+        await page.goto(temporal.TEMPORAL_PATH);
+        await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
+        await expect(page.getByRole('alert')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
+        await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
+      });
     });
   });
 

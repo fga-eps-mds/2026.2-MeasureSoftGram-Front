@@ -13,6 +13,16 @@ export const PULSE_AMPLITUDE = {
 };
 
 /**
+ * Meia largura do complexo de uma medição, em milissegundos: cada complexo vai de `t - 2 * meia largura` a
+ * `t + 2 * meia largura`, então o desenho começa e termina fora do intervalo das medições.
+ * @param ts Timestamps (em milissegundos) em ordem crescente
+ */
+export function getPulseHalfWidth(ts: number[]) {
+  const span = ts.length > 1 ? ts[ts.length - 1] - ts[0] : DAY;
+  return Math.max(span / 700, DAY / 24);
+}
+
+/**
  * Converte medições em um pulso de eletrocardiograma para uma série `line` do ECharts. A linha fica no nível do
  * indicador e, em cada medição, faz um complexo (vale, pico e recuo) cuja altura é a variação em relação à medição
  * anterior, ampliada; sobe quando o indicador melhora e desce quando piora.
@@ -23,8 +33,7 @@ export const PULSE_AMPLITUDE = {
 export function toPulseSeries(ts: number[], values: number[]): [number, number][] {
   if (!ts || !ts.length) return [];
 
-  const span = ts.length > 1 ? ts[ts.length - 1] - ts[0] : DAY;
-  const w = Math.max(span / 700, DAY / 24); // meia largura do complexo
+  const w = getPulseHalfWidth(ts); // meia largura do complexo
 
   return ts.flatMap((t, i) => {
     const current = values[i];
