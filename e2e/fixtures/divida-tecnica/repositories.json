@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "name": "MeasureSoftGram-Service",
+      "description": "Repositório de exemplo do E2E.",
+      "url": "https://github.com/fga-eps-mds/2026.2-MeasureSoftGram-Service",
+      "platform": "github",
+      "imported": true,
+      "latest_values": []
+    }
+  ]
+}
