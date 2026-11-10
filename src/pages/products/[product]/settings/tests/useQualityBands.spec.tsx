@@ -66,6 +66,11 @@ describe('useQualityBands', () => {
     expect(renderHook(() => useQualityBands('1', '5')).result.current.status).toBe('error');
   });
 
+  it('continua pronto quando uma revalidação falha com as faixas já carregadas', () => {
+    mockRequest({ data: qualityBands, error: new Error('falhou') });
+    expect(renderHook(() => useQualityBands('1', '5')).result.current.status).toBe('ready');
+  });
+
   it('salva as 5 faixas a partir dos limites e guarda a resposta no cache, sem nova requisição', async () => {
     const saved = { is_default: false, can_edit: true, bands: DEFAULT_BANDS };
     update.mockResolvedValue(saved);

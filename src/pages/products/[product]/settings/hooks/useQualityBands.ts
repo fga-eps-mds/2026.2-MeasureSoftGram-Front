@@ -18,8 +18,9 @@ export function useQualityBands(organizationId: string, productId: string) {
     { revalidateOnFocus: false }
   );
 
+  // uma revalidação que falha com a régua já em mãos não esconde o formulário atrás do erro
   let status: QualityBandsStatus = 'ready';
-  if (error) status = 'error';
+  if (error && !data) status = 'error';
   else if (!data) status = 'loading';
 
   const store = useCallback(

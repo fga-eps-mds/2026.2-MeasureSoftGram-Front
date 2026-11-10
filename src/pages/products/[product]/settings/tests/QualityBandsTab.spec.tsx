@@ -213,6 +213,17 @@ describe('QualityBandsTab', () => {
       expect(saveButton()).toBeEnabled();
     });
 
+    it('mantém os valores digitados quando o SWR revalida e traz as mesmas faixas', () => {
+      const { rerender } = render(<QualityBandsTab organizationId="1" productId="5" />);
+      fireEvent.change(field('C · Bom'), { target: { value: '0,70' } });
+
+      // a revalidação devolve um objeto novo com os mesmos valores (ex.: ao voltar a conexão)
+      mockHook({ bands: DEFAULT_BANDS.map((band) => ({ ...band })) });
+      rerender(<QualityBandsTab organizationId="1" productId="5" />);
+
+      expect(field('C · Bom').value).toBe('0,70');
+    });
+
     it('trava os campos e os botões enquanto salva', async () => {
       let finish: () => void = () => undefined;
       save.mockReturnValue(new Promise<void>((resolve) => { finish = resolve; }));

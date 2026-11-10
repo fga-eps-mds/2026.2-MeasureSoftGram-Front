@@ -40,15 +40,20 @@ const cents = (value: number) => Math.round(value * 100);
  */
 export function getLimitErrors(drafts: string[]): (string | null)[] {
   const values = drafts.map(parseLimit);
-
-  return values.map((value, index) => {
+  const formatErrors = values.map((value, index) => {
     if (Number.isNaN(value)) return LIMIT_MESSAGES.notANumber;
     if (/[.,]\d{3,}$/.test(drafts[index].trim())) return LIMIT_MESSAGES.decimals;
     if (value < 0 || value > 1) return LIMIT_MESSAGES.range;
+    return null;
+  });
+
+  return values.map((value, index) => {
+    if (formatErrors[index]) return formatErrors[index];
 
     const start = index === 0 ? 0 : values[index - 1];
-    // com o limite anterior inválido, a mensagem fica só no campo dele
-    if (!Number.isNaN(start) && cents(value) <= cents(start)) return LIMIT_MESSAGES.greaterThan(start);
+    // com o limite anterior inválido, a mensagem fica só no campo dele, como no Service (_range_errors vem antes)
+    const startIsValid = index === 0 || !formatErrors[index - 1];
+    if (startIsValid && cents(value) <= cents(start)) return LIMIT_MESSAGES.greaterThan(start);
     if (index === values.length - 1 && cents(value) >= cents(1)) return LIMIT_MESSAGES.lessThanOne;
     return null;
   });

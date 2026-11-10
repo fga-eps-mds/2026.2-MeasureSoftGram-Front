@@ -58,6 +58,8 @@ describe('qualityBandsForm', () => {
 
     it('deixa a mensagem só no campo inválido quando o seguinte depende dele', () => {
       expect(getLimitErrors(['0,20', 'x', '0,60', '0,80'])).toEqual([null, LIMIT_MESSAGES.notANumber, null, null]);
+      expect(getLimitErrors(['0,20', '1,5', '0,60', '0,80'])).toEqual([null, LIMIT_MESSAGES.range, null, null]);
+      expect(getLimitErrors(['0,20', '0,655', '0,60', '0,80'])).toEqual([null, LIMIT_MESSAGES.decimals, null, null]);
     });
 
     it('compara em centésimos, sem erro de ponto flutuante', () => {

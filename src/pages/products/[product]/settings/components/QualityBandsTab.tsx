@@ -51,10 +51,13 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
   const [isSaving, setIsSaving] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  // a régua salva (ao carregar, salvar ou restaurar) passa a ser o ponto de partida dos campos
+  // a régua salva (ao carregar, salvar ou restaurar) passa a ser o ponto de partida dos campos. Depende dos valores,
+  // não do array: uma revalidação do SWR com as mesmas faixas não pode apagar o que foi digitado (CA6)
+  const savedKey = savedLimits.join(';');
   useEffect(() => {
     setDrafts(formatLimits(savedLimits));
-  }, [savedLimits]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedKey]);
 
   const errors = getLimitErrors(drafts);
   const hasErrors = errors.some(Boolean);
