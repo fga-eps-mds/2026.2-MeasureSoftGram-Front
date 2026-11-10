@@ -70,8 +70,14 @@ export async function redrawChart(page: Page, canvas: Locator) {
   const viewport = page.viewportSize();
   const width = await canvas.getAttribute('width');
   if (!viewport || !width) throw new Error('o gráfico ainda não tem largura');
-  await page.setViewportSize({ ...viewport, width: viewport.width - 100 });
-  await expect(canvas).not.toHaveAttribute('width', width);
+  // o echarts-for-react ignora o primeiro aviso de tamanho depois de montar (isInitialResize): se o estreitamento cair
+  // nele, o gráfico não redesenha, e a janela estreita mais um pouco; definir o tamanho de novo não desfaz nada
+  let narrower = viewport.width;
+  await expect(async () => {
+    narrower -= 50;
+    await page.setViewportSize({ ...viewport, width: narrower });
+    await expect(canvas).not.toHaveAttribute('width', width, { timeout: 1000 });
+  }).toPass();
   await page.setViewportSize(viewport);
   await expect(canvas).toHaveAttribute('width', width);
 }
