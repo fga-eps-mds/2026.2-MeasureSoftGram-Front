@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { csvFileName, downloadCsv, downloadCsvZip, toCsv } from '@utils/exportCsv';
+import { csvFileName, downloadCsv, downloadCsvZip, toCsv, withRepositoryTerm } from '@utils/exportCsv';
 
 type Row = { name: string; value: number | null; ok: boolean };
 
@@ -107,5 +107,20 @@ describe('exportCsv', () => {
     expect(await zip.file('msgram-relacoes-bolhas-2026-10-23.csv')?.async('string')).toBe(
       '\uFEFFNome;Valor;Ok\r\nM;0,5;false'
     );
+  });
+
+  it('troca o título "Repositório" pelo termo do provedor e mantém as outras colunas', () => {
+    const chart = {
+      name: 'resumo',
+      columns: [
+        { key: 'release' as const, title: 'Release' },
+        { key: 'repository' as const, title: 'Repositório' }
+      ],
+      rows: [{ release: 'R1', repository: 'api' }]
+    };
+
+    expect(withRepositoryTerm(chart, 'Projeto').columns.map((column) => column.title)).toEqual(['Release', 'Projeto']);
+    expect(withRepositoryTerm(chart, 'Projeto').rows).toBe(chart.rows);
+    expect(chart.columns[1].title).toBe('Repositório');
   });
 });

@@ -16,6 +16,19 @@ export interface CsvChart<Row = Record<string, CsvValue>> {
   rows: Row[];
 }
 
+/** Título que as colunas de repositório têm nos formatadores dos dashboards (termo do GitHub). */
+const REPOSITORY_COLUMN_TITLE = 'Repositório';
+
+/** Troca o título "Repositório" das colunas pelo termo do provedor da sessão (ex.: "Projeto" no GitLab). */
+export function withRepositoryTerm<Row>(chart: CsvChart<Row>, repositoryTerm: string): CsvChart<Row> {
+  return {
+    ...chart,
+    columns: chart.columns.map((column) =>
+      column.title === REPOSITORY_COLUMN_TITLE ? { ...column, title: repositoryTerm } : column
+    )
+  };
+}
+
 const CSV_TYPE = 'text/csv;charset=utf-8';
 /**
  * O Excel em português usa `;` como separador de lista: com vírgula ele joga a linha inteira numa célula só, que foi
