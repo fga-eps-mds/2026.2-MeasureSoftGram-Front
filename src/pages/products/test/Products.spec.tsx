@@ -944,6 +944,57 @@ describe('Products Component', () => {
         expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-grupo', 8, 'group', 1, '', 'prod-gl-1');
       });
     });
+
+    it('mantém o grupo selecionado quando a organização atual é o grupo de mesmo nome do usuário', async () => {
+      const grupamentos = [
+        { id: 5, name: 'joao', full_path: 'joao', avatar_url: '', description: '', kind: 'user' },
+        { id: 8, name: 'joao', full_path: 'joao', avatar_url: '', description: 'Grupo', kind: 'group' }
+      ];
+      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValue({ type: 'success', value: grupamentos });
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        organizationList: [{ id: 'org-grupo', name: 'joao', key: 'joao', gitlab_group_id: 8 }],
+        currentOrganization: { id: 'org-grupo', name: 'joao', key: 'joao', gitlab_group_id: 8 },
+        setCurrentOrganizations: mockSetCurrentOrgs,
+        fetchOrganizations: mockFetchOrgs
+      });
+      (organizationQuery.importGitlabGroup as jest.Mock).mockResolvedValue({ type: 'success', value: { id: 'org-grupo' } });
+
+      renderProducts();
+
+      await waitFor(() => {
+        expect(organizationQuery.importGitlabGroup).toHaveBeenCalledWith(8);
+        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-grupo', 8, 'group', 1, '', 'prod-gl-1');
+      });
+      expect(organizationQuery.createOrganization).not.toHaveBeenCalled();
+    });
+
+    it('seleciona o espaço pessoal quando a organização atual é pessoal e tem o mesmo nome do grupo', async () => {
+      (organizationQuery.getGitLabNamespaces as jest.Mock).mockResolvedValue({
+        type: 'success',
+        value: [
+          { id: 5, name: 'joao', full_path: 'joao', avatar_url: '', description: '', kind: 'user' },
+          { id: 8, name: 'joao', full_path: 'joao', avatar_url: '', description: 'Grupo', kind: 'group' }
+        ]
+      });
+      (organizationQuery.createOrganization as jest.Mock).mockResolvedValueOnce({
+        type: 'success',
+        value: { id: 'org-joao' }
+      });
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        organizationList: [{ id: 'org-joao', name: 'joao', key: 'joao', gitlab_group_id: null }],
+        currentOrganization: { id: 'org-joao', name: 'joao', key: 'joao', gitlab_group_id: null },
+        setCurrentOrganizations: mockSetCurrentOrgs,
+        fetchOrganizations: mockFetchOrgs
+      });
+
+      renderProducts();
+
+      await waitFor(() => {
+        expect(organizationQuery.createOrganization).toHaveBeenCalledWith({ name: 'joao' });
+        expect(organizationQuery.getGitLabProjects).toHaveBeenCalledWith('org-joao', 5, 'user', 1, '', 'prod-gl-1');
+      });
+      expect(organizationQuery.importGitlabGroup).not.toHaveBeenCalled();
+    });
   });
 
   it('reaproveita a organização do GitHub pelo nome sem chamar a importação', async () => {

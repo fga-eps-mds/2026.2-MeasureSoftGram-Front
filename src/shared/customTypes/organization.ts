@@ -6,5 +6,6 @@ export interface Organization {
   description: string;
   products: string[];
   github_org_name?: string;
+  gitlab_group_id?: number | null;
   avatar_url?: string;
 }

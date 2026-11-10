@@ -159,13 +159,20 @@ const Products: NextPageWithLayout = () => {
     return null;
   };
 
+  // GitLab: org de grupo casa pelo gitlab_group_id; sem ele, casa pelo nome preferindo o espaço pessoal homônimo
+  const findNamespaceOfOrg = (namespaces: ProviderNamespaceItem[], org: any) => {
+    if (provider === 'gitlab' && org?.gitlab_group_id) {
+      return namespaces.find(go => go.kind === 'group' && String(go.id) === String(org.gitlab_group_id));
+    }
+    const byName = namespaces.filter(go => isSameGithubOrg(go.name, org?.name, org?.key, org?.github_org_name));
+    return byName.find(go => go.kind !== 'group') ?? byName[0];
+  };
+
   const resolveDefaultNamespace = async (namespaces: ProviderNamespaceItem[]): Promise<ProviderNamespaceItem | undefined> => {
     if (namespaces.length === 0) return undefined;
     const targetOrg = await resolveTargetOrg();
     if (targetOrg) {
-      const matchGo = namespaces.find(go =>
-        isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
-      );
+      const matchGo = findNamespaceOfOrg(namespaces, targetOrg);
       if (matchGo) {
         return matchGo;
       }
@@ -388,9 +395,7 @@ const Products: NextPageWithLayout = () => {
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
-      const matchGo = providerNamespaces.find(go =>
-        isSameGithubOrg(go.name, currentOrganization?.name, currentOrganization?.key, (currentOrganization as any)?.github_org_name)
-      );
+      const matchGo = findNamespaceOfOrg(providerNamespaces, currentOrganization);
       if (matchGo) {
         if (String(matchGo.id) !== selectedNamespaceId) {
           setSelectedNamespaceId(String(matchGo.id));
