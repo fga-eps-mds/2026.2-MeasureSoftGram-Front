@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Box, Typography, Card, Button, CardMedia, CardContent } from "@mui/material";
 
 import { InfoData } from "@customTypes/home";
-import { useTranslation } from "react-i18next";
+import { useProviderTranslation as useTranslation } from "@hooks/useProviderTranslation";
 
 interface Props {
   cardData: InfoData,
