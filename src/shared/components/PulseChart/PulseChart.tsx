@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
-import { Box, Paper, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Button, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
 import { PULSE_GRID, PulseMeasurement, PulseRelease, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
@@ -10,6 +10,7 @@ import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
 import { QualityLegend } from './QualityLegend';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { ProviderTerms } from '@utils/providerTerminology';
 
 // Protótipo aprovado pelo PO (US06.01): sem linhas horizontais, a etiqueta da release em cada faixa (sem a de início)
 // e os detalhes da release no ponto do indicador.
@@ -33,6 +34,31 @@ export function getReferenceRelease(releases: PulseRelease[], measurements: Puls
   return release ? { name: release.name, value: release.tsqmi?.value as number } : undefined;
 }
 
+/**
+ * Mensagem do estado sem dados, escolhida pela causa, da mais específica para a mais geral: sem repositório, sem
+ * nenhuma medição ou sem medição na janela De/Até. Só a última se resolve mexendo no filtro.
+ */
+export function getEmptyMessage(repositoriesCount: number, totalMeasurements: number, terms: ProviderTerms) {
+  if (repositoriesCount === 0) {
+    return {
+      title: `Este produto ainda não tem ${terms.repositories}`,
+      description: `Importe um ${terms.repository} ao produto para o MeasureSoftGram começar a medir a qualidade.`,
+    };
+  }
+
+  if (totalMeasurements === 0) {
+    return {
+      title: 'Ainda não há medições neste produto',
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa os ${terms.repositories} do produto.`,
+    };
+  }
+
+  return {
+    title: 'Nenhuma medição no período selecionado',
+    description: 'Ajuste as datas De/Até para incluir um intervalo com medições.',
+  };
+}
+
 interface Props {
   organizationId?: string;
   productId?: string;
@@ -51,15 +77,22 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     setStartDate,
     endDate,
     setEndDate,
+    totalMeasurements,
     selectedMeasurements,
     latestDate,
     releasesInPeriod,
     isLoading,
     error,
+    retry,
   } = usePulseChartData(organizationId, productId);
 
   const chartOptions = formatPulseChartOptions(filteredRepositories, PULSE_OPTIONS);
 
+  // Sem medição no período não há pulso para desenhar, mas a causa muda a instrução: o produto pode não ter
+  // nenhum repositório, nunca ter sido analisado, ou só não ter medição na janela De/Até. Antes a tela dava
+  // sempre "ajuste as datas", que manda mexer num filtro que não é o motivo, e com repositórios sem nenhuma
+  // medição ela desenhava faixas vazias sem mensagem (ressalva do PO no CA4, em 03/11/2026).
+  const emptyMessage = getEmptyMessage(allRepositories.length, totalMeasurements, terms);
 
   if (isLoading) {
     return (
@@ -74,7 +107,17 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
   if (error) {
     return (
       <Paper elevation={0} sx={{ padding: '24px', borderRadius: '12px', border: '1px solid #E0E0E0' }}>
-        <Alert severity="error">Não foi possível carregar os dados do gráfico de pulso.</Alert>
+        {/* o CA4 pede "Tentar novamente" no erro: sem ele a única saída era recarregar a página */}
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={retry}>
+              Tentar novamente
+            </Button>
+          }
+        >
+          Não foi possível carregar os dados do gráfico de pulso.
+        </Alert>
       </Paper>
     );
   }
@@ -116,16 +159,22 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         </Box>
 
         {/* Main ECharts + Sidebar Area */}
-        {filteredRepositories.length === 0 ? (
+        {selectedMeasurements === 0 ? (
           <Box
             display="flex"
+            flexDirection="column"
             alignItems="center"
             justifyContent="center"
+            gap="4px"
             minHeight="200px"
+            padding="24px"
             sx={{ border: '1px dashed #D0D7DE', borderRadius: '8px' }}
           >
-            <Typography color="text.secondary" variant="body2">
-              Nenhuma medição no período selecionado. Ajuste as datas De/Até.
+            <Typography color="text.primary" variant="body2" fontWeight="bold" textAlign="center">
+              {emptyMessage.title}
+            </Typography>
+            <Typography color="text.secondary" variant="body2" textAlign="center">
+              {emptyMessage.description}
             </Typography>
           </Box>
         ) : (
