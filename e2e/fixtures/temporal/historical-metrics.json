@@ -1,0 +1,46 @@
+{
+  "results": [
+    {
+      "id": 9,
+      "key": "tests",
+      "name": "tests",
+      "history": []
+    },
+    {
+      "id": 10,
+      "key": "sum_ci_feedback_times",
+      "name": "sum_ci_feedback_times",
+      "history": [
+        {
+          "value": 5400,
+          "created_at": "2026-08-20T12:00:00-03:00"
+        },
+        {
+          "value": 4200,
+          "created_at": "2026-09-25T12:00:00-03:00"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "key": "total_builds",
+      "name": "total_builds",
+      "history": [
+        {
+          "value": 15,
+          "created_at": "2026-08-20T12:00:00-03:00"
+        },
+        {
+          "value": 18,
+          "created_at": "2026-09-25T12:00:00-03:00"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "key": "complexity",
+      "name": "complexity",
+      "history": []
+    }
+  ]
+}

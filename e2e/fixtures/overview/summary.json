@@ -1,0 +1,16 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "totals": {
+    "characteristics": 2,
+    "subcharacteristics": 2,
+    "measures": 3,
+    "metrics": 4,
+    "repositories": 2,
+    "files": 1284
+  }
+}
