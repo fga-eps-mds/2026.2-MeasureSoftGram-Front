@@ -26,6 +26,7 @@ import getLayout from "@components/Layout";
 import useRequireAuth from "@hooks/useRequireAuth";
 import { toast } from "react-toastify";
 import { organizationQuery, Result, ResultError } from "@services/organization";
+import { Organization } from "@customTypes/organization";
 import type { AxiosError } from 'axios';
 import { useRouter } from "next/router";
 import { productQuery } from "@services/product";
@@ -141,7 +142,7 @@ const Products: NextPageWithLayout = () => {
     !!repo.url && (importedUrls.has(normalizeRepoUrl(repo.url)) ||
       pendingImports.has(`${importScope}|${normalizeRepoUrl(repo.url)}`));
 
-  const resolveTargetOrg = async (): Promise<any> => {
+  const resolveTargetOrg = async (): Promise<Organization | null> => {
     if (currentOrganization) return currentOrganization;
     const savedOrgId = localStorage.getItem('selectedOrgId');
     if (!savedOrgId) return null;
@@ -159,13 +160,23 @@ const Products: NextPageWithLayout = () => {
     return null;
   };
 
+  // GitLab: org de grupo casa por gitlab_group_id e pessoal por gitlab_user_id; sem id GitLab, casa pelo nome
+  const findNamespaceOfOrg = (namespaces: ProviderNamespaceItem[], org: Organization | null | undefined) => {
+    if (provider === 'gitlab' && org?.gitlab_group_id) {
+      return namespaces.find(go => go.kind === 'group' && String(go.id) === String(org.gitlab_group_id));
+    }
+    if (provider === 'gitlab' && org?.gitlab_user_id) {
+      return namespaces.find(go => go.kind === 'user' && String(go.id) === String(org.gitlab_user_id));
+    }
+    const byName = namespaces.filter(go => isSameGithubOrg(go.name, org?.name, org?.key, org?.github_org_name));
+    return byName.find(go => go.kind !== 'group') ?? byName[0];
+  };
+
   const resolveDefaultNamespace = async (namespaces: ProviderNamespaceItem[]): Promise<ProviderNamespaceItem | undefined> => {
     if (namespaces.length === 0) return undefined;
     const targetOrg = await resolveTargetOrg();
     if (targetOrg) {
-      const matchGo = namespaces.find(go =>
-        isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
-      );
+      const matchGo = findNamespaceOfOrg(namespaces, targetOrg);
       if (matchGo) {
         return matchGo;
       }
@@ -246,7 +257,7 @@ const Products: NextPageWithLayout = () => {
   const getBackendOrgId = async (orgName: string): Promise<string> => {
     const res = await organizationQuery.getAllOrganization();
     if (res.type !== 'success') return '';
-    const match = res.value.find((o: any) =>
+    const match = res.value.find((o) =>
       isSameGithubOrg(orgName, o.name, o.key, o.github_org_name)
     );
     return match?.id || '';
@@ -260,17 +271,12 @@ const Products: NextPageWithLayout = () => {
     return String(importRes.value.id);
   };
 
-  // espaço pessoal do GitLab: uma Organization própria, ou a que já existe com o mesmo nome
-  const importGitlabPersonalOrg = async (orgName: string): Promise<string> => {
-    const createRes = await organizationQuery.createOrganization({ name: orgName });
-    if (createRes.type === 'success' && createRes.value?.id) {
-      await fetchOrganizations();
-      return String(createRes.value.id);
-    }
-    const res = await organizationQuery.getAllOrganization();
-    if (res.type !== 'success') return '';
-    const found = res.value.find((o: any) => o.name?.toLowerCase() === orgName.toLowerCase());
-    return found?.id ? String(found.id) : '';
+  // espaço pessoal do GitLab: Organization vinculada ao gitlab_user_id pelo endpoint dedicado
+  const importGitlabPersonalOrg = async (): Promise<string> => {
+    const importRes = await organizationQuery.importGitlabPersonal();
+    if (importRes.type !== 'success' || !importRes.value?.id) return '';
+    await fetchOrganizations();
+    return String(importRes.value.id);
   };
 
   const importGithubOrg = async (orgName: string): Promise<string> => {
@@ -282,7 +288,7 @@ const Products: NextPageWithLayout = () => {
 
   const importOrg = async (ns: ProviderNamespaceItem): Promise<string> => {
     if (provider !== 'gitlab') return importGithubOrg(ns.name);
-    return ns.kind === 'group' ? importGitlabGroupOrg(ns.id) : importGitlabPersonalOrg(ns.name);
+    return ns.kind === 'group' ? importGitlabGroupOrg(ns.id) : importGitlabPersonalOrg();
   };
 
   const handleSelectOrgRef = useRef<boolean>(false);
@@ -383,14 +389,14 @@ const Products: NextPageWithLayout = () => {
     if (currentNamespace) {
       void handleSelectOrganization(currentNamespace);
     }
-  }, [currentNamespace?.id, provider]);
+  }, [currentNamespace?.id]);
 
+  // `provider` fica fora das deps de propósito: trocar de provedor exige logout (US11.01),
+  // que limpa a organização atual; reagir a ele aqui reimportaria a org do provedor antigo.
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
-      const matchGo = providerNamespaces.find(go =>
-        isSameGithubOrg(go.name, currentOrganization?.name, currentOrganization?.key, (currentOrganization as any)?.github_org_name)
-      );
+      const matchGo = findNamespaceOfOrg(providerNamespaces, currentOrganization);
       if (matchGo) {
         if (String(matchGo.id) !== selectedNamespaceId) {
           setSelectedNamespaceId(String(matchGo.id));

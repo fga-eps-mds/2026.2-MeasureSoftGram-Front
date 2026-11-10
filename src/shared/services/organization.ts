@@ -123,6 +123,15 @@ class OrganizationQuery {
     }
   }
 
+  async importGitlabPersonal(): Promise<Result<OrganizationFormData>> {
+    try {
+      const response = await api.post('/v1/organizations/import-gitlab-user/');
+      return { type: 'success', value: response.data as OrganizationFormData };
+    } catch (error) {
+      return { type: 'error', error: error as AxiosError };
+    }
+  }
+
   async getGithubRepos(
     orgId: string,
     page?: number,
