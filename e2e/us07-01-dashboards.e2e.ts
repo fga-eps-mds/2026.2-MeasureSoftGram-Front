@@ -422,7 +422,8 @@ test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica,
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openRepository(page);
     await expect(card(page, PULSE).locator('canvas')).toBeVisible();
-    await expect(card(page, PULSE)).toHaveScreenshot('repositorio-pulso.png');
+    // o pulso é animado ao desenhar: algumas dezenas de pixels mudam entre execuções
+    await expect(card(page, PULSE)).toHaveScreenshot('repositorio-pulso.png', { maxDiffPixels: 200 });
   });
 
   // o nome da release ao passar o mouse no marcador é tooltip de canvas, sem posição estável no DOM
