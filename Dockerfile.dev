@@ -1,0 +1,23 @@
+FROM node:20-alpine
+
+# Compatibility for native Node.js dependencies and the package manager version
+# pinned by package.json.
+RUN apk add --no-cache libc6-compat \
+    && npm install --global pnpm@9.0.0
+
+WORKDIR /usr/src
+
+# Keep dependencies in the image so the anonymous node_modules volume created
+# by Docker Compose is initialized without using the host's dependencies.
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV WATCHPACK_POLLING=true
+
+EXPOSE 3000
+
+CMD ["pnpm", "dev"]
