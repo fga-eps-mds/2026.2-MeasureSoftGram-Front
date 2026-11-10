@@ -212,6 +212,22 @@ describe('Organization Service', () => {
     expect(result.type).toBe('error');
   });
 
+  it('deve importar espaço pessoal do GitLab (POST)', async () => {
+    (api.post as jest.Mock).mockResolvedValue({ data: { id: '10', name: 'Pessoal', gitlab_user_id: 7 } });
+
+    const result = await organizationQuery.importGitlabPersonal();
+
+    expect(api.post).toHaveBeenCalledWith('/v1/organizations/import-gitlab-user/');
+    expect(result.type).toBe('success');
+    expect((result as any).value).toEqual({ id: '10', name: 'Pessoal', gitlab_user_id: 7 });
+  });
+
+  it('deve retornar erro ao falhar importar espaço pessoal do GitLab', async () => {
+    (api.post as jest.Mock).mockRejectedValue(new Error(NETWORK_ERROR));
+    const result = await organizationQuery.importGitlabPersonal();
+    expect(result.type).toBe('error');
+  });
+
   // Testes de getGithubRepos
   it('deve buscar repositórios do GitHub (GET)', async () => {
     const mockRepos = [{ github_repo_id: 1, name: 'repo1' }];
