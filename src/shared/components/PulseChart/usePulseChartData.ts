@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
 import { ProductTsqmiReleaseHistory, RepositoriesTsqmiHistory } from '@customTypes/product';
@@ -28,15 +28,25 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     return productQuery.getProductTsqmiReleaseHistoryConfig(organizationId, productId);
   }, [organizationId, productId]);
 
-  const { data: tsqmiHistoryData, isLoading: isTsqmiLoading, error: tsqmiError } = useRequest<RepositoriesTsqmiHistory>(
-    tsqmiHistoryConfig
-  );
+  const {
+    data: tsqmiHistoryData,
+    isLoading: isTsqmiLoading,
+    error: tsqmiError,
+    mutate: refetchTsqmiHistory,
+  } = useRequest<RepositoriesTsqmiHistory>(tsqmiHistoryConfig);
 
   const {
     data: releaseHistoryData,
     isLoading: isReleaseHistoryLoading,
     error: releaseHistoryError,
+    mutate: refetchReleaseHistory,
   } = useRequest<ProductTsqmiReleaseHistory>(releaseHistoryConfig);
+
+  // o gráfico depende das duas requisições, então "Tentar novamente" refaz as duas (CA4 da US07.01)
+  const retry = useCallback(() => {
+    void refetchTsqmiHistory();
+    void refetchReleaseHistory();
+  }, [refetchTsqmiHistory, refetchReleaseHistory]);
 
   // Releases de cada repositório, com o indicador TSQMI consolidado em cada uma (US06.01). Só entram as releases que
   // incluem o repositório, pela regra do Service; a etiqueta é o nome cadastrado no MSGram.
@@ -146,5 +156,6 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
     releasesInPeriod,
     isLoading: isTsqmiLoading || isReleaseHistoryLoading,
     error: tsqmiError || releaseHistoryError,
+    retry,
   };
 }
