@@ -4,7 +4,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { toast } from 'react-toastify';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { useProviderTerms } from '@hooks/useProviderTerms';
-import { CsvChart, CsvValue, downloadCsv, downloadCsvZip, withRepositoryTerm } from '@utils/exportCsv';
+import { withRepositoryTerm } from '@utils/csvRepositoryTerm';
+import { CsvChart, CsvValue, downloadCsv, downloadCsvZip } from '@utils/exportCsv';
 
 type Row = Record<string, CsvValue>;
 

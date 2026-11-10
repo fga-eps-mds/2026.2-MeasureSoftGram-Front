@@ -5,11 +5,7 @@ import { toast } from 'react-toastify';
 import { downloadCsv, downloadCsvZip } from '@utils/exportCsv';
 import ExportCsvButton, { ExportAllCsvButton } from '../ExportCsvButton';
 
-jest.mock('@utils/exportCsv', () => ({
-  ...jest.requireActual('@utils/exportCsv'),
-  downloadCsv: jest.fn(),
-  downloadCsvZip: jest.fn()
-}));
+jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
 jest.mock('react-toastify', () => ({ toast: { error: jest.fn() } }));
 
 const columns = [{ key: 'name' as const, title: 'Nome' }];
