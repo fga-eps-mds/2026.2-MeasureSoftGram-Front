@@ -1,16 +1,8 @@
-import { readFileSync } from 'fs';
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { PRODUCT_PATH } from './fixtures/common';
-import {
-  comDados,
-  DISTRIBUTION_PATH,
-  erro500,
-  poucasAnalises,
-  semAnalise,
-  semProduto,
-  semRelease
-} from './fixtures/distribuicao';
+import { card, choose, chooseLevel, downloadCsv, levelButton, select } from './support/helpers';
+import { PRODUCT_PATH, semProduto } from './fixtures/common';
+import { comDados, DISTRIBUTION_PATH, erro500, poucasAnalises, semAnalise, semRelease } from './fixtures/distribuicao';
 
 const TITLE = '5. Distribuição Estatística';
 const HISTOGRAM = 'Histograma';
@@ -19,32 +11,6 @@ const BOXPLOT = 'Boxplot e percentis do nível';
 const SCATTER = 'Dispersão das análises no tempo';
 const SUMMARY = 'Resumo estatístico e IQR';
 const RULER = 'Faixas de qualidade de A a E';
-
-/** O cartão de um quadro (section com aria-label). */
-const card = (page: Page, title: string) => card.in(page, title);
-card.in = (page: Page, title: string): Locator => page.getByRole('region', { name: title });
-
-/** Os seletores da tela: o nome acessível do combobox do MUI começa pelo rótulo. */
-const select = (page: Page, label: string) => page.getByRole('combobox', { name: new RegExp(`^${label}`) });
-const levelButton = (page: Page, label: string) =>
-  page.getByRole('group', { name: 'Nível do modelo' }).getByRole('button', { name: label, exact: true });
-
-/**
- * Escolhe o nível e espera o botão ficar marcado. No CI, um clique logo depois da carga às vezes não troca o nível
- * (o subtítulo ficava no TSQMI): se o botão não marcar, clica de novo.
- */
-async function chooseLevel(page: Page, label: string) {
-  const button = levelButton(page, label);
-  await expect(async () => {
-    await button.click();
-    await expect(button).toHaveAttribute('aria-pressed', 'true', { timeout: 1000 });
-  }).toPass();
-}
-
-async function choose(page: Page, label: string, option: string) {
-  await select(page, label).click();
-  await page.getByRole('option', { name: option, exact: true }).click();
-}
 
 /**
  * Abre a página com dados e espera os quadros carregarem: a linha do período só aparece com a distribuição pronta
@@ -331,15 +297,11 @@ test.describe('@US21.03-CA8 Resumo estatístico com duas casas, nota e assimetri
 
   test('exporta o resumo em CSV e todos os quadros em .zip', async ({ page }) => {
     await openDistribution(page);
-    const [csv] = await Promise.all([
-      page.waitForEvent('download'),
-      card(page, SUMMARY).getByRole('button', { name: 'Exportar .csv' }).click()
-    ]);
-    expect(csv.suggestedFilename()).toMatch(/^msgram-distribuicao-resumo-\d{4}-\d{2}-\d{2}\.csv$/);
-    const content = readFileSync((await csv.path()) ?? '', 'utf8');
-    // o arquivo baixado começa com a marca de ordem de bytes, senão o Excel troca os acentos de "Característica"
-    expect(content.startsWith('\uFEFF')).toBe(true);
-    const lines = content.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+    const lines = await downloadCsv(
+      page,
+      card(page, SUMMARY).getByRole('button', { name: 'Exportar .csv' }),
+      /^msgram-distribuicao-resumo-\d{4}-\d{2}-\d{2}\.csv$/
+    );
     // ponto e vírgula separando as colunas e vírgula na casa decimal, que é como o Excel em português abre e soma
     expect(lines[0]).toBe('Release;Repositório;Nível;Entidade;Estatística;Valor');
     expect(lines).toContain('R2;MeasureSoftGram-Service;TSQMI;TSQMI;Desvio padrão;0,16177');

@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { EMPTY_PAGE, ORGANIZATION_ID, PRODUCT_API, PRODUCT_PATH } from '../common';
+import { PRODUCT_API, PRODUCT_PATH } from '../common';
 import repositories from './repositories.json';
 import characteristic from './correlation-characteristic.json';
 import subcharacteristic from './correlation-subcharacteristic.json';
@@ -77,9 +77,4 @@ export const semRelease: ApiHandlers = {
 export const erro500: ApiHandlers = {
   ...comDados,
   [CORRELATION_API.correlation]: serverError
-};
-
-/** Organização sem produto: o menu lateral fica sem os itens do produto. */
-export const semProduto: ApiHandlers = {
-  [`/v1/organizations/${ORGANIZATION_ID}/products/`]: EMPTY_PAGE
 };

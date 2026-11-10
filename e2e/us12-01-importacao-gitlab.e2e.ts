@@ -23,13 +23,9 @@ import projects from './fixtures/importacao-gitlab/gitlab-projects.json';
 import squadProjects from './fixtures/importacao-gitlab/gitlab-projects-squad-01.json';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    // sem idioma salvo o app abre em inglês; os critérios estão em português
-    localStorage.setItem('locale_lang', 'pt');
-    // quem já usou o app tem a organização salva; sem ela, a tela escolhe o primeiro namespace (a conta pessoal) se os
-    // namespaces chegam antes das organizações (Products.tsx:162-174) e só depois troca para o grupo
-    localStorage.setItem('selectedOrgId', JSON.stringify('1'));
-  });
+  // quem já usou o app tem a organização salva; sem ela, a tela escolhe o primeiro namespace (a conta pessoal) se os
+  // namespaces chegam antes das organizações (Products.tsx:162-174) e só depois troca para o grupo
+  await page.addInitScript(() => localStorage.setItem('selectedOrgId', JSON.stringify('1')));
 });
 
 const IMPORTED = 'Projeto parser importado com sucesso!';

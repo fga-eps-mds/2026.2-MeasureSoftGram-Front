@@ -1,7 +1,7 @@
-import { readFileSync } from 'fs';
-import { Download, Locator, Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { ORGANIZATION_ID, PRODUCT_PATH } from './fixtures/common';
+import { card as region, downloadCsv, select } from './support/helpers';
+import { PRODUCT_PATH, semProduto } from './fixtures/common';
 import {
   arvorePorRelease,
   comDados,
@@ -14,9 +14,9 @@ import {
 const TITLE = '3. Estrutura das Medidas e Indicadores (Metamodelo)';
 const CARD = 'Configuração do modelo de qualidade da release';
 
-const card = (page: Page): Locator => page.getByRole('region', { name: CARD });
+const card = (page: Page): Locator => region(page, CARD);
 const chartArea = (page: Page) => page.getByTestId('metamodel-chart-area');
-const releaseSelect = (page: Page) => page.getByRole('combobox', { name: /^Release/ });
+const releaseSelect = (page: Page) => select(page, 'Release');
 
 /** Abre a página e espera a árvore desenhar: o data-render-ms só aparece quando o ECharts termina. */
 async function openMetamodelo(page: Page) {
@@ -25,28 +25,16 @@ async function openMetamodelo(page: Page) {
   await expect(chartArea(page)).toHaveAttribute('data-render-ms', /^\d+$/);
 }
 
-/** Linhas do CSV baixado, sem a marca de ordem de bytes. */
-async function csvLines(download: Download): Promise<string[]> {
-  const content = readFileSync((await download.path()) ?? '', 'utf8');
-  expect(content.startsWith('\uFEFF')).toBe(true);
-  return content
-    .replace(/^\uFEFF/, '')
-    .trim()
-    .split(/\r?\n/);
-}
-
 /**
  * A árvore é desenhada em canvas (ECharts): o que ela contém é conferido pelo CSV, que leva a mesma árvore da release
  * escolhida, com todos os ramos (#89).
  */
-async function exportTree(page: Page): Promise<string[]> {
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    card(page).getByRole('button', { name: 'Exportar .csv' }).click()
-  ]);
-  expect(download.suggestedFilename()).toMatch(/^msgram-metamodelo-arvore-\d{4}-\d{2}-\d{2}\.csv$/);
-  return csvLines(download);
-}
+const exportTree = (page: Page) =>
+  downloadCsv(
+    page,
+    card(page).getByRole('button', { name: 'Exportar .csv' }),
+    /^msgram-metamodelo-arvore-\d{4}-\d{2}-\d{2}\.csv$/
+  );
 
 const HEADER = 'Release;Nível;Chave;Nome;Entidade pai;Peso (%);Mínimo;Máximo';
 
@@ -80,11 +68,7 @@ test.describe('@US21.01-CA1 Item "3. Estrutura das Medidas e Indicadores (Metamo
   });
 
   test.describe('sem produto', () => {
-    test.use({
-      scenario: {
-        [`/v1/organizations/${ORGANIZATION_ID}/products/`]: { count: 0, next: null, previous: null, results: [] }
-      }
-    });
+    test.use({ scenario: semProduto });
 
     test('não aparece sem produto selecionado', async ({ page }) => {
       await page.goto('/home/');

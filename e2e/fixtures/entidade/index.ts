@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { EMPTY_PAGE, ORGANIZATION_ID, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
 import characteristicR2 from './matrix-characteristic-r2.json';
 import subcharacteristicR2 from './matrix-subcharacteristic-r2.json';
 import measureR2 from './matrix-measure-r2.json';
@@ -71,11 +71,6 @@ export const erro500: ApiHandlers = {
 export const erroComposicao: ApiHandlers = {
   ...comDados,
   [ENTITY_API.analysis]: serverError
-};
-
-/** Organização sem produto: o menu lateral fica sem os itens do produto. */
-export const semProduto: ApiHandlers = {
-  [`/v1/organizations/${ORGANIZATION_ID}/products/`]: EMPTY_PAGE
 };
 
 export { matrixOf };

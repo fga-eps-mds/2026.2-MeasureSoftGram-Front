@@ -1,16 +1,11 @@
-import { readFileSync } from 'fs';
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
+import { card, choose, chooseLevelTab, downloadCsv, select } from './support/helpers';
 import { ENTIDADE_PATH, entidade, TEMPORAL_PATH, temporal } from './fixtures/divida-tecnica';
 
 // a tela do repositório ainda não mostra medidas (TASK23.01.03): os critérios são conferidos na Análise por Entidade
 // e na Evolução Temporal, a proposta do plano; o nome da medida vem do Service
 const MEASURE = 'Technical Debt Ratio';
-
-// sem idioma salvo o app abre em inglês; os critérios estão em português
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
-});
 
 const heatmap = (page: Page) => page.getByRole('table', { name: 'Mapa de calor' });
 /** A célula do mapa é um botão cujo nome começa por "<repositório> · <entidade>: <valor>". */
@@ -23,13 +18,9 @@ async function openEntidade(page: Page) {
   await expect(page.getByTestId('entity-heatmap')).toHaveAttribute('data-render-ms', /^\d+$/);
 }
 
-/** Troca o nível do mapa; o clique logo depois da carga às vezes não pega, então tenta de novo até a aba mudar. */
+/** Troca o nível do mapa e espera o caminho na hierarquia mudar. */
 async function chooseLevel(page: Page, label: string) {
-  const tab = page.getByRole('tablist', { name: 'Nível do modelo' }).getByRole('tab', { name: label, exact: true });
-  await expect(async () => {
-    await tab.click();
-    await expect(tab).toHaveAttribute('aria-selected', 'true', { timeout: 1000 });
-  }).toPass();
+  await chooseLevelTab(page, label);
   await expect(page.getByTestId('entity-level-path')).toContainText(label.toLowerCase());
 }
 
@@ -52,13 +43,6 @@ async function openChildren(page: Page, cellName: string, entity: string) {
 
 const childRow = (table: Locator, name: string) => table.getByRole('row').filter({ hasText: name }).getByRole('cell');
 
-const select = (page: Page, label: string) => page.getByRole('combobox', { name: new RegExp(`^${label}`) });
-
-async function choose(page: Page, label: string, option: string) {
-  await select(page, label).click();
-  await page.getByRole('option', { name: option, exact: true }).click();
-}
-
 /** Abre a Evolução Temporal e espera os filtros carregarem a árvore (a primeira característica vem escolhida). */
 async function openTemporal(page: Page) {
   await page.goto(TEMPORAL_PATH);
@@ -67,19 +51,12 @@ async function openTemporal(page: Page) {
 }
 
 /** O gráfico é canvas (ECharts): os pontos são conferidos pelo CSV do card, que leva o que o gráfico mostra. */
-async function exportMeasures(page: Page): Promise<string[]> {
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('region', { name: 'Medidas' }).getByRole('button', { name: 'Exportar .csv' }).click()
-  ]);
-  expect(download.suggestedFilename()).toMatch(/^msgram-temporal-medidas-\d{4}-\d{2}-\d{2}\.csv$/);
-  const content = readFileSync((await download.path()) ?? '', 'utf8');
-  expect(content.startsWith('\uFEFF')).toBe(true);
-  return content
-    .replace(/^\uFEFF/, '')
-    .trim()
-    .split(/\r?\n/);
-}
+const exportMeasures = (page: Page) =>
+  downloadCsv(
+    page,
+    card(page, 'Medidas').getByRole('button', { name: 'Exportar .csv' }),
+    /^msgram-temporal-medidas-\d{4}-\d{2}-\d{2}\.csv$/
+  );
 
 // as medidas de Modifiability, em Maintainability; a dívida técnica em três datas, uma na R1 e duas na R2
 const MODIFIABILITY_MEASURES_CSV = [

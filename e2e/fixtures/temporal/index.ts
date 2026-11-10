@@ -55,13 +55,8 @@ export const comDados: ApiHandlers = {
   ...historiesOf(9, front)
 };
 
-/** Os históricos do Service demoram 2 s, para ver o estado "Carregando" (CA4). */
-export const carregando: ApiHandlers = {
-  ...comDados,
-  ...Object.fromEntries(
-    LEVELS.map((level) => [TEMPORAL_API.history(7, level), { status: 200, json: service[level], delayMs: 2000 }])
-  )
-};
+/** Os históricos do Service, que o teste segura (api.hold) para ver o estado "Carregando" com comDados (CA4). */
+export const carregando = LEVELS.map((level) => TEMPORAL_API.history(7, level));
 
 /** O Service ainda não foi analisado: os quatro históricos vêm vazios (CA4). */
 export const semMedicoes: ApiHandlers = {

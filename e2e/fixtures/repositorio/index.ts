@@ -41,12 +41,6 @@ export const umaTrocaDeFaixa: ApiHandlers = {
   }
 };
 
-/** O histórico das características demora 2 s, para ver o estado "Carregando" (CA4). */
-export const carregando: ApiHandlers = {
-  ...comDados,
-  [REPOSITORY_API.characteristics]: { status: 200, json: characteristics, delayMs: 2000 }
-};
-
 /** O repositório ainda não foi analisado: nenhuma característica tem medição (CA4). */
 export const semMedicoes: ApiHandlers = {
   ...comDados,
