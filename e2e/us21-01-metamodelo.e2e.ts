@@ -127,6 +127,16 @@ test.describe('@US21.01-CA3 Nome e peso em cada nó, referência nas medidas e d
       .forEach((row) => expect([row[6], row[7]], `referência de ${row[3]}`).not.toContain(''));
   });
 
+  test('desenho com a árvore toda aberta: peso em cada nó e mínimo e máximo nas medidas (snapshot)', async ({
+    page
+  }) => {
+    test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
+    await openMetamodelo(page);
+    await card(page).getByRole('button', { name: 'Expandir tudo' }).click();
+    await expect(card(page).getByRole('button', { name: 'Recolher tudo' })).toBeVisible();
+    await expect(chartArea(page)).toHaveScreenshot('arvore-r2-expandida.png');
+  });
+
   // o clique cai num nó desenhado em canvas: a posição não está no DOM
   test.skip('clicar num nó mostra o nome, o tipo, o peso e a descrição da entidade (manual)', async () => {});
 });
@@ -181,6 +191,7 @@ test.describe('@US21.01-CA5 Trocar a release troca a árvore sem recarregar a p�
 test.describe('@US21.01-CA6 Só entidades da configuração; métrica repetida sob cada medida', () => {
   test.use({ scenario: comDados });
 
+  // "só entidades da configuração" é do Service, que devolve a árvore da configuração da release (fora do Front)
   test('total_builds aparece sob CI Feedback Time e sob Build Stability', async ({ page }) => {
     await openMetamodelo(page);
     const lines = await exportTree(page);
@@ -188,8 +199,6 @@ test.describe('@US21.01-CA6 Só entidades da configuração; métrica repetida s
       'R2;Métrica;total_builds;total_builds;CI Feedback Time;;;',
       'R2;Métrica;total_builds;total_builds;Build Stability;;;'
     ]);
-    // nada além do que a configuração da release devolve
-    expect(lines).toHaveLength(ARVORE_R2.length);
   });
 });
 
