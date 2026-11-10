@@ -249,9 +249,6 @@ test.describe('@US06.01-CA7 Produto passa a ter releases: o empty state dá luga
     page,
     api
   }) => {
-    // o SWR do _app não refaz um pedido feito há menos de 60 s (dedupingInterval), e nada limpa o cache do histórico
-    // quando uma release é criada: o relógio falso deixa passar esse minuto sem o teste esperar por ele
-    await page.clock.install();
     await page.goto(PRODUTO_PATH);
     await expect(page.getByRole('heading', { level: 6, name: NO_RELEASES })).toBeVisible();
 
@@ -260,7 +257,6 @@ test.describe('@US06.01-CA7 Produto passa a ter releases: o empty state dá luga
     await expect(page.getByRole('navigation').getByRole('heading', { level: 6, name: 'Releases' })).toBeVisible();
 
     api.set(PRODUTO_API.releaseHistory, releaseHistoryComDados);
-    await page.clock.fastForward('01:01');
     await page.getByText('Visão Geral', { exact: true }).click();
     await expectPulseInsteadOfEmptyState(page);
   });
