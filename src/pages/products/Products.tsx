@@ -391,6 +391,8 @@ const Products: NextPageWithLayout = () => {
     }
   }, [currentNamespace?.id]);
 
+  // `provider` fica fora das deps de propósito: trocar de provedor exige logout (US11.01),
+  // que limpa a organização atual; reagir a ele aqui reimportaria a org do provedor antigo.
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
