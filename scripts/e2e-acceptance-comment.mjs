@@ -34,14 +34,24 @@ function collect(suite, titles = [], out = []) {
     const tag = [...path, spec.title].map((title) => title.match(TAG)).find(Boolean);
     if (!tag) continue;
     for (const test of spec.tests) {
-      out.push({ us: tag[1], ca: Number(tag[2]), title: spec.title, status: test.status });
+      // test.fixme marca bug conhecido do código; chega como skipped, igual ao pulado manual, e só a anotação separa os dois
+      const fixme = (test.annotations ?? []).find((annotation) => annotation.type === 'fixme');
+      const status = test.status === 'skipped' && fixme ? 'fixme' : test.status;
+      // o motivo vira um item de lista no comentário: uma quebra de linha nele partiria o item
+      const note = fixme?.description?.replace(/\s+/g, ' ');
+      out.push({ us: tag[1], ca: Number(tag[2]), title: spec.title, status, note });
     }
   }
   for (const child of suite.suites ?? []) collect(child, path, out);
   return out;
 }
 
-/** status do Playwright: expected (passou), unexpected (falhou), flaky (passou numa nova tentativa), skipped. */
+const KNOWN_BUG = 'não atendido (bug conhecido)';
+
+/**
+ * status do Playwright: expected (passou), unexpected (falhou), flaky (passou numa nova tentativa), skipped (pulado,
+ * verificação manual), mais o fixme do collect (bug conhecido: o CA não está atendido, mesmo sem falha no run).
+ */
 function summarize(tests) {
   const count = (status) => tests.filter((test) => test.status === status).length;
   const row = {
@@ -49,9 +59,11 @@ function summarize(tests) {
     passed: count('expected'),
     flaky: count('flaky'),
     failed: count('unexpected'),
+    known: count('fixme'),
     skipped: count('skipped')
   };
   if (row.failed) row.result = 'falhou';
+  else if (row.known) row.result = KNOWN_BUG;
   else if (row.flaky) row.result = 'instável';
   else if (row.passed) row.result = row.skipped ? 'passou (com itens manuais)' : 'passou';
   else row.result = 'manual';
@@ -60,6 +72,7 @@ function summarize(tests) {
 
 function overall(rows) {
   if (rows.some((row) => row.failed)) return 'falhou';
+  if (rows.some((row) => row.known)) return KNOWN_BUG;
   if (rows.some((row) => row.flaky)) return 'instável';
   return 'passou';
 }
@@ -75,6 +88,7 @@ function render(us, tests, history) {
   const rows = [...byCa.entries()].sort(([a], [b]) => a - b).map(([ca, items]) => ({ ca, ...summarize(items) }));
   const result = overall(rows);
   const manual = tests.filter((test) => test.status === 'skipped');
+  const bugs = tests.filter((test) => test.status === 'fixme');
 
   const entry = { date: now(), branch: env.GITHUB_REF_NAME ?? 'local', sha: shortSha(), result, run: RUN_URL };
   const nextHistory = [entry, ...history].slice(0, HISTORY_SIZE);
@@ -88,14 +102,26 @@ function render(us, tests, history) {
       entry.date
     } (Brasília)`,
     '',
-    '| CA | Testes | Passaram | Instáveis | Falharam | Manuais | Resultado |',
-    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| CA | Testes | Passaram | Instáveis | Falharam | Bug conhecido | Manuais | Resultado |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
     ...rows.map(
       (row) =>
-        `| CA${row.ca} | ${row.total} | ${row.passed} | ${row.flaky} | ${row.failed} | ${row.skipped} | ${row.result} |`
+        `| CA${row.ca} | ${row.total} | ${row.passed} | ${row.flaky} | ${row.failed} | ${row.known} | ${row.skipped} | ${row.result} |`
     ),
     ''
   ];
+  if (bugs.length) {
+    // o fixme não volta a rodar sozinho: depois da correção, alguém troca por test para o CA voltar a ser verificado
+    lines.push(
+      'Bugs conhecidos (`test.fixme`; depois da correção, troque por `test` para o CA voltar a ser verificado):',
+      ''
+    );
+    bugs.forEach((test) => {
+      const note = test.note ? ` (${test.note})` : '';
+      lines.push(`- CA${test.ca}: ${test.title}${note}`);
+    });
+    lines.push('');
+  }
   if (manual.length) {
     lines.push('Verificação manual (pulados no E2E):', '');
     for (const test of manual) lines.push(`- CA${test.ca}: ${test.title}`);
