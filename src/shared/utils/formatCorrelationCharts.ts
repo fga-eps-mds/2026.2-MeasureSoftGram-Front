@@ -1,9 +1,15 @@
 import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
-import { CorrelationLevel, CorrelationPair, RepositoryCorrelation } from '@customTypes/product';
+import { format } from 'date-fns';
+import {
+  CorrelationLevel,
+  CorrelationPair,
+  CorrelationReleaseValues,
+  RepositoryCorrelation
+} from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { formatCount, formatStatistic, MISSING_STATISTIC } from '@utils/distributionSummary';
 import { escapeHtml } from '@utils/formatOverviewCharts';
-import { CsvChart, CsvColumn } from '@utils/exportCsv';
+import { CsvChart, CsvColumn, CsvValue } from '@utils/exportCsv';
 
 /** Escala divergente da correlação: laranja em −1, cinza claro em 0 e azul em +1, como na referência. */
 export const CORRELATION_COLORS = {
@@ -105,9 +111,20 @@ export function formatPairTooltip(cell: CorrelationCell, correlation: Repository
   return `${names}: ${methodLabel(correlation)} = <strong>${formatStatistic(cell.pair.coefficient)}</strong>`;
 }
 
+/** Nomes das entidades numa frase: "Reliability, Maintainability e Functional Suitability". */
+function formatNames(entities: RepositoryCorrelation['entities']): string {
+  return new Intl.ListFormat('pt-BR', { type: 'conjunction' }).format(entities.map((entity) => entity.name));
+}
+
+/** Situação da release na análise: "Usada" ou "Fora: sem valor de Reliability e Maintainability". */
+export function formatReleaseStatus(row: CorrelationReleaseValues, correlation: RepositoryCorrelation): string {
+  if (row.used) return 'Usada';
+  return `Fora: sem valor de ${formatNames(correlation.entities.filter((entity) => row.values[entity.key] === null))}`;
+}
+
 /**
  * Linha da página (CA3): "20 releases de AI · 8 características · coeficiente aplicado: Spearman (distribuição não
- * normal em 1 de 8 características)", com as releases deixadas de fora por falta de valor, quando houver.
+ * normal em 1 de 8 características: Reliability)", com as releases deixadas de fora por falta de valor, quando houver.
  */
 export function formatCorrelationInfo(correlation: RepositoryCorrelation): string {
   const releases = correlation.releases.length;
@@ -119,8 +136,11 @@ export function formatCorrelationInfo(correlation: RepositoryCorrelation): strin
     `${formatCount(entities)} ${noun}`
   ];
   if (correlation.method && correlation.non_normal !== null) {
+    const nonNormal = formatNames(correlation.entities.filter((entity) => entity.normal === false));
     const normality = correlation.non_normal
-      ? `distribuição não normal em ${formatCount(correlation.non_normal)} de ${formatCount(entities)} ${noun}`
+      ? `distribuição não normal em ${formatCount(correlation.non_normal)} de ${formatCount(
+          entities
+        )} ${noun}: ${nonNormal}`
       : `distribuição normal nas ${formatCount(entities)} ${noun}`;
     parts.push(`coeficiente aplicado: ${methodLabel(correlation)} (${normality})`);
   }
@@ -337,7 +357,12 @@ export function formatCorrelationBubbleOptions(correlation: RepositoryCorrelatio
 }
 
 /** Nome do dashboard e de cada matriz nos arquivos exportados. */
-export const CORRELATION_CSV = { dashboard: 'relacoes', matrix: 'matriz-correlacao', bubbles: 'matriz-bolhas' };
+export const CORRELATION_CSV = {
+  dashboard: 'relacoes',
+  matrix: 'matriz-correlacao',
+  bubbles: 'matriz-bolhas',
+  releases: 'dados-rd'
+};
 
 export type CorrelationCsvRow = {
   repository: string;
@@ -378,6 +403,30 @@ export function formatCorrelationCsv(correlation: RepositoryCorrelation, name: s
       significant: pair.significant ? 'sim' : 'não',
       method: methodLabel(correlation),
       releases: correlation.releases.length
+    }))
+  };
+}
+
+/**
+ * CSV da matriz RD (CA3 e CA8): uma linha por release do repositório, com o valor de cada entidade sem arredondar e a
+ * situação na análise. Com as linhas usadas, o coeficiente de um par pode ser recalculado numa planilha.
+ */
+export function formatCorrelationReleasesCsv(correlation: RepositoryCorrelation): CsvChart<Record<string, CsvValue>> {
+  return {
+    name: CORRELATION_CSV.releases,
+    columns: [
+      { key: 'release', title: 'Release' },
+      { key: 'start_at', title: 'Início' },
+      { key: 'end_at', title: 'Fim' },
+      ...correlation.entities.map((entity) => ({ key: entity.key, title: entity.name })),
+      { key: 'status', title: 'Situação' }
+    ],
+    rows: correlation.release_values.map((row) => ({
+      release: row.release.release_name,
+      start_at: format(new Date(row.release.start_at), 'dd/MM/yyyy'),
+      end_at: format(new Date(row.release.end_at), 'dd/MM/yyyy'),
+      ...row.values,
+      status: formatReleaseStatus(row, correlation)
     }))
   };
 }
