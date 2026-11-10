@@ -30,11 +30,13 @@ const defaultChartData = () => ({
   setStartDate: jest.fn(),
   endDate: '',
   setEndDate: jest.fn(),
+  totalMeasurements: 10,
   selectedMeasurements: 10,
   latestDate: '25/09/2026',
   releasesInPeriod: 2,
   isLoading: false,
   error: null,
+  retry: jest.fn(),
 });
 
 const mockEchartsOption = jest.fn();
@@ -97,6 +99,63 @@ describe('<PulseChart />', () => {
     const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
 
     expect(getByText('Não foi possível carregar os dados do gráfico de pulso.')).toBeInTheDocument();
+  });
+
+  // CA4 da US07.01: o erro precisa de "Tentar novamente", e o estado sem dados, de uma mensagem que diga o que fazer.
+  // A tela dava sempre "ajuste as datas", mesmo quando o filtro não era a causa (ressalva do PO em 03/11/2026).
+  it('refaz a busca pelo "Tentar novamente" do alerta de erro', () => {
+    const chartData = { ...defaultChartData(), error: new Error('falhou') };
+    mockUsePulseChartData.mockReturnValue(chartData);
+
+    const { getByRole } = render(<PulseChart organizationId="1" productId="1" />);
+    fireEvent.click(getByRole('button', { name: 'Tentar novamente' }));
+
+    expect(chartData.retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('manda importar um repositório quando o produto não tem nenhum', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      allRepositories: [],
+      filteredRepositories: [],
+      totalMeasurements: 0,
+      selectedMeasurements: 0,
+    });
+
+    const { getByText, queryByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Este produto ainda não tem repositórios')).toBeInTheDocument();
+    expect(getByText(/Importe um repositório ao produto/)).toBeInTheDocument();
+    expect(queryByText(/Ajuste as datas/)).not.toBeInTheDocument();
+  });
+
+  it('manda rodar a coleta quando o produto tem repositório mas nenhuma medição', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      filteredRepositories: [{ id: 1, name: '2022-1-MeasureSoftGram-CLI', measurements: [], releases: [] }],
+      totalMeasurements: 0,
+      selectedMeasurements: 0,
+    });
+
+    const { getByText, queryByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Ainda não há medições neste produto')).toBeInTheDocument();
+    expect(getByText(/Action do MeasureSoftGram analisa os repositórios/)).toBeInTheDocument();
+    expect(queryByText(/Ajuste as datas/)).not.toBeInTheDocument();
+  });
+
+  it('manda ajustar o período só quando há medições fora da janela escolhida', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      filteredRepositories: [{ id: 1, name: '2022-1-MeasureSoftGram-CLI', measurements: [], releases: [] }],
+      totalMeasurements: 10,
+      selectedMeasurements: 0,
+    });
+
+    const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Nenhuma medição no período selecionado')).toBeInTheDocument();
+    expect(getByText(/Ajuste as datas De\/Até/)).toBeInTheDocument();
   });
 
   it('exporta os repositórios filtrados em CSV pelo botão padrão dos dashboards', () => {
