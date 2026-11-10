@@ -1,0 +1,16 @@
+[
+  {
+    "gitlab_project_id": 301,
+    "gitlab_path_with_namespace": "fga-eps-mds/squad-01/squad-front",
+    "name": "squad-front",
+    "description": "Interface do squad 01.",
+    "url": "https://gitlab.com/fga-eps-mds/squad-01/squad-front"
+  },
+  {
+    "gitlab_project_id": 302,
+    "gitlab_path_with_namespace": "fga-eps-mds/squad-01/squad-api",
+    "name": "squad-api",
+    "description": "API do squad 01.",
+    "url": "https://gitlab.com/fga-eps-mds/squad-01/squad-api"
+  }
+]
