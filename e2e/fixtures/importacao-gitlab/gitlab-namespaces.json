@@ -1,0 +1,26 @@
+[
+  {
+    "id": 11,
+    "name": "Usuario Mock",
+    "full_path": "usuario-mock",
+    "avatar_url": "",
+    "description": "",
+    "kind": "user"
+  },
+  {
+    "id": 101,
+    "name": "fga-eps-mds",
+    "full_path": "fga-eps-mds",
+    "avatar_url": "",
+    "description": "Grupo da disciplina",
+    "kind": "group"
+  },
+  {
+    "id": 102,
+    "name": "squad-01",
+    "full_path": "fga-eps-mds/squad-01",
+    "avatar_url": "",
+    "description": "Subgrupo do squad 01",
+    "kind": "group"
+  }
+]

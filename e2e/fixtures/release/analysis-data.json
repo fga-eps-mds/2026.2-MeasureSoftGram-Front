@@ -1,0 +1,40 @@
+{
+  "release": {
+    "id": 2,
+    "created_at": "2026-08-10T12:00:00Z",
+    "start_at": "2026-08-17T00:00:00Z",
+    "end_at": "2026-10-16T23:59:59Z",
+    "release_name": "R2",
+    "description": "Segunda release do produto",
+    "created_by": 1,
+    "product": 1,
+    "goal": 2
+  },
+  "planned": [
+    { "name": "reliability", "value": 0.7 },
+    { "name": "maintainability", "value": 0.6 },
+    { "name": "functional_suitability", "value": 0.5 },
+    { "name": "security", "value": 0.4 }
+  ],
+  "accomplished": [
+    {
+      "repository_name": "MeasureSoftGram-Service",
+      "characteristics": [
+        { "name": "reliability", "value": 0.74 },
+        { "name": "maintainability", "value": 0.6 },
+        { "name": "functional_suitability", "value": 0.35 },
+        { "name": "security", "value": 0.25 }
+      ],
+      "norm_diff": 0.21
+    },
+    {
+      "repository_name": "MeasureSoftGram-Front",
+      "characteristics": [
+        { "name": "reliability", "value": 0.8 },
+        { "name": "functional_suitability", "value": 0.5 },
+        { "name": "security", "value": 0.1 }
+      ],
+      "norm_diff": 0.3
+    }
+  ]
+}

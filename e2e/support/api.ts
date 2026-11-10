@@ -1,9 +1,10 @@
 import { Page } from '@playwright/test';
 
-/** Resposta com status, corpo e atraso; um handler que devolve outra coisa responde 200 com ela em JSON. */
+/** Resposta com status, corpo, cabeçalhos e atraso; um handler que devolve outra coisa responde 200 com ela em JSON. */
 export interface Reply {
   status: number;
   json?: unknown;
+  headers?: Record<string, string>;
   delayMs?: number;
 }
 
@@ -27,7 +28,7 @@ function isReply(value: unknown): value is Reply {
     typeof value === 'object' &&
     value !== null &&
     typeof (value as Reply).status === 'number' &&
-    Object.keys(value).every((key) => ['status', 'json', 'delayMs'].includes(key))
+    Object.keys(value).every((key) => ['status', 'json', 'headers', 'delayMs'].includes(key))
   );
 }
 
@@ -58,7 +59,7 @@ export async function mockApi(page: Page, handlers: ApiHandlers): Promise<MockAp
 
     const reply: Reply = isReply(result) ? result : { status: 200, json: result };
     if (reply.delayMs) await new Promise((resolve) => setTimeout(resolve, reply.delayMs));
-    return route.fulfill({ status: reply.status, json: reply.json ?? null });
+    return route.fulfill({ status: reply.status, json: reply.json ?? null, headers: reply.headers });
   });
 
   return { unhandled, set: (path, handler) => routes.set(normalize(path), handler) };
