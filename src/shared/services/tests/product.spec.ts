@@ -415,6 +415,37 @@ describe('ProductQuery', () => {
     );
   });
 
+  describe('faixas de qualidade (US30.01)', () => {
+    const url = '/v1/organizations/1/products/5/quality-bands/';
+    const qualityBands = { is_default: false, can_edit: true, bands: [] };
+
+    it('lê as faixas do produto, e nada sem organização ou produto', () => {
+      expect(productQuery.getQualityBandsConfig('1', '5')).toEqual({ url, method: 'get' });
+      expect(productQuery.getQualityBandsConfig('', '5')).toBeNull();
+    });
+
+    it('grava as faixas com PUT e devolve a resposta do Service', async () => {
+      const bands = [{ key: 'E' as const, min: 0, max: 0.2 }];
+      (api.put as jest.Mock).mockResolvedValueOnce({ data: qualityBands });
+
+      await expect(productQuery.updateQualityBands('1', '5', bands)).resolves.toEqual(qualityBands);
+      expect(api.put).toHaveBeenCalledWith(url, { bands });
+    });
+
+    it('restaura os padrões com DELETE', async () => {
+      (api.delete as jest.Mock).mockResolvedValueOnce({ data: qualityBands });
+
+      await expect(productQuery.restoreQualityBands('1', '5')).resolves.toEqual(qualityBands);
+      expect(api.delete).toHaveBeenCalledWith(url);
+    });
+
+    it('deixa a falha subir para a tela', async () => {
+      (api.put as jest.Mock).mockRejectedValueOnce(new Error('500'));
+
+      await expect(productQuery.updateQualityBands('1', '5', [])).rejects.toThrow('500');
+    });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
