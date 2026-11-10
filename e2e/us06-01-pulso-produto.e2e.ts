@@ -53,7 +53,8 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
   test('desenho do pulso com os marcadores e os pontos de R1 e R2 (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openPulse(page);
-    await expect(chart(page)).toHaveScreenshot('pulso-produto.png');
+    // o pulso é animado ao desenhar: algumas dezenas de pixels mudam entre execuções
+    await expect(chart(page)).toHaveScreenshot('pulso-produto.png', { maxDiffPixels: 200 });
   });
 
   // regra do PO (27/09 e 08/10): as faixas e as cores do indicador ficam documentadas e na legenda
@@ -155,7 +156,8 @@ test.describe('@US06.01-CA2 Um único valor por release, sem um ponto por commit
     await openPulse(page);
     await chooseRepository(page, 'MeasureSoftGram-Service');
     await expect(footer(page)).toContainText('1 repositório • 6 medições no período selecionado • 2 Releases');
-    await expect(chart(page)).toHaveScreenshot('pulso-um-repositorio.png');
+    // o pulso é animado ao desenhar: algumas dezenas de pixels mudam entre execuções
+    await expect(chart(page)).toHaveScreenshot('pulso-um-repositorio.png', { maxDiffPixels: 200 });
   });
 });
 
