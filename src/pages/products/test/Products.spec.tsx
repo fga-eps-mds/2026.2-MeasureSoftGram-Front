@@ -930,13 +930,12 @@ describe('Products Component', () => {
       });
 
       renderProducts();
-      // o select mostra "joao" (o usuário, primeiro da lista); o botão é o que contém esse texto
-      let orgSelect: HTMLElement | undefined;
       await waitFor(() => {
-        orgSelect = screen.getAllByRole(/combobox|button/).find(el => el.textContent?.includes('joao'));
-        expect(orgSelect).toBeDefined();
+        expect(screen.getByLabelText('Grupos do GitLab')).toBeInTheDocument();
       });
-      await act(async () => { fireEvent.mouseDown(orgSelect!); });
+      await act(async () => {
+        fireEvent.mouseDown(screen.getByLabelText('Grupos do GitLab'));
+      });
       const options = await screen.findAllByRole('option');
       await act(async () => { fireEvent.click(options[1]); });
 

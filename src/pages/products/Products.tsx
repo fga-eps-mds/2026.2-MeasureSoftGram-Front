@@ -383,7 +383,7 @@ const Products: NextPageWithLayout = () => {
     if (currentNamespace) {
       void handleSelectOrganization(currentNamespace);
     }
-  }, [selectedNamespaceId]);
+  }, [currentNamespace?.id, provider]);
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
