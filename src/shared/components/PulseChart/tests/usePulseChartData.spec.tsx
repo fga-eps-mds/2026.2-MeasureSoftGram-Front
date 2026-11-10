@@ -50,7 +50,7 @@ const RELEASE_HISTORY = {
   ]
 };
 
-type RequestResult = { data?: unknown; isLoading?: boolean; error?: unknown };
+type RequestResult = { data?: unknown; isLoading?: boolean; error?: unknown; mutate?: jest.Mock };
 
 const mockRequests = (tsqmi: RequestResult, releaseHistory: RequestResult) => {
   (useRequest as jest.Mock).mockImplementation((config: { url: string } | null) =>
@@ -190,5 +190,30 @@ describe('usePulseChartData', () => {
     expect(result.current.isLoading).toBe(true);
     expect(result.current.error).toBe(error);
     expect(result.current.allRepositories).toEqual([]);
+  });
+
+  // o gráfico junta as duas requisições, então refazer só uma deixaria metade do pulso desatualizada (CA4 da US07.01)
+  it('o retry refaz as duas requisições', () => {
+    const refetchTsqmi = jest.fn();
+    const refetchReleaseHistory = jest.fn();
+    mockRequests({ data: TSQMI_HISTORY, mutate: refetchTsqmi }, { data: RELEASE_HISTORY, mutate: refetchReleaseHistory });
+
+    const { result } = renderHook(() => usePulseChartData('1', '2'));
+    act(() => result.current.retry());
+
+    expect(refetchTsqmi).toHaveBeenCalledTimes(1);
+    expect(refetchReleaseHistory).toHaveBeenCalledTimes(1);
+  });
+
+  // o total antes do filtro distingue "nunca houve medição" de "nada no período", que pedem instruções diferentes
+  it('conta as medições antes e depois do filtro de período', () => {
+    const { result } = renderHook(() => usePulseChartData('1', '2'));
+
+    expect(result.current.totalMeasurements).toBe(3);
+
+    act(() => result.current.setStartDate('2026-09-01'));
+
+    expect(result.current.totalMeasurements).toBe(3);
+    expect(result.current.selectedMeasurements).toBe(1);
   });
 });

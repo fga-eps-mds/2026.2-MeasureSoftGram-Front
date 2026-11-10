@@ -47,7 +47,7 @@ export function SkeletonBlock({ width, height }: { width: number | string; heigh
   );
 }
 
-/** Card dos dashboards nativos, com os estados de carregamento, sem dados e erro (CA5 da US07.01). */
+/** Card dos dashboards nativos, com os estados de carregamento, sem dados e erro (CA4 da US07.01). */
 export default function DashboardCard({
   title,
   status,

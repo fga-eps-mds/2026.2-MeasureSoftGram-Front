@@ -18,8 +18,17 @@ export function formatTotal(value: number): string {
 
 export interface TotalItem {
   label: string;
-  /** `undefined` enquanto os totais da release ainda não chegaram. */
-  value?: number;
+  /** `undefined` enquanto os totais da release ainda não chegaram; `null` quando não se aplica à release. */
+  value?: number | null;
+}
+
+/**
+ * Se a release tem modelo de qualidade configurado. O Service conta as entidades da configuração da release e, sem
+ * ela, devolve 0 nos quatro níveis do modelo. Os quatro em 0 ao mesmo tempo só acontecem sem configuração, porque
+ * modelo configurado tem ao menos uma característica — ali o 0 não é medição, é a ausência de uma.
+ */
+export function hasQualityModel(totals: ReleaseDashboardSummary['totals']): boolean {
+  return totals.characteristics > 0 || totals.subcharacteristics > 0 || totals.measures > 0 || totals.metrics > 0;
 }
 
 /** Os totais da release na ordem dos cards da tela; `repositoriesLabel` é o termo do provedor ("Repositórios"). */
@@ -27,11 +36,16 @@ export function getTotalItems(
   totals: ReleaseDashboardSummary['totals'] | undefined,
   repositoriesLabel: string
 ): TotalItem[] {
+  // sem o modelo, as quatro contagens dele não se aplicam; repositórios e arquivos seguem valendo, porque o Service
+  // os conta por consultas próprias (TSQMI e métricas coletadas), que não passam pela configuração
+  const applies = !totals || hasQualityModel(totals);
+  const model = (value?: number) => (totals === undefined ? undefined : applies ? value : null);
+
   return [
-    { label: 'Características', value: totals?.characteristics },
-    { label: 'Subcaracterísticas', value: totals?.subcharacteristics },
-    { label: 'Medidas', value: totals?.measures },
-    { label: 'Métricas', value: totals?.metrics },
+    { label: 'Características', value: model(totals?.characteristics) },
+    { label: 'Subcaracterísticas', value: model(totals?.subcharacteristics) },
+    { label: 'Medidas', value: model(totals?.measures) },
+    { label: 'Métricas', value: model(totals?.metrics) },
     { label: repositoriesLabel, value: totals?.repositories },
     { label: 'Arquivos analisados', value: totals?.files }
   ];

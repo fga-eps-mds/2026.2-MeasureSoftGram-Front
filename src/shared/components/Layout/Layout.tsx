@@ -55,8 +55,8 @@ function HeaderUserMenu() {
           },
         }}
       >
-        <Avatar sx={{ width: 32, height: 32, backgroundColor: '#000' }} />
-        <Box sx={{ fontWeight: 500, fontSize: '15px' }}>{session?.username ?? '???'}</Box>
+        <Avatar src={session?.avatar_url} sx={{ width: 32, height: 32, backgroundColor: '#000' }} />
+        <Box sx={{ fontWeight: 500, fontSize: '15px' }}>{session?.username || session?.email || 'Usuário'}</Box>
         <FiChevronDown fontSize={20} />
       </Button>
       <Menu

@@ -17,7 +17,8 @@ type ReleaseField = { release: string };
 
 const RELEASE_COLUMN = { key: 'release', title: 'Release' } as const;
 
-export type TotalsCsvRow = ReleaseField & { total: string; quantity: number };
+/** `quantity` fica vazia no total que não se aplica à release, como nos outros CSVs do produto. */
+export type TotalsCsvRow = ReleaseField & { total: string; quantity: number | null };
 
 const TOTALS_CSV_COLUMNS: CsvColumn<TotalsCsvRow>[] = [
   RELEASE_COLUMN,
