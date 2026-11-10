@@ -1,7 +1,6 @@
 import { Locator, Page } from '@playwright/test';
-import { MockApi } from './support/api';
 import { expect, test } from './support/fixtures';
-import { bandSwatch, card, choose, downloadCsv, loadFont, select } from './support/helpers';
+import { bandSwatch, card, choose, downloadCsv, select } from './support/helpers';
 import { PRODUCT_PATH, releases } from './fixtures/common';
 import * as overview from './fixtures/overview';
 import * as temporal from './fixtures/temporal';
@@ -105,15 +104,6 @@ const pulseValues = (page: Page) => card(page, PULSE).getByRole('heading', { lev
 async function openRepository(page: Page) {
   await page.goto(repositorio.REPOSITORY_PATH);
   await expect(page.getByRole('heading', { name: 'MeasureSoftGram-Service' })).toBeVisible();
-  await expect(exportButton(page, PULSE)).toBeEnabled();
-}
-
-/** Abre a tela do repositório com a fonte do canvas já carregada (ver loadFont), para o snapshot do pulso. */
-async function openRepositoryForSnapshot(page: Page, api: MockApi) {
-  const release = api.hold(repositorio.REPOSITORY_API.characteristics);
-  await page.goto(repositorio.REPOSITORY_PATH);
-  await loadFont(page, 'Roboto');
-  release();
   await expect(exportButton(page, PULSE)).toBeEnabled();
 }
 
@@ -392,9 +382,10 @@ test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica,
   });
 
   // os marcadores das releases e as cores do pulso só aparecem no desenho do canvas; a baseline é gerada no CI
-  test('desenho do pulso: marcadores das releases e cores das faixas (snapshot)', async ({ api, page }) => {
+  // sem tolerância, como no pulso do produto (US06.01): o Playwright espera a animação do ECharts terminar
+  test('desenho do pulso: marcadores das releases e cores das faixas (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
-    await openRepositoryForSnapshot(page, api);
+    await openRepository(page);
     await expect(card(page, PULSE).locator('canvas')).toBeVisible();
     await expect(card(page, PULSE)).toHaveScreenshot('repositorio-pulso.png');
   });

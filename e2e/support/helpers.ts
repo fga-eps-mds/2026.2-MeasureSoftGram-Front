@@ -59,20 +59,3 @@ export async function downloadCsv(page: Page, button: Locator, fileName: RegExp)
  */
 export const bandSwatch = (scope: Page | Locator, label: string): Locator =>
   scope.getByText(label, { exact: true }).locator('xpath=preceding-sibling::div[1]');
-
-/**
- * Carrega a fonte antes do desenho do gráfico. O pulso escreve no canvas em Roboto, que vem do Google Fonts com
- * display=swap: se o ECharts desenha antes de a fonte chegar, o texto sai na fonte reserva e não é redesenhado, e o
- * snapshot muda de uma execução para outra.
- */
-export async function loadFont(page: Page, family: string) {
-  await expect
-    .poll(() =>
-      page.evaluate(async (family) => {
-        const faces = [...document.fonts].filter((face) => face.family.replace(/["']/g, '') === family);
-        await Promise.all(faces.map((face) => face.load()));
-        return faces.length;
-      }, family)
-    )
-    .toBeGreaterThan(0);
-}

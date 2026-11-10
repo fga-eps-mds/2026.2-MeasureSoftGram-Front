@@ -1,7 +1,6 @@
 import { Page } from '@playwright/test';
-import { MockApi } from './support/api';
 import { expect, test } from './support/fixtures';
-import { bandSwatch, downloadCsv, loadFont } from './support/helpers';
+import { bandSwatch, downloadCsv } from './support/helpers';
 import { RELEASES_API, releases } from './fixtures/common';
 import {
   comDados,
@@ -35,16 +34,6 @@ async function openPulse(page: Page) {
   await expect(chart(page)).toHaveCount(1);
 }
 
-/** Abre o pulso com a fonte do canvas já carregada (ver loadFont), para o snapshot ser o mesmo a cada execução. */
-async function openPulseForSnapshot(page: Page, api: MockApi) {
-  const release = api.hold(PRODUTO_API.historicalValues);
-  await page.goto(PRODUTO_PATH);
-  await loadFont(page, 'Roboto');
-  release();
-  await expect(footer(page)).toBeVisible();
-  await expect(chart(page)).toHaveCount(1);
-}
-
 async function chooseRepository(page: Page, option: string) {
   await repositorySelect(page).click();
   await page.getByRole('option', { name: option, exact: true }).click();
@@ -61,9 +50,11 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
     );
   });
 
-  test('desenho do pulso com os marcadores e os pontos de R1 e R2 (snapshot)', async ({ api, page }) => {
+  // sem tolerância: o Playwright só compara depois de duas capturas seguidas iguais, isto é, com a animação do ECharts
+  // terminada; com maxDiffPixels essa espera também afrouxa, e a baseline antiga tinha saído no meio da animação
+  test('desenho do pulso com os marcadores e os pontos de R1 e R2 (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
-    await openPulseForSnapshot(page, api);
+    await openPulse(page);
     await expect(chart(page)).toHaveScreenshot('pulso-produto.png');
   });
 
@@ -154,9 +145,9 @@ test.describe('@US06.01-CA2 Um único valor por release, sem um ponto por commit
   test.use({ scenario: comDados });
 
   // o CSV exporta as medições, não os pontos das releases: só o desenho mostra um ponto por release
-  test('seis medições do Service e um ponto em cada uma das duas releases (snapshot)', async ({ api, page }) => {
+  test('seis medições do Service e um ponto em cada uma das duas releases (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
-    await openPulseForSnapshot(page, api);
+    await openPulse(page);
     await chooseRepository(page, 'MeasureSoftGram-Service');
     await expect(footer(page)).toContainText('1 repositório • 6 medições no período selecionado • 2 Releases');
     await expect(chart(page)).toHaveScreenshot('pulso-um-repositorio.png');
