@@ -463,6 +463,12 @@ export interface CorrelationPair {
   significant: boolean;
 }
 
+export interface CorrelationReleaseValues {
+  release: ReleaseDashboardRelease;
+  values: Record<string, number | null>;
+  used: boolean;
+}
+
 /**
  * GET products/{id}/correlation/?repository_id=&level= (Service, US21.04): RD_Corr, a correlação entre as entidades
  * do nível ao longo das releases do repositório, pela função f_sigma do Core.
@@ -470,12 +476,14 @@ export interface CorrelationPair {
 export interface RepositoryCorrelation {
   repository: { id: number; name: string };
   level: CorrelationLevel;
-  /** Entidades da configuração da release mais recente, na ordem dela. */
-  entities: Array<{ key: string; name: string }>;
+  /** Entidades da configuração da release mais recente, na ordem dela; `normal` é null quando não há pares. */
+  entities: Array<{ key: string; name: string; normal: boolean | null }>;
   /** Linhas de RD: as releases com valor para todas as entidades, da mais antiga para a mais nova. */
   releases: ReleaseDashboardRelease[];
   /** Releases do repositório deixadas de fora por falta de valor. */
   excluded_releases: number;
+  /** Todas as releases do repositório, com o valor de cada entidade (null quando falta) e se entraram em RD. */
+  release_values: CorrelationReleaseValues[];
   /** null quando não há pares (reason preenchido). */
   method: 'pearson' | 'spearman' | null;
   /** Colunas de RD sem distribuição normal. */
