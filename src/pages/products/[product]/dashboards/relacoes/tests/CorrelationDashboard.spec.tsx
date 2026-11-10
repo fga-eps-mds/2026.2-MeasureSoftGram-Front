@@ -71,7 +71,7 @@ describe('<CorrelationDashboard />', () => {
     );
   });
 
-  it('mostra num diálogo quais releases entraram na análise e quais ficaram de fora (CA3)', () => {
+  it('mostra num diálogo quais releases entraram na análise e quais ficaram de fora (CA3)', async () => {
     const data = correlation();
     const [excluded, ...used] = data.release_values;
     mockRequests({
@@ -99,6 +99,9 @@ describe('<CorrelationDashboard />', () => {
 
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Exportar .csv' }));
     expect((downloadCsv as jest.Mock).mock.calls[0][1].name).toBe('dados-rd');
+
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Fechar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('tem os seletores de repositório e de nível (CA2)', () => {

@@ -30,7 +30,7 @@ interface Props {
 }
 
 /** Releases da análise (CA3): todas as releases do repositório, com o valor de cada entidade e se entraram em RD. */
-export default function CorrelationReleasesDialog({ correlation, open, onClose }: Props) {
+export default function CorrelationReleasesDialog({ correlation, open, onClose }: Readonly<Props>) {
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
 
   return (
