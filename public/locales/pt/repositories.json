@@ -2,6 +2,8 @@
   "title": "Repositórios",
   "title_gitlab": "Projetos",
   "more": "VER MAIS...",
+  "add": "Adicionar repositório",
+  "add_gitlab": "Adicionar projeto",
   "input-placeholder": "Insira o nome do repositório",
   "input-placeholder_gitlab": "Insira o nome do projeto",
   "history": "Histórico",

@@ -47,7 +47,7 @@ describe('Repository', () => {
       </OrganizationProvider>
     );
 
-    fireEvent.click(screen.getByLabelText('add repository'));
+    fireEvent.click(screen.getByLabelText('add'));
 
     expect(mockPush).toHaveBeenCalledWith('/products');
   });
