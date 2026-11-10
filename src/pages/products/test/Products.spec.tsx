@@ -948,11 +948,14 @@ describe('Products Component', () => {
   });
 
   it('reaproveita a organização do GitHub pelo nome sem chamar a importação', async () => {
+    // zera filas de mockResolvedValueOnce de testes anteriores
+    (organizationQuery.getAllOrganization as jest.Mock).mockReset().mockResolvedValue({
+      type: 'success',
+      value: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }]
+    });
     renderProducts();
 
-    await waitFor(() => {
-      expect(organizationQuery.getGithubRepos).toHaveBeenCalled();
-    });
+    expect(await screen.findByText('Repo 1')).toBeInTheDocument();
     expect(organizationQuery.importOrganization).not.toHaveBeenCalled();
   });
 });
