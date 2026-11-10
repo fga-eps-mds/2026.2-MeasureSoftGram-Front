@@ -100,6 +100,22 @@ describe('Landing', () => {
     expect(docsLinks[0]).toHaveAttribute('target', '_blank');
   });
 
+  it('exibe estado de carregamento e oculta as seções da landing durante o callback de OAuth', () => {
+    const originalLocation = window.location;
+    // @ts-ignore
+    delete window.location;
+    // @ts-ignore
+    window.location = { ...originalLocation, search: '?code=oauth_code_123&state=state_abc' };
+
+    render(<Landing meta={meta} />);
+
+    expect(screen.getByTestId('landing-oauth-loading')).toBeInTheDocument();
+    expect(screen.getByText('Autenticando no MeasureSoftGram...')).toBeInTheDocument();
+    expect(screen.queryByText('hero.title')).not.toBeInTheDocument();
+
+    window.location = originalLocation;
+  });
+
   it('renderiza title e meta description com texto real (nao chave crua)', () => {
     const { container } = render(<Landing meta={meta} />);
 

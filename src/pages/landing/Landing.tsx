@@ -1,7 +1,8 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import type { GetStaticProps } from 'next';
-import { Box } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { loadTranslations } from 'ni18n';
 import { NextPageWithLayout } from '@pages/_app.next';
 import { ni18nConfig } from '../../../n18n.config';
@@ -30,10 +31,18 @@ interface LandingProps {
 
 const Landing: React.FC<LandingProps> = ({ meta }) => {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const isOAuthCallback =
+    mounted &&
+    ((typeof window !== 'undefined' &&
+      (window.location.search.includes('code=') || window.location.search.includes('error='))) ||
+      router?.query?.code !== undefined ||
+      router?.query?.error !== undefined);
 
   const pageTitle = `${meta.metaTitle} - ${meta.heroTitle}`;
 
@@ -58,18 +67,36 @@ const Landing: React.FC<LandingProps> = ({ meta }) => {
         <meta name="twitter:image" content={meta.ogImage} />
       </Head>
       <Box component="main" sx={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
-        {mounted && (
-          <>
-            <LandingHeader />
-            <HeroSection />
-            <HowItWorksSection />
-            <ValuePropsSection />
-            <IntegrationsSection />
-            <PublicationsSection />
-            <CommunitySection />
-            <LandingFooter />
-          </>
-        )}
+        {mounted &&
+          (isOAuthCallback ? (
+            <Box
+              data-testid="landing-oauth-loading"
+              sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2
+              }}
+            >
+              <CircularProgress size={48} sx={{ color: '#1976d2' }} />
+              <Typography variant="body1" sx={{ color: '#5e5e5e', fontWeight: 500 }}>
+                Autenticando no MeasureSoftGram...
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <LandingHeader />
+              <HeroSection />
+              <HowItWorksSection />
+              <ValuePropsSection />
+              <IntegrationsSection />
+              <PublicationsSection />
+              <CommunitySection />
+              <LandingFooter />
+            </>
+          ))}
       </Box>
     </>
   );
