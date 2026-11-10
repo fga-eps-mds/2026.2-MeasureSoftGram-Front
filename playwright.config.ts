@@ -28,6 +28,11 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 5 * 60 * 1000,
-    env: { NEXT_PUBLIC_API_URL: `${BASE_URL}/api` }
+    env: {
+      NEXT_PUBLIC_API_URL: `${BASE_URL}/api`,
+      // sem o client id, o botão do GitLab vai direto a /auth/error; o redirect volta para este servidor
+      GITLAB_CLIENT_ID: 'e2e-gitlab',
+      NEXT_PUBLIC_LOGIN_REDIRECT_URL: `${BASE_URL}/`
+    }
   }
 });
