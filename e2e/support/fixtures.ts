@@ -1,17 +1,18 @@
 import { expect, test as base } from '@playwright/test';
 import { common } from '../fixtures/common';
 import { ApiHandlers, MockApi, mockApi } from './api';
-import { seedSession } from './session';
+import { seedSession, SessionProvider } from './session';
 
 /**
  * Teste base das páginas autenticadas: semeia a sessão fake e simula a API com os handlers comuns mais os do cenário
  * (`test.use({ scenario })`). No fim, falha se alguma rota foi pedida sem handler.
  */
-export const test = base.extend<{ scenario: ApiHandlers; api: MockApi }>({
+export const test = base.extend<{ scenario: ApiHandlers; provider: SessionProvider; api: MockApi }>({
   scenario: [{}, { option: true }],
+  provider: ['credentials', { option: true }],
   api: [
-    async ({ page, scenario }, use) => {
-      await seedSession(page);
+    async ({ page, scenario, provider }, use) => {
+      await seedSession(page, provider);
       const api = await mockApi(page, { ...common, ...scenario });
       await use(api);
       expect(api.unhandled, 'rotas da API pedidas sem handler').toEqual([]);
