@@ -612,7 +612,8 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
       test('mostra o erro com "Tentar novamente"', async ({ page }) => {
         await page.goto(temporal.TEMPORAL_PATH);
         await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
-        await expect(page.getByRole('alert')).toBeVisible();
+        // no card: o anunciador de rota do Next também tem role=alert e, com o título da página, entra na busca
+        await expect(card(page, 'Evolução Temporal').getByRole('alert')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
         await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
       });
