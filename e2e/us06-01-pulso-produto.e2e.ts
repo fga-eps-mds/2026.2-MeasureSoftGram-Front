@@ -1,6 +1,7 @@
-import { readFileSync } from 'fs';
 import { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
+import { bandSwatch, downloadCsv, redrawChart } from './support/helpers';
+import { RELEASES_API, releases } from './fixtures/common';
 import {
   comDados,
   PRODUTO_API,
@@ -13,14 +14,13 @@ import {
 const TITLE = 'Visão Geral';
 const NO_RELEASES = 'Este produto ainda não tem releases cadastradas';
 
-// sem idioma salvo o app abre em inglês; os critérios estão em português
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
-});
-
 /** O resumo abaixo do pulso: "N repositórios • M medições no período selecionado • K Releases no período • …". */
 const footer = (page: Page) => page.getByText(/ medições? no período selecionado/);
-/** O pulso é um canvas só (ECharts); o nome, o último indicador e a variação de cada faixa ficam no DOM, por cima. */
+/**
+ * O pulso é um canvas só (ECharts); o nome, o último indicador e a variação de cada faixa ficam no DOM, por cima.
+ * shortcut: sem escopo, porque o quadro do pulso na Visão Geral não tem section com aria-label em src/ (o do repositório
+ * tem); o openPulse confere que a página tem um canvas só. Troque por um card quando o quadro ganhar um.
+ */
 const chart = (page: Page) => page.locator('canvas');
 const repositoryNames = (page: Page) => page.getByTitle(/^MeasureSoftGram-/);
 const repositorySelect = (page: Page) => page.getByRole('combobox', { name: 'Repositório', exact: true });
@@ -50,11 +50,13 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
     );
   });
 
+  // sem tolerância: o redesenho deixa os picos sempre inteiros (ver redrawChart), e o Playwright só compara depois de
+  // duas capturas seguidas iguais, com a animação do ECharts terminada
   test('desenho do pulso com os marcadores e os pontos de R1 e R2 (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openPulse(page);
-    // o pulso é animado ao desenhar: algumas dezenas de pixels mudam entre execuções
-    await expect(chart(page)).toHaveScreenshot('pulso-produto.png', { maxDiffPixels: 200 });
+    await redrawChart(page, chart(page));
+    await expect(chart(page)).toHaveScreenshot('pulso-produto.png');
   });
 
   // regra do PO (27/09 e 08/10): as faixas e as cores do indicador ficam documentadas e na legenda
@@ -68,10 +70,7 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
       ['A · Ótimo (0,80 a 1,00)', 'rgb(4, 114, 77)']
     ];
     await Promise.all(
-      bands.map(async ([label, color]) => {
-        const marker = page.getByText(label, { exact: true }).locator('..').locator('div');
-        await expect(marker).toHaveCSS('background-color', color);
-      })
+      bands.map(([label, color]) => expect(bandSwatch(page, label)).toHaveCSS('background-color', color))
     );
   });
 
@@ -87,11 +86,7 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
 
   test('"Exportar .csv" baixa as medições de cada repositório, com o grau de cada uma', async ({ page }) => {
     await openPulse(page);
-    const [download] = await Promise.all([page.waitForEvent('download'), exportButton(page).click()]);
-    expect(download.suggestedFilename()).toMatch(/^msgram-produto-pulso-\d{4}-\d{2}-\d{2}\.csv$/);
-    const content = readFileSync((await download.path()) ?? '', 'utf8');
-    expect(content.startsWith('\uFEFF')).toBe(true);
-    expect(content.replace(/^\uFEFF/, '').split(/\r?\n/)).toEqual([
+    expect(await downloadCsv(page, exportButton(page), /^msgram-produto-pulso-\d{4}-\d{2}-\d{2}\.csv$/)).toEqual([
       'Repositório;Data;Valor;Grau',
       'MeasureSoftGram-Service;2026-07-01T12:00:00Z;0,62;B',
       'MeasureSoftGram-Service;2026-07-25T12:00:00Z;0,7;B',
@@ -135,29 +130,26 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
   test.describe('indicador que muda de faixa uma vez só', () => {
     test.use({ scenario: umaTrocaDeFaixa });
 
-    test.fixme(
-      'o gráfico aparece quando o indicador de um repositório muda de faixa uma única vez (bug: a página quebra com "Application error")',
-      async ({ page }) => {
-        await openPulse(page);
-        await expect(footer(page)).toHaveText(
-          '2 repositórios • 9 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
-        );
-      }
-    );
+    test('o gráfico aparece quando o indicador de um repositório muda de faixa uma única vez', async ({ page }) => {
+      await openPulse(page);
+      await expect(footer(page)).toHaveText(
+        '2 repositórios • 9 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
+      );
+    });
   });
 });
 
 test.describe('@US06.01-CA2 Um único valor por release, sem um ponto por commit ou PR', () => {
   test.use({ scenario: comDados });
 
-  // o CSV exporta as medições, não os pontos das releases: só o desenho mostra um ponto por release
+  // o CSV exporta as medições, não os pontos das releases: só o desenho mostra um ponto por release; a troca de
+  // repositório já redesenha o pulso, então os picos saem inteiros sem o redrawChart
   test('seis medições do Service e um ponto em cada uma das duas releases (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openPulse(page);
     await chooseRepository(page, 'MeasureSoftGram-Service');
     await expect(footer(page)).toContainText('1 repositório • 6 medições no período selecionado • 2 Releases');
-    // o pulso é animado ao desenhar: algumas dezenas de pixels mudam entre execuções
-    await expect(chart(page)).toHaveScreenshot('pulso-um-repositorio.png', { maxDiffPixels: 200 });
+    await expect(chart(page)).toHaveScreenshot('pulso-um-repositorio.png');
   });
 });
 
@@ -230,21 +222,43 @@ test.describe('@US06.01-CA6 Produto sem releases: empty state orientativo', () =
 test.describe('@US06.01-CA7 Produto passa a ter releases: o empty state dá lugar ao histórico', () => {
   test.use({ scenario: semReleases });
 
-  test('com as releases cadastradas, ao voltar à tela o pulso aparece no lugar do empty state', async ({
+  async function expectPulseInsteadOfEmptyState(page: Page) {
+    await expect(footer(page)).toHaveText(
+      '2 repositórios • 10 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
+    );
+    await expect(chart(page)).toHaveCount(1);
+    await expect(page.getByRole('heading', { level: 6, name: NO_RELEASES })).toHaveCount(0);
+  }
+
+  test('com as releases cadastradas, ao recarregar a tela o pulso aparece no lugar do empty state', async ({
     page,
     api
   }) => {
     await page.goto(PRODUTO_PATH);
     await expect(page.getByRole('heading', { level: 6, name: NO_RELEASES })).toBeVisible();
 
-    // o SWR guarda a resposta por 60 s: só a recarga refaz o pedido
     api.set(PRODUTO_API.releaseHistory, releaseHistoryComDados);
     await page.reload();
+    await expectPulseInsteadOfEmptyState(page);
+  });
 
-    await expect(footer(page)).toHaveText(
-      '2 repositórios • 10 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
-    );
-    await expect(chart(page)).toHaveCount(1);
-    await expect(page.getByRole('heading', { level: 6, name: NO_RELEASES })).toHaveCount(0);
+  test('com as releases cadastradas, ao ir às Releases e voltar pelo menu o pulso aparece no lugar do empty state', async ({
+    page,
+    api
+  }) => {
+    // o SWR do _app não refaz um pedido feito há menos de 60 s (dedupingInterval), e nada limpa o cache do histórico
+    // quando uma release é criada: o relógio falso deixa passar esse minuto sem o teste esperar por ele
+    await page.clock.install();
+    await page.goto(PRODUTO_PATH);
+    await expect(page.getByRole('heading', { level: 6, name: NO_RELEASES })).toBeVisible();
+
+    api.set(RELEASES_API, releases);
+    await page.getByRole('button', { name: 'Ir para Releases' }).click();
+    await expect(page.getByRole('navigation').getByRole('heading', { level: 6, name: 'Releases' })).toBeVisible();
+
+    api.set(PRODUTO_API.releaseHistory, releaseHistoryComDados);
+    await page.clock.fastForward('01:01');
+    await page.getByText('Visão Geral', { exact: true }).click();
+    await expectPulseInsteadOfEmptyState(page);
   });
 });

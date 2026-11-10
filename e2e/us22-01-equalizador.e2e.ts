@@ -5,11 +5,6 @@ import { comDados, duasCaracteristicas, RELEASE_PATH, semAnalise, semPlanejament
 const CHARACTERISTICS = ['Confiabilidade', 'Manutenibilidade', 'Adequação Funcional', 'Segurança'];
 const KEYS = ['reliability', 'maintainability', 'functional_suitability', 'security'];
 
-// sem idioma salvo o app abre em inglês; os critérios estão em português
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
-});
-
 const equalizer = (page: Page) => page.getByTestId('planned-vs-accomplished-equalizer');
 const tracks = (page: Page) => page.getByTestId(/^equalizer-track-/);
 const vectors = (page: Page) => page.getByRole('table', { name: 'Exibir valores' });

@@ -1,11 +1,10 @@
 import { Page } from '@playwright/test';
 
-/** Resposta com status, corpo, cabeçalhos e atraso; um handler que devolve outra coisa responde 200 com ela em JSON. */
+/** Resposta com status, corpo e cabeçalhos; um handler que devolve outra coisa responde 200 com ela em JSON. */
 export interface Reply {
   status: number;
   json?: unknown;
   headers?: Record<string, string>;
-  delayMs?: number;
 }
 
 /** O JSON da resposta, um Reply ou uma função da URL pedida (undefined conta como rota sem handler). */
@@ -19,6 +18,11 @@ export interface MockApi {
   unhandled: string[];
   /** Troca ou acrescenta a resposta de uma rota no meio do teste. */
   set(path: string, handler: Handler): void;
+  /**
+   * Segura as respostas das rotas até o teste chamar a função devolvida: o estado de carregamento fica na tela o tempo
+   * que o teste precisar, sem depender da velocidade da máquina.
+   */
+  hold(...paths: string[]): () => void;
 }
 
 export const serverError: Reply = { status: 500, json: { detail: 'Erro interno do servidor.' } };
@@ -28,7 +32,7 @@ function isReply(value: unknown): value is Reply {
     typeof value === 'object' &&
     value !== null &&
     typeof (value as Reply).status === 'number' &&
-    Object.keys(value).every((key) => ['status', 'json', 'headers', 'delayMs'].includes(key))
+    Object.keys(value).every((key) => ['status', 'json', 'headers'].includes(key))
   );
 }
 
@@ -44,6 +48,7 @@ function normalize(path: string): string {
  */
 export async function mockApi(page: Page, handlers: ApiHandlers): Promise<MockApi> {
   const routes = new Map(Object.entries(handlers).map(([path, handler]) => [normalize(path), handler]));
+  const held = new Map<string, Promise<void>>();
   const unhandled: string[] = [];
 
   await page.route('**/api/v1/**', async (route) => {
@@ -58,9 +63,20 @@ export async function mockApi(page: Page, handlers: ApiHandlers): Promise<MockAp
     }
 
     const reply: Reply = isReply(result) ? result : { status: 200, json: result };
-    if (reply.delayMs) await new Promise((resolve) => setTimeout(resolve, reply.delayMs));
+    await held.get(path);
     return route.fulfill({ status: reply.status, json: reply.json ?? null, headers: reply.headers });
   });
 
-  return { unhandled, set: (path, handler) => routes.set(normalize(path), handler) };
+  return {
+    unhandled,
+    set: (path, handler) => routes.set(normalize(path), handler),
+    hold: (...paths) => {
+      let release = () => {};
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      paths.forEach((path) => held.set(normalize(path), gate));
+      return release;
+    }
+  };
 }

@@ -32,3 +32,8 @@ export const common: ApiHandlers = {
   [`${PRODUCT_API}/repositories-tsqmi-historical-values/`]: EMPTY_PAGE,
   [`${PRODUCT_API}/repositories-tsqmi-release-history/`]: { releases: [], repositories: [] }
 };
+
+/** Organização sem produto: o menu lateral fica sem os itens do produto. */
+export const semProduto: ApiHandlers = {
+  [`/v1/organizations/${ORGANIZATION_ID}/products/`]: EMPTY_PAGE
+};

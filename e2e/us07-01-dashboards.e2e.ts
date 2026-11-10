@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs';
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
+import { bandSwatch, card, choose, downloadCsv, redrawChart, select } from './support/helpers';
 import { PRODUCT_PATH, releases } from './fixtures/common';
 import * as overview from './fixtures/overview';
 import * as temporal from './fixtures/temporal';
@@ -28,41 +28,12 @@ const BANDS = [
   { label: 'E · Muito ruim (0,00 a 0,19)', color: 'rgb(190, 46, 14)' }
 ];
 
-// sem idioma salvo o app abre em inglês; os critérios estão em português
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
-});
-
-/** O cartão de um gráfico (section com aria-label); exato, porque "Característica" está em "Subcaracterísticas". */
-const card = (page: Page, title: string) => page.getByRole('region', { name: title, exact: true });
-
-/** Os seletores da tela: o nome acessível do combobox do MUI começa pelo rótulo. */
-const select = (page: Page, label: string) => page.getByRole('combobox', { name: new RegExp(`^${label}`) });
-
-async function choose(page: Page, label: string, option: string) {
-  await select(page, label).click();
-  await page.getByRole('option', { name: option, exact: true }).click();
-}
-
 /** As opções de um seletor, com a lista fechada depois. */
 async function expectOptions(page: Page, label: string, options: string[]) {
   await select(page, label).click();
   await expect(page.getByRole('option')).toHaveText(options);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('listbox')).toHaveCount(0);
-}
-
-/** Baixa o CSV do botão e devolve as linhas, sem a marca de ordem de bytes do começo. */
-async function downloadCsv(page: Page, button: Locator, fileName: RegExp): Promise<string[]> {
-  const [download] = await Promise.all([page.waitForEvent('download'), button.click()]);
-  expect(download.suggestedFilename()).toMatch(fileName);
-  const content = readFileSync((await download.path()) ?? '', 'utf8');
-  // o Excel em português precisa da marca de ordem de bytes para os acentos e do ";" entre as colunas
-  expect(content.startsWith('\uFEFF')).toBe(true);
-  return content
-    .replace(/^\uFEFF/, '')
-    .trim()
-    .split(/\r?\n/);
 }
 
 const exportButton = (page: Page, title: string) =>
@@ -91,12 +62,14 @@ async function expectError(scope: Locator, title: string) {
 const vectors = (page: Page) => card(page, PLANNED).getByRole('table', { name: 'Exibir valores' });
 const rowCells = (page: Page, testId: string) => vectors(page).getByTestId(testId).getByRole('cell');
 const totals = (page: Page) => card(page, TOTALS).getByTestId('overview-total');
+/** Um dos seis totais, pelo rótulo dele ("Repositórios", "Arquivos analisados"…). */
+const total = (page: Page, label: string) => totals(page).filter({ has: page.getByText(label, { exact: true }) });
 
 /** Abre a Visão Geral e espera os três cards com dados. */
 async function openOverview(page: Page) {
   await page.goto(overview.OVERVIEW_PATH);
   await expect(page.getByRole('heading', { level: 1, name: OVERVIEW_TITLE })).toBeVisible();
-  await expect(totals(page).first()).toHaveText('2Características');
+  await expect(total(page, 'Características')).toHaveText('2Características');
   await expect(exportButton(page, INDICATOR)).toBeEnabled();
   await expect(card(page, PLANNED).getByTestId('planned-vs-accomplished-equalizer')).toBeVisible();
 }
@@ -124,12 +97,8 @@ async function openTemporal(page: Page) {
 
 // ---------------------------------------------------------------- Repositório
 
-/**
- * A faixa lateral de uma característica no pulso: o nome fica num texto com title, dentro da linha do nome, dentro da
- * faixa (PulseChartRepoSidebar), que tem a altura da faixa do gráfico.
- */
-const pulseRow = (page: Page, name: string) =>
-  card(page, PULSE).getByTitle(name, { exact: true }).locator('xpath=../..');
+/** O último valor de cada característica no pulso, um título por faixa, na ordem das faixas. */
+const pulseValues = (page: Page) => card(page, PULSE).getByRole('heading', { level: 6 });
 
 /** Abre a tela do repositório e espera o nome no cabeçalho e o pulso com dados. */
 async function openRepository(page: Page) {
@@ -225,8 +194,8 @@ test.describe('@US07.01-CA1 Visão Geral da release: totais, indicador por repos
     await page.getByRole('option', { name: 'R1', exact: true }).click();
 
     await expect(select(page, 'Release')).toHaveText('R1');
-    await expect(totals(page).nth(4)).toHaveText('1Repositórios');
-    await expect(totals(page).nth(5)).toHaveText('312Arquivos analisados');
+    await expect(total(page, 'Repositórios')).toHaveText('1Repositórios');
+    await expect(total(page, 'Arquivos analisados')).toHaveText('312Arquivos analisados');
     await expect(rowCells(page, 'vector-rd')).toHaveText(['0.50', '0.45']);
     expect(await indicatorCsv(page)).toEqual([
       'Release;Repositório;Indicador;Grau',
@@ -324,10 +293,8 @@ test.describe('@US07.01-CA2 Evolução Temporal: 4 gráficos, filtros em cascata
       'MeasureSoftGram-Service;Reliability;2026-10-10;0,58'
     ]);
 
-    await expect(async () => {
-      await months.click();
-      await expect(months).toHaveAttribute('aria-pressed', 'true', { timeout: 1000 });
-    }).toPass();
+    await months.click();
+    await expect(months).toHaveAttribute('aria-pressed', 'true');
     await expect(days).toHaveAttribute('aria-pressed', 'false');
     expect(await temporalCsv(page, 'Característica')).toEqual([
       'Repositório;Entidade;Data;Valor',
@@ -342,20 +309,17 @@ test.describe('@US07.01-CA2 Evolução Temporal: 4 gráficos, filtros em cascata
 test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica, como o pulso do produto', () => {
   test.use({ scenario: repositorio.comDados });
 
-  test('uma faixa por característica medida, todas da mesma altura, com o último valor e a faixa', async ({ page }) => {
+  // a altura das faixas é desenhada no canvas: fica no snapshot do pulso, abaixo
+  test('uma faixa por característica medida, com o último valor e a faixa', async ({ page }) => {
     await openRepository(page);
-    const reliability = pulseRow(page, 'Reliability');
-    const maintainability = pulseRow(page, 'Maintainability');
-    await expect(reliability).toContainText('0.580');
-    await expect(reliability).toContainText('último valor · Bom');
-    await expect(maintainability).toContainText('0.300');
-    await expect(maintainability).toContainText('último valor · Ruim');
+    const pulse = card(page, PULSE);
     // Functional Suitability não tem medição e fica sem faixa
-    await expect(card(page, PULSE).getByTitle('Functional Suitability')).toHaveCount(0);
-
-    const [first, second] = await Promise.all([reliability.boundingBox(), maintainability.boundingBox()]);
-    expect(first?.height).toBeGreaterThan(0);
-    expect(second?.height).toBe(first?.height);
+    await expect(pulse.getByTitle(/^(Reliability|Maintainability|Functional Suitability)$/)).toHaveText([
+      'Reliability',
+      'Maintainability'
+    ]);
+    await expect(pulseValues(page)).toHaveText(['0.580', '0.300']);
+    await expect(pulse.getByText(/^último valor · /)).toHaveText(['último valor · Bom', 'último valor · Ruim']);
   });
 
   test('a legenda das faixas e o "Exportar .csv" com as medições de cada característica', async ({ page }) => {
@@ -403,27 +367,24 @@ test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica,
   test.describe('característica que troca de faixa uma vez só', () => {
     test.use({ scenario: repositorio.umaTrocaDeFaixa });
 
-    test.fixme(
-      'o pulso é desenhado e o período pode ser trocado (bug: com uma única troca de faixa, o ECharts lança "Cannot read properties of undefined (reading \'coord\')" e o pulso fica sem linha; se a troca aparece ao mudar o período ou no "Tentar novamente", a tela vira "Application error")',
-      async ({ page }) => {
-        const errors: string[] = [];
-        page.on('pageerror', (error) => errors.push(error.message));
-        await openRepository(page);
-        await page.getByLabel('De', { exact: true }).fill('2026-09-01');
-        await expect(pulseRow(page, 'Reliability')).toContainText('0.660');
-        await expect(exportButton(page, PULSE)).toBeEnabled();
-        expect(errors).toEqual([]);
-      }
-    );
+    test('o pulso é desenhado e o período pode ser trocado', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      await openRepository(page);
+      await page.getByLabel('De', { exact: true }).fill('2026-09-01');
+      await expect(pulseValues(page)).toHaveText(['0.660']);
+      await expect(exportButton(page, PULSE)).toBeEnabled();
+      expect(errors).toEqual([]);
+    });
   });
 
   // os marcadores das releases e as cores do pulso só aparecem no desenho do canvas; a baseline é gerada no CI
+  // sem tolerância, como no pulso do produto (US06.01): o redesenho deixa os picos sempre inteiros (ver redrawChart)
   test('desenho do pulso: marcadores das releases e cores das faixas (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openRepository(page);
-    await expect(card(page, PULSE).locator('canvas')).toBeVisible();
-    // o pulso é animado ao desenhar: algumas dezenas de pixels mudam entre execuções
-    await expect(card(page, PULSE)).toHaveScreenshot('repositorio-pulso.png', { maxDiffPixels: 200 });
+    await redrawChart(page, card(page, PULSE).locator('canvas'));
+    await expect(card(page, PULSE)).toHaveScreenshot('repositorio-pulso.png');
   });
 
   // o nome da release ao passar o mouse no marcador é tooltip de canvas, sem posição estável no DOM
@@ -433,9 +394,10 @@ test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica,
 test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente", sem detalhes técnicos', () => {
   test.describe('Visão Geral', () => {
     test.describe('carregando', () => {
-      test.use({ scenario: overview.carregando });
+      test.use({ scenario: overview.comDados });
 
-      test('cada card mostra o selo "Carregando" e depois os dados', async ({ page }) => {
+      test('cada card mostra o selo "Carregando" e depois os dados', async ({ api, page }) => {
+        const release = api.hold(...overview.carregando);
         await page.goto(overview.OVERVIEW_PATH);
         await Promise.all(
           [TOTALS, INDICATOR, PLANNED].map(async (title) => {
@@ -443,7 +405,8 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
             await expect(card(page, title)).toContainText('Carregando os dados da release…');
           })
         );
-        await expect(totals(page).first()).toHaveText('2Características');
+        release();
+        await expect(total(page, 'Características')).toHaveText('2Características');
         await expect(exportButton(page, INDICATOR)).toBeEnabled();
         await expect(page.getByText('Carregando', { exact: true })).toHaveCount(0);
       });
@@ -497,7 +460,7 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
           'A contagem de repositórios e de arquivos analisados não depende dele e segue valendo.'
         );
         await expect(card(page, TOTALS).getByLabel('Não se aplica')).toHaveCount(4);
-        await expect(totals(page).nth(4)).toHaveText('2Repositórios');
+        await expect(total(page, 'Repositórios')).toHaveText('2Repositórios');
       });
     });
 
@@ -531,7 +494,7 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
         api.set(overview.OVERVIEW_API.releases, releases);
         await page.getByRole('button', { name: 'Tentar novamente' }).click();
         await expect(select(page, 'Release')).toHaveText('R2 (atual)');
-        await expect(totals(page).first()).toHaveText('2Características');
+        await expect(total(page, 'Características')).toHaveText('2Características');
       });
     });
 
@@ -552,9 +515,10 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
 
   test.describe('Evolução Temporal', () => {
     test.describe('carregando', () => {
-      test.use({ scenario: temporal.carregando });
+      test.use({ scenario: temporal.comDados });
 
-      test('cada gráfico mostra o selo "Carregando" e depois os dados', async ({ page }) => {
+      test('cada gráfico mostra o selo "Carregando" e depois os dados', async ({ api, page }) => {
+        const release = api.hold(...temporal.carregando);
         await page.goto(temporal.TEMPORAL_PATH);
         await Promise.all(
           TEMPORAL_CHARTS.map(async (title) => {
@@ -562,6 +526,7 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
             await expect(card(page, title)).toContainText('Carregando a evolução das');
           })
         );
+        release();
         await Promise.all(TEMPORAL_CHARTS.map((title) => expect(exportButton(page, title)).toBeEnabled()));
         await expect(page.getByText('Carregando', { exact: true })).toHaveCount(0);
       });
@@ -644,27 +609,27 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
     test.describe('erro na lista de repositórios', () => {
       test.use({ scenario: temporal.erroRepositorios });
 
-      test.fixme(
-        'mostra o erro com "Tentar novamente" (bug: a tela diz "Este produto ainda não tem repositórios")',
-        async ({ page }) => {
-          await page.goto(temporal.TEMPORAL_PATH);
-          await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
-          await expect(page.getByRole('alert')).toBeVisible();
-          await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
-          await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
-        }
-      );
+      test('mostra o erro com "Tentar novamente"', async ({ page }) => {
+        await page.goto(temporal.TEMPORAL_PATH);
+        await expect(page.getByRole('heading', { level: 1, name: TEMPORAL_TITLE })).toBeVisible();
+        // no card: o anunciador de rota do Next também tem role=alert e, com o título da página, entra na busca
+        await expect(card(page, 'Evolução Temporal').getByRole('alert')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
+        await expect(page.getByText('Este produto ainda não tem repositórios')).toHaveCount(0);
+      });
     });
   });
 
   test.describe('Repositório', () => {
     test.describe('carregando', () => {
-      test.use({ scenario: repositorio.carregando });
+      test.use({ scenario: repositorio.comDados });
 
-      test('o pulso mostra o selo "Carregando" e depois as medições', async ({ page }) => {
+      test('o pulso mostra o selo "Carregando" e depois as medições', async ({ api, page }) => {
+        const release = api.hold(repositorio.REPOSITORY_API.characteristics);
         await page.goto(repositorio.REPOSITORY_PATH);
         await expect(card(page, PULSE).getByText('Carregando', { exact: true })).toBeVisible();
         await expect(card(page, PULSE)).toContainText('Carregando as medições das características…');
+        release();
         await expect(exportButton(page, PULSE)).toBeEnabled();
         await expect(card(page, PULSE).getByText('Carregando', { exact: true })).toHaveCount(0);
       });
@@ -698,7 +663,7 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
         );
         await card(page, PULSE).getByRole('button', { name: 'Tentar novamente' }).click();
         await expect(exportButton(page, PULSE)).toBeEnabled();
-        await expect(pulseRow(page, 'Reliability')).toContainText('0.580');
+        await expect(pulseValues(page)).toHaveText(['0.580', '0.300']);
       });
     });
 
@@ -719,7 +684,7 @@ const todasAsTelas = { ...overview.comDados, ...temporal.comDados, ...repositori
 
 // CA5 é Fora do Front: quem pode ver é decidido pelo Service. O Front não tem papel de administrador (useRequireAuth só
 // exige sessão), e a sessão fake do E2E é de um membro comum da organização, sem nenhuma marca de administrador.
-test.describe('@US07.01-CA5 Qualquer membro da organização vê os dashboards', () => {
+test.describe('@US07.01-CA5 A sessão de um membro da organização abre os dashboards', () => {
   test.use({ scenario: todasAsTelas });
 
   test('a sessão de um membro abre as três telas com os dados', async ({ page }) => {
@@ -761,14 +726,8 @@ test.describe('@US07.01-CA7 Cores dos gráficos do guia de IDV', () => {
     test('a legenda das faixas da Visão Geral usa as cores do guia', async ({ page }) => {
       await openOverview(page);
       const legend = card(page, INDICATOR).getByTestId('quality-bands-legend');
-      // o quadrado da cor fica logo antes do rótulo da faixa
       await Promise.all(
-        BANDS.map(({ label, color }) =>
-          expect(legend.getByText(label, { exact: true }).locator('xpath=preceding-sibling::div[1]')).toHaveCSS(
-            'background-color',
-            color
-          )
-        )
+        BANDS.map(({ label, color }) => expect(bandSwatch(legend, label)).toHaveCSS('background-color', color))
       );
     });
 
@@ -776,14 +735,12 @@ test.describe('@US07.01-CA7 Cores dos gráficos do guia de IDV', () => {
       await openRepository(page);
       await Promise.all(
         BANDS.map(({ label, color }) =>
-          expect(
-            card(page, PULSE).getByText(label, { exact: true }).locator('xpath=preceding-sibling::div[1]')
-          ).toHaveCSS('background-color', color)
+          expect(bandSwatch(card(page, PULSE), label)).toHaveCSS('background-color', color)
         )
       );
       // Reliability termina em 0,58 (C) e Maintainability em 0,30 (D)
-      await expect(pulseRow(page, 'Reliability').getByText('0.580')).toHaveCSS('color', BANDS[2].color);
-      await expect(pulseRow(page, 'Maintainability').getByText('0.300')).toHaveCSS('color', BANDS[3].color);
+      await expect(pulseValues(page).filter({ hasText: '0.580' })).toHaveCSS('color', BANDS[2].color);
+      await expect(pulseValues(page).filter({ hasText: '0.300' })).toHaveCSS('color', BANDS[3].color);
     });
   });
 

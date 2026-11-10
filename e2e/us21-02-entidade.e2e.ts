@@ -1,6 +1,7 @@
-import { Locator, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { PRODUCT_PATH } from './fixtures/common';
+import { card, choose, chooseLevelTab, levelTab, select } from './support/helpers';
+import { PRODUCT_PATH, semProduto } from './fixtures/common';
 import {
   comDados,
   ENTITY_API,
@@ -9,7 +10,6 @@ import {
   erroComposicao,
   matrixOf,
   semAnalise,
-  semProduto,
   semRelease
 } from './fixtures/entidade';
 
@@ -18,18 +18,9 @@ const HEATMAP = 'Mapa de calor: repositório × medida';
 const CONTRIBUTION = 'O que puxa a qualidade total para baixo';
 const RANKING = 'Ranking dos piores pares';
 
-// sem idioma salvo o app abre em inglês; os critérios estão em português
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
-});
-
-/** O cartão de um quadro (section com aria-label). */
-const card = (page: Page, title: string): Locator => page.getByRole('region', { name: title });
 const heatmap = (page: Page) => page.getByRole('table', { name: 'Mapa de calor' });
 const ranking = (page: Page) => page.getByRole('table', { name: RANKING });
-const releaseSelect = (page: Page) => page.getByRole('combobox', { name: /^Release/ });
-const levelTab = (page: Page, label: string) =>
-  page.getByRole('tablist', { name: 'Nível do modelo' }).getByRole('tab', { name: label, exact: true });
+const releaseSelect = (page: Page) => select(page, 'Release');
 /** A célula do mapa é um botão com o repositório, a entidade e o valor no nome acessível. */
 const cell = (page: Page, name: string) => heatmap(page).getByRole('button', { name });
 
@@ -40,19 +31,7 @@ async function openEntity(page: Page) {
   await expect(page.getByTestId('entity-heatmap')).toHaveAttribute('data-render-ms', /^\d+$/);
 }
 
-/** Clique na aba logo depois da carga às vezes não pega: clica de novo até a aba ficar selecionada. */
-async function chooseLevel(page: Page, label: string) {
-  const tab = levelTab(page, label);
-  await expect(async () => {
-    await tab.click();
-    await expect(tab).toHaveAttribute('aria-selected', 'true', { timeout: 1000 });
-  }).toPass();
-}
-
-async function chooseRelease(page: Page, option: string) {
-  await releaseSelect(page).click();
-  await page.getByRole('option', { name: option, exact: true }).click();
-}
+const chooseRelease = (page: Page, option: string) => choose(page, 'Release', option);
 
 test.describe('@US21.02-CA1 Item "4. Análise por Entidade" no submenu Dashboards', () => {
   test.use({ scenario: comDados });
@@ -105,7 +84,7 @@ test.describe('@US21.02-CA2 Release (padrão a atual), nível e caminho na hiera
 
   test('a troca de nível muda o caminho e as colunas do mapa', async ({ page }) => {
     await openEntity(page);
-    await chooseLevel(page, 'Característica');
+    await chooseLevelTab(page, 'Característica');
     await expect(page.getByTestId('entity-level-path')).toHaveText('TSQMI › características');
     await expect(card(page, 'Mapa de calor: repositório × característica')).toBeVisible();
     await expect(heatmap(page).locator('th[scope="col"]')).toHaveText([
@@ -115,7 +94,7 @@ test.describe('@US21.02-CA2 Release (padrão a atual), nível e caminho na hiera
       'TSQMI · Δ'
     ]);
 
-    await chooseLevel(page, 'Subcaracterística');
+    await chooseLevelTab(page, 'Subcaracterística');
     await expect(page.getByTestId('entity-level-path')).toHaveText(
       'TSQMI › todas as características › subcaracterísticas'
     );
@@ -301,7 +280,7 @@ test.describe('@US21.02-CA7 Ao clicar numa célula, os filhos da entidade com o 
 
   test('no nível característica, a célula abre as subcaracterísticas do repositório', async ({ page }) => {
     await openEntity(page);
-    await chooseLevel(page, 'Característica');
+    await chooseLevelTab(page, 'Característica');
     await cell(page, 'MeasureSoftGram-Action · Reliability: 0,42 (C, Bom)').click();
 
     const dialog = page.getByRole('dialog');
@@ -393,14 +372,25 @@ test.describe('@US21.02-CA9 Estados vazios e erro com "Tentar novamente"', () =>
   test.describe('erro 500 na composição da célula', () => {
     test.use({ scenario: erroComposicao });
 
-    test('o diálogo mostra a falha com "Tentar novamente", sem detalhes técnicos', async ({ page }) => {
+    test('o diálogo mostra a falha com "Tentar novamente", sem detalhes técnicos, que carrega a composição', async ({
+      api,
+      page
+    }) => {
       await openEntity(page);
-      await chooseLevel(page, 'Característica');
+      await chooseLevelTab(page, 'Característica');
       await cell(page, 'MeasureSoftGram-Action · Reliability').click();
       const dialog = page.getByRole('dialog');
       await expect(dialog).toContainText('Não foi possível carregar a composição.');
-      await expect(dialog.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
       await expect(dialog).not.toContainText(/500|Erro interno|Request failed/);
+
+      api.set(ENTITY_API.analysis, comDados[ENTITY_API.analysis]);
+      await dialog.getByRole('button', { name: 'Tentar novamente' }).click();
+      await expect(dialog.getByRole('table', { name: 'Filhos de Reliability' }).getByRole('row')).toHaveText([
+        'SubcaracterísticaPesoValor',
+        'Testing Status50%0,45 (C, Bom)',
+        'Maturity50%0,35 (D, Ruim)'
+      ]);
+      await expect(dialog).not.toContainText('Não foi possível carregar a composição.');
     });
   });
 });

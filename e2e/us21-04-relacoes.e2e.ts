@@ -1,8 +1,9 @@
 import { readFileSync } from 'fs';
 import JSZip from 'jszip';
-import { Download, Locator, Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { PRODUCT_PATH } from './fixtures/common';
+import { card, chooseLevel, csvLines, downloadCsv, levelButton, select } from './support/helpers';
+import { PRODUCT_PATH, semProduto } from './fixtures/common';
 import {
   comDados,
   CORRELATION_API,
@@ -11,7 +12,6 @@ import {
   erro500,
   poucasReleases,
   semAnalise,
-  semProduto,
   semRelease
 } from './fixtures/relacoes';
 
@@ -34,11 +34,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('locale_lang', 'pt'));
 });
 
-/** O cartão de um quadro (section com aria-label). */
-const card = (page: Page, title: string): Locator => page.getByRole('region', { name: title });
-const repositorySelect = (page: Page) => page.getByRole('combobox', { name: /^Repositório/ });
-const levelButton = (page: Page, label: string) =>
-  page.getByRole('group', { name: 'Nível do modelo' }).getByRole('button', { name: label, exact: true });
+const repositorySelect = (page: Page) => select(page, 'Repositório');
 
 /** Abre a página e espera as matrizes: a linha das releases só aparece com a correlação pronta. */
 async function openCorrelation(page: Page) {
@@ -46,15 +42,6 @@ async function openCorrelation(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
   await expect(page.getByTestId('correlation-info')).toBeVisible();
   await expect(page.getByTestId('correlation-grid')).not.toHaveAttribute('aria-busy', 'true');
-}
-
-/** O clique no nível às vezes não pega logo depois da carga: clica de novo até o botão ficar marcado. */
-async function chooseLevel(page: Page, label: string) {
-  const button = levelButton(page, label);
-  await expect(async () => {
-    await button.click();
-    await expect(button).toHaveAttribute('aria-pressed', 'true', { timeout: 1000 });
-  }).toPass();
 }
 
 /** Troca para o repositório Front e o nível subcaracterística, e espera as matrizes da nova escolha. */
@@ -73,25 +60,9 @@ async function expectChartDrawn(chart: Locator, description: string) {
   await expect(chart.getByLabel(description, { exact: true })).toBeAttached();
 }
 
-/** Linhas de um CSV exportado, sem a marca de ordem de bytes. */
-function csvLines(content: string): string[] {
-  return content
-    .replace(/^\uFEFF/, '')
-    .trim()
-    .split(/\r?\n/);
-}
-
-async function downloadedText(download: Download): Promise<string> {
-  return readFileSync((await download.path()) ?? '', 'utf8');
-}
-
-async function exportCard(page: Page, title: string): Promise<Download> {
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    card(page, title).getByRole('button', { name: 'Exportar .csv' }).click()
-  ]);
-  return download;
-}
+/** Baixa o CSV de um quadro e devolve as linhas. */
+const exportCard = (page: Page, title: string, fileName: RegExp) =>
+  downloadCsv(page, card(page, title).getByRole('button', { name: 'Exportar .csv' }), fileName);
 
 test.describe('@US21.04-CA1 Item "6. Relações e Correlações" no submenu Dashboards e a frase da página', () => {
   test.use({ scenario: comDados });
@@ -276,13 +247,8 @@ test.describe('@US21.04-CA7 "Exportar .csv" por matriz e .zip no topo, seguindo 
     page
   }) => {
     await openCorrelation(page);
-    const download = await exportCard(page, MATRIX);
-    expect(download.suggestedFilename()).toMatch(/^msgram-relacoes-matriz-correlacao-\d{4}-\d{2}-\d{2}\.csv$/);
-    const content = await downloadedText(download);
-    // o arquivo baixado começa com a marca de ordem de bytes, senão o Excel troca os acentos de "Característica"
-    expect(content.startsWith('\uFEFF')).toBe(true);
     // os valores são os da RD_Corr do Service, sem o arredondamento da tela
-    expect(csvLines(content)).toEqual([
+    expect(await exportCard(page, MATRIX, /^msgram-relacoes-matriz-correlacao-\d{4}-\d{2}-\d{2}\.csv$/)).toEqual([
       CSV_HEADER,
       'MeasureSoftGram-Service;Característica;Maintainability;Reliability;0,5589743589743589;0,010403772956762005;sim;Spearman;20',
       'MeasureSoftGram-Service;Característica;Functional Suitability;Reliability;-0,18232322463624387;0,44168225692108976;não;Spearman;20',
@@ -302,9 +268,7 @@ test.describe('@US21.04-CA7 "Exportar .csv" por matriz e .zip no topo, seguindo 
       'MeasureSoftGram-Front;Subcaracterística;Functional Completeness;Testing Status;;;não;Spearman;20',
       'MeasureSoftGram-Front;Subcaracterística;Functional Completeness;Modifiability;;;não;Spearman;20'
     ];
-    const bubbles = await exportCard(page, BUBBLES);
-    expect(bubbles.suggestedFilename()).toMatch(/^msgram-relacoes-matriz-bolhas-\d{4}-\d{2}-\d{2}\.csv$/);
-    expect(csvLines(await downloadedText(bubbles))).toEqual(subRows);
+    expect(await exportCard(page, BUBBLES, /^msgram-relacoes-matriz-bolhas-\d{4}-\d{2}-\d{2}\.csv$/)).toEqual(subRows);
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),
@@ -359,7 +323,7 @@ test.describe('@US21.04-CA9 Poucas releases, entidade sem variação, estados va
         card(page, SUB_MATRIX),
         `Matriz de correlação de Spearman entre 3 subcaracterísticas de MeasureSoftGram-Front em 20 releases. ${SUB_PAIRS}`
       );
-      const lines = csvLines(await downloadedText(await exportCard(page, SUB_MATRIX)));
+      const lines = await exportCard(page, SUB_MATRIX, /^msgram-relacoes-.+\.csv$/);
       expect(lines).toContain(
         'MeasureSoftGram-Front;Subcaracterística;Functional Completeness;Testing Status;;;não;Spearman;20'
       );
