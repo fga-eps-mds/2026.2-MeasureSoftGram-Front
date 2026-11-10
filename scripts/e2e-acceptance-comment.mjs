@@ -37,7 +37,9 @@ function collect(suite, titles = [], out = []) {
       // test.fixme marca bug conhecido do código; chega como skipped, igual ao pulado manual, e só a anotação separa os dois
       const fixme = (test.annotations ?? []).find((annotation) => annotation.type === 'fixme');
       const status = test.status === 'skipped' && fixme ? 'fixme' : test.status;
-      out.push({ us: tag[1], ca: Number(tag[2]), title: spec.title, status, note: fixme?.description });
+      // o motivo vira um item de lista no comentário: uma quebra de linha nele partiria o item
+      const note = fixme?.description?.replace(/\s+/g, ' ');
+      out.push({ us: tag[1], ca: Number(tag[2]), title: spec.title, status, note });
     }
   }
   for (const child of suite.suites ?? []) collect(child, path, out);
