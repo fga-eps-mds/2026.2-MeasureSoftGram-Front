@@ -296,6 +296,21 @@ describe('<TemporalDashboard />', () => {
     expect(mutate).toHaveBeenCalled();
   });
 
+  // o SWR revalida a lista ao voltar para a aba e guarda a anterior quando essa conferência falha, então o `error`
+  // aparece com a lista ainda na mão: trocar os gráficos pelo card de erro aí tiraria da tela dados que já estavam
+  // certos, e o CA4 pede o erro no lugar do estado vazio, não no de uma lista carregada (revisão do @thegm445)
+  it('mantém os gráficos quando a revalidação da lista falha mas a lista anterior continua no cache', () => {
+    responses = (request) =>
+      request.url.endsWith('/repositories/')
+        ? { data: { results: repositories }, error: new Error('falhou') }
+        : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+
+    expect(screen.getByRole('region', { name: 'Característica' })).toBeTruthy();
+    expect(screen.queryByText('Não foi possível carregar os repositórios do produto')).toBeNull();
+  });
+
   describe('exportação de CSV', () => {
     it('exporta o gráfico da característica com um ponto por dia, sem arredondar', () => {
       render(<TemporalDashboard />);
