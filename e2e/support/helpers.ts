@@ -59,3 +59,25 @@ export async function downloadCsv(page: Page, button: Locator, fileName: RegExp)
  */
 export const bandSwatch = (scope: Page | Locator, label: string): Locator =>
   scope.getByText(label, { exact: true }).locator('xpath=preceding-sibling::div[1]');
+
+/**
+ * Redesenha o gráfico estreitando a janela e voltando, e espera o canvas voltar à largura de antes.
+ * shortcut: contorna o pulso do ECharts 5.6, cuja animação de entrada termina com o recorte na borda da faixa e corta os
+ * picos que passam dela (o clip: false só vale a partir do segundo desenho). Sem o redesenho, o snapshot sai com ou sem
+ * os picos, conforme a página redesenhe ou não logo depois de abrir. Tire quando o pulso desenhar certo da primeira vez.
+ */
+export async function redrawChart(page: Page, canvas: Locator) {
+  const viewport = page.viewportSize();
+  const width = await canvas.getAttribute('width');
+  if (!viewport || !width) throw new Error('o gráfico ainda não tem largura');
+  // o echarts-for-react ignora o primeiro aviso de tamanho depois de montar (isInitialResize): se o estreitamento cair
+  // nele, o gráfico não redesenha, e a janela estreita mais um pouco; definir o tamanho de novo não desfaz nada
+  let narrower = viewport.width;
+  await expect(async () => {
+    narrower -= 50;
+    await page.setViewportSize({ ...viewport, width: narrower });
+    await expect(canvas).not.toHaveAttribute('width', width, { timeout: 1000 });
+  }).toPass();
+  await page.setViewportSize(viewport);
+  await expect(canvas).toHaveAttribute('width', width);
+}

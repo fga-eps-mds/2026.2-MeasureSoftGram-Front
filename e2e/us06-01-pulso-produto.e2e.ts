@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { bandSwatch, downloadCsv } from './support/helpers';
+import { bandSwatch, downloadCsv, redrawChart } from './support/helpers';
 import { RELEASES_API, releases } from './fixtures/common';
 import {
   comDados,
@@ -50,10 +50,12 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
     );
   });
 
-  // sem tolerância: o pulso não tem animação de entrada e desenha os picos inteiros já no primeiro desenho
+  // sem tolerância: o redesenho deixa os picos sempre inteiros (ver redrawChart), e o Playwright só compara depois de
+  // duas capturas seguidas iguais, com a animação do ECharts terminada
   test('desenho do pulso com os marcadores e os pontos de R1 e R2 (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openPulse(page);
+    await redrawChart(page, chart(page));
     await expect(chart(page)).toHaveScreenshot('pulso-produto.png');
   });
 
@@ -128,22 +130,20 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
   test.describe('indicador que muda de faixa uma vez só', () => {
     test.use({ scenario: umaTrocaDeFaixa });
 
-    test.fixme(
-      'o gráfico aparece quando o indicador de um repositório muda de faixa uma única vez (bug: a página quebra com "Application error")',
-      async ({ page }) => {
-        await openPulse(page);
-        await expect(footer(page)).toHaveText(
-          '2 repositórios • 9 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
-        );
-      }
-    );
+    test('o gráfico aparece quando o indicador de um repositório muda de faixa uma única vez', async ({ page }) => {
+      await openPulse(page);
+      await expect(footer(page)).toHaveText(
+        '2 repositórios • 9 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
+      );
+    });
   });
 });
 
 test.describe('@US06.01-CA2 Um único valor por release, sem um ponto por commit ou PR', () => {
   test.use({ scenario: comDados });
 
-  // o CSV exporta as medições, não os pontos das releases: só o desenho mostra um ponto por release
+  // o CSV exporta as medições, não os pontos das releases: só o desenho mostra um ponto por release; a troca de
+  // repositório já redesenha o pulso, então os picos saem inteiros sem o redrawChart
   test('seis medições do Service e um ponto em cada uma das duas releases (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openPulse(page);
