@@ -85,7 +85,7 @@ const TemporalDashboard: NextPageWithLayout = () => {
   const { query } = useRouter();
   const [organizationId, productId] = getPathId(query?.product as string);
   const evolution = useTemporalEvolution(organizationId, productId);
-  const { repositories, isLoadingRepositories, granularity, measures } = evolution;
+  const { repositories, isLoadingRepositories, hasRepositoriesError, granularity, measures } = evolution;
 
   // os CSVs levam o que os gráficos mostram: o gráfico carregando, com erro ou sem dados não exporta nada
   const repositoryName = repositories.find((repository) => repository.id === evolution.repositoryId)?.name ?? '';
@@ -126,6 +126,18 @@ const TemporalDashboard: NextPageWithLayout = () => {
   };
 
   const renderContent = () => {
+    // a falha ao buscar a lista precisa vir antes do estado vazio: sem ela, a lista chega vazia e a tela acusava
+    // produto sem repositório, escondendo o erro e o "Tentar novamente" que o CA4 exige
+    if (hasRepositoriesError) {
+      return (
+        <DashboardCard
+          title="Evolução Temporal"
+          status="error"
+          errorTitle={`Não foi possível carregar os ${terms.repositories} do produto`}
+          onRetry={evolution.retryRepositories}
+        />
+      );
+    }
     if (!isLoadingRepositories && repositories.length === 0) {
       return (
         <DashboardCard
