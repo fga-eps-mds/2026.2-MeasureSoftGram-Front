@@ -1,0 +1,86 @@
+[
+  {
+    "gitlab_project_id": 201,
+    "gitlab_path_with_namespace": "fga-eps-mds/front",
+    "name": "front",
+    "description": "Interface web do produto.",
+    "url": "https://gitlab.com/fga-eps-mds/front"
+  },
+  {
+    "gitlab_project_id": 202,
+    "gitlab_path_with_namespace": "fga-eps-mds/service",
+    "name": "service",
+    "description": "API REST do produto.",
+    "url": "https://gitlab.com/fga-eps-mds/service"
+  },
+  {
+    "gitlab_project_id": 203,
+    "gitlab_path_with_namespace": "fga-eps-mds/core",
+    "name": "core",
+    "description": "Cálculo do modelo de qualidade.",
+    "url": "https://gitlab.com/fga-eps-mds/core"
+  },
+  {
+    "gitlab_project_id": 204,
+    "gitlab_path_with_namespace": "fga-eps-mds/parser",
+    "name": "parser",
+    "description": "Leitura das métricas do SonarQube.",
+    "url": "https://gitlab.com/fga-eps-mds/parser"
+  },
+  {
+    "gitlab_project_id": 205,
+    "gitlab_path_with_namespace": "fga-eps-mds/cli",
+    "name": "cli",
+    "description": "Linha de comando do produto.",
+    "url": "https://gitlab.com/fga-eps-mds/cli"
+  },
+  {
+    "gitlab_project_id": 206,
+    "gitlab_path_with_namespace": "fga-eps-mds/action",
+    "name": "action",
+    "description": "Ação de CI que envia as métricas.",
+    "url": "https://gitlab.com/fga-eps-mds/action"
+  },
+  {
+    "gitlab_project_id": 207,
+    "gitlab_path_with_namespace": "fga-eps-mds/docs",
+    "name": "docs",
+    "description": "Documentação do produto.",
+    "url": "https://gitlab.com/fga-eps-mds/docs"
+  },
+  {
+    "gitlab_project_id": 208,
+    "gitlab_path_with_namespace": "fga-eps-mds/landing-page",
+    "name": "landing-page",
+    "description": "Página de apresentação.",
+    "url": "https://gitlab.com/fga-eps-mds/landing-page"
+  },
+  {
+    "gitlab_project_id": 209,
+    "gitlab_path_with_namespace": "fga-eps-mds/design-system",
+    "name": "design-system",
+    "description": "Componentes de interface.",
+    "url": "https://gitlab.com/fga-eps-mds/design-system"
+  },
+  {
+    "gitlab_project_id": 210,
+    "gitlab_path_with_namespace": "fga-eps-mds/infra",
+    "name": "infra",
+    "description": "Infraestrutura de implantação.",
+    "url": "https://gitlab.com/fga-eps-mds/infra"
+  },
+  {
+    "gitlab_project_id": 211,
+    "gitlab_path_with_namespace": "fga-eps-mds/metrics-bot",
+    "name": "metrics-bot",
+    "description": "Robô de coleta de métricas.",
+    "url": "https://gitlab.com/fga-eps-mds/metrics-bot"
+  },
+  {
+    "gitlab_project_id": 212,
+    "gitlab_path_with_namespace": "fga-eps-mds/sandbox",
+    "name": "sandbox",
+    "description": "Projeto de testes.",
+    "url": "https://gitlab.com/fga-eps-mds/sandbox"
+  }
+]
