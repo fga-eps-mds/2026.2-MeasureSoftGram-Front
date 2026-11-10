@@ -8,7 +8,9 @@ import {
   formatCorrelationCsv,
   formatCorrelationInfo,
   formatCorrelationMatrixOptions,
+  formatCorrelationReleasesCsv,
   formatPairTooltip,
+  formatReleaseStatus,
   formatSignificanceNote,
   getCorrelationCells,
   getCorrelationChartSize
@@ -98,8 +100,8 @@ describe('formatCorrelationCharts', () => {
   it('escapa os nomes no tooltip', () => {
     const data = correlation({
       entities: [
-        { key: 'reliability', name: '<b>R</b>' },
-        { key: 'maintainability', name: 'M' }
+        { key: 'reliability', name: '<b>R</b>', normal: false },
+        { key: 'maintainability', name: 'M', normal: false }
       ],
       pairs: [correlation().pairs[0]]
     });
@@ -110,7 +112,19 @@ describe('formatCorrelationCharts', () => {
   describe('formatCorrelationInfo', () => {
     it('informa as releases, as entidades e o coeficiente aplicado', () => {
       expect(formatCorrelationInfo(correlation())).toBe(
-        '20 releases de MeasureSoftGram-Service · 3 características · coeficiente aplicado: Spearman (distribuição não normal em 3 de 3 características)'
+        '20 releases de MeasureSoftGram-Service · 3 características · coeficiente aplicado: Spearman (distribuição não normal em 3 de 3 características: Reliability, Maintainability e Functional Suitability)'
+      );
+    });
+
+    it('diz quais entidades não têm distribuição normal', () => {
+      const [reliability, maintainability, functionalSuitability] = correlation().entities;
+      const data = correlation({
+        non_normal: 1,
+        entities: [{ ...reliability, normal: true }, maintainability, { ...functionalSuitability, normal: true }]
+      });
+
+      expect(formatCorrelationInfo(data)).toContain(
+        'coeficiente aplicado: Spearman (distribuição não normal em 1 de 3 características: Maintainability)'
       );
     });
 
@@ -166,6 +180,38 @@ describe('formatCorrelationCharts', () => {
       expect(toCsv(formatCorrelationCsv(data, 'matriz-bolhas')).split('\r\n')[1]).toBe(
         'MeasureSoftGram-Service;Característica;Maintainability;Reliability;;;não;Spearman;20'
       );
+    });
+  });
+
+  describe('releases da análise', () => {
+    const [used, excluded] = correlation().release_values;
+    const data = correlation({
+      release_values: [
+        used,
+        {
+          ...excluded,
+          values: { reliability: 0.7, maintainability: null, functional_suitability: null },
+          used: false
+        }
+      ]
+    });
+
+    it('diz a situação de cada release na análise', () => {
+      expect(formatReleaseStatus(data.release_values[0], data)).toBe('Usada');
+      expect(formatReleaseStatus(data.release_values[1], data)).toBe(
+        'Fora: sem valor de Maintainability e Functional Suitability'
+      );
+    });
+
+    it('exporta a RD com uma release por linha, os valores sem arredondar e a situação', () => {
+      const chart = formatCorrelationReleasesCsv(data);
+
+      expect(chart.name).toBe('dados-rd');
+      expect(toCsv(chart).split('\r\n')).toEqual([
+        'Release;Início;Fim;Reliability;Maintainability;Functional Suitability;Situação',
+        'R1;05/01/2026;11/01/2026;0,63;0,63;0,45;Usada',
+        'R2;05/01/2026;11/01/2026;0,7;;;Fora: sem valor de Maintainability e Functional Suitability'
+      ]);
     });
   });
 
