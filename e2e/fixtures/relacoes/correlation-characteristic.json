@@ -1,0 +1,171 @@
+{
+  "repository": {
+    "id": 10,
+    "name": "MeasureSoftGram-Service"
+  },
+  "level": "characteristic",
+  "entities": [
+    {
+      "key": "reliability",
+      "name": "Reliability"
+    },
+    {
+      "key": "maintainability",
+      "name": "Maintainability"
+    },
+    {
+      "key": "functional_suitability",
+      "name": "Functional Suitability"
+    }
+  ],
+  "releases": [
+    {
+      "id": 3,
+      "release_name": "R3",
+      "start_at": "2026-02-02T00:00:00-03:00",
+      "end_at": "2026-02-15T00:00:00-03:00"
+    },
+    {
+      "id": 4,
+      "release_name": "R4",
+      "start_at": "2026-02-16T00:00:00-03:00",
+      "end_at": "2026-03-01T00:00:00-03:00"
+    },
+    {
+      "id": 5,
+      "release_name": "R5",
+      "start_at": "2026-03-02T00:00:00-03:00",
+      "end_at": "2026-03-15T00:00:00-03:00"
+    },
+    {
+      "id": 6,
+      "release_name": "R6",
+      "start_at": "2026-03-16T00:00:00-03:00",
+      "end_at": "2026-03-29T00:00:00-03:00"
+    },
+    {
+      "id": 7,
+      "release_name": "R7",
+      "start_at": "2026-03-30T00:00:00-03:00",
+      "end_at": "2026-04-12T00:00:00-03:00"
+    },
+    {
+      "id": 8,
+      "release_name": "R8",
+      "start_at": "2026-04-13T00:00:00-03:00",
+      "end_at": "2026-04-26T00:00:00-03:00"
+    },
+    {
+      "id": 9,
+      "release_name": "R9",
+      "start_at": "2026-04-27T00:00:00-03:00",
+      "end_at": "2026-05-10T00:00:00-03:00"
+    },
+    {
+      "id": 10,
+      "release_name": "R10",
+      "start_at": "2026-05-11T00:00:00-03:00",
+      "end_at": "2026-05-24T00:00:00-03:00"
+    },
+    {
+      "id": 11,
+      "release_name": "R11",
+      "start_at": "2026-05-25T00:00:00-03:00",
+      "end_at": "2026-06-07T00:00:00-03:00"
+    },
+    {
+      "id": 12,
+      "release_name": "R12",
+      "start_at": "2026-06-08T00:00:00-03:00",
+      "end_at": "2026-06-21T00:00:00-03:00"
+    },
+    {
+      "id": 13,
+      "release_name": "R13",
+      "start_at": "2026-06-22T00:00:00-03:00",
+      "end_at": "2026-07-05T00:00:00-03:00"
+    },
+    {
+      "id": 14,
+      "release_name": "R14",
+      "start_at": "2026-07-06T00:00:00-03:00",
+      "end_at": "2026-07-19T00:00:00-03:00"
+    },
+    {
+      "id": 15,
+      "release_name": "R15",
+      "start_at": "2026-07-20T00:00:00-03:00",
+      "end_at": "2026-08-02T00:00:00-03:00"
+    },
+    {
+      "id": 16,
+      "release_name": "R16",
+      "start_at": "2026-08-03T00:00:00-03:00",
+      "end_at": "2026-08-16T00:00:00-03:00"
+    },
+    {
+      "id": 17,
+      "release_name": "R17",
+      "start_at": "2026-08-17T00:00:00-03:00",
+      "end_at": "2026-08-30T00:00:00-03:00"
+    },
+    {
+      "id": 18,
+      "release_name": "R18",
+      "start_at": "2026-08-31T00:00:00-03:00",
+      "end_at": "2026-09-13T00:00:00-03:00"
+    },
+    {
+      "id": 19,
+      "release_name": "R19",
+      "start_at": "2026-09-14T00:00:00-03:00",
+      "end_at": "2026-09-27T00:00:00-03:00"
+    },
+    {
+      "id": 20,
+      "release_name": "R20",
+      "start_at": "2026-09-28T00:00:00-03:00",
+      "end_at": "2026-10-11T00:00:00-03:00"
+    },
+    {
+      "id": 21,
+      "release_name": "R21",
+      "start_at": "2026-10-12T00:00:00-03:00",
+      "end_at": "2026-10-25T00:00:00-03:00"
+    },
+    {
+      "id": 22,
+      "release_name": "R22",
+      "start_at": "2026-10-26T00:00:00-03:00",
+      "end_at": "2026-11-08T00:00:00-03:00"
+    }
+  ],
+  "excluded_releases": 2,
+  "method": "spearman",
+  "non_normal": 3,
+  "critical_value": 0.4438,
+  "pairs": [
+    {
+      "row": "maintainability",
+      "column": "reliability",
+      "coefficient": 0.559,
+      "p_value": 0.0104,
+      "significant": true
+    },
+    {
+      "row": "functional_suitability",
+      "column": "reliability",
+      "coefficient": -0.32,
+      "p_value": 0.17,
+      "significant": false
+    },
+    {
+      "row": "functional_suitability",
+      "column": "maintainability",
+      "coefficient": 0.9282,
+      "p_value": 3.7e-9,
+      "significant": true
+    }
+  ],
+  "reason": null
+}
