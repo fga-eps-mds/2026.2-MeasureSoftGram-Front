@@ -135,15 +135,12 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
   test.describe('indicador que muda de faixa uma vez só', () => {
     test.use({ scenario: umaTrocaDeFaixa });
 
-    test.fixme(
-      'o gráfico aparece quando o indicador de um repositório muda de faixa uma única vez (bug: a página quebra com "Application error")',
-      async ({ page }) => {
-        await openPulse(page);
-        await expect(footer(page)).toHaveText(
-          '2 repositórios • 9 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
-        );
-      }
-    );
+    test('o gráfico aparece quando o indicador de um repositório muda de faixa uma única vez', async ({ page }) => {
+      await openPulse(page);
+      await expect(footer(page)).toHaveText(
+        '2 repositórios • 9 medições no período selecionado • 2 Releases no período • última medição: 10/10/2026'
+      );
+    });
   });
 });
 
