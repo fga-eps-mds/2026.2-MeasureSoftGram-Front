@@ -27,9 +27,11 @@ function correlationOf(url: URL, body: object = {}) {
 export const correlationHandler = (url: URL) => correlationOf(url);
 
 /**
- * Dois repositórios com id numérico (o mock comum tem id "1" em texto, e a página compara com ===). Na característica,
- * C1, C3 e C6 do Exemplo 7 (20 releases, Spearman), com um par não significativo e 2 releases sem valor; na
- * subcaracterística, uma entidade que não variou (pares sem correlação).
+ * Dois repositórios com id numérico (o mock comum tem id "1" em texto, e a página compara com ===). A RD de cada nível
+ * está em `release_values` (20 releases usadas e 2 sem valor), e os pares, os p-valores e a normalidade são os que o
+ * f_σ do Core (Shapiro-Wilk e Spearman do scipy) calcula sobre ela. Na característica, C1, C3 e C6 do Exemplo 7, com
+ * Functional Suitability em 0,65 (no lugar de 0,45) em R3, R4 e R19 a R22, para ter um par não significativo e negativo;
+ * na subcaracterística, uma entidade que não variou (pares sem correlação) e Modifiability com distribuição normal.
  */
 export const comDados: ApiHandlers = {
   [CORRELATION_API.repositories]: repositories,

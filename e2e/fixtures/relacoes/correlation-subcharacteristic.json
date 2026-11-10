@@ -169,7 +169,7 @@
       "values": {
         "testing_status": 0.6,
         "modifiability": null,
-        "functional_completeness": 0.6
+        "functional_completeness": 0.8
       },
       "used": false
     },
@@ -182,7 +182,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.57,
+        "modifiability": 0.59,
         "functional_completeness": 0.8
       },
       "used": true
@@ -196,7 +196,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.57,
+        "modifiability": 0.76,
         "functional_completeness": 0.8
       },
       "used": true
@@ -210,7 +210,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.75,
+        "modifiability": 0.62,
         "functional_completeness": 0.8
       },
       "used": true
@@ -224,7 +224,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.75,
+        "modifiability": 0.67,
         "functional_completeness": 0.8
       },
       "used": true
@@ -238,7 +238,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.75,
+        "modifiability": 0.56,
         "functional_completeness": 0.8
       },
       "used": true
@@ -252,7 +252,7 @@
       },
       "values": {
         "testing_status": 0.85,
-        "modifiability": 0.57,
+        "modifiability": 0.44,
         "functional_completeness": 0.8
       },
       "used": true
@@ -266,7 +266,7 @@
       },
       "values": {
         "testing_status": 0.85,
-        "modifiability": 0.57,
+        "modifiability": 0.51,
         "functional_completeness": 0.8
       },
       "used": true
@@ -280,7 +280,7 @@
       },
       "values": {
         "testing_status": 0.85,
-        "modifiability": 0.57,
+        "modifiability": 0.48,
         "functional_completeness": 0.8
       },
       "used": true
@@ -294,7 +294,7 @@
       },
       "values": {
         "testing_status": 0.65,
-        "modifiability": 0.55,
+        "modifiability": 0.64,
         "functional_completeness": 0.8
       },
       "used": true
@@ -308,7 +308,7 @@
       },
       "values": {
         "testing_status": 0.65,
-        "modifiability": 0.55,
+        "modifiability": 0.66,
         "functional_completeness": 0.8
       },
       "used": true
@@ -322,7 +322,7 @@
       },
       "values": {
         "testing_status": 0.69,
-        "modifiability": 0.51,
+        "modifiability": 0.61,
         "functional_completeness": 0.8
       },
       "used": true
@@ -336,7 +336,7 @@
       },
       "values": {
         "testing_status": 0.69,
-        "modifiability": 0.51,
+        "modifiability": 0.57,
         "functional_completeness": 0.8
       },
       "used": true
@@ -350,7 +350,7 @@
       },
       "values": {
         "testing_status": 0.69,
-        "modifiability": 0.51,
+        "modifiability": 0.54,
         "functional_completeness": 0.8
       },
       "used": true
@@ -364,7 +364,7 @@
       },
       "values": {
         "testing_status": 0.69,
-        "modifiability": 0.51,
+        "modifiability": 0.53,
         "functional_completeness": 0.8
       },
       "used": true
@@ -378,7 +378,7 @@
       },
       "values": {
         "testing_status": 0.69,
-        "modifiability": 0.51,
+        "modifiability": 0.58,
         "functional_completeness": 0.8
       },
       "used": true
@@ -392,7 +392,7 @@
       },
       "values": {
         "testing_status": 0.69,
-        "modifiability": 0.51,
+        "modifiability": 0.72,
         "functional_completeness": 0.8
       },
       "used": true
@@ -406,7 +406,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.57,
+        "modifiability": 0.65,
         "functional_completeness": 0.8
       },
       "used": true
@@ -420,7 +420,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.57,
+        "modifiability": 0.55,
         "functional_completeness": 0.8
       },
       "used": true
@@ -434,7 +434,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.57,
+        "modifiability": 0.63,
         "functional_completeness": 0.8
       },
       "used": true
@@ -448,7 +448,7 @@
       },
       "values": {
         "testing_status": 0.63,
-        "modifiability": 0.57,
+        "modifiability": 0.69,
         "functional_completeness": 0.8
       },
       "used": true
@@ -461,8 +461,8 @@
     {
       "row": "modifiability",
       "column": "testing_status",
-      "coefficient": -0.6143,
-      "p_value": 0.0039,
+      "coefficient": -0.5996293009040392,
+      "p_value": 0.005197857100976576,
       "significant": true
     },
     {

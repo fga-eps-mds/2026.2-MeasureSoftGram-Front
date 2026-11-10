@@ -183,7 +183,7 @@
       "values": {
         "reliability": 0.63,
         "maintainability": 0.63,
-        "functional_suitability": 0.45
+        "functional_suitability": 0.65
       },
       "used": true
     },
@@ -197,7 +197,7 @@
       "values": {
         "reliability": 0.63,
         "maintainability": 0.63,
-        "functional_suitability": 0.45
+        "functional_suitability": 0.65
       },
       "used": true
     },
@@ -407,7 +407,7 @@
       "values": {
         "reliability": 0.63,
         "maintainability": 0.63,
-        "functional_suitability": 0.45
+        "functional_suitability": 0.65
       },
       "used": true
     },
@@ -421,7 +421,7 @@
       "values": {
         "reliability": 0.63,
         "maintainability": 0.63,
-        "functional_suitability": 0.45
+        "functional_suitability": 0.65
       },
       "used": true
     },
@@ -435,7 +435,7 @@
       "values": {
         "reliability": 0.63,
         "maintainability": 0.63,
-        "functional_suitability": 0.45
+        "functional_suitability": 0.65
       },
       "used": true
     },
@@ -449,7 +449,7 @@
       "values": {
         "reliability": 0.63,
         "maintainability": 0.63,
-        "functional_suitability": 0.45
+        "functional_suitability": 0.65
       },
       "used": true
     }
@@ -461,22 +461,22 @@
     {
       "row": "maintainability",
       "column": "reliability",
-      "coefficient": 0.559,
-      "p_value": 0.0104,
+      "coefficient": 0.5589743589743589,
+      "p_value": 0.010403772956762005,
       "significant": true
     },
     {
       "row": "functional_suitability",
       "column": "reliability",
-      "coefficient": -0.32,
-      "p_value": 0.17,
+      "coefficient": -0.18232322463624387,
+      "p_value": 0.44168225692108976,
       "significant": false
     },
     {
       "row": "functional_suitability",
       "column": "maintainability",
-      "coefficient": 0.9282,
-      "p_value": 3.7e-9,
+      "coefficient": 0.591169243517518,
+      "p_value": 0.006049590958040661,
       "significant": true
     }
   ],

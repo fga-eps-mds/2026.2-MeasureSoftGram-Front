@@ -21,12 +21,12 @@ const SUB_MATRIX = 'Matriz de correlação das subcaracterísticas';
 const BUBBLES = 'Matriz de bolhas das correlações';
 const CSV_HEADER = 'Repositório;Nível;Linha;Coluna;Coeficiente;p-valor;Significativo;Coeficiente aplicado;Releases';
 
-/** Os pares do Exemplo 7 (C1, C3 e C6), como a descrição acessível das matrizes os mostra, com duas casas. */
+/** Os pares que o f_σ do Core calcula sobre a RD da fixture, como a descrição acessível das matrizes os mostra. */
 const PAIRS =
-  'Maintainability × Reliability: 0,56; Functional Suitability × Reliability: -0,32, não significativo; ' +
-  'Functional Suitability × Maintainability: 0,93.';
+  'Maintainability × Reliability: 0,56; Functional Suitability × Reliability: -0,18, não significativo; ' +
+  'Functional Suitability × Maintainability: 0,59.';
 const SUB_PAIRS =
-  'Modifiability × Testing Status: -0,61; Functional Completeness × Testing Status: sem correlação; ' +
+  'Modifiability × Testing Status: -0,60; Functional Completeness × Testing Status: sem correlação; ' +
   'Functional Completeness × Modifiability: sem correlação.';
 
 // sem idioma salvo o app abre em inglês; os critérios estão em português
@@ -194,7 +194,7 @@ test.describe('@US21.04-CA3 Releases usadas, entidades, coeficiente, colunas nã
       '—',
       'Fora: sem valor de Functional Suitability'
     ]);
-    await expect(row(3)).toHaveText(['R3', '2 fev a 15 fev', '0,63', '0,63', '0,45', 'Usada']);
+    await expect(row(3)).toHaveText(['R3', '2 fev a 15 fev', '0,63', '0,63', '0,65', 'Usada']);
     await expect(table.getByRole('cell', { name: 'Usada', exact: true })).toHaveCount(20);
   });
 });
@@ -281,12 +281,12 @@ test.describe('@US21.04-CA7 "Exportar .csv" por matriz e .zip no topo, seguindo 
     const content = await downloadedText(download);
     // o arquivo baixado começa com a marca de ordem de bytes, senão o Excel troca os acentos de "Característica"
     expect(content.startsWith('\uFEFF')).toBe(true);
-    // os valores são os da RD_Corr do Service (Exemplo 7), sem o arredondamento da tela (CA8)
+    // os valores são os da RD_Corr do Service, sem o arredondamento da tela
     expect(csvLines(content)).toEqual([
       CSV_HEADER,
-      'MeasureSoftGram-Service;Característica;Maintainability;Reliability;0,559;0,0104;sim;Spearman;20',
-      'MeasureSoftGram-Service;Característica;Functional Suitability;Reliability;-0,32;0,17;não;Spearman;20',
-      'MeasureSoftGram-Service;Característica;Functional Suitability;Maintainability;0,9282;3,7e-9;sim;Spearman;20'
+      'MeasureSoftGram-Service;Característica;Maintainability;Reliability;0,5589743589743589;0,010403772956762005;sim;Spearman;20',
+      'MeasureSoftGram-Service;Característica;Functional Suitability;Reliability;-0,18232322463624387;0,44168225692108976;não;Spearman;20',
+      'MeasureSoftGram-Service;Característica;Functional Suitability;Maintainability;0,591169243517518;0,006049590958040661;sim;Spearman;20'
     ]);
   });
 
@@ -298,7 +298,7 @@ test.describe('@US21.04-CA7 "Exportar .csv" por matriz e .zip no topo, seguindo 
 
     const subRows = [
       CSV_HEADER,
-      'MeasureSoftGram-Front;Subcaracterística;Modifiability;Testing Status;-0,6143;0,0039;sim;Spearman;20',
+      'MeasureSoftGram-Front;Subcaracterística;Modifiability;Testing Status;-0,5996293009040392;0,005197857100976576;sim;Spearman;20',
       'MeasureSoftGram-Front;Subcaracterística;Functional Completeness;Testing Status;;;não;Spearman;20',
       'MeasureSoftGram-Front;Subcaracterística;Functional Completeness;Modifiability;;;não;Spearman;20'
     ];
@@ -324,8 +324,8 @@ test.describe('@US21.04-CA7 "Exportar .csv" por matriz e .zip no topo, seguindo 
     expect(rdLines.slice(0, 4)).toEqual([
       'Release;Início;Fim;Testing Status;Modifiability;Functional Completeness;Situação',
       'R1;05/01/2026;18/01/2026;;;;Fora: sem valor de Testing Status, Modifiability e Functional Completeness',
-      'R2;19/01/2026;01/02/2026;0,6;;0,6;Fora: sem valor de Modifiability',
-      'R3;02/02/2026;15/02/2026;0,63;0,57;0,8;Usada'
+      'R2;19/01/2026;01/02/2026;0,6;;0,8;Fora: sem valor de Modifiability',
+      'R3;02/02/2026;15/02/2026;0,63;0,59;0,8;Usada'
     ]);
   });
 });
