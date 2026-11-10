@@ -1,0 +1,484 @@
+{
+  "repository": {
+    "id": 10,
+    "name": "MeasureSoftGram-Service"
+  },
+  "level": "subcharacteristic",
+  "entities": [
+    {
+      "key": "testing_status",
+      "name": "Testing Status",
+      "normal": false
+    },
+    {
+      "key": "modifiability",
+      "name": "Modifiability",
+      "normal": true
+    },
+    {
+      "key": "functional_completeness",
+      "name": "Functional Completeness",
+      "normal": false
+    }
+  ],
+  "releases": [
+    {
+      "id": 3,
+      "release_name": "R3",
+      "start_at": "2026-02-02T00:00:00-03:00",
+      "end_at": "2026-02-15T00:00:00-03:00"
+    },
+    {
+      "id": 4,
+      "release_name": "R4",
+      "start_at": "2026-02-16T00:00:00-03:00",
+      "end_at": "2026-03-01T00:00:00-03:00"
+    },
+    {
+      "id": 5,
+      "release_name": "R5",
+      "start_at": "2026-03-02T00:00:00-03:00",
+      "end_at": "2026-03-15T00:00:00-03:00"
+    },
+    {
+      "id": 6,
+      "release_name": "R6",
+      "start_at": "2026-03-16T00:00:00-03:00",
+      "end_at": "2026-03-29T00:00:00-03:00"
+    },
+    {
+      "id": 7,
+      "release_name": "R7",
+      "start_at": "2026-03-30T00:00:00-03:00",
+      "end_at": "2026-04-12T00:00:00-03:00"
+    },
+    {
+      "id": 8,
+      "release_name": "R8",
+      "start_at": "2026-04-13T00:00:00-03:00",
+      "end_at": "2026-04-26T00:00:00-03:00"
+    },
+    {
+      "id": 9,
+      "release_name": "R9",
+      "start_at": "2026-04-27T00:00:00-03:00",
+      "end_at": "2026-05-10T00:00:00-03:00"
+    },
+    {
+      "id": 10,
+      "release_name": "R10",
+      "start_at": "2026-05-11T00:00:00-03:00",
+      "end_at": "2026-05-24T00:00:00-03:00"
+    },
+    {
+      "id": 11,
+      "release_name": "R11",
+      "start_at": "2026-05-25T00:00:00-03:00",
+      "end_at": "2026-06-07T00:00:00-03:00"
+    },
+    {
+      "id": 12,
+      "release_name": "R12",
+      "start_at": "2026-06-08T00:00:00-03:00",
+      "end_at": "2026-06-21T00:00:00-03:00"
+    },
+    {
+      "id": 13,
+      "release_name": "R13",
+      "start_at": "2026-06-22T00:00:00-03:00",
+      "end_at": "2026-07-05T00:00:00-03:00"
+    },
+    {
+      "id": 14,
+      "release_name": "R14",
+      "start_at": "2026-07-06T00:00:00-03:00",
+      "end_at": "2026-07-19T00:00:00-03:00"
+    },
+    {
+      "id": 15,
+      "release_name": "R15",
+      "start_at": "2026-07-20T00:00:00-03:00",
+      "end_at": "2026-08-02T00:00:00-03:00"
+    },
+    {
+      "id": 16,
+      "release_name": "R16",
+      "start_at": "2026-08-03T00:00:00-03:00",
+      "end_at": "2026-08-16T00:00:00-03:00"
+    },
+    {
+      "id": 17,
+      "release_name": "R17",
+      "start_at": "2026-08-17T00:00:00-03:00",
+      "end_at": "2026-08-30T00:00:00-03:00"
+    },
+    {
+      "id": 18,
+      "release_name": "R18",
+      "start_at": "2026-08-31T00:00:00-03:00",
+      "end_at": "2026-09-13T00:00:00-03:00"
+    },
+    {
+      "id": 19,
+      "release_name": "R19",
+      "start_at": "2026-09-14T00:00:00-03:00",
+      "end_at": "2026-09-27T00:00:00-03:00"
+    },
+    {
+      "id": 20,
+      "release_name": "R20",
+      "start_at": "2026-09-28T00:00:00-03:00",
+      "end_at": "2026-10-11T00:00:00-03:00"
+    },
+    {
+      "id": 21,
+      "release_name": "R21",
+      "start_at": "2026-10-12T00:00:00-03:00",
+      "end_at": "2026-10-25T00:00:00-03:00"
+    },
+    {
+      "id": 22,
+      "release_name": "R22",
+      "start_at": "2026-10-26T00:00:00-03:00",
+      "end_at": "2026-11-08T00:00:00-03:00"
+    }
+  ],
+  "excluded_releases": 2,
+  "release_values": [
+    {
+      "release": {
+        "id": 1,
+        "release_name": "R1",
+        "start_at": "2026-01-05T00:00:00-03:00",
+        "end_at": "2026-01-18T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": null,
+        "modifiability": null,
+        "functional_completeness": null
+      },
+      "used": false
+    },
+    {
+      "release": {
+        "id": 2,
+        "release_name": "R2",
+        "start_at": "2026-01-19T00:00:00-03:00",
+        "end_at": "2026-02-01T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.6,
+        "modifiability": null,
+        "functional_completeness": 0.8
+      },
+      "used": false
+    },
+    {
+      "release": {
+        "id": 3,
+        "release_name": "R3",
+        "start_at": "2026-02-02T00:00:00-03:00",
+        "end_at": "2026-02-15T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.59,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 4,
+        "release_name": "R4",
+        "start_at": "2026-02-16T00:00:00-03:00",
+        "end_at": "2026-03-01T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.76,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 5,
+        "release_name": "R5",
+        "start_at": "2026-03-02T00:00:00-03:00",
+        "end_at": "2026-03-15T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.62,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 6,
+        "release_name": "R6",
+        "start_at": "2026-03-16T00:00:00-03:00",
+        "end_at": "2026-03-29T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.67,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 7,
+        "release_name": "R7",
+        "start_at": "2026-03-30T00:00:00-03:00",
+        "end_at": "2026-04-12T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.56,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 8,
+        "release_name": "R8",
+        "start_at": "2026-04-13T00:00:00-03:00",
+        "end_at": "2026-04-26T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.85,
+        "modifiability": 0.44,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 9,
+        "release_name": "R9",
+        "start_at": "2026-04-27T00:00:00-03:00",
+        "end_at": "2026-05-10T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.85,
+        "modifiability": 0.51,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 10,
+        "release_name": "R10",
+        "start_at": "2026-05-11T00:00:00-03:00",
+        "end_at": "2026-05-24T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.85,
+        "modifiability": 0.48,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 11,
+        "release_name": "R11",
+        "start_at": "2026-05-25T00:00:00-03:00",
+        "end_at": "2026-06-07T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.65,
+        "modifiability": 0.64,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 12,
+        "release_name": "R12",
+        "start_at": "2026-06-08T00:00:00-03:00",
+        "end_at": "2026-06-21T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.65,
+        "modifiability": 0.66,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 13,
+        "release_name": "R13",
+        "start_at": "2026-06-22T00:00:00-03:00",
+        "end_at": "2026-07-05T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.69,
+        "modifiability": 0.61,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 14,
+        "release_name": "R14",
+        "start_at": "2026-07-06T00:00:00-03:00",
+        "end_at": "2026-07-19T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.69,
+        "modifiability": 0.57,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 15,
+        "release_name": "R15",
+        "start_at": "2026-07-20T00:00:00-03:00",
+        "end_at": "2026-08-02T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.69,
+        "modifiability": 0.54,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 16,
+        "release_name": "R16",
+        "start_at": "2026-08-03T00:00:00-03:00",
+        "end_at": "2026-08-16T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.69,
+        "modifiability": 0.53,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 17,
+        "release_name": "R17",
+        "start_at": "2026-08-17T00:00:00-03:00",
+        "end_at": "2026-08-30T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.69,
+        "modifiability": 0.58,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 18,
+        "release_name": "R18",
+        "start_at": "2026-08-31T00:00:00-03:00",
+        "end_at": "2026-09-13T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.69,
+        "modifiability": 0.72,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 19,
+        "release_name": "R19",
+        "start_at": "2026-09-14T00:00:00-03:00",
+        "end_at": "2026-09-27T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.65,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 20,
+        "release_name": "R20",
+        "start_at": "2026-09-28T00:00:00-03:00",
+        "end_at": "2026-10-11T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.55,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 21,
+        "release_name": "R21",
+        "start_at": "2026-10-12T00:00:00-03:00",
+        "end_at": "2026-10-25T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.63,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    },
+    {
+      "release": {
+        "id": 22,
+        "release_name": "R22",
+        "start_at": "2026-10-26T00:00:00-03:00",
+        "end_at": "2026-11-08T00:00:00-03:00"
+      },
+      "values": {
+        "testing_status": 0.63,
+        "modifiability": 0.69,
+        "functional_completeness": 0.8
+      },
+      "used": true
+    }
+  ],
+  "method": "spearman",
+  "non_normal": 2,
+  "critical_value": 0.4438,
+  "pairs": [
+    {
+      "row": "modifiability",
+      "column": "testing_status",
+      "coefficient": -0.5996293009040392,
+      "p_value": 0.005197857100976576,
+      "significant": true
+    },
+    {
+      "row": "functional_completeness",
+      "column": "testing_status",
+      "coefficient": null,
+      "p_value": null,
+      "significant": false
+    },
+    {
+      "row": "functional_completeness",
+      "column": "modifiability",
+      "coefficient": null,
+      "p_value": null,
+      "significant": false
+    }
+  ],
+  "reason": null
+}

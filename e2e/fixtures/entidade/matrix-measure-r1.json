@@ -1,0 +1,192 @@
+{
+  "release": {
+    "id": 1,
+    "release_name": "R1",
+    "start_at": "2026-06-01T00:00:00-03:00",
+    "end_at": "2026-08-16T00:00:00-03:00"
+  },
+  "previous_release": null,
+  "level": "measure",
+  "columns": [
+    {
+      "key": "passed_tests",
+      "name": "Passed Tests",
+      "weight": 33,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "reliability",
+          "name": "Reliability",
+          "weight": 34
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 50
+        }
+      ]
+    },
+    {
+      "key": "test_coverage",
+      "name": "Test Coverage",
+      "weight": 34,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "reliability",
+          "name": "Reliability",
+          "weight": 34
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 50
+        }
+      ]
+    },
+    {
+      "key": "ci_feedback_time",
+      "name": "CI Feedback Time",
+      "weight": 100,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "reliability",
+          "name": "Reliability",
+          "weight": 34
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "maturity",
+          "name": "Maturity",
+          "weight": 50
+        }
+      ]
+    },
+    {
+      "key": "commented_file_density",
+      "name": "Commented File Density",
+      "weight": 25,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "maintainability",
+          "name": "Maintainability",
+          "weight": 33
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "modifiability",
+          "name": "Modifiability",
+          "weight": 100
+        }
+      ]
+    }
+  ],
+  "repositories": [
+    {
+      "id": 1,
+      "name": "MeasureSoftGram-Service",
+      "tsqmi": {
+        "value": 0.7,
+        "previous_value": null
+      },
+      "cells": [
+        {
+          "key": "passed_tests",
+          "value": 0.99,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "test_coverage",
+          "value": 0.85,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "ci_feedback_time",
+          "value": 0.8,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "commented_file_density",
+          "value": 0.48,
+          "previous_value": null,
+          "contribution": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "MeasureSoftGram-Action",
+      "tsqmi": {
+        "value": 0.5,
+        "previous_value": null
+      },
+      "cells": [
+        {
+          "key": "passed_tests",
+          "value": 0.7,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "test_coverage",
+          "value": 0.47,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "ci_feedback_time",
+          "value": 0.4,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "commented_file_density",
+          "value": 0.41,
+          "previous_value": null,
+          "contribution": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "MeasureSoftGram-Front",
+      "tsqmi": {
+        "value": 0.6,
+        "previous_value": null
+      },
+      "cells": [
+        {
+          "key": "passed_tests",
+          "value": 0.9,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "test_coverage",
+          "value": 0.68,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "ci_feedback_time",
+          "value": null,
+          "previous_value": null,
+          "contribution": null
+        },
+        {
+          "key": "commented_file_density",
+          "value": 0.24,
+          "previous_value": null,
+          "contribution": null
+        }
+      ]
+    }
+  ]
+}

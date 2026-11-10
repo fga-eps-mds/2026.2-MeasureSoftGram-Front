@@ -1,0 +1,145 @@
+[
+  {
+    "id": 1,
+    "type": "tsqmi",
+    "key": "tsqmi",
+    "name": "TSQMI",
+    "description": "Indicador Total da Qualidade do produto, agregado das características da release.",
+    "weight": null,
+    "children": [
+      {
+        "id": 2,
+        "type": "characteristic",
+        "key": "reliability",
+        "name": "Reliability",
+        "description": "Grau em que o software executa as funções especificadas sob condições definidas.",
+        "weight": 60,
+        "children": [
+          {
+            "id": 3,
+            "type": "subcharacteristic",
+            "key": "testing_status",
+            "name": "Testing Status",
+            "description": null,
+            "weight": 100,
+            "children": [
+              {
+                "id": 4,
+                "type": "measure",
+                "key": "passed_tests",
+                "name": "Passed Tests",
+                "description": null,
+                "weight": 50,
+                "min_threshold": 0,
+                "max_threshold": 1,
+                "children": [
+                  {
+                    "id": 5,
+                    "type": "metric",
+                    "key": "tests",
+                    "name": "tests",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 6,
+                "type": "measure",
+                "key": "ci_feedback_time",
+                "name": "CI Feedback Time",
+                "description": null,
+                "weight": 50,
+                "min_threshold": 0,
+                "max_threshold": 900,
+                "children": [
+                  {
+                    "id": 7,
+                    "type": "metric",
+                    "key": "sum_ci_feedback_times",
+                    "name": "sum_ci_feedback_times",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  },
+                  {
+                    "id": 8,
+                    "type": "metric",
+                    "key": "total_builds",
+                    "name": "total_builds",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "type": "characteristic",
+        "key": "maintainability",
+        "name": "Maintainability",
+        "description": null,
+        "weight": 40,
+        "children": [
+          {
+            "id": 10,
+            "type": "subcharacteristic",
+            "key": "modifiability",
+            "name": "Modifiability",
+            "description": null,
+            "weight": 100,
+            "children": [
+              {
+                "id": 11,
+                "type": "measure",
+                "key": "non_complex_file_density",
+                "name": "Non Complex File Density",
+                "description": null,
+                "weight": 70,
+                "min_threshold": 0,
+                "max_threshold": 10,
+                "children": [
+                  {
+                    "id": 12,
+                    "type": "metric",
+                    "key": "complexity",
+                    "name": "complexity",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 13,
+                "type": "measure",
+                "key": "build_stability",
+                "name": "Build Stability",
+                "description": null,
+                "weight": 30,
+                "min_threshold": 0,
+                "max_threshold": 1,
+                "children": [
+                  {
+                    "id": 14,
+                    "type": "metric",
+                    "key": "total_builds",
+                    "name": "total_builds",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
