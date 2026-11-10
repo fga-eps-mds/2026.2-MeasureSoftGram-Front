@@ -44,8 +44,8 @@ export function usePulseChartData(organizationId?: string, productId?: string) {
 
   // o gráfico depende das duas requisições, então "Tentar novamente" refaz as duas (CA4 da US07.01)
   const retry = useCallback(() => {
-    refetchTsqmiHistory();
-    refetchReleaseHistory();
+    void refetchTsqmiHistory();
+    void refetchReleaseHistory();
   }, [refetchTsqmiHistory, refetchReleaseHistory]);
 
   // Releases de cada repositório, com o indicador TSQMI consolidado em cada uma (US06.01). Só entram as releases que
