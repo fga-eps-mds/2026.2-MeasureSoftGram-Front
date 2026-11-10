@@ -56,6 +56,15 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      # no push para develop e main, o resultado por critério vai para a issue de cada US no DOC
+      # (mapa em e2e/acceptance-issues.json); sem o secret DOC_ISSUES_TOKEN, o passo só avisa
+      - name: Publicar resultado nas issues das US
+        if: always() && github.event_name == 'push'
+        continue-on-error: true
+        env:
+          DOC_ISSUES_TOKEN: ${{ secrets.DOC_ISSUES_TOKEN }}
+        run: node scripts/e2e-acceptance-comment.mjs e2e-results.json
+
       - name: Publicar baselines dos snapshots
         if: inputs.update_snapshots
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

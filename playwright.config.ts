@@ -13,7 +13,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // o JSON fica fora de playwright-report (o reporter HTML limpa a pasta) e alimenta scripts/e2e-acceptance-comment.mjs
+  reporter: [['list'], ['html', { open: 'never' }], ['json', { outputFile: 'e2e-results.json' }]],
   use: {
     baseURL: BASE_URL,
     locale: 'pt-BR',
