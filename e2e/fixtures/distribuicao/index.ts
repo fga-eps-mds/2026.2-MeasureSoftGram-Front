@@ -1,6 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { EMPTY_PAGE, ORGANIZATION_ID, PRODUCT_API, PRODUCT_PATH } from '../common';
-import releases from './releases.json';
+import { EMPTY_PAGE, ORGANIZATION_ID, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
 import releaseRepositories from './release-repositories.json';
 import tree from './quality-model-tree.json';
 import entities from './entity-analysis-entities.json';
@@ -16,7 +15,7 @@ export const DISTRIBUTION_PATH = `${PRODUCT_PATH}/dashboards/distribuicao/`;
 
 /** Os endpoints da página (useDistributionDashboard), a partir do produto. */
 export const DISTRIBUTION_API = {
-  releases: `${PRODUCT_API}/release/`,
+  releases: RELEASES_API,
   repositories: `${PRODUCT_API}/release-dashboard/characteristics/`,
   tree: `${PRODUCT_API}/quality-model-tree/`,
   entities: `${PRODUCT_API}/entity-analysis/entities/`,
