@@ -1,0 +1,197 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "previous_release": {
+    "id": 1,
+    "release_name": "R1",
+    "start_at": "2026-06-01T00:00:00-03:00",
+    "end_at": "2026-08-16T00:00:00-03:00"
+  },
+  "level": "measure",
+  "columns": [
+    {
+      "key": "passed_tests",
+      "name": "Passed Tests",
+      "weight": 50,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "reliability",
+          "name": "Reliability",
+          "weight": 50
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "key": "ci_feedback_time",
+      "name": "CI Feedback Time",
+      "weight": 50,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "reliability",
+          "name": "Reliability",
+          "weight": 50
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "key": "non_complex_file_density",
+      "name": "Non Complex File Density",
+      "weight": 50,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "maintainability",
+          "name": "Maintainability",
+          "weight": 50
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "modifiability",
+          "name": "Modifiability",
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "key": "technical_debt_ratio",
+      "name": "Technical Debt Ratio",
+      "weight": 50,
+      "path": [
+        {
+          "level": "characteristic",
+          "key": "maintainability",
+          "name": "Maintainability",
+          "weight": 50
+        },
+        {
+          "level": "subcharacteristic",
+          "key": "modifiability",
+          "name": "Modifiability",
+          "weight": 100
+        }
+      ]
+    }
+  ],
+  "repositories": [
+    {
+      "id": 1,
+      "name": "MeasureSoftGram-Service",
+      "tsqmi": {
+        "value": 0.72,
+        "previous_value": 0.7
+      },
+      "cells": [
+        {
+          "key": "passed_tests",
+          "value": 0.95,
+          "previous_value": 0.93,
+          "contribution": 0.005
+        },
+        {
+          "key": "ci_feedback_time",
+          "value": 0.81,
+          "previous_value": 0.8,
+          "contribution": 0.002
+        },
+        {
+          "key": "non_complex_file_density",
+          "value": 0.66,
+          "previous_value": 0.7,
+          "contribution": -0.01
+        },
+        {
+          "key": "technical_debt_ratio",
+          "value": 0.58,
+          "previous_value": 0.64,
+          "contribution": -0.015
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "MeasureSoftGram-Front",
+      "tsqmi": {
+        "value": 0.55,
+        "previous_value": 0.6
+      },
+      "cells": [
+        {
+          "key": "passed_tests",
+          "value": 0.88,
+          "previous_value": 0.9,
+          "contribution": -0.005
+        },
+        {
+          "key": "ci_feedback_time",
+          "value": 0.47,
+          "previous_value": 0.52,
+          "contribution": -0.012
+        },
+        {
+          "key": "non_complex_file_density",
+          "value": 0.51,
+          "previous_value": 0.49,
+          "contribution": 0.005
+        },
+        {
+          "key": "technical_debt_ratio",
+          "value": null,
+          "previous_value": 0.45,
+          "contribution": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "MeasureSoftGram-Action",
+      "tsqmi": {
+        "value": 0.43,
+        "previous_value": 0.41
+      },
+      "cells": [
+        {
+          "key": "passed_tests",
+          "value": 0.62,
+          "previous_value": 0.6,
+          "contribution": 0.005
+        },
+        {
+          "key": "ci_feedback_time",
+          "value": 0.35,
+          "previous_value": 0.3,
+          "contribution": 0.012
+        },
+        {
+          "key": "non_complex_file_density",
+          "value": 0.39,
+          "previous_value": 0.42,
+          "contribution": -0.007
+        },
+        {
+          "key": "technical_debt_ratio",
+          "value": 0.31,
+          "previous_value": 0.28,
+          "contribution": 0.007
+        }
+      ]
+    }
+  ]
+}
