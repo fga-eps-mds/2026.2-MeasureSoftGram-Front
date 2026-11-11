@@ -59,3 +59,11 @@ export const temporal: ApiHandlers = {
   [DIVIDA_API.measures]: measures,
   [DIVIDA_API.metrics]: { results: [] }
 };
+
+/** A mesma Evolução Temporal, com a dívida técnica sem nenhuma medição no repositório (CA5). */
+export const temporalSemDivida: ApiHandlers = {
+  ...temporal,
+  [DIVIDA_API.measures]: {
+    results: measures.results.map((item) => (item.key === 'technical_debt_ratio' ? { ...item, history: [] } : item))
+  }
+};
