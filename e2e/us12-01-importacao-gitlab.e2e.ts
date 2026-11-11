@@ -1,6 +1,6 @@
 import { Locator, Page, Request } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { ORGANIZATION_ID, PRODUCT_ID, PRODUCT_PATH } from './fixtures/common';
+import { PRODUCT_PATH } from './fixtures/common';
 import {
   comProjetos,
   comSubgrupo,
@@ -61,18 +61,12 @@ const importRequest = (page: Page) =>
   page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith(`/api${IMPORT_API.repositories}`));
 
 const REPOSITORIES_PATH = `${PRODUCT_PATH}/repositories/`;
-/** O caminho que o lápis da lista de Projetos monta (RepositoriesTable.tsx:211). */
-const EDIT_PATH = `/products/${ORGANIZATION_ID}-${PRODUCT_ID}/repositories/manage-repository?id=${PARSER_REPOSITORY.id}`;
 const parserRow = (page: Page) => page.getByTestId('repository-row').filter({ hasText: PARSER.name });
 
-/**
- * Abre a edição do parser pela navegação do Next, como o lápis faria: o lápis leva à tela do projeto (fixme no CA6) e a
- * URL direta volta para /home antes de a organização carregar (RepositoryForm.tsx:71-74).
- */
+/** Abre a edição do parser pelo lápis da lista de Projetos. */
 async function openEdit(page: Page) {
   await page.goto(REPOSITORIES_PATH);
-  await expect(parserRow(page)).toBeVisible();
-  await page.evaluate((path) => (window as any).next.router.push(path), EDIT_PATH);
+  await parserRow(page).getByRole('button', { name: 'edit' }).click();
   await expect(page.getByText('Editar Projeto', { exact: true })).toBeVisible();
 }
 
@@ -346,15 +340,10 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
       await expect(page.getByRole('button', { name: 'Salvar Alterações' })).toBeDisabled();
     });
 
-    test.fixme(
-      'o lápis da lista de Projetos abre a edição (bug: o clique no lápis também chega à linha, que leva à tela do projeto; RepositoriesTable.tsx:180 e 208-214)',
-      async ({ page }) => {
-        await page.goto(REPOSITORIES_PATH);
-        await parserRow(page).getByRole('button', { name: 'edit' }).click();
-        await expect(page).toHaveURL(/\/repositories\/manage-repository\/?\?id=1$/);
-        await expect(page.getByText('Editar Projeto', { exact: true })).toBeVisible();
-      }
-    );
+    test('o lápis da lista de Projetos abre a edição', async ({ page }) => {
+      await openEdit(page);
+      await expect(page).toHaveURL(/\/repositories\/manage-repository\/?\?id=1$/);
+    });
   });
 });
 

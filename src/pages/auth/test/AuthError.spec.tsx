@@ -16,7 +16,7 @@ describe('AuthError Component', () => {
   it('renders the auth error message and instructions correctly', () => {
     render(<AuthError />);
 
-    expect(screen.getByText('Ops! Problema no redirecionamento')).toBeInTheDocument();
+    expect(screen.getByText('Sua sessão expirou. Por favor, faça login novamente!')).toBeInTheDocument();
     expect(
       screen.getByText(/Não conseguimos concluir o seu login neste momento/i)
     ).toBeInTheDocument();

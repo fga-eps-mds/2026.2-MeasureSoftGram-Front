@@ -109,68 +109,58 @@ test.describe('@US11.01-CA5 Falha, sessão expirada ou GitLab fora do ar: mensag
       await loginButton(page).click();
 
       await expect(page).toHaveURL(/\/auth\/error\/?$/);
-      await expect(page.getByText('Ops! Problema no redirecionamento')).toBeVisible();
+      await expect(page.getByText(EXPIRED)).toBeVisible();
       await expect(page.locator('body')).not.toContainText(TECHNICAL_DETAIL);
       await page.getByRole('button', { name: 'Voltar para o Login' }).click();
       await expect(page).toHaveURL(/\/auth\/?$/);
       await expect(loginButton(page)).toBeEnabled();
     });
 
-    test.fixme(
-      'mostra "Sua sessão expirou. Por favor, faça login novamente!" (bug: mostra "Ops! Problema no redirecionamento")',
-      async ({ page }) => {
-        await page.goto('/auth/');
-        await loginButton(page).click();
-        await expect(page.getByText(EXPIRED)).toBeVisible();
-      }
-    );
+    test('mostra "Sua sessão expirou. Por favor, faça login novamente!"', async ({ page }) => {
+      await page.goto('/auth/');
+      await loginButton(page).click();
+      await expect(page.getByText(EXPIRED)).toBeVisible();
+    });
   });
 
   test.describe('o Service recusa o code do GitLab (400)', () => {
     test.use({ scenario: login400 });
 
-    test.fixme(
-      'mostra "Sua sessão expirou. Por favor, faça login novamente!" e volta ao login (bug: mostra "Erro ao realizar login: <mensagem do Service>" e fica em "Autenticando no MeasureSoftGram...")',
-      async ({ page }) => {
-        await gitlabAnswers(page, { code: 'e2e' });
-        await page.goto('/auth/');
-        await loginButton(page).click();
-        await expect(page.getByText(EXPIRED)).toBeVisible();
-        await expect(page).toHaveURL(/\/auth\/?$/);
-        await expect(loginButton(page)).toBeEnabled();
-      }
-    );
+    test('mostra "Sua sessão expirou. Por favor, faça login novamente!" e volta ao login', async ({ page }) => {
+      await gitlabAnswers(page, { code: 'e2e' });
+      await page.goto('/auth/');
+      await loginButton(page).click();
+      await expect(page.getByText(EXPIRED)).toBeVisible();
+      await expect(page).toHaveURL(/\/auth\/?$/);
+      await expect(loginButton(page)).toBeEnabled();
+    });
   });
 
   test.describe('o GitLab está fora do ar (502 ao trocar o code)', () => {
     test.use({ scenario: login502 });
 
-    test.fixme(
-      'mostra "Sua sessão expirou. Por favor, faça login novamente!" sem detalhe técnico e volta ao login (bug: mostra "Erro ao realizar login: Request failed with status code 502" e fica em "Autenticando no MeasureSoftGram...")',
-      async ({ page }) => {
-        await gitlabAnswers(page, { code: 'e2e' });
-        await page.goto('/auth/');
-        await loginButton(page).click();
-        await expect(page.getByText(EXPIRED)).toBeVisible();
-        await expect(page.locator('body')).not.toContainText(TECHNICAL_DETAIL);
-        await expect(page).toHaveURL(/\/auth\/?$/);
-        await expect(loginButton(page)).toBeEnabled();
-      }
-    );
+    test('mostra "Sua sessão expirou. Por favor, faça login novamente!" sem detalhe técnico e volta ao login', async ({
+      page
+    }) => {
+      await gitlabAnswers(page, { code: 'e2e' });
+      await page.goto('/auth/');
+      await loginButton(page).click();
+      await expect(page.getByText(EXPIRED)).toBeVisible();
+      await expect(page.locator('body')).not.toContainText(TECHNICAL_DETAIL);
+      await expect(page).toHaveURL(/\/auth\/?$/);
+      await expect(loginButton(page)).toBeEnabled();
+    });
   });
 
   test.describe('a sessão passou de 2 h', () => {
     test.use({ scenario: loginOk });
 
-    test.fixme(
-      'mostra "Sua sessão expirou. Por favor, faça login novamente!" (bug: mostra "Sua sessão expirou por segurança (limite de 2h).")',
-      async ({ page }) => {
-        await loginWithGitlab(page);
-        await page.evaluate(() => localStorage.setItem('login_timestamp', String(Date.now() - 121 * 60 * 1000)));
-        await page.reload();
-        await expect(page.getByText(EXPIRED)).toBeVisible();
-      }
-    );
+    test('mostra "Sua sessão expirou. Por favor, faça login novamente!"', async ({ page }) => {
+      await loginWithGitlab(page);
+      await page.evaluate(() => localStorage.setItem('login_timestamp', String(Date.now() - 121 * 60 * 1000)));
+      await page.reload();
+      await expect(page.getByText(EXPIRED)).toBeVisible();
+    });
   });
 });
 

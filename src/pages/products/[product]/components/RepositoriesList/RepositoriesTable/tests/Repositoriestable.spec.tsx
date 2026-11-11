@@ -135,6 +135,28 @@ describe('RepositoriesTable', () => {
     expect(screen.queryByTestId('repository-row')).not.toBeInTheDocument();
   });
 
+  it('o lápis leva à edição e a lixeira abre a confirmação, sem ir para a tela do projeto', async () => {
+    api.request.mockResolvedValue({ data: { results: [{ id: 1, name: repoName, platform: 'github' }] } });
+    const push = jest.fn();
+    useRouter.mockReturnValue({ push, query: { product: '1-3-2024-measure' } });
+
+    renderTable();
+
+    await waitFor(() => {
+      expect(screen.getByText(repoName)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('edit'));
+    expect(push.mock.calls).toEqual([['/products/1-1/repositories/manage-repository?id=1']]);
+
+    fireEvent.click(screen.getByLabelText('delete'));
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(push).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByText(repoName));
+    expect(push).toHaveBeenLastCalledWith('/products/1-1-Product A/repositories/1-Repository 1');
+  });
+
   it('mostra na hora a lista que já está no cache, sem esperar o Service', () => {
     const cache = new Map();
     const key = JSON.stringify({ url: '/v1/organizations/1/products/3/repositories/', method: 'get' });

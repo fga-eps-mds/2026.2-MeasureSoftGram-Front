@@ -141,18 +141,6 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         backgroundColor: '#FFFFFF',
       }}
     >
-      {/* Filters Bar */}
-      <PulseChartFilters
-        repositories={allRepositories}
-        selectedRepo={selectedRepo}
-        onRepoChange={setSelectedRepo}
-        startDate={startDate}
-        onStartDateChange={setStartDate}
-        endDate={endDate}
-        onEndDateChange={setEndDate}
-        exportAction={<ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />}
-      />
-
       {/* Card do gráfico: título, subtítulo e legenda logo abaixo, à esquerda (protótipo) */}
       <Box sx={{ border: '1px solid #E0E0E0', borderRadius: '8px', padding: '24px' }}>
         <Box display="flex" flexDirection="column" gap="4px" marginBottom="16px">
@@ -213,6 +201,22 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
             />
           </Box>
         )}
+      </Box>
+
+      {/* Filtros abaixo do gráfico, a pedido do PO (US06.01, 08/10) */}
+      <Box marginTop="16px">
+        <PulseChartFilters
+          repositories={allRepositories}
+          selectedRepo={selectedRepo}
+          onRepoChange={setSelectedRepo}
+          startDate={startDate}
+          onStartDateChange={setStartDate}
+          endDate={endDate}
+          onEndDateChange={setEndDate}
+          exportAction={
+            <ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />
+          }
+        />
       </Box>
 
       {/* Footer summary */}
