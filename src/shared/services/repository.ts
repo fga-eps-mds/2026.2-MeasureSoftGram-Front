@@ -7,6 +7,7 @@ interface RepositoryFormData {
   url?: string;
   platform: string;
   imported?: boolean;
+  gitlab_project_id?: number;
 }
 
 interface HistoricalCharacteristicsProps {

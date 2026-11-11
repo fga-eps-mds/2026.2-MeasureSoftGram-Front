@@ -72,7 +72,8 @@ const Products: NextPageWithLayout = () => {
   const { t: tp } = useTranslation('product');
   const router = useRouter();
 
-  const { organizationList, setCurrentOrganizations, fetchOrganizations, currentOrganization } = useOrganizationContext();
+  const { organizationList, setCurrentOrganizations, fetchOrganizations, currentOrganization, hasFetched } =
+    useOrganizationContext();
   const { setCurrentProduct, updateProductList, currentProduct } = useProductContext();
 
   const [providerNamespaces, setProviderNamespaces] = useState<ProviderNamespaceItem[]>([]);
@@ -347,7 +348,8 @@ const Products: NextPageWithLayout = () => {
         url: repo.url,
         description: repo.description || '',
         platform: provider === 'gitlab' ? 'gitlab' : 'github',
-        imported: true
+        imported: true,
+        ...(provider === 'gitlab' && { gitlab_project_id: repo.gitlab_project_id })
       });
       if (response.type === 'success') {
         toast.success(`${terms.Repository} ${repo.name} importado com sucesso!`);
@@ -378,12 +380,14 @@ const Products: NextPageWithLayout = () => {
 
   // Só busca depois de o provider real ser lido do localStorage; antes disso ele
   // vale 'credentials' provisoriamente e geraria uma busca (e um toast) a mais.
+  // Também espera a lista de organizações: sem ela a tela não sabe qual é a organização atual, escolheria o primeiro
+  // namespace (a conta pessoal) e a importaria no MeasureSoftGram antes de voltar para a organização certa.
   useEffect(() => {
-    if (!isProviderReady) return;
+    if (!isProviderReady || !hasFetched) return;
     let ativo = true;
     void loadProviderNamespaces(() => ativo);
     return () => { ativo = false; };
-  }, [provider, isProviderReady]);
+  }, [provider, isProviderReady, hasFetched]);
 
   useEffect(() => {
     if (currentNamespace) {
