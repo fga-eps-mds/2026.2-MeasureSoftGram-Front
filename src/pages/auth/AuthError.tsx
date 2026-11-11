@@ -25,7 +25,7 @@ const AuthError: NextPageWithLayout = () => {
           </Typography>
 
           <Typography variant="body1" color="text.secondary">
-            Não conseguimos concluir o seu login neste momento. Isso geralmente acontece devido a uma falha temporária de comunicação.
+            Por segurança, você precisa entrar de novo. Volte para o login e tente novamente.
           </Typography>
         </Box>
 

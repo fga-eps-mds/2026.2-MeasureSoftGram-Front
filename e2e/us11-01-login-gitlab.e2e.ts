@@ -110,6 +110,7 @@ test.describe('@US11.01-CA5 Falha, sessão expirada ou GitLab fora do ar: mensag
 
       await expect(page).toHaveURL(/\/auth\/error\/?$/);
       await expect(page.getByText(EXPIRED)).toBeVisible();
+      await expect(page.getByText('Volte para o login e tente novamente.')).toBeVisible();
       await expect(page.locator('body')).not.toContainText(TECHNICAL_DETAIL);
       await page.getByRole('button', { name: 'Voltar para o Login' }).click();
       await expect(page).toHaveURL(/\/auth\/?$/);
