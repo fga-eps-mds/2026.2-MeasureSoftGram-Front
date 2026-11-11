@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import PlannedVsAccomplishedEqualizer, { buildCurvePath } from '../PlannedVsAccomplishedEqualizer';
 
 /** jsdom não calcula layout; simulamos trilhos de 240px lado a lado para as curvas e marcadores. */
@@ -119,6 +119,34 @@ describe('PlannedVsAccomplishedEqualizer', () => {
     // a curva do realizado é interrompida na característica sem dado (dois trechos)
     const accomplishedPath = screen.getByTestId('equalizer-curve-accomplished').getAttribute('d') ?? '';
     expect(accomplishedPath.match(/M/g)).toHaveLength(2);
+    spy.mockRestore();
+  });
+
+  it('redesenha as curvas quando o trilho anda sem o contêiner mudar de tamanho', () => {
+    let sliderLeft = 100;
+    const spy = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function mockRect(this: HTMLElement) {
+      const isSlider = this.classList.contains('MuiSlider-root');
+      return { left: isSlider ? sliderLeft : 0, top: 0, width: isSlider ? 4 : 600, height: 240 } as DOMRect;
+    });
+    const observed: Element[] = [];
+    let notifyResize = () => {};
+    const original = window.ResizeObserver;
+    window.ResizeObserver = jest.fn((callback: ResizeObserverCallback) => {
+      const observer = { observe: (element: Element) => observed.push(element), unobserve: jest.fn(), disconnect: jest.fn() };
+      notifyResize = () => callback([], observer as unknown as ResizeObserver);
+      return observer;
+    }) as unknown as typeof ResizeObserver;
+
+    render(<PlannedVsAccomplishedEqualizer planned={planned.slice(0, 1)} accomplished={accomplished.slice(0, 1)} />);
+    expect(observed).toContain(screen.getByTestId('equalizer-slider-reliability').parentElement);
+    expect(screen.getByTestId('equalizer-curve-planned')).toHaveAttribute('d', expect.stringMatching(/^M90\.0 /));
+
+    // o rótulo traduzido devolve o slider ao centro: o item dele muda de tamanho e as curvas acompanham
+    sliderLeft = 80;
+    act(() => notifyResize());
+    expect(screen.getByTestId('equalizer-curve-planned')).toHaveAttribute('d', expect.stringMatching(/^M70\.0 /));
+
+    window.ResizeObserver = original;
     spy.mockRestore();
   });
 
