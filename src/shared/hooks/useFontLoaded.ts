@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-/** O prazo que os navegadores dão a uma fonte com `font-display: block` antes de usar a reserva. */
+/**
+ * Prazo de espera pela fonte: depois dele, o canvas desenha com a fonte reserva. São os mesmos 3 s que os navegadores
+ * esperam no `font-display: block`.
+ */
 export const FONT_LOAD_TIMEOUT_MS = 3000;
 
 /**

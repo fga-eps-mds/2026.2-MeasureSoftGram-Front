@@ -55,6 +55,11 @@ describe('<PulseChart />', () => {
     mockUsePulseChartData.mockReturnValue(defaultChartData());
   });
 
+  // o jsdom não tem a API de fontes; o teste que a simula não pode deixá-la para os seguintes
+  afterEach(() => {
+    delete (document as unknown as { fonts?: unknown }).fonts;
+  });
+
   it('refaz o gráfico a cada atualização, sem mesclar com as faixas do filtro anterior', () => {
     render(<PulseChart organizationId="1" productId="1" />);
 
@@ -82,7 +87,6 @@ describe('<PulseChart />', () => {
     await act(async () => fontArrived());
 
     expect(lastOption().series).toHaveLength(1);
-    delete (document as unknown as { fonts?: unknown }).fonts;
   });
 
   it('desenha o pulso sem linhas horizontais e sem a etiqueta de início das releases', () => {
