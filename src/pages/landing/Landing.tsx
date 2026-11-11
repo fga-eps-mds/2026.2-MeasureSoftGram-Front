@@ -4,7 +4,7 @@ import type { GetStaticProps } from 'next';
 import { Box } from '@mui/material';
 import { loadTranslations } from 'ni18n';
 import { NextPageWithLayout } from '@pages/_app.next';
-import AcademicNotice from '@components/AcademicNotice';
+import AcademicNotice, { AcademicNoticeFloating } from '@components/AcademicNotice';
 import { ni18nConfig } from '../../../n18n.config';
 import { LandingHeader } from './components/LandingHeader';
 import { HeroSection } from './components/HeroSection';
@@ -70,6 +70,7 @@ const Landing: React.FC<LandingProps> = ({ meta }) => {
             <PublicationsSection />
             <CommunitySection />
             <LandingFooter />
+            <AcademicNoticeFloating />
           </>
         )}
       </Box>
