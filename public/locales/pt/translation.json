@@ -20,6 +20,8 @@
     "experimental": "O MeasureSoftGram é um <strong>projeto universitário em fase experimental</strong>.",
     "noGuarantee": "Não oferecemos <strong>garantias sobre a persistência ou segurança</strong> dos dados armazenados.",
     "noRealData": "<strong>Não utilize dados reais, confidenciais ou tokens</strong> com permissões sensíveis nesta instância.",
-    "learnMore": "Saiba mais"
+    "learnMore": "Saiba mais",
+    "floatingHint": "Não use dados reais",
+    "viewNotice": "Ver aviso"
   }
 }
