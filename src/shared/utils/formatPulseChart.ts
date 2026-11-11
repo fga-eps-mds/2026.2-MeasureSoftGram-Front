@@ -34,6 +34,10 @@ export function getQualityStatus(value: number): QualityStatus {
 /** Medidas das faixas do gráfico de pulso, em px: as mesmas no pulso do produto e no do repositório. */
 export const PULSE_GRID = { topOffset: 60, height: 82, gap: 34 };
 
+const FONT_FAMILY = 'Roboto';
+/** A fonte do texto do canvas do pulso: os gráficos só desenham depois de ela carregar (ver `useFontLoaded`). */
+export const PULSE_CANVAS_FONT = `11px ${FONT_FAMILY}`;
+
 export interface PulseChartOptions {
   /**
    * `first-row` mostra o nome de cada release só na primeira faixa que a tem, para as etiquetas não se repetirem nem
@@ -261,7 +265,7 @@ export function formatPulseChartOptions(
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
               color: '#FFFFFF',
               fontSize: 10,
-              fontFamily: 'Roboto',
+              fontFamily: FONT_FAMILY,
               padding: [2, 5],
               borderRadius: 3,
             },
@@ -296,7 +300,7 @@ export function formatPulseChartOptions(
               backgroundColor: COLOR_TOKENS.primary,
               color: '#FFFFFF',
               fontSize: 10.5,
-              fontFamily: 'Roboto',
+              fontFamily: FONT_FAMILY,
               padding: [3, 6],
               borderRadius: 3,
             },
@@ -333,7 +337,7 @@ export function formatPulseChartOptions(
       axisLabel: {
         color: COLOR_TOKENS.axisText,
         fontSize: 11,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
         formatter: (val: number) => {
           const date = new Date(val);
           const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -361,7 +365,7 @@ export function formatPulseChartOptions(
       axisLabel: {
         color: COLOR_TOKENS.axisText,
         fontSize: 11,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
         formatter: (v: number) => v.toFixed(1),
       },
       splitLine: {
@@ -436,7 +440,7 @@ export function formatPulseChartOptions(
       textStyle: {
         color: '#1F2937',
         fontSize: 12,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
       },
       formatter: (allParams: any[]) => {
         // Com o cursor no ponto de uma release, o eixo encaixa nele e os params trazem os pontos dessa release.
