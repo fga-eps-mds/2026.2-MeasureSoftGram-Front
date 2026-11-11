@@ -1,6 +1,6 @@
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { PulseMeasurement, PulseRepositoryData } from '@utils/formatPulseChart';
-import { getQualityBandClamped } from '@utils/qualityBands';
+import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 /** Nome do dashboard de cada pulso e do gráfico nos arquivos exportados: `msgram-<produto|repositorio>-pulso-<data>.csv`. */
 export const PULSE_CSV = { product: 'produto', repository: 'repositorio', pulse: 'pulso' };
@@ -34,17 +34,20 @@ function byDate(measurements: PulseMeasurement[]): PulseMeasurement[] {
   return [...measurements].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 }
 
-function toMeasurementFields({ created_at: date, value }: PulseMeasurement) {
-  return { date, value, grade: getQualityBandClamped(value).grade };
+function toMeasurementFields({ created_at: date, value }: PulseMeasurement, bands: QualityBand[] = QUALITY_BANDS) {
+  return { date, value, grade: getQualityBandClamped(value, bands).grade };
 }
 
 /** CSV do pulso do produto: as medições do período filtrado de cada repositório, em ordem de data, com o grau (A a E). */
-export function formatProductPulseCsv(repositories: PulseRepositoryData[]): CsvChart<ProductPulseCsvRow> {
+export function formatProductPulseCsv(
+  repositories: PulseRepositoryData[],
+  bands: QualityBand[] = QUALITY_BANDS
+): CsvChart<ProductPulseCsvRow> {
   return {
     name: PULSE_CSV.pulse,
     columns: PRODUCT_PULSE_CSV_COLUMNS,
     rows: repositories.flatMap(({ name, measurements }) =>
-      byDate(measurements).map((measurement) => ({ repository: name, ...toMeasurementFields(measurement) }))
+      byDate(measurements).map((measurement) => ({ repository: name, ...toMeasurementFields(measurement, bands) }))
     )
   };
 }
@@ -52,7 +55,8 @@ export function formatProductPulseCsv(repositories: PulseRepositoryData[]): CsvC
 /** CSV do pulso das características do repositório: as medições do período filtrado de cada característica. */
 export function formatRepositoryPulseCsv(
   repositoryName: string,
-  characteristics: PulseRepositoryData[]
+  characteristics: PulseRepositoryData[],
+  bands: QualityBand[] = QUALITY_BANDS
 ): CsvChart<RepositoryPulseCsvRow> {
   return {
     name: PULSE_CSV.pulse,
@@ -61,7 +65,7 @@ export function formatRepositoryPulseCsv(
       byDate(measurements).map((measurement) => ({
         repository: repositoryName,
         characteristic: name,
-        ...toMeasurementFields(measurement)
+        ...toMeasurementFields(measurement, bands)
       }))
     )
   };
