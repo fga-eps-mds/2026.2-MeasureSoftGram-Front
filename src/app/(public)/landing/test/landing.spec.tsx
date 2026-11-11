@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { ACADEMIC_NOTICE_LEARN_MORE_URL } from '@components/AcademicNotice';
+import { ACADEMIC_NOTICE_BANNER_ID, ACADEMIC_NOTICE_LEARN_MORE_URL } from '@components/AcademicNotice';
 import Landing from '../Landing';
 import { generateMetadata, getLandingMeta } from '../metadata';
 import { EXTERNAL_LINKS } from '../constants';
@@ -47,6 +47,15 @@ describe('Landing', () => {
     expect(within(notice).getByRole('link', { name: 'academicNotice.learnMore' })).toHaveAttribute(
       'href',
       ACADEMIC_NOTICE_LEARN_MORE_URL
+    );
+  });
+
+  it('exibe o selo flutuante do aviso academico', () => {
+    render(<Landing />);
+
+    expect(screen.getByRole('button', { name: /academicNotice.badge/ })).toHaveAttribute(
+      'aria-controls',
+      ACADEMIC_NOTICE_BANNER_ID
     );
   });
 

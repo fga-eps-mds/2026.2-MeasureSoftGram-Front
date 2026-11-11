@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
-import AcademicNotice from '@components/AcademicNotice';
+import AcademicNotice, { AcademicNoticeFloating } from '@components/AcademicNotice';
 import { LandingHeader } from './components/LandingHeader';
 import { HeroSection } from './components/HeroSection';
 import { HowItWorksSection } from './components/HowItWorksSection';
@@ -24,6 +24,7 @@ const Landing: React.FC = () => {
       <PublicationsSection />
       <CommunitySection />
       <LandingFooter />
+      <AcademicNoticeFloating />
     </Box>
   );
 };
