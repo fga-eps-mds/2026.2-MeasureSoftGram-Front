@@ -239,6 +239,15 @@ describe('<PulseChart />', () => {
     expect(endDate.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  // pedido do PO em 08/10 (US06.01): o filtro fica abaixo do gráfico
+  it('põe o filtro de período depois do gráfico', () => {
+    const { getByTestId, getByLabelText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    const chart = getByTestId('echarts-mock');
+    // eslint-disable-next-line no-bitwise
+    expect(chart.compareDocumentPosition(getByLabelText('De')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('mostra na barra lateral a variação em relação à última release com indicador', () => {
     mockUsePulseChartData.mockReturnValue({
       ...defaultChartData(),
