@@ -23,6 +23,7 @@ export const AuthContext = createContext<authContextType>(authContextDefaultValu
 const OAUTH_ERROR_PAGE = '/auth/error';
 const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Por favor, faça login novamente!';
 const OAUTH_REJECTED_MESSAGE = 'Não foi possível confirmar o login. Tente entrar novamente.';
+const CREDENTIALS_LOGIN_UNAVAILABLE_MESSAGE = 'Não foi possível entrar agora. Tente novamente em instantes.';
 
 export const AuthProvider = ({ children }: { children: JSX.Element }) => {
   const [loading, setLoading] = useState<'loading' | 'loaded'>('loading');
@@ -140,7 +141,12 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
         return response;
       }
       if (response.type === 'error') {
-        toast.error(`Erro ao realizar login: ${response.error.message === 'Request failed with status code 400' ? 'Erro nas credenciais' : response.error.message || 'Erro desconhecido'}`);
+        // Fora o 400 (credenciais erradas), sem o detalhe técnico do axios: 5xx, rede fora do ar etc.
+        toast.error(
+          response.error.message === 'Request failed with status code 400'
+            ? 'Erro ao realizar login: Erro nas credenciais'
+            : CREDENTIALS_LOGIN_UNAVAILABLE_MESSAGE
+        );
         return response;
       }
 

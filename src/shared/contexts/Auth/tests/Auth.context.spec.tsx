@@ -354,6 +354,27 @@ describe('AuthContext', () => {
     });
   });
 
+  it.each([
+    ['o Service responde 5xx', 'Request failed with status code 502'],
+    ['não há rede', 'Network Error'],
+  ])('mostra mensagem amigável, sem detalhe técnico, quando %s no login com credenciais', async (_caso, message) => {
+    (signInCredentials as jest.Mock).mockResolvedValue({ type: 'error', error: { message } });
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('btn-login'));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Não foi possível entrar agora. Tente novamente em instantes.');
+    });
+    expect(toast.error).not.toHaveBeenCalledWith(expect.stringContaining(message));
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
   it('deve realizar o logout com sucesso e redirecionar para /', async () => {
     (signOut as jest.Mock).mockResolvedValue({ type: 'success' });
 
