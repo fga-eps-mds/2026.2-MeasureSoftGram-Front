@@ -199,8 +199,9 @@ describe('AuthContext', () => {
       renderProvider();
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Erro ao realizar login: código expirado');
+        expect(toast.error).toHaveBeenCalledWith('Sua sessão expirou. Por favor, faça login novamente!');
       });
+      expect(mockReplace).toHaveBeenCalledWith('/auth');
       expect(localStorageMock.provider).toBeUndefined();
     });
 
@@ -441,6 +442,10 @@ describe('AuthContext', () => {
 
     it('deve realizar logout automático quando atingir 2 horas', async () => {
       (signOut as jest.Mock).mockResolvedValue({ type: 'success' });
+      // o getItem deste describe é fixo: o removeItem do timer precisa valer para o efeito não deslogar de novo
+      const removeItem = jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+        (Storage.prototype.getItem as jest.Mock).mockReturnValue(null);
+      });
 
       render(
         <AuthProvider>
@@ -455,9 +460,13 @@ describe('AuthContext', () => {
 
       await waitFor(() => {
         expect(signOut).toHaveBeenCalled();
-        expect(toast.warning).toHaveBeenCalledWith('Sua sessão expirou por segurança (limite de 2h).');
+        expect(toast.warning).toHaveBeenCalledWith('Sua sessão expirou. Por favor, faça login novamente!');
         expect(mockPush).toHaveBeenCalledWith('/');
       });
+      expect(signOut).toHaveBeenCalledTimes(1);
+      // o aviso de 1h50 também passa pelo toast.warning
+      expect(toast.warning).toHaveBeenCalledTimes(2);
+      removeItem.mockRestore();
     });
   });
 });
