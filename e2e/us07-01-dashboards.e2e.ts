@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { bandSwatch, card, choose, downloadCsv, redrawChart, select } from './support/helpers';
+import { bandSwatch, card, choose, downloadCsv, select } from './support/helpers';
 import { PRODUCT_PATH, releases } from './fixtures/common';
 import * as overview from './fixtures/overview';
 import * as temporal from './fixtures/temporal';
@@ -379,11 +379,10 @@ test.describe('@US07.01-CA3 Tela do repositório: pulso de cada característica,
   });
 
   // os marcadores das releases e as cores do pulso só aparecem no desenho do canvas; a baseline é gerada no CI
-  // sem tolerância, como no pulso do produto (US06.01): o redesenho deixa os picos sempre inteiros (ver redrawChart)
+  // sem tolerância, como no pulso do produto (US06.01): o pulso desenha os picos inteiros já no primeiro desenho
   test('desenho do pulso: marcadores das releases e cores das faixas (snapshot)', async ({ page }) => {
     test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');
     await openRepository(page);
-    await redrawChart(page, card(page, PULSE).locator('canvas'));
     await expect(card(page, PULSE)).toHaveScreenshot('repositorio-pulso.png');
   });
 
