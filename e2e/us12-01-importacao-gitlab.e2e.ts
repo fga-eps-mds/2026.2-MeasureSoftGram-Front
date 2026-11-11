@@ -23,8 +23,7 @@ import projects from './fixtures/importacao-gitlab/gitlab-projects.json';
 import squadProjects from './fixtures/importacao-gitlab/gitlab-projects-squad-01.json';
 
 test.beforeEach(async ({ page }) => {
-  // quem já usou o app tem a organização salva; sem ela, a tela escolhe o primeiro namespace (a conta pessoal) se os
-  // namespaces chegam antes das organizações (Products.tsx:162-174) e só depois troca para o grupo
+  // quem já usou o app tem a organização salva
   await page.addInitScript(() => localStorage.setItem('selectedOrgId', JSON.stringify('1')));
 });
 
@@ -153,6 +152,27 @@ test.describe('@US12.01-CA2 Seletor de grupos e projetos do grupo escolhido, com
       `${GROUP.name} (${GROUP.description})`,
       `${SUBGROUP.name} (${SUBGROUP.description})`
     ]);
+  });
+
+  test('sem organização salva, só busca os grupos depois de a lista de organizações chegar', async ({ page, api }) => {
+    await page.addInitScript(() => localStorage.removeItem('selectedOrgId'));
+    let released = false;
+    const early: string[] = [];
+    page.on('request', (r) => {
+      // antes das organizações a tela escolhia a conta pessoal e a importava no MeasureSoftGram
+      const tooEarly = !released && r.url().includes('/gitlab-namespaces/');
+      if (tooEarly || r.url().includes('/import-gitlab-user/'))
+        early.push(`${r.method()} ${new URL(r.url()).pathname}`);
+    });
+    const release = api.hold('/v1/organizations/');
+    await page.goto(IMPORT_PATH);
+    await expect(page.getByRole('heading', { name: 'Importação de Projetos' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Carregando grupos...' })).toBeDisabled();
+    released = true;
+    release();
+    await openImport(page);
+    await expect(projectNames(page)).toHaveText(FIRST_PAGE);
+    expect(early).toEqual([]);
   });
 
   test('"A Importar" mostra os projetos do grupo, dez por página, e busca a página 2', async ({ page }) => {
@@ -285,7 +305,8 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
         url: PARSER.url,
         description: PARSER.description,
         platform: 'gitlab',
-        imported: true
+        imported: true,
+        gitlab_project_id: PARSER.gitlab_project_id
       });
       await expect(toasts(page)).toHaveText([IMPORTED]);
 
@@ -296,15 +317,12 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
       await expect(page.getByTestId('repo-name')).toHaveText([PARSER.name]);
     });
 
-    test.fixme(
-      'o POST leva o identificador do projeto no GitLab (bug: o Front manda só nome, URL, descrição, plataforma e imported; Products.tsx:339-345)',
-      async ({ page }) => {
-        await openImport(page);
-        const post = importRequest(page);
-        await item(page, PARSER.gitlab_path_with_namespace).getByRole('button', { name: 'Importar' }).click();
-        expect((await post).postDataJSON()).toMatchObject({ gitlab_project_id: PARSER.gitlab_project_id });
-      }
-    );
+    test('o POST leva o identificador do projeto no GitLab', async ({ page }) => {
+      await openImport(page);
+      const post = importRequest(page);
+      await item(page, PARSER.gitlab_path_with_namespace).getByRole('button', { name: 'Importar' }).click();
+      expect((await post).postDataJSON()).toMatchObject({ gitlab_project_id: PARSER.gitlab_project_id });
+    });
   });
 
   test.describe('edição', () => {
