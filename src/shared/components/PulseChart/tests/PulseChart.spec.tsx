@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv } from '@utils/exportCsv';
 import { QUALITY_BANDS } from '@utils/qualityBands';
@@ -85,11 +85,38 @@ describe('<PulseChart />', () => {
     expect(retryBands).toHaveBeenCalledTimes(1);
   });
 
+  // o jsdom não tem a API de fontes; o teste que a simula não pode deixá-la para os seguintes
+  afterEach(() => {
+    delete (document as unknown as { fonts?: unknown }).fonts;
+  });
+
   it('refaz o gráfico a cada atualização, sem mesclar com as faixas do filtro anterior', () => {
     render(<PulseChart organizationId="1" productId="1" />);
 
     const [, notMerge] = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1];
     expect(notMerge).toBe(true);
+  });
+
+  // o canvas não troca a fonte quando ela chega: desenhando antes, os eixos e as etiquetas ficam na fonte reserva
+  it('só desenha o pulso depois de a fonte do canvas carregar', async () => {
+    let fontArrived: () => void = () => undefined;
+    const load = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          fontArrived = resolve;
+        })
+    );
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load } });
+    const lastOption = () => mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0];
+
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(load).toHaveBeenCalledWith('11px Roboto');
+    expect(lastOption()).toEqual({});
+
+    await act(async () => fontArrived());
+
+    expect(lastOption().series).toHaveLength(1);
   });
 
   it('desenha o pulso sem linhas horizontais e sem a etiqueta de início das releases', () => {

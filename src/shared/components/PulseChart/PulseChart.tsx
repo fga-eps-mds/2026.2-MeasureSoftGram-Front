@@ -3,7 +3,13 @@ import ReactEcharts from '@components/ECharts';
 import { Box, Button, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
 import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
-import { PULSE_GRID, PulseMeasurement, PulseRelease, formatPulseChartOptions } from '@utils/formatPulseChart';
+import {
+  PULSE_CANVAS_FONT,
+  PULSE_GRID,
+  PulseMeasurement,
+  PulseRelease,
+  formatPulseChartOptions,
+} from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
 import { formatPulseReleaseTooltip } from '@utils/formatPulseReleaseTooltip';
 import { useProductQualityBands } from '@hooks/useProductQualityBands';
@@ -11,6 +17,7 @@ import { usePulseChartData } from './usePulseChartData';
 import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
 import { QualityLegend } from './QualityLegend';
+import { useFontLoaded } from '@hooks/useFontLoaded';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { ProviderTerms } from '@utils/providerTerminology';
 
@@ -69,6 +76,7 @@ interface Props {
 export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
   const { terms } = useProviderTerms();
   const echartsRef = useRef<any>(null);
+  const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
   const { bands, isError: isQualityBandsError, retry: retryQualityBands } = useProductQualityBands(organizationId, productId);
 
@@ -215,7 +223,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
             {/* notMerge: a cada filtro, o gráfico é refeito; mesclando, ficariam as faixas e séries anteriores */}
             <ReactEcharts
               ref={echartsRef}
-              option={chartOptions}
+              option={fontLoaded ? chartOptions : {}}
               notMerge
               style={{
                 height: `${chartOptions.height || 400}px`,

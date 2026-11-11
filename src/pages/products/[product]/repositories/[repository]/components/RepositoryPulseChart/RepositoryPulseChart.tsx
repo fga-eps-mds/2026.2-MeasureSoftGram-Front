@@ -6,9 +6,10 @@ import ExportCsvButton from '@components/ExportCsvButton';
 import { PulseChartFilters } from '@components/PulseChart/PulseChartFilters';
 import { PulseChartRepoSidebar } from '@components/PulseChart/PulseChartRepoSidebar';
 import { QualityLegend } from '@components/PulseChart/QualityLegend';
+import { useFontLoaded } from '@hooks/useFontLoaded';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { CsvChart } from '@utils/exportCsv';
-import { PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
+import { PULSE_CANVAS_FONT, PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, RepositoryPulseCsvRow } from '@utils/formatPulseCsv';
 import { useRepositoryPulse } from '../../hooks/useRepositoryPulse';
 
@@ -29,6 +30,7 @@ interface Props {
 export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
   const { terms } = useProviderTerms();
   const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS), [pulse.rows]);
+  const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
   let status: 'loading' | 'error' | 'empty' | 'ready' = 'ready';
   if (pulse.hasError) status = 'error';
@@ -88,7 +90,11 @@ export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
               showIcon={false}
             />
           ))}
-          <ReactEcharts option={options} notMerge style={{ height: `${options.height}px`, width: '100%' }} />
+          <ReactEcharts
+            option={fontLoaded ? options : {}}
+            notMerge
+            style={{ height: `${options.height}px`, width: '100%' }}
+          />
         </Box>
       )}
     </DashboardCard>

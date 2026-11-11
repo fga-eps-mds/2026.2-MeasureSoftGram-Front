@@ -27,7 +27,7 @@ jest.mock('next/router', () => ({
 }));
 
 jest.mock('@hooks/useRequest', () => ({
-  useRequest: () => ({ data: [], isLoading: false })
+  useRequest: () => ({ data: [], isLoading: false, mutate: jest.fn() })
 }));
 
 describe('Product', () => {
