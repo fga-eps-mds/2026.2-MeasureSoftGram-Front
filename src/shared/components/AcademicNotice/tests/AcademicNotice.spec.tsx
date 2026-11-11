@@ -1,7 +1,11 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import pt from '../../../../../public/locales/pt/translation.json';
-import AcademicNotice, { ACADEMIC_NOTICE_LEARN_MORE_URL, renderWithStrong } from '../AcademicNotice';
+import AcademicNotice, {
+  ACADEMIC_NOTICE_BANNER_ID,
+  ACADEMIC_NOTICE_LEARN_MORE_URL,
+  renderWithStrong
+} from '../AcademicNotice';
 
 // O mock global devolve a própria chave; aqui o t devolve o texto real em português para conferir o negrito.
 jest.mock('react-i18next', () => ({
@@ -12,11 +16,12 @@ jest.mock('react-i18next', () => ({
 
 describe('AcademicNotice', () => {
   describe('variante banner', () => {
-    it('exibe o selo, o texto com os trechos em negrito e o link "Saiba mais"', () => {
+    it('exibe o título, o texto com os trechos em negrito e o link "Saiba mais"', () => {
       render(<AcademicNotice variant="banner" />);
 
       const banner = screen.getByRole('complementary', { name: 'Aviso de ambiente acadêmico' });
-      expect(within(banner).getByText('Ambiente acadêmico')).toBeInTheDocument();
+      expect(banner).toHaveAttribute('id', ACADEMIC_NOTICE_BANNER_ID);
+      expect(within(banner).getByText('Aviso de ambiente acadêmico')).toBeInTheDocument();
       expect(within(banner).getByText('projeto universitário em fase experimental').tagName).toBe('STRONG');
       expect(
         within(banner).getByText('não utilizar dados reais, confidenciais ou tokens com permissões sensíveis').tagName

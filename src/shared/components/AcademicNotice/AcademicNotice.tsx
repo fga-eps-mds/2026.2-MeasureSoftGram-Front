@@ -7,9 +7,14 @@ import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 // Página da documentação que explica o projeto e a sua condição de produto acadêmico.
 export const ACADEMIC_NOTICE_LEARN_MORE_URL = 'https://fga-eps-mds.github.io/MeasureSoftGram-Docs/docs/intro/';
 
+// id da tarja do topo: o selo flutuante rola até ela e passa o foco para ela.
+export const ACADEMIC_NOTICE_BANNER_ID = 'academic-notice';
+
 const COLORS = {
-  bannerBackground: '#1F3047',
-  bannerText: '#FFFFFF',
+  yellow: '#F6C343',
+  navy: '#1F3047',
+  navyHover: '#2C4363',
+  white: '#FFFFFF',
   badgeBackground: '#F6C343',
   badgeText: '#3B2A00',
   cardBackground: '#FFF6DC',
@@ -33,34 +38,28 @@ export function renderWithStrong(text: string): React.ReactNode[] {
 }
 
 type AcademicNoticeProps = {
-  /** `banner`: faixa no topo da landing. `card`: caixa dentro do card de login. */
+  /** `banner`: tarja no topo da landing. `card`: caixa dentro do card de login. */
   variant: 'banner' | 'card';
 };
 
-function Badge({ label }: { label: string }) {
+/** Ícone de atenção amarelo dentro de um círculo azul-escuro, usado na tarja e no selo flutuante. */
+export function WarningIcon({ size }: { size: number }) {
   return (
     <Box
-      component="span"
+      aria-hidden="true"
       sx={{
-        display: 'inline-flex',
+        display: 'flex',
         alignItems: 'center',
-        gap: 0.75,
+        justifyContent: 'center',
         flexShrink: 0,
-        alignSelf: 'flex-start',
-        px: 1.25,
-        py: 0.25,
-        borderRadius: '999px',
-        backgroundColor: COLORS.badgeBackground,
-        color: COLORS.badgeText,
-        fontSize: '0.75rem',
-        fontWeight: 700,
-        letterSpacing: '0.5px',
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap'
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        backgroundColor: COLORS.navy,
+        color: COLORS.yellow
       }}
     >
-      <WarningAmberRoundedIcon aria-hidden="true" sx={{ fontSize: '1rem' }} />
-      {label}
+      <WarningAmberRoundedIcon sx={{ fontSize: size * 0.55 }} />
     </Box>
   );
 }
@@ -72,34 +71,55 @@ export default function AcademicNotice({ variant }: AcademicNoticeProps) {
     return (
       <Box
         component="aside"
+        id={ACADEMIC_NOTICE_BANNER_ID}
+        tabIndex={-1}
         aria-label={t('academicNotice.title')}
         data-testid="academic-notice-banner"
-        sx={{ backgroundColor: COLORS.bannerBackground, color: COLORS.bannerText, py: 1.5 }}
+        sx={{
+          backgroundColor: COLORS.yellow,
+          color: COLORS.navy,
+          outline: 'none',
+          // Faixa listrada de "atenção" na borda de baixo.
+          borderBottom: '6px solid transparent',
+          borderImage: `repeating-linear-gradient(-45deg, ${COLORS.navy} 0 12px, ${COLORS.yellow} 12px 24px) 6`
+        }}
       >
         <Container maxWidth="lg">
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             alignItems={{ xs: 'flex-start', md: 'center' }}
-            gap={{ xs: 1.25, md: 2 }}
+            gap={{ xs: 1.5, md: 2.5 }}
+            sx={{ py: 2 }}
           >
-            <Badge label={t('academicNotice.badge')} />
-            <Typography sx={{ flex: 1, fontSize: '0.875rem', lineHeight: 1.5 }}>
-              {renderWithStrong(t('academicNotice.summary'))}
-            </Typography>
+            <Stack direction="row" alignItems="flex-start" gap={2} sx={{ flex: 1 }}>
+              <WarningIcon size={44} />
+              <Box>
+                <Typography component="p" sx={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.4, mb: 0.5 }}>
+                  {t('academicNotice.title')}
+                </Typography>
+                <Typography sx={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                  {renderWithStrong(t('academicNotice.summary'))}
+                </Typography>
+              </Box>
+            </Stack>
             <Button
               component="a"
               href={ACADEMIC_NOTICE_LEARN_MORE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              variant="outlined"
-              size="small"
+              variant="contained"
+              disableElevation
               sx={{
                 flexShrink: 0,
-                color: COLORS.bannerText,
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-                fontWeight: 600,
+                alignSelf: { xs: 'flex-end', md: 'center' },
+                px: 2.25,
+                py: 1,
+                backgroundColor: COLORS.navy,
+                color: COLORS.white,
+                fontWeight: 700,
                 textTransform: 'none',
-                '&:hover': { borderColor: COLORS.bannerText, backgroundColor: 'rgba(255, 255, 255, 0.08)' }
+                borderRadius: 1,
+                '&:hover': { backgroundColor: COLORS.navyHover }
               }}
             >
               {t('academicNotice.learnMore')}
