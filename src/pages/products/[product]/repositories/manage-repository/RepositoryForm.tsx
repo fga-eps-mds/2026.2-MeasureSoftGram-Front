@@ -43,8 +43,8 @@ const RepositoryForm: NextPageWithLayout = () => {
   const { terms } = useProviderTerms();
   const router = useRouter();
   const { handleRepositoryAction } = useQuery();
-  const { currentOrganization } = useOrganizationContext();
-  const { currentProduct } = useProductContext();
+  const { currentOrganization, organizationList, hasFetched, isLoading } = useOrganizationContext();
+  const { currentProduct, productsList, hasFetchedProducts } = useProductContext();
   const { t } = useTranslation('repositories');
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -69,13 +69,20 @@ const RepositoryForm: NextPageWithLayout = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   useEffect(() => {
-    if (!currentOrganization?.id || !currentProduct?.id) {
+    // numa carga direta a organização e o produto ainda não chegaram: só volta para a home quando as listas já
+    // chegaram vazias (o atual é escolhido um render depois de a lista chegar)
+    const noOrganization = hasFetched && !isLoading && !organizationList?.length;
+    const noProduct = Boolean(hasFetchedProducts) && !productsList?.length;
+    if (noOrganization || noProduct) {
       void router.push('/home');
     }
+  }, [hasFetched, isLoading, organizationList, hasFetchedProducts, productsList, router]);
 
+  useEffect(() => {
     const repositoryId = router.query.id as string;
     if (repositoryId) {
       setIsEditMode(true);
+      if (!currentOrganization?.id || !currentProduct?.id) return;
       const fetchRepositoryData = async () => {
         try {
           const result = await repository.getRepository(currentOrganization.id, currentProduct.id, repositoryId);
@@ -183,12 +190,6 @@ const RepositoryForm: NextPageWithLayout = () => {
     setErrorMessage(errorMsg);
     setOpenSnackbar(true);
   }
-
-  useEffect(() => {
-    if (!currentOrganization?.id || !currentProduct?.id) {
-      void router.push('/home');
-    }
-  }, [currentOrganization?.id, currentProduct?.id, router]);
 
   return (
     <Container>

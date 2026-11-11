@@ -344,6 +344,12 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
       await openEdit(page);
       await expect(page).toHaveURL(/\/repositories\/manage-repository\/?\?id=1$/);
     });
+
+    test('a URL da edição aberta direto mostra o projeto, sem voltar para a home', async ({ page }) => {
+      await page.goto(`${REPOSITORIES_PATH}manage-repository?id=1`);
+      await expect(page.getByLabel('Nome do Projeto')).toHaveValue(PARSER_REPOSITORY.name);
+      await expect(page).toHaveURL(/\/repositories\/manage-repository\/?\?id=1$/);
+    });
   });
 });
 
