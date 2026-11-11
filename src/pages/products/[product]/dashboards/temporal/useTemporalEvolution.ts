@@ -22,6 +22,8 @@ export interface FilterOption {
 
 export interface EvolutionChartData {
   series: TimeSeries[];
+  /** Nomes das entidades escolhidas que não têm nenhuma medição no repositório, e por isso ficam fora do gráfico. */
+  missing: string[];
   isLoading: boolean;
   hasError: boolean;
   retry: () => void;
@@ -129,8 +131,12 @@ export function useTemporalEvolution(organizationId: string, productId: string) 
 
   const charts = (Object.keys(histories) as EvolutionLevel[]).reduce((result, level) => {
     const request = histories[level];
+    const series = toTimeSeries(request.data?.results, entitiesByLevel[level], granularity);
     result[level] = {
-      series: toTimeSeries(request.data?.results, entitiesByLevel[level], granularity),
+      series,
+      missing: entitiesByLevel[level]
+        .filter((entity) => !series.some((item) => item.key === entity.key))
+        .map((entity) => entity.name),
       isLoading: treeRequest.isLoading || request.isLoading,
       hasError: !!treeRequest.error || !!request.error,
       retry: () => {

@@ -263,6 +263,21 @@ describe('<TemporalDashboard />', () => {
     expect(chart('Medidas').getAllByText(/depois que a Action do MeasureSoftGram analisa o repositório/)).toBeTruthy();
   });
 
+  it('avisa quais medidas não têm valores sem esconder as que têm', () => {
+    const partial = [entity('passed_tests', [record(0.4, '2026-03-01T10:00:00')]), entity('test_coverage', [])];
+    responses = (request) =>
+      request.url.includes('historical-values/measures') ? { data: { results: partial } } : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+
+    expect(
+      chart('Medidas').getByText('Medidas sem valores neste repositório: Test Coverage, CI Feedback Time')
+    ).toBeTruthy();
+    expect(chart('Medidas').getByText(/As demais seguem no gráfico/)).toBeTruthy();
+    expect(chart('Medidas').getByTestId('echarts').textContent).toBe('Passed Tests:1');
+    expect(chart('Subcaracterísticas').queryByText(/sem valores neste repositório/)).toBeNull();
+  });
+
   it('mostra estado vazio quando o produto não tem repositórios', () => {
     responses = (request) =>
       request.url.endsWith('/repositories/') ? { data: { results: [] } } : defaultResponse(request);
