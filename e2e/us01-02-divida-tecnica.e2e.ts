@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
 import { card, choose, chooseLevelTab, downloadCsv, select } from './support/helpers';
-import { ENTIDADE_PATH, entidade, TEMPORAL_PATH, temporal } from './fixtures/divida-tecnica';
+import { ENTIDADE_PATH, entidade, TEMPORAL_PATH, temporal, temporalSemDivida } from './fixtures/divida-tecnica';
 
 // a tela do repositório ainda não mostra medidas (TASK23.01.03): os critérios são conferidos na Análise por Entidade
 // e na Evolução Temporal, a proposta do plano; o nome da medida vem do Service
@@ -165,5 +165,20 @@ test.describe('@US01.02-CA5 Sem cálculo, a medida aparece como indisponível e 
       '50%',
       '0,51 (C, Bom)'
     ]);
+  });
+
+  test.describe('na Evolução Temporal', () => {
+    test.use({ scenario: temporalSemDivida });
+
+    test('o gráfico de Medidas avisa que a medida não tem valores e segue com a outra', async ({ page }) => {
+      await openTemporal(page);
+      await choose(page, 'Característica', 'Maintainability');
+      await expect(select(page, 'Característica')).toHaveText('Maintainability');
+
+      const measures = card(page, 'Medidas');
+      await expect(measures.getByText(`Medidas sem valores neste repositório: ${MEASURE}`)).toBeVisible();
+      await expect(measures.getByText('As demais seguem no gráfico.')).toBeVisible();
+      expect(await exportMeasures(page)).toEqual(MODIFIABILITY_MEASURES_CSV.slice(0, 3));
+    });
   });
 });
