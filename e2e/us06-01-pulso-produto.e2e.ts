@@ -113,17 +113,14 @@ test.describe('@US06.01-CA1 Um ponto por release em cada repositório, no eixo d
   });
 
   // pedido do PO em 08/10: "mantenha o componente de filtro abaixo dos gráficos"
-  test.fixme(
-    'o filtro de período (De/Até) fica abaixo do gráfico (bug: o filtro fica acima do gráfico)',
-    async ({ page }) => {
-      await openPulse(page);
-      const [from, canvas] = await Promise.all([
-        page.getByLabel('De', { exact: true }).boundingBox(),
-        chart(page).boundingBox()
-      ]);
-      expect(from!.y).toBeGreaterThan(canvas!.y + canvas!.height);
-    }
-  );
+  test('o filtro de período (De/Até) fica abaixo do gráfico', async ({ page }) => {
+    await openPulse(page);
+    const [from, canvas] = await Promise.all([
+      page.getByLabel('De', { exact: true }).boundingBox(),
+      chart(page).boundingBox()
+    ]);
+    expect(from!.y).toBeGreaterThan(canvas!.y + canvas!.height);
+  });
 
   test.describe('indicador que muda de faixa uma vez só', () => {
     test.use({ scenario: umaTrocaDeFaixa });
