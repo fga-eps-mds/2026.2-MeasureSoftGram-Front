@@ -186,3 +186,34 @@ export const grupoComNomeDoUsuario: ApiHandlers = {
   [`${JOAO_PERSONAL_API}/products/`]: EMPTY_PAGE,
   [`${JOAO_PERSONAL_API}/gitlab-projects/`]: pagesOf([])
 };
+
+/** O produto da organização pessoal de joao, para a tela mostrar de qual organização são os produtos (BUG12.02). */
+export const JOAO_PERSONAL_PRODUCT = {
+  ...products.results[0],
+  id: '5',
+  name: 'Produto do joao',
+  key: 'produto-do-joao'
+};
+const comProdutoPessoal: ApiHandlers = {
+  [`${JOAO_PERSONAL_API}/products/`]: { ...products, results: [JOAO_PERSONAL_PRODUCT] },
+  [`${JOAO_PERSONAL_API}/products/${JOAO_PERSONAL_PRODUCT.id}/repositories/`]: EMPTY_PAGE,
+  // na troca, o menu lateral pede por um instante o produto anterior (1) na organização nova
+  [`${JOAO_PERSONAL_API}/products/1/repositories/`]: EMPTY_PAGE
+};
+
+/** Cenário 1 do BUG12.02: a organização do grupo joao existe e é a atual; joao escolhe o namespace pessoal. */
+export const pessoalComNomeDeGrupo: ApiHandlers = { ...grupoComNomeDoUsuario, ...comProdutoPessoal };
+
+/**
+ * Cenário 2 do BUG12.02: existe uma organização joao de outra pessoa, que joao não enxerga (não vem na lista); ele só
+ * tem o namespace pessoal e entra na importação pela primeira vez, com a organização 1 (de outro nome) como atual.
+ */
+export const pessoalComNomeDeOutraOrg: ApiHandlers = {
+  ...comProjetos,
+  [IMPORT_API.namespaces]: [JOAO_USER],
+  '/v1/organizations/': { ...organizations, count: 2, results: [organizations.results[0], JOAO_PERSONAL_ORGANIZATION] },
+  '/v1/organizations/import-gitlab-user/': JOAO_PERSONAL_ORGANIZATION,
+  [`${JOAO_PERSONAL_API}/`]: JOAO_PERSONAL_ORGANIZATION,
+  [`${JOAO_PERSONAL_API}/gitlab-projects/`]: pagesOf([]),
+  ...comProdutoPessoal
+};
