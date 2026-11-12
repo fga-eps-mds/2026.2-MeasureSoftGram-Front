@@ -19,6 +19,30 @@ export interface IProductContext {
   loadAllProducts: () => Promise<void>;
 }
 
+/**
+ * Produto que deve virar o atual, ou undefined para manter o atual: o da URL, se a lista o tiver; sem produto atual,
+ * o salvo no navegador ou o primeiro da lista.
+ */
+function productToSelect(
+  productsList: Product[],
+  currentProduct: Product | null | undefined,
+  routeProductId: string | undefined,
+  storedProductId: string | null
+): Product | undefined {
+  const routeProduct = routeProductId
+    ? productsList.find((product) => String(product.id) === routeProductId)
+    : undefined;
+  if (routeProduct) {
+    // compara pelo id: o produto pode ter vindo completo do getProductById, e não precisa ser trocado
+    return String(currentProduct?.id) === routeProductId ? undefined : routeProduct;
+  }
+  if (currentProduct) return undefined;
+  const stored = storedProductId
+    ? productsList.find((p) => p.id === storedProductId || p.id?.toString() === storedProductId)
+    : undefined;
+  return stored ?? productsList[0];
+}
+
 export const ProductContext = createContext<IProductContext | undefined>(undefined);
 
 export function ProductProvider({ children }: Props) {
@@ -72,24 +96,8 @@ export function ProductProvider({ children }: Props) {
 
   useEffect(() => {
     if (productsList.length > 0) {
-      const routeProduct = routeProductId
-        ? productsList.find((product) => String(product.id) === routeProductId)
-        : undefined;
-      if (routeProduct) {
-        // compara pelo id: o produto pode ter vindo completo do getProductById, e não precisa ser trocado
-        if (String(currentProduct?.id) !== routeProductId) setCurrentProduct(routeProduct);
-        return;
-      }
-      if (currentProduct === undefined || currentProduct === null) {
-        if (storedProductId) {
-          const found = productsList.find((p) => p.id === storedProductId || p.id?.toString() === storedProductId);
-          if (found) {
-            setCurrentProduct(found);
-            return;
-          }
-        }
-        setCurrentProduct(productsList[0]);
-      }
+      const next = productToSelect(productsList, currentProduct, routeProductId, storedProductId);
+      if (next) setCurrentProduct(next);
     } else if (currentOrganization && loadedOrgId === String(currentOrganization.id)) {
       // a lista desta organização já chegou e veio vazia
       setCurrentProduct(null);
