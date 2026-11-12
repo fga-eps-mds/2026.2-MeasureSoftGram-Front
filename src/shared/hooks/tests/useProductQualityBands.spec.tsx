@@ -62,6 +62,17 @@ describe('toQualityBands', () => {
       })
     ).toEqual(QUALITY_BANDS);
   });
+
+  it('devolve as faixas padrão quando vêm 5 faixas mas uma falta ou está sem limite', () => {
+    const [e, d, c, b] = CUSTOM_PRODUCT_BANDS.bands;
+    expect(toQualityBands({ ...CUSTOM_PRODUCT_BANDS, bands: [e, d, c, b, b] })).toEqual(QUALITY_BANDS);
+    expect(
+      toQualityBands({
+        ...CUSTOM_PRODUCT_BANDS,
+        bands: [e, d, c, b, { key: 'A', min: null, max: 1 } as unknown as typeof b]
+      })
+    ).toEqual(QUALITY_BANDS);
+  });
 });
 
 describe('useProductQualityBands', () => {
@@ -97,6 +108,30 @@ describe('useProductQualityBands', () => {
 
     expect(result.current.bands).toEqual(QUALITY_BANDS);
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it('sem organização ou produto, não busca e fica com as faixas padrão', () => {
+    const { result } = renderHook(() => useProductQualityBands(undefined, undefined), {
+      wrapper: createWrapper()
+    });
+
+    expect(mockedApiRequest).not.toHaveBeenCalled();
+    expect(result.current).toMatchObject({ bands: QUALITY_BANDS, isError: false, isLoading: false });
+  });
+
+  it('retry busca as faixas de novo e tira o aviso quando a nova tentativa dá certo', async () => {
+    mockedApiRequest.mockRejectedValueOnce(new Error('500'));
+    mockedApiRequest.mockResolvedValue({ data: CUSTOM_PRODUCT_BANDS, status: 200 });
+
+    const { result } = renderHook(() => useProductQualityBands('1', '5'), {
+      wrapper: createWrapper()
+    });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    act(() => result.current.retry());
+
+    await waitFor(() => expect(result.current.bands).toEqual(toQualityBands(CUSTOM_PRODUCT_BANDS)));
+    expect(result.current.isError).toBe(false);
   });
 
   it('atualiza as faixas quando um mutate do SWR invalida a mesma chave da aba de configurações', async () => {
