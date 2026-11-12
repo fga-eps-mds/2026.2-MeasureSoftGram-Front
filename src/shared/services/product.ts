@@ -19,6 +19,11 @@ import { ProductQualityBand, ProductQualityBands } from '@customTypes/qualityBan
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import type { GetRequest } from '@hooks/useRequest';
 import api from './api';
+import { DuplicateMessages, saveError } from './saveError';
+
+const PRODUCT_DUPLICATES: DuplicateMessages = {
+  name: { server: 'Product with this name already exists.', message: 'Já existe um produto com este nome.' }
+};
 
 export interface ProductFormData {
   name: string;
@@ -47,16 +52,7 @@ class ProductQuery {
       const response = await api.put(`/v1/organizations/${data.organizationId}/products/${productId}/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      const error = err as AxiosError;
-
-      const responseData = error.response?.data as { name?: string[]; key?: string[] };
-      if (error.response && error.response.status === 400) {
-        if (responseData.name && responseData.name[0] === 'Product with this name already exists.') {
-          return { type: 'error', error: new Error('Já existe um produto com este nome.') };
-        }
-      }
-
-      return { type: 'error', error: new Error('Erro ao atualizar o produto.') };
+      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, 'Erro ao atualizar o produto.') };
     }
   }
 
@@ -354,16 +350,7 @@ class ProductQuery {
       const response = await api.post(`/v1/organizations/${data.organizationId}/products/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      const error = err as AxiosError;
-
-      const responseData = error.response?.data as { name?: string[]; key?: string[] };
-      if (error.response && error.response.status === 400) {
-        if (responseData.name && responseData.name[0] === 'Product with this name already exists.') {
-          return { type: 'error', error: new Error('Já existe um produto com este nome.') };
-        }
-      }
-
-      return { type: 'error', error: new Error('Erro ao criar o produto.') };
+      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, 'Erro ao criar o produto.') };
     }
   }
 
