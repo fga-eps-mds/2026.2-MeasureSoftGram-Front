@@ -1,5 +1,6 @@
 import { Locator, Page, Request } from '@playwright/test';
 import { expect, test } from './support/fixtures';
+import { OAUTH_SERVER_TAG } from './support/service';
 import { PRODUCT_PATH } from './fixtures/common';
 import {
   comProjetos,
@@ -30,7 +31,7 @@ test.beforeEach(async ({ page }) => {
 const IMPORTED = 'Projeto parser importado com sucesso!';
 
 /** Os avisos do react-toastify (o anunciador de rotas do Next também tem role alert). */
-const toasts = (page: Page) => page.locator('.Toastify__toast-body');
+const toasts = (page: Page) => page.locator('.Toastify__toast');
 
 /** O FaGitlab do react-icons não tem nome acessível: o desenho (path) identifica o ícone. */
 const gitlabIcon = (scope: Page | Locator) => scope.locator('svg:has(path[d^="M105.2 24.9"])');
@@ -58,7 +59,7 @@ const projectsRequest = (page: Page, query: Record<string, string | null> = {}):
   });
 
 const importRequest = (page: Page) =>
-  page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith(`/api${IMPORT_API.repositories}`));
+  page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith(`/bff${IMPORT_API.repositories}`));
 
 const REPOSITORIES_PATH = `${PRODUCT_PATH}/repositories/`;
 const parserRow = (page: Page) => page.getByTestId('repository-row').filter({ hasText: PARSER.name });
@@ -200,7 +201,7 @@ test.describe('@US12.01-CA2 Seletor de grupos e projetos do grupo escolhido, com
 
     test('ao escolher o subgrupo, importa o grupo e lista os projetos dele', async ({ page }) => {
       // o mock casa só pelo caminho: aqui a organização depende do grupo do corpo do POST
-      await page.route('**/api/v1/organizations/import-gitlab/', (route) =>
+      await page.route('**/bff/v1/organizations/import-gitlab/', (route) =>
         route.fulfill({ json: ORGANIZATION_OF[route.request().postDataJSON().gitlab_group_id] })
       );
       await openImport(page);
@@ -214,7 +215,7 @@ test.describe('@US12.01-CA2 Seletor de grupos e projetos do grupo escolhido, com
       expect((await importGroup).postDataJSON()).toEqual({ gitlab_group_id: SUBGROUP.id });
       const url = new URL((await subgroupProjects).url());
       // a organização é a que o POST devolveu para o subgrupo
-      expect(url.pathname).toBe(`/api${IMPORT_API.squadProjects}`);
+      expect(url.pathname).toBe(`/bff${IMPORT_API.squadProjects}`);
       expect(Object.fromEntries(url.searchParams)).toEqual({
         namespace_id: String(SUBGROUP.id),
         kind: 'group',
@@ -369,7 +370,8 @@ test.describe('@US12.01-CA7 Falha na API do GitLab e token expirado, sem detalhe
     });
   });
 
-  test.describe('token expirado ao listar os projetos', () => {
+  // o "Autorizar GitLab" passa pelo OAuth no servidor do Next, que valida o client id no Service fake
+  test.describe('token expirado ao listar os projetos', { tag: OAUTH_SERVER_TAG }, () => {
     test.use({ scenario: token409 });
 
     test('mostra "Token do GitLab expirado ou inválido" e "Autorizar GitLab" leva ao OAuth do GitLab', async ({
@@ -386,7 +388,7 @@ test.describe('@US12.01-CA7 Falha na API do GitLab e token expirado, sem detalhe
     });
   });
 
-  test.describe('token expirado ao listar os grupos', () => {
+  test.describe('token expirado ao listar os grupos', { tag: OAUTH_SERVER_TAG }, () => {
     test.use({ scenario: token409Grupos });
 
     test('mostra o mesmo aviso, com "Autorizar GitLab", no lugar da lista', async ({ page }) => {

@@ -111,7 +111,7 @@ Os gráficos de pulso (`formatProductPulseCsv` e `formatRepositoryPulseCsv`, em 
 
 ## Testes E2E
 
-Os testes de ponta a ponta usam o [Playwright](https://playwright.dev) só com Chromium e ficam em `e2e/**/*.e2e.ts`, fora do `src/` (o Jest, o `next lint` e o Sonar não os veem). Eles rodam contra a API simulada no navegador (`page.route`), sem Service nem MSW: o build sobe sem `NEXT_PUBLIC_API_MOCKING`, o `NEXT_PUBLIC_API_URL` aponta para o próprio servidor de teste e uma chamada a `/api/v1` sem handler faz o teste falhar.
+Os testes de ponta a ponta usam o [Playwright](https://playwright.dev) só com Chromium e ficam em `e2e/**/*.e2e.ts`, fora do `src/` (o Jest, o `next lint` e o Sonar não os veem). Eles rodam contra a API simulada no navegador (`page.route` no `/bff/v1`), sem MSW: o build sobe sem `NEXT_PUBLIC_API_MOCKING` e uma chamada a `/bff/v1` sem handler faz o teste falhar. O que o servidor do Next pede ao Service por conta própria (validar o token da sessão, o client id do OAuth, trocar o code, encerrar a sessão) vai para um Service fake (`e2e/support/mock-service.mjs`), que o `webServer` sobe junto e o Next recebe como `SERVICE_URL`. Os testes com a tag `@oauth-servidor`, que trocam as respostas desse Service fake, ficam no projeto `oauth-servidor`, que roda um teste por vez.
 
 ```bash
 pnpm exec playwright install chromium   # uma vez, baixa o navegador
@@ -124,7 +124,7 @@ Fora do CI, o `webServer` do `playwright.config.ts` reaproveita um servidor que 
 
 ### Como escrever um cenário
 
-1. Importe `test` e `expect` de `e2e/support/fixtures.ts`. Esse teste base semeia a sessão fake (as mesmas chaves do `src/mocks/initMocks.ts`) e simula a API com os handlers comuns de `e2e/fixtures/common.ts`.
+1. Importe `test` e `expect` de `e2e/support/fixtures.ts`. Esse teste base semeia a sessão fake (os cookies `msgram_token`, `msgram_provider` e `msgram_login_at`, como o login grava) e simula a API com os handlers comuns de `e2e/fixtures/common.ts`.
 2. Descreva as respostas da página num módulo em `e2e/fixtures/<pagina>/`: JSONs no formato que o Service devolve e um objeto de handlers por cenário, com o caminho a partir de `/v1` como chave. O valor é o JSON da resposta, um `{ status, json, delayMs }` (ex.: `serverError`) ou uma função da URL, para escolher a resposta pela query.
 3. Escolha o cenário no `describe` com `test.use({ scenario })`; para trocar uma resposta no meio do teste (um erro depois do carregamento, por exemplo), use `api.set(caminho, resposta)`.
 4. Prefira seletores por papel e texto (`getByRole`, `getByText`) e os `data-testid` que a tela já tem; os gráficos são canvas, então verifique o resumo, os filtros, os estados do `DashboardCard` e os downloads.

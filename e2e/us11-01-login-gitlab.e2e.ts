@@ -1,5 +1,7 @@
-import { Page, Request } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
+import { cookieValue, SESSION_COOKIES } from './support/session';
+import { OAUTH_SERVER_TAG, waitForServiceRequest } from './support/service';
 import { PRODUCT_PATH } from './fixtures/common';
 import { GITLAB_TOKEN, LOGIN_API, login400, login502, loginOk, validateFalha } from './fixtures/login-gitlab';
 
@@ -9,13 +11,10 @@ test.use({ session: false });
 const USERNAME = 'usuario-mock';
 const EXPIRED = 'Sua sessão expirou. Por favor, faça login novamente!';
 const TECHNICAL_DETAIL = /\b(400|500|502)\b|Request failed|status code|Bad Gateway|Erro interno/;
-/** A página pública ("/", pelo useRequireAuth) ou o login ("/auth", pelo 401 do Service tratado em services/api.ts). */
-const PUBLIC_PAGE = /^http:\/\/localhost:\d+\/(auth\/?)?$/;
+/** A página pública ("/") ou o login ("/auth", com o returnTo da tela pedida), para onde o proxy manda sem sessão. */
+const PUBLIC_PAGE = /^http:\/\/localhost:\d+\/(auth\/?(\?returnTo=[^&]+)?)?$/;
 
-/**
- * Telas autenticadas de src/pages. As que chamam useRequireAuth voltam a "/"; as outras (organizações, releases,
- * repositórios) não têm o hook e só saem porque pedem a API e o 401 do Service manda para /auth.
- */
+/** Telas autenticadas de src/app/(dashboard): sem a sessão, o proxy manda todas para o login. */
 const PROTECTED_ROUTES = [
   '/home/',
   '/about/',
@@ -39,9 +38,6 @@ const PROTECTED_ROUTES = [
 /** O botão mostra "LOGIN COM GITLAB" em maiúsculas; o CA diz "Login com GitLab". */
 const loginButton = (page: Page) => page.getByRole('button', { name: /login com gitlab/i });
 
-/** Pedido do navegador a uma rota da API simulada (caminho a partir de /v1). */
-const apiRequest = (path: string) => (request: Request) => new URL(request.url()).pathname === `/api${path}`;
-
 /**
  * O GitLab simulado: devolve o navegador ao redirect_uri com o state que o Front mandou, mais o code (Authorize) ou o
  * error (Deny).
@@ -58,12 +54,15 @@ async function gitlabAnswers(page: Page, answer: { code: string } | { error: str
 /** O usuário no rodapé do menu lateral, que abre o menu com "Finalizar Sessão". */
 const sideMenuUser = (page: Page) => page.getByTestId('side-menu').getByText(USERNAME, { exact: true });
 
-/** A conta que o Front guardou na sessão. */
-const storedAccount = (page: Page) =>
-  page.evaluate(() => {
-    const { id, username } = JSON.parse(localStorage.getItem('session') ?? 'null') ?? {};
-    return { id, username };
-  });
+/** A conta da sessão: o /bff pede ao Service a conta do token guardado no cookie. */
+const storedAccount = async (page: Page) => {
+  // page.request leva os cookies da página e não passa pelo page.route
+  const { id, username } = await (await page.request.get('/bff/v1/accounts/')).json();
+  return { id, username };
+};
+
+/** O token que o Service devolveu no último login com o GitLab. */
+const lastLoginKey = async () => (await waitForServiceRequest(LOGIN_API.login)).response.key as string;
 
 /** Entra pelo GitLab (autorizando) e espera a página inicial com o usuário no menu. */
 async function loginWithGitlab(page: Page) {
@@ -79,7 +78,7 @@ async function finishSession(page: Page) {
   await sideMenuUser(page).click();
   await page.getByRole('menuitem', { name: 'Finalizar Sessão' }).click();
   await expect(page).toHaveURL('/');
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull();
+  await expect.poll(() => cookieValue(page, SESSION_COOKIES.token)).toBeNull();
 }
 
 /** Abre cada rota numa aba nova do mesmo navegador (mesma sessão) e confere que ela manda para a página pública. */
@@ -88,7 +87,7 @@ async function expectRedirectsToPublicPage(page: Page, routes: string[]) {
     routes.map(async (route) => {
       const tab = await page.context().newPage();
       // a aba nova não tem os handlers do teste: sem token, o Service recusaria qualquer pedido
-      await tab.route('**/api/v1/**', (request) =>
+      await tab.route('**/bff/v1/**', (request) =>
         request.fulfill({ status: 401, json: { detail: 'Sem credenciais.' } })
       );
       await tab.goto(route);
@@ -99,7 +98,7 @@ async function expectRedirectsToPublicPage(page: Page, routes: string[]) {
   );
 }
 
-test.describe('@US11.01-CA1 Botão "Login com GitLab" na tela de login', () => {
+test.describe('@US11.01-CA1 Botão "Login com GitLab" na tela de login', { tag: OAUTH_SERVER_TAG }, () => {
   test.use({ scenario: loginOk });
 
   test('a tela de login, sem sessão, mostra o botão habilitado', async ({ page }) => {
@@ -109,19 +108,20 @@ test.describe('@US11.01-CA1 Botão "Login com GitLab" na tela de login', () => {
   });
 });
 
-test.describe('@US11.01-CA2 Autorizar no GitLab entra logado na página inicial', () => {
+test.describe('@US11.01-CA2 Autorizar no GitLab entra logado na página inicial', { tag: OAUTH_SERVER_TAG }, () => {
   test.use({ scenario: loginOk });
 
   test('o botão valida o client id e leva à autorização oficial do GitLab', async ({ page, baseURL }) => {
     await gitlabAnswers(page, { code: 'e2e' });
     await page.goto('/auth/');
-    const [validate, authorize] = await Promise.all([
-      page.waitForRequest(apiRequest(LOGIN_API.validate)),
+    const [authorize] = await Promise.all([
       page.waitForRequest(/^https:\/\/gitlab\.com\/oauth\/authorize\?/),
       loginButton(page).click()
     ]);
 
-    expect(validate.postDataJSON()).toEqual({ client_id: 'e2e-gitlab' });
+    // quem valida o client id é o servidor do Next, antes de mandar o navegador ao GitLab
+    const validate = await waitForServiceRequest(LOGIN_API.validate);
+    expect(validate.body).toEqual({ client_id: 'e2e-gitlab' });
     const params = new URL(authorize.url()).searchParams;
     expect(params.get('client_id')).toBe('e2e-gitlab');
     expect(params.get('redirect_uri')).toBe(`${baseURL}/`);
@@ -132,14 +132,13 @@ test.describe('@US11.01-CA2 Autorizar no GitLab entra logado na página inicial'
   test('ao autorizar, troca o code pelo token e abre a página inicial com o usuário do GitLab', async ({ page }) => {
     await gitlabAnswers(page, { code: 'e2e' });
     await page.goto('/auth/');
-    const [login, account] = await Promise.all([
-      page.waitForRequest(apiRequest(LOGIN_API.login)),
-      page.waitForRequest(apiRequest('/v1/accounts/')),
-      loginButton(page).click()
-    ]);
+    await loginButton(page).click();
 
-    expect(login.postDataJSON()).toEqual({ code: 'e2e' });
-    expect(account.headers().authorization).toBe(`Token ${GITLAB_TOKEN}`);
+    // a troca do code e a consulta da conta saem do servidor do Next; o token fica no cookie HttpOnly
+    const login = await waitForServiceRequest(LOGIN_API.login);
+    expect(login.body).toEqual({ code: 'e2e' });
+    expect(login.response.key).toMatch(new RegExp(`^${GITLAB_TOKEN}`));
+    await waitForServiceRequest('/v1/accounts/', (request) => request.authorization === `Token ${login.response.key}`);
     await expect(page.getByText('Login realizado com sucesso!')).toBeVisible();
     await expect(page).toHaveURL(/\/home\/?$/);
     // nome e e-mail não aparecem em nenhuma tela do Front: o menu lateral mostra o username
@@ -147,7 +146,7 @@ test.describe('@US11.01-CA2 Autorizar no GitLab entra logado na página inicial'
   });
 });
 
-test.describe('@US11.01-CA3 Entrar com o GitLab abre a conta existente, sem perfil duplicado', () => {
+test.describe('@US11.01-CA3 Entrar com o GitLab abre a conta existente, sem perfil duplicado', { tag: OAUTH_SERVER_TAG }, () => {
   test.use({ scenario: loginOk });
 
   // Quem reaproveita a conta (e não cria outro perfil para o mesmo usuário do GitLab) é o Service. O Front prova a parte
@@ -158,15 +157,17 @@ test.describe('@US11.01-CA3 Entrar com o GitLab abre a conta existente, sem perf
     expect(first).toEqual({ id: 1, username: USERNAME });
 
     await finishSession(page);
-    const [account] = await Promise.all([page.waitForRequest(apiRequest('/v1/accounts/')), loginWithGitlab(page)]);
+    await loginWithGitlab(page);
+    const key = await lastLoginKey();
 
-    expect(account.headers().authorization).toBe(`Token ${GITLAB_TOKEN}`);
+    expect(key).toMatch(new RegExp(`^${GITLAB_TOKEN}`));
+    await waitForServiceRequest('/v1/accounts/', (request) => request.authorization === `Token ${key}`);
     expect(await storedAccount(page)).toEqual(first);
     await expect(sideMenuUser(page)).toBeVisible();
   });
 });
 
-test.describe('@US11.01-CA4 Cancelar no GitLab volta ao login com "Login cancelado"', () => {
+test.describe('@US11.01-CA4 Cancelar no GitLab volta ao login com "Login cancelado"', { tag: OAUTH_SERVER_TAG }, () => {
   test.use({ scenario: loginOk });
 
   test('o "Deny" do GitLab (error=access_denied) volta a /auth com o aviso', async ({ page }) => {
@@ -180,7 +181,7 @@ test.describe('@US11.01-CA4 Cancelar no GitLab volta ao login com "Login cancela
   });
 });
 
-test.describe('@US11.01-CA5 Falha, sessão expirada ou GitLab fora do ar: mensagem sem detalhe técnico e nova tentativa', () => {
+test.describe('@US11.01-CA5 Falha, sessão expirada ou GitLab fora do ar: mensagem sem detalhe técnico e nova tentativa', { tag: OAUTH_SERVER_TAG }, () => {
   test.describe('o Service não valida o client id', () => {
     test.use({ scenario: validateFalha });
 
@@ -238,29 +239,33 @@ test.describe('@US11.01-CA5 Falha, sessão expirada ou GitLab fora do ar: mensag
 
     test('mostra "Sua sessão expirou. Por favor, faça login novamente!"', async ({ page }) => {
       await loginWithGitlab(page);
-      await page.evaluate(() => localStorage.setItem('login_timestamp', String(Date.now() - 121 * 60 * 1000)));
+      // o início da sessão fica no cookie que o login gravou
+      await page
+        .context()
+        .addCookies([{ name: SESSION_COOKIES.loginAt, value: String(Date.now() - 121 * 60 * 1000), url: new URL('/', page.url()).toString() }]);
       await page.reload();
       await expect(page.getByText(EXPIRED)).toBeVisible();
     });
   });
 });
 
-test.describe('@US11.01-CA6 "Finalizar Sessão" no menu do usuário encerra a sessão', () => {
+test.describe('@US11.01-CA6 "Finalizar Sessão" no menu do usuário encerra a sessão', { tag: OAUTH_SERVER_TAG }, () => {
   test.use({ scenario: loginOk });
 
   test('encerra a sessão no Service e volta à página pública', async ({ page }) => {
     await loginWithGitlab(page);
     await sideMenuUser(page).click();
-    const [logout] = await Promise.all([
-      page.waitForRequest(apiRequest(LOGIN_API.logout)),
-      page.getByRole('menuitem', { name: 'Finalizar Sessão' }).click()
-    ]);
+    const key = await lastLoginKey();
+    await page.getByRole('menuitem', { name: 'Finalizar Sessão' }).click();
 
-    expect(logout.method()).toBe('DELETE');
+    // o /bff/session encerra a sessão no Service com o token do cookie
+    const logout = await waitForServiceRequest(LOGIN_API.logout);
+    expect(logout.method).toBe('DELETE');
+    expect(logout.authorization).toBe(`Token ${key}`);
     await expect(page.getByText('Volte logo para acompanhar seus produtos!')).toBeVisible();
     await expect(page).toHaveURL('/');
     await expect
-      .poll(() => page.evaluate(() => [localStorage.getItem('token'), localStorage.getItem('session')]))
+      .poll(async () => [await cookieValue(page, SESSION_COOKIES.token), await cookieValue(page, SESSION_COOKIES.provider)])
       .toEqual([null, null]);
   });
 

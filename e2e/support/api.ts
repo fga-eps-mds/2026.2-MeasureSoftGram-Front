@@ -10,7 +10,7 @@ export interface Reply {
 /** O JSON da resposta, um Reply ou uma função da URL pedida (undefined conta como rota sem handler). */
 export type Handler = unknown | Reply | ((url: URL) => unknown | Reply | undefined);
 
-/** Caminhos a partir de /v1 (sem o /api), como os services do Front montam. */
+/** Caminhos a partir de /v1 (sem o /bff), como os services do Front montam. */
 export type ApiHandlers = Record<string, Handler>;
 
 export interface MockApi {
@@ -43,15 +43,16 @@ function normalize(path: string): string {
 }
 
 /**
- * Simula a API: toda chamada a /api/v1 do navegador é respondida pelos handlers, por caminho exato. Uma rota sem handler
- * responde 501 e entra em unhandled, para a fixture do teste acusar em vez de passar em silêncio.
+ * Simula a API: toda chamada do navegador ao /bff/v1 (que o servidor do Next repassaria ao Service) é respondida pelos
+ * handlers, por caminho exato. Uma rota sem handler responde 501 e entra em unhandled, para a fixture do teste acusar em
+ * vez de passar em silêncio.
  */
 export async function mockApi(page: Page, handlers: ApiHandlers): Promise<MockApi> {
   const routes = new Map(Object.entries(handlers).map(([path, handler]) => [normalize(path), handler]));
   const held = new Map<string, Promise<void>>();
   const unhandled: string[] = [];
 
-  await page.route('**/api/v1/**', async (route) => {
+  await page.route('**/bff/v1/**', async (route) => {
     const url = new URL(route.request().url());
     const path = normalize(url.pathname);
     const handler = routes.get(path);
