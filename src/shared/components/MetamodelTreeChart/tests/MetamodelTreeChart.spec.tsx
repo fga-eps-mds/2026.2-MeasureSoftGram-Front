@@ -211,6 +211,90 @@ describe('<MetamodelTreeChart />', () => {
     expect(markMock).toHaveBeenCalledTimes(3);
   });
 
+  describe('medição de performance sem todas as condições (CA8)', () => {
+    const mockPerformance = (overrides: Record<string, unknown>) => {
+      const perf = {
+        mark: jest.fn(),
+        measure: jest.fn(),
+        clearMarks: jest.fn(),
+        getEntriesByName: jest.fn((name: string) => {
+          if (name === 'metamodelo-render-start') return [{ name }];
+          if (name === 'metamodelo-render-time') return [{ duration: 7.6 }];
+          return [];
+        }),
+        ...overrides
+      };
+      Object.defineProperty(window, 'performance', { writable: true, value: perf });
+      return perf;
+    };
+    const finish = () => fireEvent.click(screen.getByTestId('mock-finish-event'));
+
+    it('sem a marca de início não mede nem limpa marcas', () => {
+      const perf = mockPerformance({ getEntriesByName: jest.fn(() => []) });
+      const onPerf = jest.fn();
+      render(<MetamodelTreeChart treeData={sampleTree} onPerformanceMeasured={onPerf} />);
+
+      finish();
+
+      expect(perf.measure).not.toHaveBeenCalled();
+      expect(perf.clearMarks).not.toHaveBeenCalled();
+      expect(onPerf).not.toHaveBeenCalled();
+    });
+
+    it('sem performance.measure só limpa as marcas', () => {
+      const perf = mockPerformance({ measure: undefined });
+      const onPerf = jest.fn();
+      render(<MetamodelTreeChart treeData={sampleTree} onPerformanceMeasured={onPerf} />);
+
+      finish();
+
+      expect(perf.mark).toHaveBeenCalledWith('metamodelo-render-end');
+      expect(onPerf).not.toHaveBeenCalled();
+      expect(perf.clearMarks).toHaveBeenCalledWith('metamodelo-render-start');
+      expect(screen.getByTestId('metamodel-chart-area')).not.toHaveAttribute('data-render-ms');
+    });
+
+    it('sem medida registrada e sem clearMarks não chama o callback', () => {
+      mockPerformance({ getEntriesByName: jest.fn((name: string) => (name === 'metamodelo-render-start' ? [{ name }] : [])), clearMarks: undefined });
+      const onPerf = jest.fn();
+      render(<MetamodelTreeChart treeData={sampleTree} onPerformanceMeasured={onPerf} />);
+
+      expect(finish).not.toThrow();
+
+      expect(onPerf).not.toHaveBeenCalled();
+    });
+
+    it('sem callback guarda a duração na área do gráfico', () => {
+      mockPerformance({});
+      render(<MetamodelTreeChart treeData={sampleTree} />);
+
+      finish();
+
+      expect(screen.getByTestId('metamodel-chart-area')).toHaveAttribute('data-render-ms', '8');
+    });
+
+    it('erro na medição é ignorado', () => {
+      mockPerformance({ measure: jest.fn(() => { throw new Error('sem suporte'); }) });
+      const onPerf = jest.fn();
+      render(<MetamodelTreeChart treeData={sampleTree} onPerformanceMeasured={onPerf} />);
+
+      expect(finish).not.toThrow();
+
+      expect(onPerf).not.toHaveBeenCalled();
+    });
+
+    it('sem performance.getEntriesByName não faz nada', () => {
+      const perf = mockPerformance({ getEntriesByName: undefined });
+      const onPerf = jest.fn();
+      render(<MetamodelTreeChart treeData={sampleTree} onPerformanceMeasured={onPerf} />);
+
+      finish();
+
+      expect(perf.mark).not.toHaveBeenCalledWith('metamodelo-render-end');
+      expect(onPerf).not.toHaveBeenCalled();
+    });
+  });
+
   it('abre e fecha um ramo no clique e aumenta a área do gráfico', () => {
     const deepTree: QualityModelNode = {
       ...sampleTree,
