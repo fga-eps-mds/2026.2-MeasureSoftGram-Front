@@ -16,7 +16,7 @@ const nextConfig = {
     GITLAB_CLIENT_ID: process.env.GITLAB_CLIENT_ID
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
     tsconfigPath: './tsconfig.json'
   },
   trailingSlash: true,
