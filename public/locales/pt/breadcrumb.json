@@ -2,6 +2,8 @@
   "products": "Produtos",
   "repositories": "Repositórios",
   "repositories_gitlab": "Projetos",
+  "manage-repository": "Gerenciar repositório",
+  "manage-repository_gitlab": "Gerenciar projeto",
   "releases": "Releases",
   "organizations": "Organizações",
   "organizations_gitlab": "Grupos",
