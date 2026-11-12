@@ -7,8 +7,10 @@ import { NextPageWithLayout } from '@pages/_app.next';
 import getLayout from '@components/Layout';
 import DashboardCard from '@components/DashboardCard';
 import { ExportAllCsvButton } from '@components/ExportCsvButton';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
 import useRequireAuth from '@hooks/useRequireAuth';
 import { usePreloadECharts } from '@components/ECharts';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { DISTRIBUTION_LEVEL_LABELS } from '@utils/distributionCascade';
@@ -87,6 +89,13 @@ const DistributionDashboard: NextPageWithLayout = () => {
   const { terms } = useProviderTerms();
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
+
+  // a régua do produto pinta o histograma e a curva (US30.02); sem ela, os gráficos seguem na régua padrão
+  const {
+    bands,
+    isError: isQualityBandsError,
+    retry: retryQualityBands
+  } = useProductQualityBands(organizationId, productId);
 
   const dashboard = useDistributionDashboard(organizationId, productId);
   const { release, level, selectedEntity, distribution, entity, children, period, status, isUpdating, retry } =
@@ -178,8 +187,8 @@ const DistributionDashboard: NextPageWithLayout = () => {
       return (
         <DistributionGrid
           busy={isUpdating}
-          histogram={<DistributionHistogram entity={entity} csv={csv?.histogram} />}
-          density={<DistributionDensity entity={entity} csv={csv?.density} />}
+          histogram={<DistributionHistogram entity={entity} csv={csv?.histogram} bands={bands} />}
+          density={<DistributionDensity entity={entity} csv={csv?.density} bands={bands} />}
           boxplot={<DistributionBoxplot entity={entity} childEntities={children ?? []} csv={csv?.boxplot} />}
           scatter={<DistributionScatter entity={entity} csv={csv?.scatter} />}
           summary={<DistributionSummary summary={entity.summary} csv={csv?.summary} />}
@@ -220,6 +229,9 @@ const DistributionDashboard: NextPageWithLayout = () => {
           </Box>
 
           <DistributionFilters {...dashboard} />
+
+          {/* a régua do produto não veio: os gráficos continuam na tela com a régua padrão (CA4) */}
+          {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}
 
           {status === 'ready' && distribution && period?.first && period.last && (
             <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid="distribution-period">

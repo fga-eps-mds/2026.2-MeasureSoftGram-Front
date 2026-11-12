@@ -4,6 +4,8 @@ import '@testing-library/jest-dom';
 import { downloadCsvZip } from '@utils/exportCsv';
 import { useRepositoryPulse } from '../hooks/useRepositoryPulse';
 import { useQuery } from '../hooks/useQuery';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
+import { QUALITY_BANDS } from '@utils/qualityBands';
 import Repository from '../Repository';
 
 jest.mock('next/router', () => ({ useRouter: () => ({ query: { product: '1-2-Produto', repository: '7-api' } }) }));
@@ -22,6 +24,7 @@ jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: j
 jest.mock('../hooks/useRepositoryPulse', () => ({ useRepositoryPulse: jest.fn() }));
 jest.mock('@components/ECharts', () => ({ __esModule: true, default: () => null, usePreloadECharts: jest.fn() }));
 jest.mock('../hooks/useQuery', () => ({ useQuery: jest.fn() }));
+jest.mock('@hooks/useProductQualityBands', () => ({ useProductQualityBands: jest.fn() }));
 jest.mock('../components/Header', () => () => <div data-testid="repository-header" />);
 jest.mock('../components/TsqmiBadge', () => ({ latestTSQMIBadgeUrl }: { latestTSQMIBadgeUrl: string }) => (
   <div data-testid="tsqmi-badge">{latestTSQMIBadgeUrl}</div>
@@ -38,6 +41,9 @@ const pulseState = (overrides = {}) => ({
   hasError: false,
   ...overrides,
 });
+// régua do produto com a faixa A a partir de 0,85 (US30.02): 0,82 passa a ser B
+const productBands = QUALITY_BANDS.map((band) => ({ ...band, ...({ B: { max: 0.85 }, A: { min: 0.85 } } as Record<string, object>)[band.grade] }));
+const qualityBandsState = (overrides = {}) => ({ bands: productBands, isError: false, isLoading: false, retry: jest.fn(), ...overrides });
 const exportAllButton = () => screen.getByRole('button', { name: 'Exportar todos (.zip)' });
 
 describe('<Repository />', () => {
@@ -45,6 +51,33 @@ describe('<Repository />', () => {
     jest.clearAllMocks();
     (useRepositoryPulse as jest.Mock).mockReturnValue(pulseState());
     (useQuery as jest.Mock).mockReturnValue({ repositoryNotFound: false });
+    (useProductQualityBands as jest.Mock).mockReturnValue(qualityBandsState());
+  });
+
+  it('o CSV do pulso usa a régua do produto: com A a partir de 0,85, 0,82 é B', async () => {
+    (useRepositoryPulse as jest.Mock).mockReturnValue(
+      pulseState({ rows: [{ id: 'reliability', name: 'Reliability', measurements: [measurement(0.82)], releases: [] }] })
+    );
+
+    render(<Repository />);
+    fireEvent.click(exportAllButton());
+    await waitFor(() => expect(downloadCsvZip).toHaveBeenCalled());
+
+    expect(useProductQualityBands).toHaveBeenCalledWith('1', '2');
+    const [, charts] = (downloadCsvZip as jest.Mock).mock.calls[0];
+    expect(charts[0].rows[0].grade).toBe('B');
+  });
+
+  it('avisa quando as faixas do produto não carregam e tenta de novo', () => {
+    const retry = jest.fn();
+    (useProductQualityBands as jest.Mock).mockReturnValue(qualityBandsState({ bands: QUALITY_BANDS, isError: true, retry }));
+
+    render(<Repository />);
+
+    expect(screen.getByText('Não foi possível carregar as faixas do produto')).toBeInTheDocument();
+    expect(screen.getByTestId('repository-pulse')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it('avisa que o usuário não tem acesso ao repositório no provedor quando o servidor responde 404', () => {

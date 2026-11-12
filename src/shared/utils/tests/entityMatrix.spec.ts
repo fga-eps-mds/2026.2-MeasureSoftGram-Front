@@ -18,6 +18,8 @@ import {
   hasAnyValue,
   sortRepositoriesByTsqmi
 } from '../entityMatrix';
+import { QUALITY_BANDS } from '@utils/qualityBands';
+import { PRODUCT_BANDS } from './productQualityBandsFixture';
 
 describe('entityMatrix', () => {
   describe('formatação', () => {
@@ -239,7 +241,7 @@ describe('entityMatrix', () => {
     });
 
     it('exporta uma linha por célula do mapa, na ordem da tela, com a release, o nível e o caminho', () => {
-      const chart = formatEntityHeatmapCsv(measureMatrix());
+      const chart = formatEntityHeatmapCsv(measureMatrix(), QUALITY_BANDS);
 
       expect(chart.name).toBe('mapa-calor');
       expect(chart.columns.map((column) => column.title)).toEqual([
@@ -278,7 +280,7 @@ describe('entityMatrix', () => {
     });
 
     it('deixa vazios o valor e o grau da célula "sem dado"', () => {
-      const chart = formatEntityHeatmapCsv(measureMatrix());
+      const chart = formatEntityHeatmapCsv(measureMatrix(), QUALITY_BANDS);
       const noData = chart.rows.find((row) => row.repository === 'Front' && row.key === 'ci_feedback_time');
 
       expect(noData).toMatchObject({ value: null, grade: null, tsqmi: 0.53, tsqmi_grade: 'C' });
@@ -290,10 +292,10 @@ describe('entityMatrix', () => {
     it('deixa vazia a variação na primeira release do produto', () => {
       const matrix = firstRelease();
 
-      expect(toCsv(formatEntityHeatmapCsv(matrix)).split('\r\n')[1]).toBe(
+      expect(toCsv(formatEntityHeatmapCsv(matrix, QUALITY_BANDS)).split('\r\n')[1]).toBe(
         'R2;Medida;api;Passed Tests;passed_tests;Reliability › Testing Status;33;0,9;A;0,6;B;'
       );
-      expect(toCsv(formatEntityRankingCsv(matrix, getWorstPairs(getPairs(matrix)))).split('\r\n')).toEqual([
+      expect(toCsv(formatEntityRankingCsv(matrix, getWorstPairs(getPairs(matrix)), QUALITY_BANDS)).split('\r\n')).toEqual([
         'Release;Nível;Posição;Repositório;Entidade;Chave da entidade;Valor;Grau;Variação',
         'R2;Medida;1;api;Test Coverage;test_coverage;0,4;C;',
         'R2;Medida;2;api;Passed Tests;passed_tests;0,9;A;'
@@ -333,7 +335,7 @@ describe('entityMatrix', () => {
 
     it('exporta o ranking com a posição, o valor, o grau e a variação', () => {
       const matrix = measureMatrix();
-      const chart = formatEntityRankingCsv(matrix, getWorstPairs(getPairs(matrix)));
+      const chart = formatEntityRankingCsv(matrix, getWorstPairs(getPairs(matrix)), QUALITY_BANDS);
 
       expect(chart.name).toBe('ranking');
       expect(chart.rows).toHaveLength(10);
@@ -350,6 +352,39 @@ describe('entityMatrix', () => {
       });
       expect(variation).toBeCloseTo(-0.29, 10);
       expect(chart.rows.map((row) => row.position)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    });
+
+    it('tira o grau da régua do produto, no mapa e no ranking, para o CSV dizer o mesmo que a tela (US30.02)', () => {
+      const matrix = measureMatrix();
+      const pairs = getWorstPairs(getPairs(matrix));
+      const grade =
+        (chart: { rows: Array<{ repository: string; key: string; grade: string | null }> }) =>
+        (repositoryName: string, key: string) =>
+          chart.rows.find((row) => row.repository === repositoryName && row.key === key)?.grade;
+
+      const defaultHeatmap = grade(formatEntityHeatmapCsv(matrix, QUALITY_BANDS));
+      const productHeatmap = grade(formatEntityHeatmapCsv(matrix, PRODUCT_BANDS));
+      // 0,81 é A na régua padrão (A de 0,80) e B na do produto (A só a partir de 0,85)
+      expect(defaultHeatmap('Service', 'test_coverage')).toBe('A');
+      expect(productHeatmap('Service', 'test_coverage')).toBe('B');
+      // o grau do indicador do repositório segue a mesma régua: 0,41 cai de C para D
+      const tsqmi = (chart: ReturnType<typeof formatEntityHeatmapCsv>) =>
+        chart.rows.find((row) => row.repository === 'AI')?.tsqmi_grade;
+      expect(tsqmi(formatEntityHeatmapCsv(matrix, QUALITY_BANDS))).toBe('C');
+      expect(tsqmi(formatEntityHeatmapCsv(matrix, PRODUCT_BANDS))).toBe('D');
+      // e o ranking também: 0,22 cai de D para E
+      expect(grade(formatEntityRankingCsv(matrix, pairs, QUALITY_BANDS))('Front', 'commented_file_density')).toBe('D');
+      expect(grade(formatEntityRankingCsv(matrix, pairs, PRODUCT_BANDS))('Front', 'commented_file_density')).toBe('E');
+    });
+
+    it('exporta sem grau o valor que a régua não alcança, como a tela mostra "sem dado"', () => {
+      // um valor fora de 0 a 1 não cai em faixa nenhuma: o CSV deixa o grau vazio em vez de inventar um
+      const matrix = measureMatrix({
+        repositories: [repository(1, 'Service', [1.4, 0.7], { test_coverage: [1.2, 0.85, -0.004] })]
+      });
+      const row = formatEntityHeatmapCsv(matrix, PRODUCT_BANDS).rows.find((item) => item.key === 'test_coverage');
+
+      expect(row).toMatchObject({ value: 1.2, grade: null, tsqmi: 1.4, tsqmi_grade: null });
     });
   });
 });

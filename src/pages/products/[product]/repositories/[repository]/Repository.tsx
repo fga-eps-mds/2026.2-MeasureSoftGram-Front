@@ -8,11 +8,13 @@ import useRequireAuth from '@hooks/useRequireAuth';
 import { usePreloadECharts } from '@components/ECharts';
 import { ExportAllCsvButton } from '@components/ExportCsvButton';
 import Layout from '@components/Layout/Layout';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
 import ProductConfigFilterProvider from '@contexts/ProductConfigFilterProvider/ProductConfigFilterProvider';
 import { useRepositoryContext } from '@contexts/RepositoryProvider';
 import { getPathId } from '@utils/pathDestructer';
 import { PULSE_CSV, formatRepositoryPulseCsv } from '@utils/formatPulseCsv';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 
 import Headers from './components/Header';
 import RepositoryPulseChart from './components/RepositoryPulseChart';
@@ -32,10 +34,17 @@ const Repository: NextPageWithLayout = () => {
   const [repositoryId] = getPathId((query?.repository as string) ?? '');
 
   const pulse = useRepositoryPulse(organizationId, productId, repositoryId ? Number(repositoryId) : undefined);
+  // a régua do produto pinta o pulso, a legenda e o grau do CSV (US30.02); sem ela, a régua padrão
+  const {
+    bands,
+    isError: isQualityBandsError,
+    retry: retryQualityBands
+  } = useProductQualityBands(organizationId, productId);
   // o CSV leva o que o card mostra: carregando ou com erro, não exporta nada
   const pulseCsv = formatRepositoryPulseCsv(
     currentRepository?.name ?? '',
-    pulse.isLoading || pulse.hasError ? [] : pulse.rows
+    pulse.isLoading || pulse.hasError ? [] : pulse.rows,
+    bands
   );
 
   if (repositoryNotFound) {
@@ -70,7 +79,10 @@ const Repository: NextPageWithLayout = () => {
 
             <TsqmiBadge latestTSQMI={latestTSQMI} latestTSQMIBadgeUrl={latestTSQMIBadgeUrl} />
 
-            <RepositoryPulseChart pulse={pulse} csv={pulseCsv} />
+            {/* a régua do produto não veio: o velocímetro e o pulso seguem na tela com a régua padrão (CA4) */}
+            {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}
+
+            <RepositoryPulseChart pulse={pulse} csv={pulseCsv} bands={bands} />
 
             {/* Lista de arquivos por medida: entra com a TASK23.01.03 */}
             <Box component="section" data-testid="repository-measures-section" />

@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useRequest } from '@hooks/useRequest';
 import { downloadCsv, downloadCsvZip } from '@utils/exportCsv';
+import { PRODUCT_BANDS_RESPONSE } from '@utils/tests/productQualityBandsFixture';
 import EntityAnalysisDashboard from '../EntityAnalysisDashboard';
 import { measureMatrix, repository } from './fixtures';
 
@@ -58,6 +59,18 @@ async function exportAll() {
   await waitFor(() => expect(exportAllButton().disabled).toBe(false));
 }
 const zipCharts = () => (downloadCsvZip as jest.Mock).mock.calls.at(-1)[1];
+const exportedChart = (name: string) =>
+  (downloadCsv as jest.Mock).mock.calls.map(([, chart]) => chart).find((chart) => chart.name === name);
+
+const bandsMutate = jest.fn();
+/** Resposta das faixas do produto (US30.02); os outros pedidos seguem vazios, como no beforeEach. */
+function mockQualityBands(response: { data?: unknown; error?: Error }) {
+  (useRequest as jest.Mock).mockImplementation((request: { url: string } | null) =>
+    request?.url.endsWith('/quality-bands/')
+      ? { isLoading: false, mutate: bandsMutate, ...response }
+      : { data: undefined, isLoading: false, mutate: jest.fn() }
+  );
+}
 
 describe('<EntityAnalysisDashboard />', () => {
   beforeEach(() => {
@@ -65,6 +78,7 @@ describe('<EntityAnalysisDashboard />', () => {
     (downloadCsv as jest.Mock).mockClear();
     (downloadCsvZip as jest.Mock).mockClear();
     mockUseEntityAnalysis.mockReturnValue(hookState());
+    bandsMutate.mockClear();
     (useRequest as jest.Mock).mockReturnValue({ data: undefined, isLoading: false, mutate: jest.fn() });
   });
 
@@ -136,6 +150,44 @@ describe('<EntityAnalysisDashboard />', () => {
     expect(cell.textContent).toBe('0,18E');
     expect(screen.getByRole('button', { name: 'Front · CI Feedback Time: sem dado' }).textContent).toBe('sem dado');
     expect(screen.getByTestId('quality-grade-legend').textContent).toContain('[0,80; 1,00] Ótimo');
+  });
+
+  it('a célula, o TSQMI, a legenda, o ranking e o CSV seguem as faixas do produto (US30.02 CA1)', () => {
+    mockQualityBands({ data: PRODUCT_BANDS_RESPONSE });
+    render(<EntityAnalysisDashboard />);
+
+    // 0,81 é A na régua padrão e B na do produto, onde o A só começa em 0,85
+    const cell = screen.getByRole('button', { name: /^Service · Test Coverage/ });
+    expect(cell.getAttribute('aria-label')).toBe('Service · Test Coverage: 0,81 (B, Muito bom)');
+    expect(cell.textContent).toBe('0,81B');
+    // o TSQMI do repositório usa a mesma régua: 0,41 cai de C para D
+    expect(screen.getByTestId('tsqmi-2').textContent).toBe('0,41D · −0,09');
+    expect(screen.getByTestId('quality-grade-legend').textContent).toContain('[0,85; 1,00] Ótimo');
+    expect(screen.getByTestId('quality-grade-legend').textContent).toContain('[0,00; 0,25) Muito ruim');
+    // e o ranking: 0,22 cai de D para E
+    expect(within(card(RANKING)).getAllByRole('row')[2].textContent).toBe('2Frontcommented_file_density0,22 E−0,02');
+
+    fireEvent.click(exportButton(HEATMAP));
+    const rows = exportedChart('mapa-calor').rows as { repository: string; key: string }[];
+    const row = (repositoryName: string, key: string) =>
+      rows.find((item) => item.repository === repositoryName && item.key === key);
+    expect(row('Service', 'test_coverage')).toMatchObject({ value: 0.81, grade: 'B' });
+    expect(row('AI', 'passed_tests')).toMatchObject({ tsqmi: 0.41, tsqmi_grade: 'D' });
+  });
+
+  it('sem a régua do produto, o mapa fica na tela com a padrão e um aviso explica (US30.02 CA4)', () => {
+    mockQualityBands({ error: new Error('500') });
+    render(<EntityAnalysisDashboard />);
+
+    const alert = screen.getByRole('status');
+    expect(alert.textContent).toContain('Não foi possível carregar as faixas do produto');
+    expect(alert.textContent).toContain('Os gráficos estão sendo exibidos com as faixas padrão.');
+    // o mapa continua na tela, na régua padrão
+    expect(screen.getByRole('button', { name: /^Service · Test Coverage/ }).textContent).toBe('0,81A');
+    expect(screen.getByTestId('quality-grade-legend').textContent).toContain('[0,80; 1,00] Ótimo');
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Tentar novamente' }));
+    expect(bandsMutate).toHaveBeenCalled();
   });
 
   it('quebra a chave da entidade no "_" do cabeçalho', () => {
@@ -236,6 +288,56 @@ describe('<EntityAnalysisDashboard />', () => {
     expect(within(dialog).getByText('Test Coverage em AI')).toBeTruthy();
     expect(within(dialog).getByText('Valor: 0,18 (E, Muito ruim)')).toBeTruthy();
     expect(within(dialog).getByRole('row', { name: 'Coverage — 18.50' })).toBeTruthy();
+  });
+
+  it('a composição da célula também lê o grau pela régua do produto (US30.02 CA1)', () => {
+    mockQualityBands({ data: PRODUCT_BANDS_RESPONSE });
+    render(<EntityAnalysisDashboard />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^Service · Test Coverage/ }));
+
+    // 0,81 é A na régua padrão e B na do produto
+    expect(within(screen.getByRole('dialog')).getByText('Valor: 0,81 (B, Muito bom)')).toBeTruthy();
+  });
+
+  it('o valor do filho no diálogo sai na régua do produto quando o filho vai de 0 a 1 (US30.02 CA1)', () => {
+    // no nível subcaracterística os filhos são medidas, de 0 a 1, e saem com o grau; no nível medida são métricas,
+    // na escala da própria métrica, e saem sem grau
+    const reliability = { level: 'characteristic' as const, key: 'reliability', name: 'Reliability', weight: 34 };
+    const matrix = measureMatrix({
+      level: 'subcharacteristic',
+      columns: [{ key: 'testing_status', name: 'Testing Status', weight: 50, path: [reliability] }],
+      repositories: [repository(1, 'Service', [0.67, 0.7], { testing_status: [0.81, 0.85, -0.004] })]
+    });
+    mockUseEntityAnalysis.mockReturnValue(hookState({ level: 'subcharacteristic', matrix }));
+    (useRequest as jest.Mock).mockImplementation((request: { url: string } | null) => {
+      if (request?.url.endsWith('/quality-bands/')) {
+        return { data: PRODUCT_BANDS_RESPONSE, isLoading: false, mutate: bandsMutate };
+      }
+      return {
+        data: {
+          repositories: [
+            {
+              id: 1,
+              name: 'Service',
+              children: [
+                { key: 'test_coverage', name: 'Test Coverage', weight: 34, value: 0.81, created_at: '2026-03-10' }
+              ]
+            }
+          ]
+        },
+        isLoading: false,
+        mutate: jest.fn()
+      };
+    });
+    render(<EntityAnalysisDashboard />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^Service · Testing Status/ }));
+
+    // 0,81 é A na régua padrão e B na do produto
+    expect(
+      within(screen.getByRole('dialog')).getByRole('row', { name: 'Test Coverage 34% 0,81 (B, Muito bom)' })
+    ).toBeTruthy();
   });
 
   it('mostra o erro sem detalhes técnicos, com "Tentar novamente"', () => {

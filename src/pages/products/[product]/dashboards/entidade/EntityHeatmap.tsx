@@ -4,7 +4,7 @@ import { EntityMatrix, EntityMatrixColumn, EntityMatrixRepository } from '@custo
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { NO_DATA_LABEL } from '@utils/entityLevels';
 import { cellId, formatDelta, formatScore, getColumnGroups, sortRepositoriesByTsqmi } from '@utils/entityMatrix';
-import { getQualityBand, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { getQualityBand, QualityBand } from '@utils/qualityBands';
 
 export interface SelectedCell {
   repository: { id: number; name: string };
@@ -16,6 +16,8 @@ interface Props {
   matrix: EntityMatrix;
   highlighted: Set<string>;
   onSelectCell: (cell: SelectedCell) => void;
+  /** Régua do produto, que dá a cor e o grau de cada célula (US30.02). */
+  bands: QualityBand[];
 }
 
 const CELL_WIDTH = 80;
@@ -68,8 +70,8 @@ const headerCellSx = {
   color: DASHBOARD_COLORS.text
 } as const;
 
-function Score({ value, detail }: { value: number | null; detail?: string }) {
-  const band = value === null ? undefined : getQualityBand(value);
+function Score({ value, detail, bands }: Readonly<{ value: number | null; detail?: string; bands: QualityBand[] }>) {
+  const band = value === null ? undefined : getQualityBand(value, bands);
   if (value === null || !band) {
     return (
       <Typography fontSize="12px" fontStyle="italic" color={DASHBOARD_COLORS.mutedText}>
@@ -89,8 +91,8 @@ function Score({ value, detail }: { value: number | null; detail?: string }) {
   );
 }
 
-const scoreBoxSx = (value: number | null, highlighted = false) => {
-  const band = value === null ? undefined : getQualityBand(value);
+const scoreBoxSx = (value: number | null, highlighted: boolean, bands: QualityBand[]) => {
+  const band = value === null ? undefined : getQualityBand(value, bands);
   return {
     width: '100%',
     height: CELL_HEIGHT,
@@ -107,23 +109,23 @@ const scoreBoxSx = (value: number | null, highlighted = false) => {
   } as const;
 };
 
-function TsqmiCell({ repository }: { repository: EntityMatrixRepository }) {
+function TsqmiCell({ repository, bands }: Readonly<{ repository: EntityMatrixRepository; bands: QualityBand[] }>) {
   const { value, previous_value: previousValue } = repository.tsqmi;
   return (
-    <Box sx={scoreBoxSx(value)} data-testid={`tsqmi-${repository.id}`}>
-      <Score value={value} detail={formatDelta(value, previousValue)} />
+    <Box sx={scoreBoxSx(value, false, bands)} data-testid={`tsqmi-${repository.id}`}>
+      <Score value={value} detail={formatDelta(value, previousValue)} bands={bands} />
     </Box>
   );
 }
 
-/** Legenda das 5 faixas e do destaque (CA3, CA4). */
-export function QualityGradeLegend() {
+/** Legenda das 5 faixas e do destaque (CA3, CA4), nos limites da régua do produto (US30.02). */
+export function QualityGradeLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box display="flex" flexWrap="wrap" alignItems="center" gap="8px 16px" data-testid="quality-grade-legend">
       <Typography fontSize="12px" fontWeight="bold" color={DASHBOARD_COLORS.text}>
         Escala
       </Typography>
-      {[...QUALITY_BANDS].reverse().map((band) => (
+      {[...bands].reverse().map((band) => (
         <Box key={band.grade} display="flex" alignItems="center" gap="6px">
           <Box
             sx={{
@@ -163,7 +165,7 @@ export function QualityGradeLegend() {
  * o grau e a cor da faixa, linhas do pior para o melhor TSQMI. Mede o tempo entre a chegada dos dados e o desenho
  * (diretriz do épico: menos de 1 s) e o expõe em `data-render-ms`.
  */
-export default function EntityHeatmap({ matrix, highlighted, onSelectCell }: Props) {
+export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands }: Readonly<Props>) {
   const rows = useMemo(() => sortRepositoriesByTsqmi(matrix.repositories), [matrix]);
   const groups = useMemo(() => getColumnGroups(matrix.columns), [matrix]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -269,7 +271,7 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell }: Pro
                 </Box>
                 {matrix.columns.map((column) => {
                   const value = cells.get(column.key)?.value ?? null;
-                  const band = value === null ? undefined : getQualityBand(value);
+                  const band = value === null ? undefined : getQualityBand(value, bands);
                   const isHighlighted = highlighted.has(cellId(repository.id, column.key));
                   return (
                     <td key={column.key}>
@@ -284,18 +286,18 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell }: Pro
                           onSelectCell({ repository: { id: repository.id, name: repository.name }, column, value })
                         }
                         sx={{
-                          ...scoreBoxSx(value, isHighlighted),
+                          ...scoreBoxSx(value, isHighlighted, bands),
                           cursor: 'pointer',
                           '&:hover': { filter: 'brightness(0.95)' }
                         }}
                       >
-                        <Score value={value} />
+                        <Score value={value} bands={bands} />
                       </Box>
                     </td>
                   );
                 })}
                 <td>
-                  <TsqmiCell repository={repository} />
+                  <TsqmiCell repository={repository} bands={bands} />
                 </td>
               </tr>
             );
