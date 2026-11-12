@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { formatDelta, formatScore, MatrixPair } from '@utils/entityMatrix';
-import { getQualityBand, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { getQualityBand, QualityBand } from '@utils/qualityBands';
 import { IMPROVEMENT_COLOR, WORSENING_COLOR } from './ContributionChart';
 import { EntityKey } from './EntityHeatmap';
 
@@ -14,11 +14,11 @@ const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
  */
 export default function WorstPairsRanking({
   pairs,
-  bands = QUALITY_BANDS
+  bands
 }: {
   pairs: MatrixPair[];
-  /** Régua do produto (US30.02); sem ela, a régua padrão. */
-  bands?: QualityBand[];
+  /** Régua do produto, que dá o grau de cada par (US30.02). */
+  bands: QualityBand[];
 }) {
   return (
     <Box sx={{ overflowX: 'auto' }}>

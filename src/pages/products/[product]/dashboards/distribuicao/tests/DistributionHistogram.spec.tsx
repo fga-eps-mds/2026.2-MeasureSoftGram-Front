@@ -16,7 +16,7 @@ function cssRules() {
   return Array.from(document.styleSheets).flatMap((sheet) => Array.from(sheet.cssRules).map((rule) => rule.cssText));
 }
 
-/** As colunas que a régua deve ter, cada número sendo quanto a faixa vale do eixo de 0 a 1, em centésimos. */
+/** As colunas que a régua deve ter, cada número sendo a proporção da faixa no eixo, na forma mais simples. */
 const columns = (...widths: number[]) => widths.map((width) => `minmax(0, ${width}fr)`).join(' ');
 
 describe('<QualityBandRuler />', () => {
@@ -62,18 +62,31 @@ describe('<QualityBandRuler />', () => {
     const list = screen.getByRole('list', { name: 'Faixas de qualidade de A a E' });
     const listClass = Array.from(list.classList).find((name) => name.startsWith('css-'));
     const rule = cssRules().find((item) => item.startsWith(`.${listClass} {`));
-    expect(rule).toContain(`grid-template-columns: ${columns(25, 20, 20, 20, 15)};`);
+    expect(rule).toContain(`grid-template-columns: ${columns(5, 4, 4, 4, 3)};`);
   });
 });
 
 describe('bandColumns', () => {
-  it('dá cinco colunas iguais na régua padrão', () => {
-    expect(bandColumns(QUALITY_BANDS)).toBe(columns(20, 20, 20, 20, 20));
+  it('dá cinco colunas iguais na régua padrão, na proporção mais simples', () => {
+    // 1fr, e não 20fr: com números grandes o navegador arredonda diferente e a última faixa saía 1 px mais estreita
+    expect(bandColumns(QUALITY_BANDS)).toBe(columns(1, 1, 1, 1, 1));
   });
 
   it('dá a cada faixa do produto a largura que ela vale no eixo de 0 a 1, para a cor cair embaixo das barras', () => {
-    // um A que começa em 0,85 vale 0,15 do eixo: a coluna dele é menor que as outras
-    expect(bandColumns(PRODUCT_BANDS)).toBe(columns(25, 20, 20, 20, 15));
+    // um A que começa em 0,85 vale 0,15 do eixo e um E até 0,25 vale 0,25: 3 e 5 partes de 20
+    expect(bandColumns(PRODUCT_BANDS)).toBe(columns(5, 4, 4, 4, 3));
+  });
+
+  it('mantém a proporção com limites quebrados, que não simplificam', () => {
+    const bands: QualityBand[] = [
+      { ...QUALITY_BANDS[0], min: 0, max: 0.125 },
+      { ...QUALITY_BANDS[1], min: 0.125, max: 0.3 },
+      { ...QUALITY_BANDS[2], min: 0.3, max: 0.5 },
+      { ...QUALITY_BANDS[3], min: 0.5, max: 0.7 },
+      { ...QUALITY_BANDS[4], min: 0.7, max: 1 }
+    ];
+
+    expect(bandColumns(bands)).toBe(columns(5, 7, 8, 8, 12));
   });
 
   it('não deixa o ponto flutuante virar uma largura esquisita', () => {

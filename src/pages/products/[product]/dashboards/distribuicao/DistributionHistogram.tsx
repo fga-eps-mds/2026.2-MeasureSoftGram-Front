@@ -57,14 +57,27 @@ export function bandLabelRules() {
   };
 }
 
+/** Maior divisor comum, para a proporção das colunas sair na forma mais simples (ver bandColumns). */
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
 /**
  * Colunas da régua: cada faixa ocupa no eixo a sua própria largura, então a coluna mede o tanto que ela vale de 0 a 1.
  * Com a régua padrão isso dá cinco colunas iguais; com a régua do produto (US30.02), não — uma faixa A a partir de
  * 0,85 vale 0,15 do eixo, e uma coluna de 0,2 deixaria a cor fora de lugar em relação às barras. O `minmax(0, …)`
  * deixa a faixa encolher abaixo do rótulo, que é o que permite a régua caber em telas estreitas.
+ *
+ * A proporção sai na forma mais simples (as faixas iguais da régua padrão viram `1fr`, e não `20fr`): números
+ * grandes mudam o arredondamento do navegador em uma fração de pixel, e com isso a cor da última faixa deslizava
+ * para fora da última barra.
  */
 export function bandColumns(bands: QualityBand[]): string {
-  return bands.map((band) => `minmax(0, ${Number(((band.max - band.min) * 100).toFixed(2))}fr)`).join(' ');
+  // décimos de milésimo do eixo, para a conta ser entre inteiros mesmo com limites quebrados como 0,125
+  const widths = bands.map((band) => Math.round((band.max - band.min) * 10000));
+  // a régua cobre o eixo inteiro, então o divisor nunca é zero
+  const divisor = widths.reduce(gcd, 0);
+  return widths.map((width) => `minmax(0, ${width / divisor}fr)`).join(' ');
 }
 
 /**
@@ -73,7 +86,7 @@ export function bandColumns(bands: QualityBand[]): string {
  * cartão. Cada faixa decide pela própria largura se mostra a letra e o rótulo, com a fonte menor se precisar, ou só a
  * letra (ver bandLabelRules): no desktop o rótulo aparece; em telas estreitas, como 360 px, só a letra.
  */
-export function QualityBandRuler({ bands = QUALITY_BANDS }: { bands?: QualityBand[] } = {}) {
+export function QualityBandRuler({ bands = QUALITY_BANDS }: { bands?: QualityBand[] }) {
   return (
     <Box
       component="ul"

@@ -19,7 +19,7 @@ import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
 import { formatEntityValue, LEVEL_LABELS, NO_DATA_LABEL } from '@utils/entityLevels';
 import { formatScore } from '@utils/entityMatrix';
-import { getQualityBand, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { getQualityBand, QualityBand } from '@utils/qualityBands';
 import { SelectedCell } from './EntityHeatmap';
 
 const CHILD_LEVEL: Record<EntityMatrixLevel, EntityLevel> = {
@@ -35,11 +35,11 @@ interface Props {
   level: EntityMatrixLevel;
   cell: SelectedCell | null;
   onClose: () => void;
-  /** Régua do produto (US30.02); sem ela, a régua padrão. */
-  bands?: QualityBand[];
+  /** Régua do produto, que dá o grau do valor (US30.02). */
+  bands: QualityBand[];
 }
 
-function formatCellValue(value: number | null, bands: QualityBand[] = QUALITY_BANDS): string {
+function formatCellValue(value: number | null, bands: QualityBand[]): string {
   if (value === null) return NO_DATA_LABEL;
   const band = getQualityBand(value, bands);
   return band ? `${formatScore(value)} (${band.grade}, ${band.label})` : formatScore(value);
@@ -53,7 +53,7 @@ export default function RepositoryDetailDialog({
   level,
   cell,
   onClose,
-  bands = QUALITY_BANDS
+  bands
 }: Props) {
   const childLevel = CHILD_LEVEL[level];
   const {

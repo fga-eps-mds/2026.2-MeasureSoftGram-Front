@@ -231,7 +231,7 @@ const variation = ({ value, previous_value: previousValue }: EntityMatrixValue) 
   value === null || previousValue === null ? null : value - previousValue;
 
 /** O grau sai da régua do produto (US30.02); sem ela, da régua padrão, como na tela. */
-const gradeOf = (value: number | null, bands: QualityBand[] = QUALITY_BANDS) =>
+const gradeOf = (value: number | null, bands: QualityBand[]) =>
   value === null ? null : getQualityBand(value, bands)?.grade ?? null;
 
 const releaseFields = (matrix: EntityMatrix) => ({

@@ -300,6 +300,46 @@ describe('<EntityAnalysisDashboard />', () => {
     expect(within(screen.getByRole('dialog')).getByText('Valor: 0,81 (B, Muito bom)')).toBeTruthy();
   });
 
+  it('o valor do filho no diálogo sai na régua do produto quando o filho vai de 0 a 1 (US30.02 CA1)', () => {
+    // no nível subcaracterística os filhos são medidas, de 0 a 1, e saem com o grau; no nível medida são métricas,
+    // na escala da própria métrica, e saem sem grau
+    const reliability = { level: 'characteristic' as const, key: 'reliability', name: 'Reliability', weight: 34 };
+    const matrix = measureMatrix({
+      level: 'subcharacteristic',
+      columns: [{ key: 'testing_status', name: 'Testing Status', weight: 50, path: [reliability] }],
+      repositories: [repository(1, 'Service', [0.67, 0.7], { testing_status: [0.81, 0.85, -0.004] })]
+    });
+    mockUseEntityAnalysis.mockReturnValue(hookState({ level: 'subcharacteristic', matrix }));
+    (useRequest as jest.Mock).mockImplementation((request: { url: string } | null) => {
+      if (request?.url.endsWith('/quality-bands/')) {
+        return { data: PRODUCT_BANDS_RESPONSE, isLoading: false, mutate: bandsMutate };
+      }
+      return {
+        data: {
+          repositories: [
+            {
+              id: 1,
+              name: 'Service',
+              children: [
+                { key: 'test_coverage', name: 'Test Coverage', weight: 34, value: 0.81, created_at: '2026-03-10' }
+              ]
+            }
+          ]
+        },
+        isLoading: false,
+        mutate: jest.fn()
+      };
+    });
+    render(<EntityAnalysisDashboard />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^Service · Testing Status/ }));
+
+    // 0,81 é A na régua padrão e B na do produto
+    expect(
+      within(screen.getByRole('dialog')).getByRole('row', { name: 'Test Coverage 34% 0,81 (B, Muito bom)' })
+    ).toBeTruthy();
+  });
+
   it('mostra o erro sem detalhes técnicos, com "Tentar novamente"', () => {
     const retry = jest.fn();
     mockUseEntityAnalysis.mockReturnValue(hookState({ error: new Error('500'), matrix: undefined, retry }));

@@ -375,5 +375,15 @@ describe('entityMatrix', () => {
       expect(grade(formatEntityRankingCsv(matrix, pairs))('Front', 'commented_file_density')).toBe('D');
       expect(grade(formatEntityRankingCsv(matrix, pairs, PRODUCT_BANDS))('Front', 'commented_file_density')).toBe('E');
     });
+
+    it('exporta sem grau o valor que a régua não alcança, como a tela mostra "sem dado"', () => {
+      // um valor fora de 0 a 1 não cai em faixa nenhuma: o CSV deixa o grau vazio em vez de inventar um
+      const matrix = measureMatrix({
+        repositories: [repository(1, 'Service', [1.4, 0.7], { test_coverage: [1.2, 0.85, -0.004] })]
+      });
+      const row = formatEntityHeatmapCsv(matrix, PRODUCT_BANDS).rows.find((item) => item.key === 'test_coverage');
+
+      expect(row).toMatchObject({ value: 1.2, grade: null, tsqmi: 1.4, tsqmi_grade: null });
+    });
   });
 });
