@@ -40,9 +40,15 @@ export async function collectUiText(page: Page): Promise<string[]> {
   });
 }
 
-/** Falha listando cada linha da tela que usa um termo de outro provedor. */
+/**
+ * Falha listando cada linha da tela que usa um termo de outro provedor. Confere de novo até a tela assentar: logo depois
+ * de abrir, o breadcrumb ainda mostra a chave sem tradução ("organizations") e o padrão da rota ("[repository]").
+ */
 export async function expectOnlyTermsOf(page: Page, provider: SessionProvider, language: Language) {
-  const lines = await collectUiText(page);
-  const found = lines.filter((line) => forbidden(provider, language).some((term) => term.test(line)));
-  expect(found, `termos de outro provedor na sessão ${provider} em ${language}`).toEqual([]);
+  await expect
+    .poll(
+      async () => (await collectUiText(page)).filter((line) => forbidden(provider, language).some((t) => t.test(line))),
+      { message: `termos de outro provedor na sessão ${provider} em ${language}` }
+    )
+    .toEqual([]);
 }
