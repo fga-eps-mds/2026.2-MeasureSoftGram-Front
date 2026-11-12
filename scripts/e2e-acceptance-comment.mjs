@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Publica na issue de cada US, no repositório DOC, o resultado dos E2E por critério de aceitação.
+ * Publica na issue de cada US (ou bug), no repositório DOC, o resultado dos E2E por critério de aceitação.
  *
  * Lê o relatório JSON do Playwright, agrupa os testes pela tag `@USxx.yy-CAn` dos títulos e mantém um único comentário
  * por issue (achado pelo marcador), editado a cada run, com a tabela por CA e o histórico dos últimos runs.
- * O número da issue de cada US fica em e2e/acceptance-issues.json.
+ * O número da issue de cada US (ou bug, com a tag @BUGxx.yy-CAn) fica em e2e/acceptance-issues.json.
  *
  * Uso: node scripts/e2e-acceptance-comment.mjs [e2e-results.json] [--dry-run]
  * No CI precisa de DOC_ISSUES_TOKEN (token com permissão de escrita em issues do DOC); sem ele, só avisa e sai.
@@ -19,7 +19,7 @@ const CONFIG = JSON.parse(readFileSync(new URL('../e2e/acceptance-issues.json', 
 const MARKER = '<!-- e2e-aceitacao -->';
 const HISTORY_MARKER = /<!-- e2e-historico:(.*?) -->/s;
 const HISTORY_SIZE = 10;
-const TAG = /@(US\d+\.\d+)-CA(\d+)/;
+const TAG = /@((?:US|BUG)\d+\.\d+)-CA(\d+)/;
 
 const env = process.env;
 const API = env.GITHUB_API_URL ?? 'https://api.github.com';
