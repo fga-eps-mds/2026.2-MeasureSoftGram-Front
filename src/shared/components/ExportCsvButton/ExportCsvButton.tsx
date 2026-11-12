@@ -3,6 +3,8 @@ import { Button } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { toast } from 'react-toastify';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import { useProviderTerms } from '@hooks/useProviderTerms';
+import { withRepositoryTerm } from '@utils/csvRepositoryTerm';
 import { CsvChart, CsvValue, downloadCsv, downloadCsvZip } from '@utils/exportCsv';
 
 type Row = Record<string, CsvValue>;
@@ -26,6 +28,8 @@ export default function ExportCsvButton<T extends Row>({
   chart,
   ariaLabel
 }: Readonly<{ dashboard: string; chart: CsvChart<T>; ariaLabel?: string }>) {
+  const { terms } = useProviderTerms();
+
   return (
     <Button
       variant="outlined"
@@ -33,7 +37,7 @@ export default function ExportCsvButton<T extends Row>({
       aria-label={ariaLabel}
       startIcon={<DownloadIcon fontSize="small" />}
       disabled={chart.rows.length === 0}
-      onClick={() => downloadCsv(dashboard, chart)}
+      onClick={() => downloadCsv(dashboard, withRepositoryTerm(chart, terms.Repository))}
       sx={BUTTON_SX}
     >
       Exportar .csv
@@ -46,13 +50,17 @@ export function ExportAllCsvButton<T extends Row>({
   dashboard,
   charts
 }: Readonly<{ dashboard: string; charts: CsvChart<T>[] }>) {
+  const { terms } = useProviderTerms();
   const [isExporting, setIsExporting] = useState(false);
   const withRows = charts.filter((chart) => chart.rows.length > 0);
 
   const handleClick = async () => {
     setIsExporting(true);
     try {
-      await downloadCsvZip(dashboard, withRows);
+      await downloadCsvZip(
+        dashboard,
+        withRows.map((chart) => withRepositoryTerm(chart, terms.Repository))
+      );
     } catch {
       toast.error('Não foi possível gerar o .zip. Tente de novo.');
     } finally {
