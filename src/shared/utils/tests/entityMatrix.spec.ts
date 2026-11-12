@@ -18,6 +18,7 @@ import {
   hasAnyValue,
   sortRepositoriesByTsqmi
 } from '../entityMatrix';
+import { PRODUCT_BANDS } from './productQualityBandsFixture';
 
 describe('entityMatrix', () => {
   describe('formatação', () => {
@@ -350,6 +351,29 @@ describe('entityMatrix', () => {
       });
       expect(variation).toBeCloseTo(-0.29, 10);
       expect(chart.rows.map((row) => row.position)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    });
+
+    it('tira o grau da régua do produto, no mapa e no ranking, para o CSV dizer o mesmo que a tela (US30.02)', () => {
+      const matrix = measureMatrix();
+      const pairs = getWorstPairs(getPairs(matrix));
+      const grade =
+        (chart: { rows: Array<{ repository: string; key: string; grade: string | null }> }) =>
+        (repositoryName: string, key: string) =>
+          chart.rows.find((row) => row.repository === repositoryName && row.key === key)?.grade;
+
+      const defaultHeatmap = grade(formatEntityHeatmapCsv(matrix));
+      const productHeatmap = grade(formatEntityHeatmapCsv(matrix, PRODUCT_BANDS));
+      // 0,81 é A na régua padrão (A de 0,80) e B na do produto (A só a partir de 0,85)
+      expect(defaultHeatmap('Service', 'test_coverage')).toBe('A');
+      expect(productHeatmap('Service', 'test_coverage')).toBe('B');
+      // o grau do indicador do repositório segue a mesma régua: 0,41 cai de C para D
+      const tsqmi = (chart: ReturnType<typeof formatEntityHeatmapCsv>) =>
+        chart.rows.find((row) => row.repository === 'AI')?.tsqmi_grade;
+      expect(tsqmi(formatEntityHeatmapCsv(matrix))).toBe('C');
+      expect(tsqmi(formatEntityHeatmapCsv(matrix, PRODUCT_BANDS))).toBe('D');
+      // e o ranking também: 0,22 cai de D para E
+      expect(grade(formatEntityRankingCsv(matrix, pairs))('Front', 'commented_file_density')).toBe('D');
+      expect(grade(formatEntityRankingCsv(matrix, pairs, PRODUCT_BANDS))('Front', 'commented_file_density')).toBe('E');
     });
   });
 });

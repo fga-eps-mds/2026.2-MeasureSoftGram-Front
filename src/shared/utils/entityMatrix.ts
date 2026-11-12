@@ -8,7 +8,7 @@ import {
 } from '@customTypes/product';
 import { LEVEL_LABELS } from '@utils/entityLevels';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
-import { getQualityBand } from '@utils/qualityBands';
+import { getQualityBand, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 export const MATRIX_LEVELS: EntityMatrixLevel[] = ['characteristic', 'subcharacteristic', 'measure'];
 
@@ -230,7 +230,9 @@ export const ENTITY_CSV = {
 const variation = ({ value, previous_value: previousValue }: EntityMatrixValue) =>
   value === null || previousValue === null ? null : value - previousValue;
 
-const gradeOf = (value: number | null) => (value === null ? null : getQualityBand(value)?.grade ?? null);
+/** O grau sai da régua do produto (US30.02); sem ela, da régua padrão, como na tela. */
+const gradeOf = (value: number | null, bands: QualityBand[] = QUALITY_BANDS) =>
+  value === null ? null : getQualityBand(value, bands)?.grade ?? null;
 
 const releaseFields = (matrix: EntityMatrix) => ({
   release: matrix.release.release_name,
@@ -281,7 +283,10 @@ const HEATMAP_CSV_COLUMNS: CsvColumn<EntityHeatmapCsvRow>[] = [
  * CSV do mapa de calor: uma linha por célula, na ordem da tela (linhas do pior para o melhor TSQMI), com a célula
  * "sem dado" e a variação da primeira release vazias.
  */
-export function formatEntityHeatmapCsv(matrix: EntityMatrix): CsvChart<EntityHeatmapCsvRow> {
+export function formatEntityHeatmapCsv(
+  matrix: EntityMatrix,
+  bands: QualityBand[] = QUALITY_BANDS
+): CsvChart<EntityHeatmapCsvRow> {
   return {
     name: ENTITY_CSV.heatmap,
     columns: HEATMAP_CSV_COLUMNS,
@@ -296,9 +301,9 @@ export function formatEntityHeatmapCsv(matrix: EntityMatrix): CsvChart<EntityHea
           path: column.path.map((parent) => parent.name).join(' › '),
           weight: column.weight,
           value,
-          grade: gradeOf(value),
+          grade: gradeOf(value, bands),
           tsqmi: repository.tsqmi.value,
-          tsqmi_grade: gradeOf(repository.tsqmi.value),
+          tsqmi_grade: gradeOf(repository.tsqmi.value, bands),
           tsqmi_variation: variation(repository.tsqmi)
         };
       });
@@ -373,7 +378,11 @@ const RANKING_CSV_COLUMNS: CsvColumn<EntityRankingCsvRow>[] = [
 ];
 
 /** CSV do "Ranking dos piores pares": a posição na tela, o valor, o grau e a variação (vazia na primeira release). */
-export function formatEntityRankingCsv(matrix: EntityMatrix, worstPairs: MatrixPair[]): CsvChart<EntityRankingCsvRow> {
+export function formatEntityRankingCsv(
+  matrix: EntityMatrix,
+  worstPairs: MatrixPair[],
+  bands: QualityBand[] = QUALITY_BANDS
+): CsvChart<EntityRankingCsvRow> {
   return {
     name: ENTITY_CSV.ranking,
     columns: RANKING_CSV_COLUMNS,
@@ -383,7 +392,7 @@ export function formatEntityRankingCsv(matrix: EntityMatrix, worstPairs: MatrixP
       repository: pair.repository.name,
       ...entityFields(pair.column),
       value: pair.value,
-      grade: gradeOf(pair.value),
+      grade: gradeOf(pair.value, bands),
       variation: variation({ value: pair.value, previous_value: pair.previousValue })
     }))
   };

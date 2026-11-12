@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { formatDelta, formatScore, MatrixPair } from '@utils/entityMatrix';
-import { getQualityBand } from '@utils/qualityBands';
+import { getQualityBand, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 import { IMPROVEMENT_COLOR, WORSENING_COLOR } from './ContributionChart';
 import { EntityKey } from './EntityHeatmap';
 
@@ -12,7 +12,14 @@ const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
  * "Ranking dos piores pares" (CA6): do menor valor para o maior, com o grau e a variação em relação à release anterior
  * ("—" na primeira release).
  */
-export default function WorstPairsRanking({ pairs }: { pairs: MatrixPair[] }) {
+export default function WorstPairsRanking({
+  pairs,
+  bands = QUALITY_BANDS
+}: {
+  pairs: MatrixPair[];
+  /** Régua do produto (US30.02); sem ela, a régua padrão. */
+  bands?: QualityBand[];
+}) {
   return (
     <Box sx={{ overflowX: 'auto' }}>
       <Table size="small" aria-label="Ranking dos piores pares">
@@ -31,7 +38,7 @@ export default function WorstPairsRanking({ pairs }: { pairs: MatrixPair[] }) {
         <TableBody>
           {pairs.map((pair, index) => {
             const value = pair.value as number;
-            const band = getQualityBand(value);
+            const band = getQualityBand(value, bands);
             const delta = formatDelta(value, pair.previousValue);
             // "0,00" e "—" ficam neutros
             let deltaColor = DASHBOARD_COLORS.mutedText;
