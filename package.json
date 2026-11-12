@@ -14,7 +14,9 @@
     "ci:test": "TZ=America/Sao_Paulo jest --ci --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "update-snapshot": "TZ=America/Sao_Paulo jest --updateSnapshot"
+    "update-snapshot": "TZ=America/Sao_Paulo jest --updateSnapshot",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -46,6 +48,7 @@
     "swr": "2.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

@@ -19,7 +19,7 @@ import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
 import { formatEntityValue, LEVEL_LABELS, NO_DATA_LABEL } from '@utils/entityLevels';
 import { formatScore } from '@utils/entityMatrix';
-import { getQualityBand } from '@utils/qualityBands';
+import { getQualityBand, QualityBand } from '@utils/qualityBands';
 import { SelectedCell } from './EntityHeatmap';
 
 const CHILD_LEVEL: Record<EntityMatrixLevel, EntityLevel> = {
@@ -35,16 +35,26 @@ interface Props {
   level: EntityMatrixLevel;
   cell: SelectedCell | null;
   onClose: () => void;
+  /** Régua do produto, que dá o grau do valor (US30.02). */
+  bands: QualityBand[];
 }
 
-function formatCellValue(value: number | null): string {
+function formatCellValue(value: number | null, bands: QualityBand[]): string {
   if (value === null) return NO_DATA_LABEL;
-  const band = getQualityBand(value);
+  const band = getQualityBand(value, bands);
   return band ? `${formatScore(value)} (${band.grade}, ${band.label})` : formatScore(value);
 }
 
 /** Composição da célula (CA7): os filhos da entidade naquele repositório, com o peso e o valor de cada um. */
-export default function RepositoryDetailDialog({ organizationId, productId, releaseId, level, cell, onClose }: Props) {
+export default function RepositoryDetailDialog({
+  organizationId,
+  productId,
+  releaseId,
+  level,
+  cell,
+  onClose,
+  bands
+}: Readonly<Props>) {
   const childLevel = CHILD_LEVEL[level];
   const {
     data: analysis,
@@ -95,7 +105,9 @@ export default function RepositoryDetailDialog({ organizationId, productId, rele
                 align="right"
                 sx={child.value === null ? { color: 'text.secondary', fontStyle: 'italic' } : undefined}
               >
-                {childLevel === 'metric' ? formatEntityValue(child.value, childLevel) : formatCellValue(child.value)}
+                {childLevel === 'metric'
+                  ? formatEntityValue(child.value, childLevel)
+                  : formatCellValue(child.value, bands)}
               </TableCell>
             </TableRow>
           ))}
@@ -111,7 +123,7 @@ export default function RepositoryDetailDialog({ organizationId, productId, rele
           <DialogTitle>
             {cell.column.name} em {cell.repository.name}
             <Typography variant="body2" color="text.secondary">
-              Valor: {formatCellValue(cell.value)}
+              Valor: {formatCellValue(cell.value, bands)}
             </Typography>
           </DialogTitle>
           <DialogContent dividers>{renderContent()}</DialogContent>

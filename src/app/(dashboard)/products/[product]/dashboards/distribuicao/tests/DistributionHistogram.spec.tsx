@@ -1,9 +1,12 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { PRODUCT_BANDS } from '@utils/tests/productQualityBandsFixture';
 import {
   BAND_LABEL_STEPS,
   BAND_LETTER_ONLY_MAX_WIDTH,
+  bandColumns,
   bandLabelRules,
   QualityBandRuler,
   VISUALLY_HIDDEN
@@ -13,9 +16,12 @@ function cssRules() {
   return Array.from(document.styleSheets).flatMap((sheet) => Array.from(sheet.cssRules).map((rule) => rule.cssText));
 }
 
+/** As colunas que a régua deve ter, cada número sendo a proporção da faixa no eixo, na forma mais simples. */
+const columns = (...widths: number[]) => widths.map((width) => `minmax(0, ${width}fr)`).join(' ');
+
 describe('<QualityBandRuler />', () => {
   it('tem as cinco faixas, de E a A, com a letra e o rótulo no texto e no title', () => {
-    render(<QualityBandRuler />);
+    render(<QualityBandRuler bands={QUALITY_BANDS} />);
 
     const bands = within(screen.getByRole('list', { name: 'Faixas de qualidade de A a E' })).getAllByRole('listitem');
     expect(bands.map((band) => band.textContent)).toEqual([
@@ -29,7 +35,7 @@ describe('<QualityBandRuler />', () => {
   });
 
   it('cada faixa é o próprio container: a decisão de mostrar o rótulo é pela largura da faixa, não da régua', () => {
-    render(<QualityBandRuler />);
+    render(<QualityBandRuler bands={QUALITY_BANDS} />);
 
     const [band] = screen.getAllByTestId('quality-band');
     const bandClass = Array.from(band.classList).find((name) => name.startsWith('css-'));
@@ -39,6 +45,60 @@ describe('<QualityBandRuler />', () => {
     // regras por largura ficam em bandLabelRules
     expect(cssRules()).toContainEqual(expect.stringMatching(`^\\.${bandClass} \\{.*container-type: inline-size;`));
     expect(cssRules().find((rule) => rule.startsWith(`.${listClass} `))).not.toContain('container-type');
+  });
+
+  it('desenha as faixas do produto, com a cor e o rótulo de cada grau (US30.02)', () => {
+    render(<QualityBandRuler bands={PRODUCT_BANDS} />);
+
+    const bands = within(screen.getByRole('list', { name: 'Faixas de qualidade de A a E' })).getAllByRole('listitem');
+    // os graus e os rótulos vêm do guia de IDV: o que a régua do produto muda são os limites, e com eles a largura
+    expect(bands.map((band) => band.textContent)).toEqual([
+      'E · Muito ruim',
+      'D · Ruim',
+      'C · Bom',
+      'B · Muito bom',
+      'A · Ótimo'
+    ]);
+    const list = screen.getByRole('list', { name: 'Faixas de qualidade de A a E' });
+    const listClass = Array.from(list.classList).find((name) => name.startsWith('css-'));
+    const rule = cssRules().find((item) => item.startsWith(`.${listClass} {`));
+    expect(rule).toContain(`grid-template-columns: ${columns(5, 4, 4, 4, 3)};`);
+  });
+});
+
+describe('bandColumns', () => {
+  it('dá cinco colunas iguais na régua padrão, na proporção mais simples', () => {
+    // 1fr, e não 20fr: com números grandes o navegador arredonda diferente e a última faixa saía 1 px mais estreita
+    expect(bandColumns(QUALITY_BANDS)).toBe(columns(1, 1, 1, 1, 1));
+  });
+
+  it('dá a cada faixa do produto a largura que ela vale no eixo de 0 a 1, para a cor cair embaixo das barras', () => {
+    // um A que começa em 0,85 vale 0,15 do eixo e um E até 0,25 vale 0,25: 3 e 5 partes de 20
+    expect(bandColumns(PRODUCT_BANDS)).toBe(columns(5, 4, 4, 4, 3));
+  });
+
+  it('mantém a proporção com limites quebrados, que não simplificam', () => {
+    const bands: QualityBand[] = [
+      { ...QUALITY_BANDS[0], min: 0, max: 0.125 },
+      { ...QUALITY_BANDS[1], min: 0.125, max: 0.3 },
+      { ...QUALITY_BANDS[2], min: 0.3, max: 0.5 },
+      { ...QUALITY_BANDS[3], min: 0.5, max: 0.7 },
+      { ...QUALITY_BANDS[4], min: 0.7, max: 1 }
+    ];
+
+    expect(bandColumns(bands)).toBe(columns(5, 7, 8, 8, 12));
+  });
+
+  it('não deixa o ponto flutuante virar uma largura esquisita', () => {
+    const thirds: QualityBand[] = [
+      { ...QUALITY_BANDS[0], min: 0, max: 0.07 },
+      { ...QUALITY_BANDS[1], min: 0.07, max: 0.29 },
+      { ...QUALITY_BANDS[2], min: 0.29, max: 0.58 },
+      { ...QUALITY_BANDS[3], min: 0.58, max: 0.91 },
+      { ...QUALITY_BANDS[4], min: 0.91, max: 1 }
+    ];
+
+    expect(bandColumns(thirds)).toBe(columns(7, 22, 29, 33, 9));
   });
 });
 

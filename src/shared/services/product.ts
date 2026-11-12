@@ -14,6 +14,7 @@ import {
   CorrelationLevel
 } from '@customTypes/product';
 import { PreConfigData, PreConfigRoot, ReleaseInfoForm } from '@customTypes/preConfig';
+import { ProductQualityBand, ProductQualityBands } from '@customTypes/qualityBands';
 
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import type { GetRequest } from '@hooks/useRequest';
@@ -24,8 +25,6 @@ export interface ProductFormData {
   organizationId?: number;
   description?: string;
   key?: string;
-  gaugeRedLimit?: number;
-  gaugeYellowLimit?: number;
 }
 
 class ProductQuery {
@@ -155,6 +154,36 @@ class ProductQuery {
       url: `/v1/organizations/${organizationId}/products/${productId}/repositories-tsqmi-release-history/`,
       method: 'get'
     };
+  }
+
+  /** Faixas de qualidade do produto (US30.01). */
+  getQualityBandsConfig(organizationId: string, productId: string): GetRequest {
+    if (!organizationId || !productId) return null;
+    return {
+      url: `/v1/organizations/${organizationId}/products/${productId}/quality-bands/`,
+      method: 'get'
+    };
+  }
+
+  /** Grava a régua do produto; só o administrador da organização pode. */
+  async updateQualityBands(
+    organizationId: string,
+    productId: string,
+    bands: ProductQualityBand[]
+  ): Promise<ProductQualityBands> {
+    const response = await api.put<ProductQualityBands>(
+      `/v1/organizations/${organizationId}/products/${productId}/quality-bands/`,
+      { bands }
+    );
+    return response.data;
+  }
+
+  /** Volta a régua do produto aos valores padrão. */
+  async restoreQualityBands(organizationId: string, productId: string): Promise<ProductQualityBands> {
+    const response = await api.delete<ProductQualityBands>(
+      `/v1/organizations/${organizationId}/products/${productId}/quality-bands/`
+    );
+    return response.data;
   }
 
   getProductRepositoriesLatestTsqmiConfig(organizationId: string, productId: string): GetRequest {

@@ -22,6 +22,8 @@ export interface FilterOption {
 
 export interface EvolutionChartData {
   series: TimeSeries[];
+  /** Nomes das entidades escolhidas que não têm nenhuma medição no repositório, e por isso ficam fora do gráfico. */
+  missing: string[];
   isLoading: boolean;
   hasError: boolean;
   retry: () => void;
@@ -50,10 +52,12 @@ function pick(options: FilterOption[], keys: string[]) {
  * subcaracterísticas, medidas e métricas) e os históricos do repositório escolhido, como no dashboard do Grafana.
  */
 export function useTemporalEvolution(organizationId: string, productId: string) {
-  const { repositories = NO_REPOSITORIES, isLoading: isLoadingRepositories } = useRepositoryList(
-    organizationId,
-    productId
-  );
+  const {
+    repositories = NO_REPOSITORIES,
+    isLoading: isLoadingRepositories,
+    error: repositoriesError,
+    mutate: refetchRepositories
+  } = useRepositoryList(organizationId, productId);
   const [chosenRepositoryId, setRepositoryId] = useState<number | undefined>();
   // decidido no render: os históricos já saem com o primeiro repositório, sem esperar um efeito
   const repositoryId = repositories.some((repository) => repository.id === chosenRepositoryId)
@@ -127,8 +131,12 @@ export function useTemporalEvolution(organizationId: string, productId: string) 
 
   const charts = (Object.keys(histories) as EvolutionLevel[]).reduce((result, level) => {
     const request = histories[level];
+    const series = toTimeSeries(request.data?.results, entitiesByLevel[level], granularity);
     result[level] = {
-      series: toTimeSeries(request.data?.results, entitiesByLevel[level], granularity),
+      series,
+      missing: entitiesByLevel[level]
+        .filter((entity) => !series.some((item) => item.key === entity.key))
+        .map((entity) => entity.name),
       isLoading: treeRequest.isLoading || request.isLoading,
       hasError: !!treeRequest.error || !!request.error,
       retry: () => {
@@ -145,6 +153,13 @@ export function useTemporalEvolution(organizationId: string, productId: string) 
   return {
     repositories,
     isLoadingRepositories,
+    // a lista de repositórios é a origem de todos os históricos: se ela falha, a tela não tem como saber se o
+    // produto está vazio ou se a busca deu erro, e dizia sempre que o produto não tinha repositório (CA4 da US07.01).
+    // Só conta como erro quando não há lista: o SWR revalida ao voltar para a aba e guarda a lista anterior quando
+    // essa conferência falha, então sem o `length` uma falha de segundo plano trocaria pelo card de erro os gráficos
+    // que já estavam na tela (revisão do @thegm445 no Front#129).
+    hasRepositoriesError: !!repositoriesError && repositories.length === 0,
+    retryRepositories: () => void refetchRepositories(),
     repositoryId,
     setRepositoryId,
     granularity,

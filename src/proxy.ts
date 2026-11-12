@@ -30,14 +30,15 @@ export async function proxy(request: NextRequest) {
   };
 
   if (isPublicPath(path)) {
-    const isEntryPage = path === '/' || path === LOGIN;
+    const isLanding = path === '/' || path === '/landing';
+    const isEntryPage = isLanding || path === LOGIN;
     if (!token || !isEntryPage) return NextResponse.next();
 
     const validation = await validateToken(token);
     if (validation.status === 'valid') {
       const destination = sanitizeReturnTo(searchParams.get('returnTo')) ?? HOME;
       const response = NextResponse.redirect(new URL(destination, request.url));
-      if (path === '/') response.cookies.set(WELCOME_COOKIE, '1', welcomeCookieOptions(secure));
+      if (isLanding) response.cookies.set(WELCOME_COOKIE, '1', welcomeCookieOptions(secure));
       return response;
     }
     if (validation.status === 'invalid') {

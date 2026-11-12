@@ -1,6 +1,13 @@
 import { toCsv } from '../exportCsv';
 import { PulseRepositoryData } from '../formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv, formatRepositoryPulseCsv } from '../formatPulseCsv';
+import { QUALITY_BANDS, QualityBand } from '../qualityBands';
+
+const CUSTOM_BANDS: QualityBand[] = QUALITY_BANDS.map((band) => {
+  if (band.grade === 'B') return { ...band, min: 0.6, max: 0.85 };
+  if (band.grade === 'A') return { ...band, min: 0.85, max: 1 };
+  return band;
+});
 
 const row = (id: number, name: string, measurements: PulseRepositoryData['measurements']): PulseRepositoryData => ({
   id,
@@ -25,10 +32,11 @@ describe('formatProductPulseCsv', () => {
 
     expect(chart.name).toBe(PULSE_CSV.pulse);
     expect(lines(chart)).toEqual([
-      'Repositório,Data,Valor,Grau',
-      'service,2026-10-01T12:00:00Z,0.55,C',
-      'service,2026-10-10T12:00:00Z,0.9,A',
-      '"front, web",2026-10-05T12:00:00Z,0.1234567,E'
+      'Repositório;Data;Valor;Grau',
+      'service;2026-10-01T12:00:00Z;0,55;C',
+      'service;2026-10-10T12:00:00Z;0,9;A',
+      // o nome com vírgula dispensa as aspas agora que o separador é o ponto e vírgula
+      'front, web;2026-10-05T12:00:00Z;0,1234567;E'
     ]);
   });
 
@@ -40,6 +48,13 @@ describe('formatProductPulseCsv', () => {
     formatProductPulseCsv(rows);
 
     expect(rows[0].measurements[0].value).toBe(0.9);
+  });
+
+  it('usa as faixas configuradas no produto (A a partir de 0,85: 0,82 sai como B)', () => {
+    const customRow = [row(1, 'service', [{ created_at: '2026-10-10T12:00:00Z', value: 0.82 }])];
+    const chart = formatProductPulseCsv(customRow, CUSTOM_BANDS);
+
+    expect(chart.rows[0].grade).toBe('B');
   });
 });
 
@@ -57,10 +72,10 @@ describe('formatRepositoryPulseCsv', () => {
 
     expect(chart.name).toBe(PULSE_CSV.pulse);
     expect(lines(chart)).toEqual([
-      'Repositório,Característica,Data,Valor,Grau',
-      'MeasureSoftGram-Front,Reliability,2026-10-01T00:00:00Z,0.19999,E',
-      'MeasureSoftGram-Front,Reliability,2026-10-02T00:00:00Z,0.2,D',
-      'MeasureSoftGram-Front,Maintainability,2026-10-03T00:00:00Z,1,A'
+      'Repositório;Característica;Data;Valor;Grau',
+      'MeasureSoftGram-Front;Reliability;2026-10-01T00:00:00Z;0,19999;E',
+      'MeasureSoftGram-Front;Reliability;2026-10-02T00:00:00Z;0,2;D',
+      'MeasureSoftGram-Front;Maintainability;2026-10-03T00:00:00Z;1;A'
     ]);
   });
 

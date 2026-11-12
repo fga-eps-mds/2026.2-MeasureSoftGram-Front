@@ -24,10 +24,10 @@ describe('formatTemporalCsv', () => {
 
     expect(chart.name).toBe(TEMPORAL_CSV.characteristics);
     expect(lines(chart)).toEqual([
-      'Repositório,Entidade,Data,Valor',
-      'MeasureSoftGram-Service,Reliability,2026-10-01,0.7',
-      'MeasureSoftGram-Service,Reliability,2026-10-15,0.7333333333333333',
-      'MeasureSoftGram-Service,Maintainability,2026-11-01,0.8'
+      'Repositório;Entidade;Data;Valor',
+      'MeasureSoftGram-Service;Reliability;2026-10-01;0,7',
+      'MeasureSoftGram-Service;Reliability;2026-10-15;0,7333333333333333',
+      'MeasureSoftGram-Service;Maintainability;2026-11-01;0,8'
     ]);
   });
 
@@ -35,8 +35,8 @@ describe('formatTemporalCsv', () => {
     const chart = formatTemporalCsv('measures', 'repo', SERIES, 'month');
 
     expect(lines(chart).slice(1, 3)).toEqual([
-      'repo,Reliability,2026-10,0.7',
-      'repo,Reliability,2026-10,0.7333333333333333'
+      'repo;Reliability;2026-10;0,7',
+      'repo;Reliability;2026-10;0,7333333333333333'
     ]);
   });
 
@@ -54,14 +54,18 @@ describe('formatTemporalCsv', () => {
     expect(formatTemporalCsv('metrics', 'repo', [{ key: 'a', name: 'A', points: [] }], 'day').rows).toEqual([]);
   });
 
-  it('escapa vírgula no nome da entidade', () => {
+  // a vírgula no nome não precisa mais de aspas, porque quem separa as colunas agora é o ponto e vírgula
+  it('escapa ponto e vírgula no nome da entidade e deixa a vírgula passar', () => {
     const chart = formatTemporalCsv(
       'metrics',
       'repo',
-      [{ key: 'm', name: 'a,b', points: [[day('2026-10-01'), 1]] }],
+      [
+        { key: 'm', name: 'a;b', points: [[day('2026-10-01'), 1]] },
+        { key: 'n', name: 'c,d', points: [[day('2026-10-01'), 1]] }
+      ],
       'day'
     );
 
-    expect(lines(chart)[1]).toBe('repo,"a,b",2026-10-01,1');
+    expect(lines(chart).slice(1)).toEqual(['repo;"a;b";2026-10-01;1', 'repo;c,d;2026-10-01;1']);
   });
 });

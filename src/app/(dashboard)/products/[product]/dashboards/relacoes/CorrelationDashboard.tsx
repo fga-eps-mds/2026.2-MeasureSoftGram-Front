@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { useRouter } from '@hooks/useRouter';
 import { Box, Button, Container, Typography } from '@mui/material';
 
@@ -13,7 +13,8 @@ import {
   CORRELATION_CSV,
   CORRELATION_LEVEL_PLURALS,
   formatCorrelationCsv,
-  formatCorrelationInfo
+  formatCorrelationInfo,
+  formatCorrelationReleasesCsv
 } from '@utils/formatCorrelationCharts';
 import { getPathId } from '@utils/pathDestructer';
 
@@ -21,6 +22,7 @@ import { CollectionGuideLink } from '../distribuicao/DistributionStates';
 import CorrelationBubbles, { BUBBLES_TITLE } from './CorrelationBubbles';
 import CorrelationFilters from './CorrelationFilters';
 import CorrelationMatrix, { matrixTitle } from './CorrelationMatrix';
+import CorrelationReleasesDialog from './CorrelationReleasesDialog';
 import { MIN_RELEASES, useCorrelationDashboard } from './useCorrelationDashboard';
 
 const TITLE = '6. Relações e Correlações';
@@ -78,11 +80,15 @@ const CorrelationDashboard: React.FC = () => {
 
   const dashboard = useCorrelationDashboard(organizationId, productId);
   const { repository, level, correlation, status, isUpdating, retry } = dashboard;
+  const [releasesOpen, setReleasesOpen] = useState(false);
   const noun = CORRELATION_LEVEL_PLURALS[level];
-  // a exportação geral leva as duas matrizes da tela, com os filtros aplicados
+  // a exportação geral leva as duas matrizes da tela e os dados de RD, com os filtros aplicados
   const csvCharts =
     status === 'ready' && correlation
-      ? [CORRELATION_CSV.matrix, CORRELATION_CSV.bubbles].map((name) => formatCorrelationCsv(correlation, name))
+      ? [
+          ...[CORRELATION_CSV.matrix, CORRELATION_CSV.bubbles].map((name) => formatCorrelationCsv(correlation, name)),
+          formatCorrelationReleasesCsv(correlation)
+        ]
       : [];
 
   const renderContent = () => {
@@ -200,9 +206,23 @@ const CorrelationDashboard: React.FC = () => {
           <CorrelationFilters {...dashboard} />
 
           {status === 'ready' && correlation && (
-            <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid="correlation-info">
-              {formatCorrelationInfo(correlation)}
-            </Typography>
+            <Box display="flex" alignItems="baseline" flexWrap="wrap" columnGap="12px">
+              <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid="correlation-info">
+                {formatCorrelationInfo(correlation)}
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => setReleasesOpen(true)}
+                sx={{ color: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
+              >
+                Ver releases da análise
+              </Button>
+              <CorrelationReleasesDialog
+                correlation={correlation}
+                open={releasesOpen}
+                onClose={() => setReleasesOpen(false)}
+              />
+            </Box>
           )}
 
           {renderContent()}

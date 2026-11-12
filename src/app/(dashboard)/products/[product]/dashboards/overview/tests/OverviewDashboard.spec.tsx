@@ -2,6 +2,8 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv, downloadCsvZip } from '@utils/exportCsv';
+import { QUALITY_BANDS } from '@utils/qualityBands';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useOverviewDashboard } from '../useOverviewDashboard';
 import OverviewDashboard from '../OverviewDashboard';
 import {
@@ -28,6 +30,7 @@ jest.mock('@hooks/useProviderTerms', () => ({
   })
 }));
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
+jest.mock('@hooks/useProductQualityBands', () => ({ useProductQualityBands: jest.fn() }));
 jest.mock('../useOverviewDashboard', () => ({ useOverviewDashboard: jest.fn() }));
 // o equalizador tem testes próprios: aqui basta ver o que ele recebe do analysis_data
 jest.mock('@components/PlannedVsAccomplishedEqualizer', () => ({
@@ -110,6 +113,31 @@ describe('<OverviewDashboard />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useOverviewDashboard as jest.Mock).mockReturnValue(dashboard());
+    (useProductQualityBands as jest.Mock).mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: false,
+      isLoading: false,
+      retry: jest.fn()
+    });
+  });
+
+  it('mostra o aviso quando o carregamento das faixas do produto falha e segue renderizando com o padrão', () => {
+    const retryQualityBands = jest.fn();
+    (useProductQualityBands as jest.Mock).mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: true,
+      isLoading: false,
+      retry: retryQualityBands
+    });
+    render(<OverviewDashboard />);
+    const indicator = card('Indicador Total da Qualidade');
+
+    expect(screen.getByText('Não foi possível carregar as faixas do produto')).toBeInTheDocument();
+    expect(within(indicator).getByTestId('echarts')).toBeInTheDocument();
+    expect(within(indicator).getByText('A · Ótimo (0,80 a 1,00)')).toBeInTheDocument();
+
+    fireEvent.click(within(indicator).getByRole('button', { name: 'Tentar novamente' }));
+    expect(retryQualityBands).toHaveBeenCalledTimes(1);
   });
 
   it('busca os dados do produto da URL', () => {
@@ -217,10 +245,41 @@ describe('<OverviewDashboard />', () => {
     );
     render(<OverviewDashboard />);
 
-    expect(screen.getAllByText('Carregando')).toHaveLength(2);
+    // os três blocos da tela avisam que estão carregando, inclusive os totais, que antes eram só uma grade
+    // de esqueletos sem título nem selo (CA4 da US07.01)
+    expect(screen.getAllByText('Carregando')).toHaveLength(3);
+    const totals = screen.getByRole('region', { name: 'Totais da release' });
+    expect(totals).toHaveTextContent('Carregando os dados da release');
     expect(screen.getAllByTestId('overview-total')[0]).not.toHaveTextContent('3');
     expect(screen.queryByTestId('echarts')).not.toBeInTheDocument();
     expect(screen.queryByTestId('equalizer')).not.toBeInTheDocument();
+  });
+
+  it('sem modelo de qualidade configurado, mostra travessão no lugar de zero e explica o motivo', () => {
+    const noModel = summary();
+    noModel.totals = { ...noModel.totals, characteristics: 0, subcharacteristics: 0, measures: 0, metrics: 0 };
+    (useOverviewDashboard as jest.Mock).mockReturnValue(dashboard({ summary: noModel }));
+    render(<OverviewDashboard />);
+
+    const totals = screen.getAllByTestId('overview-total');
+    // zero ali afirmaria que a release foi medida e não tem nenhuma característica, o que é diferente de não ter modelo
+    expect(totals.slice(0, 4).map((total) => total.textContent)).toEqual([
+      '—Características',
+      '—Subcaracterísticas',
+      '—Medidas',
+      '—Métricas'
+    ]);
+    // repositórios e arquivos não dependem da configuração: o Service os conta por consultas próprias
+    expect(totals[4]).toHaveTextContent('2');
+    expect(totals[5]).toHaveTextContent('1.284');
+    expect(screen.getByText('Esta release não tem modelo de qualidade configurado')).toBeInTheDocument();
+  });
+
+  it('com modelo configurado, não mostra o aviso nem travessão', () => {
+    render(<OverviewDashboard />);
+
+    expect(screen.queryByText('Esta release não tem modelo de qualidade configurado')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('overview-total')[0]).toHaveTextContent('3');
   });
 
   it('explica o que fazer, com o aviso do guia de IDV, quando a release não tem análises', () => {

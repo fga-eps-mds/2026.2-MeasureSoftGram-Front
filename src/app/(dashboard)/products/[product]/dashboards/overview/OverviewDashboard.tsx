@@ -6,21 +6,25 @@ import { useRouter } from '@hooks/useRouter';
 import { Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } from '@mui/material';
 
 import DashboardCard, { dashboardCardSx, SkeletonBlock } from '@components/DashboardCard';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
 import ReleaseSelect from '@components/ReleaseSelect';
 import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { ReleaseDashboardSummary } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import PlannedVsAccomplishedEqualizer from '@components/PlannedVsAccomplishedEqualizer';
 import { comparePlannedAccomplished } from '@utils/comparePlannedAccomplished';
 import {
+  TotalItem,
   formatRadarOptions,
   formatTotal,
   formatTsqmiBarOptions,
   getDefaultAnalysisRepository,
   getTotalItems,
   getTsqmiBars,
-  hasAccomplishedValues
+  hasAccomplishedValues,
+  hasQualityModel
 } from '@utils/formatOverviewCharts';
 import {
   OVERVIEW_CSV,
@@ -30,7 +34,7 @@ import {
   formatTotalsCsv
 } from '@utils/formatOverviewCsv';
 import { getPathId } from '@utils/pathDestructer';
-import { QUALITY_BANDS, formatQualityBandRange } from '@utils/qualityBands';
+import { QualityBand, formatQualityBandRange } from '@utils/qualityBands';
 import { useTranslation } from 'react-i18next';
 import MSGAlert from '../../../../../../components/idv/feedback';
 
@@ -39,6 +43,12 @@ import { useOverviewDashboard } from './useOverviewDashboard';
 const TITLE = '1. Visão Geral de Qualidade';
 const COLLECTION_GUIDE_URL = 'https://github.com/fga-eps-mds/MeasureSoftGram-Action';
 const SKELETON_BAR_WIDTHS = [300, 260, 230, 200, 170, 140];
+/** Total que não se aplica à release, como o resumo estatístico e a matriz de correlação já fazem. */
+const TOTAL_NOT_APPLICABLE = '—';
+// o raio do radar é 72% do menor lado, então no card largo é a altura que limita o círculo: em 300px fixos ele
+// ficava miúdo ao lado do equalizador, que tem 15rem só de trilho (homologação do PO em 03/11/2026). No celular
+// quem limita é a largura, então crescer a altura só deixaria vão sobrando.
+const RADAR_HEIGHT = { xs: 320, sm: 400, md: 480 };
 
 type CardStatus = 'loading' | 'empty' | 'error' | 'ready';
 
@@ -84,15 +94,8 @@ interface TotalsProps {
   onRetry: () => void;
 }
 
-function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
-  const { terms } = useProviderTerms();
-
-  if (error) {
-    return <DashboardCard title="Totais da release" status="error" onRetry={onRetry} />;
-  }
-
-  const items = getTotalItems(summary?.totals, terms.Repositories);
-
+/** A grade dos seis totais: cada quadro vira esqueleto enquanto o seu valor não chegou. */
+function TotalsGrid({ items }: { items: TotalItem[] }) {
   return (
     <Box
       display="grid"
@@ -106,15 +109,22 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
           data-testid="overview-total"
           sx={{ ...dashboardCardSx, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}
         >
-          {isLoading || item.value === undefined ? (
+          {item.value === undefined ? (
             <Box display="flex" flexDirection="column" gap="10px" paddingY="2px">
               <SkeletonBlock width={70} height={22} />
               <SkeletonBlock width={110} height={10} />
             </Box>
           ) : (
             <>
-              <Typography fontWeight="bold" fontSize="26px" lineHeight={1.2} color={DASHBOARD_COLORS.primary}>
-                {formatTotal(item.value)}
+              {/* o leitor de tela anuncia "travessão" ou pula o glifo; o rótulo diz o que o travessão significa */}
+              <Typography
+                fontWeight="bold"
+                fontSize="26px"
+                lineHeight={1.2}
+                color={DASHBOARD_COLORS.primary}
+                aria-label={item.value === null ? 'Não se aplica' : undefined}
+              >
+                {item.value === null ? TOTAL_NOT_APPLICABLE : formatTotal(item.value)}
               </Typography>
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
                 {item.label}
@@ -127,14 +137,41 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
   );
 }
 
+function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
+  const { terms } = useProviderTerms();
+  const items = getTotalItems(summary?.totals, terms.Repositories);
+  // sem o resumo não há número nenhum para mostrar: segue como carregando, com título, selo e mensagem, em vez da
+  // grade de esqueletos solta, que era o único bloco da tela sem os estados do CA4 da US07.01
+  const status = getStatus(error, isLoading || !summary, false);
+  const withoutQualityModel = !!summary && !hasQualityModel(summary.totals);
+
+  return (
+    <DashboardCard
+      title="Totais da release"
+      status={status}
+      loadingContent={<TotalsGrid items={getTotalItems(undefined, terms.Repositories)} />}
+      onRetry={onRetry}
+    >
+      {/* o travessão sozinho não explica por que não há o que contar; o aviso evita ler ausência como perda de dado */}
+      {withoutQualityModel && (
+        <MSGAlert severity="warning" title="Esta release não tem modelo de qualidade configurado">
+          {'Sem o modelo não há características, subcaracterísticas, medidas nem métricas para contar — por isso o ' +
+            `travessão. A contagem de ${terms.repositories} e de arquivos analisados não depende dele e segue valendo.`}
+        </MSGAlert>
+      )}
+      <TotalsGrid items={items} />
+    </DashboardCard>
+  );
+}
+
 /** Legenda das 5 faixas do Indicador Total da Qualidade (US06.01), da melhor para a pior. */
-function QualityBandsLegend() {
+function QualityBandsLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box display="flex" flexDirection="column" gap="8px" data-testid="quality-bands-legend">
       <Typography fontWeight="bold" fontSize="13px" color={DASHBOARD_COLORS.text}>
         Faixas
       </Typography>
-      {[...QUALITY_BANDS].reverse().map((band) => (
+      {[...bands].reverse().map((band) => (
         <Box key={band.grade} display="flex" alignItems="center" gap="8px">
           <Box sx={{ width: 14, height: 14, borderRadius: '3px', backgroundColor: band.color, flexShrink: 0 }} />
           <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
@@ -151,6 +188,12 @@ const OverviewDashboard: React.FC = () => {
   const { terms } = useProviderTerms();
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
+
+  const {
+    bands,
+    isError: isQualityBandsError,
+    retry: retryQualityBands
+  } = useProductQualityBands(organizationId, productId);
 
   const {
     releases,
@@ -199,6 +242,10 @@ const OverviewDashboard: React.FC = () => {
     [characteristics, previousCharacteristics]
   );
   const releaseName = release?.release_name ?? '';
+  const tsqmiBarOptions = useMemo(
+    () => formatTsqmiBarOptions(tsqmiBars, releaseName, previousRelease?.release_name, bands),
+    [tsqmiBars, releaseName, previousRelease?.release_name, bands]
+  );
 
   const isLoadingCharacteristics = isLoadingReleases || (!!release && !characteristics);
   const tsqmiStatus = getStatus(characteristicsError, isLoadingCharacteristics, tsqmiBars.length === 0);
@@ -213,7 +260,7 @@ const OverviewDashboard: React.FC = () => {
   const hasRadar = analysisStatus === 'ready' && hasAccomplishedValues(selectedRepository);
   const csv = {
     totals: formatTotalsCsv(releaseName, summaryError ? [] : getTotalItems(summary?.totals, terms.Repositories)),
-    indicator: formatIndicatorCsv(releaseName, tsqmiStatus === 'ready' ? tsqmiBars : []),
+    indicator: formatIndicatorCsv(releaseName, tsqmiStatus === 'ready' ? tsqmiBars : [], bands),
     plannedAccomplished: formatPlannedAccomplishedCsv(
       releaseName,
       repositoryName,
@@ -268,15 +315,16 @@ const OverviewDashboard: React.FC = () => {
           onRetry={retryCharacteristics}
           headerAction={<ExportCsvButton dashboard={OVERVIEW_CSV.dashboard} chart={csv.indicator} />}
         >
+          {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}
           <Box display="flex" flexWrap="wrap" alignItems="center" gap="32px">
             <Box flex="1 1 480px" minWidth={0}>
               <ReactEcharts
-                option={formatTsqmiBarOptions(tsqmiBars, releaseName, previousRelease?.release_name)}
+                option={tsqmiBarOptions}
                 notMerge
                 style={{ height: Math.max(160, tsqmiBars.length * 34 + 40), width: '100%' }}
               />
             </Box>
-            <QualityBandsLegend />
+            <QualityBandsLegend bands={bands} />
           </Box>
         </DashboardCard>
 
@@ -335,11 +383,13 @@ const OverviewDashboard: React.FC = () => {
           </Box>
           {hasAccomplishedValues(selectedRepository) ? (
             <>
-              <ReactEcharts
-                option={formatRadarOptions(comparisons, selectedRepository?.repository_name ?? '', characteristicName)}
-                notMerge
-                style={{ height: 300, width: '100%' }}
-              />
+              <Box height={RADAR_HEIGHT}>
+                <ReactEcharts
+                  option={formatRadarOptions(comparisons, repositoryName, characteristicName)}
+                  notMerge
+                  style={{ height: '100%', width: '100%' }}
+                />
+              </Box>
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
                 Mesmos valores do realizado (Rd) do {terms.repository} {selectedRepository?.repository_name} na release{' '}
                 {releaseName}.

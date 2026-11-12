@@ -9,11 +9,12 @@ export const MISSING_STATISTIC = '—';
 export const MIN_ANALYSES_FOR_SKEWNESS = 3;
 
 /**
- * Estatística com duas casas e vírgula (CA8); null vira "—". Um valor que arredonda para zero perde o sinal, senão
- * uma assimetria de −0,001 apareceria como "-0,00".
+ * Estatística com duas casas e vírgula (CA8); null vira "—", e undefined também, para a tela não quebrar com um Service
+ * que ainda não devolve o campo. Um valor que arredonda para zero perde o sinal, senão uma assimetria de −0,001
+ * apareceria como "-0,00".
  */
-export function formatStatistic(value: number | null): string {
-  if (value === null) return MISSING_STATISTIC;
+export function formatStatistic(value: number | null | undefined): string {
+  if (value === null || value === undefined) return MISSING_STATISTIC;
   const rounded = Math.abs(value) < 0.005 ? 0 : value;
   return rounded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -54,6 +55,8 @@ export const SUMMARY_STATISTICS: SummaryStatistic[] = [
   { label: 'Limite superior', key: 'upper_limit' },
   { label: 'Discrepantes', key: 'outliers' },
   { label: 'Média', key: 'mean' },
+  { label: 'Desvio padrão', key: 'std' },
+  { label: 'Variância', key: 'variance' },
   { label: 'Assimetria', key: 'skewness' }
 ];
 

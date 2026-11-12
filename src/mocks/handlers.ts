@@ -19,6 +19,21 @@ import characteristicsLatestValues from './fixtures/characteristicsLatestValues.
 // Token fake devolvido pelos fluxos de autenticacao do modo mock.
 export const MOCK_TOKEN = 'mock-token-msg';
 
+// Faixas de qualidade do produto (US30.01): o modo mock guarda em memoria o que foi salvo, como o Service.
+const DEFAULT_QUALITY_BANDS = [
+  { key: 'E', min: 0, max: 0.2 },
+  { key: 'D', min: 0.2, max: 0.4 },
+  { key: 'C', min: 0.4, max: 0.6 },
+  { key: 'B', min: 0.6, max: 0.8 },
+  { key: 'A', min: 0.8, max: 1 }
+];
+let mockQualityBands: typeof DEFAULT_QUALITY_BANDS | null = null;
+const qualityBandsResponse = () => ({
+  is_default: mockQualityBands === null,
+  can_edit: true,
+  bands: mockQualityBands ?? DEFAULT_QUALITY_BANDS
+});
+
 export const handlers = [
   // ----- Autenticacao -----
   rest.post('*/v1/accounts/login/', (_req, res, ctx) => res(ctx.status(200), ctx.json({ key: MOCK_TOKEN }))),
@@ -94,6 +109,18 @@ export const handlers = [
   rest.get('*/v1/organizations/:orgId/products/:productId/repositories/:repositoryId/', (_req, res, ctx) =>
     res(ctx.status(200), ctx.json(repositories.results[0]))
   ),
+  rest.get('*/v1/organizations/:orgId/products/:productId/quality-bands/', (_req, res, ctx) =>
+    res(ctx.status(200), ctx.json(qualityBandsResponse()))
+  ),
+  rest.put('*/v1/organizations/:orgId/products/:productId/quality-bands/', async (req, res, ctx) => {
+    const { bands } = await req.json();
+    mockQualityBands = bands;
+    return res(ctx.status(200), ctx.json(qualityBandsResponse()));
+  }),
+  rest.delete('*/v1/organizations/:orgId/products/:productId/quality-bands/', (_req, res, ctx) => {
+    mockQualityBands = null;
+    return res(ctx.status(200), ctx.json(qualityBandsResponse()));
+  }),
 
   // ----- Fallback -----
   // Qualquer outro GET sob /v1/.../latest-values|historical-values devolve lista vazia,

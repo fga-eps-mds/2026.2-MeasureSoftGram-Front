@@ -1,0 +1,82 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "level": "characteristic",
+  "entity": {
+    "key": "reliability",
+    "name": "Reliability"
+  },
+  "reference": null,
+  "repositories": [
+    {
+      "id": 1,
+      "name": "MeasureSoftGram-Service",
+      "value": 0.86,
+      "created_at": "2026-10-10T12:00:00-03:00",
+      "children": [
+        {
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 50,
+          "value": 0.9,
+          "created_at": "2026-10-10T12:00:00-03:00"
+        },
+        {
+          "key": "maturity",
+          "name": "Maturity",
+          "weight": 50,
+          "value": 0.78,
+          "created_at": "2026-10-10T12:00:00-03:00"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "MeasureSoftGram-Action",
+      "value": 0.42,
+      "created_at": "2026-10-10T12:00:00-03:00",
+      "children": [
+        {
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 50,
+          "value": 0.45,
+          "created_at": "2026-10-10T12:00:00-03:00"
+        },
+        {
+          "key": "maturity",
+          "name": "Maturity",
+          "weight": 50,
+          "value": 0.35,
+          "created_at": "2026-10-10T12:00:00-03:00"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "MeasureSoftGram-Front",
+      "value": 0.62,
+      "created_at": "2026-10-10T12:00:00-03:00",
+      "children": [
+        {
+          "key": "testing_status",
+          "name": "Testing Status",
+          "weight": 50,
+          "value": 0.61,
+          "created_at": "2026-10-10T12:00:00-03:00"
+        },
+        {
+          "key": "maturity",
+          "name": "Maturity",
+          "weight": 50,
+          "value": null,
+          "created_at": null
+        }
+      ]
+    }
+  ]
+}

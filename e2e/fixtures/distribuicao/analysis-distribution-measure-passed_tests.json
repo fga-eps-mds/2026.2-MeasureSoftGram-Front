@@ -1,0 +1,86 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "repository": {
+    "id": 7,
+    "name": "MeasureSoftGram-Service"
+  },
+  "level": "measure",
+  "key": "passed_tests",
+  "period": {
+    "count": 8,
+    "first": "2026-08-18T10:00:00-03:00",
+    "last": "2026-10-10T10:00:00-03:00"
+  },
+  "entity": {
+    "key": "passed_tests",
+    "name": "Passed Tests",
+    "level": "measure",
+    "metric_type": null,
+    "analyses": [
+      {
+        "date": "2026-08-18T10:00:00-03:00",
+        "value": 0.72,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-08-25T10:00:00-03:00",
+        "value": 0.75,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-01T10:00:00-03:00",
+        "value": 0.78,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-08T10:00:00-03:00",
+        "value": 0.8,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-15T10:00:00-03:00",
+        "value": 0.81,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-22T10:00:00-03:00",
+        "value": 0.83,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-10-01T10:00:00-03:00",
+        "value": 0.85,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-10-10T10:00:00-03:00",
+        "value": 0.88,
+        "is_outlier": false
+      }
+    ],
+    "summary": {
+      "count": 8,
+      "min": 0.72,
+      "p10": 0.741,
+      "q1": 0.7725,
+      "median": 0.805,
+      "q3": 0.835,
+      "p90": 0.859,
+      "max": 0.88,
+      "iqr": 0.0625,
+      "lower_limit": 0.67875,
+      "upper_limit": 0.92875,
+      "outliers": 0,
+      "mean": 0.8025,
+      "std": 0.052304,
+      "variance": 0.002736,
+      "skewness": -0.164733
+    }
+  },
+  "children": []
+}

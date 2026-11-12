@@ -32,7 +32,7 @@ describe('AuthCallback', () => {
 
     render(<AuthCallback />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Entrando no MeasureSoftGram');
+    expect(screen.getByRole('status')).toHaveTextContent('Autenticando no MeasureSoftGram');
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
@@ -89,7 +89,7 @@ describe('AuthCallback', () => {
     render(<AuthCallback />);
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/auth'));
-    expect(flash().text).toContain('Serviço indisponível');
+    expect(flash().text).toBe('Sua sessão expirou. Por favor, faça login novamente!');
   });
 
   it('sem code nem error volta para /auth sem chamar o servidor', async () => {
@@ -107,10 +107,10 @@ describe('AuthCallback', () => {
       destination: '/auth',
       flash: { type: 'error', text: 'Erro na autorização do provedor.' }
     });
-    expect(resolveCallbackResult(400, { error: 'login_failed', message: 'E-mail em uso' }).flash.text).toBe(
-      'Erro ao realizar login: E-mail em uso'
-    );
-    expect(resolveCallbackResult(502, {}).flash.text).toBe('Erro ao realizar login: Serviço indisponível');
-    expect(resolveCallbackResult(400, {}).flash.text).toBe('Erro ao realizar login: Erro desconhecido');
+    // sem o detalhe técnico do Service (US11.01 CA5)
+    const expired = { destination: '/auth', flash: { type: 'error', text: 'Sua sessão expirou. Por favor, faça login novamente!' } };
+    expect(resolveCallbackResult(400, { error: 'login_failed', message: 'E-mail em uso' })).toMatchObject(expired);
+    expect(resolveCallbackResult(502, {})).toMatchObject(expired);
+    expect(resolveCallbackResult(400, {})).toMatchObject(expired);
   });
 });

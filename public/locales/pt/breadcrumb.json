@@ -2,11 +2,14 @@
   "products": "Produtos",
   "repositories": "Repositórios",
   "repositories_gitlab": "Projetos",
+  "manage-repository": "Gerenciar repositório",
+  "manage-repository_gitlab": "Gerenciar projeto",
   "releases": "Releases",
   "organizations": "Organizações",
   "organizations_gitlab": "Grupos",
   "dashboards": "Dashboards",
   "metamodelo": "3. Estrutura das Medidas e Indicadores (Metamodelo)",
   "distribuicao": "5. Distribuição Estatística",
-  "relacoes": "6. Relações e Correlações"
+  "relacoes": "6. Relações e Correlações",
+  "settings": "Configurações"
 }

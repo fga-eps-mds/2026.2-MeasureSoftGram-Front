@@ -24,6 +24,7 @@ import {
 import { Search, GitHub, FolderSpecial } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { organizationQuery, Result, ResultError } from "@services/organization";
+import { Organization } from "@customTypes/organization";
 import type { AxiosError } from 'axios';
 import { useRouter } from "@hooks/useRouter";
 import { productQuery } from "@services/product";
@@ -64,11 +65,13 @@ const Products: React.FC = () => {
   const { t: tp } = useTranslation('product');
   const router = useRouter();
 
-  const { organizationList, setCurrentOrganizations, fetchOrganizations, currentOrganization } = useOrganizationContext();
+  const { organizationList, setCurrentOrganizations, fetchOrganizations, currentOrganization, hasFetched } =
+    useOrganizationContext();
   const { setCurrentProduct, updateProductList, currentProduct } = useProductContext();
 
   const [providerNamespaces, setProviderNamespaces] = useState<ProviderNamespaceItem[]>([]);
-  const [selectedOrgName, setSelectedOrgName] = useState<string>('');
+  // id do namespace do provedor (não o nome: usuário e grupo do GitLab podem ter o mesmo nome)
+  const [selectedNamespaceId, setSelectedNamespaceId] = useState<string>('');
   const [selectedOrgDbId, setSelectedOrgDbId] = useState<string>('');
 
   const [products, setProducts] = useState<ProductType[]>([]);
@@ -88,7 +91,7 @@ const Products: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [search, tabValue, selectedOrgName, provider, selectedProductId]);
+  }, [search, tabValue, selectedNamespaceId, provider, selectedProductId]);
 
   // a busca vai para o servidor só quando a pessoa para de digitar
   useEffect(() => {
@@ -99,8 +102,8 @@ const Products: React.FC = () => {
   const lastLoadedProductIdRef = useRef<string>('');
 
   const currentNamespace = useMemo(
-    () => providerNamespaces.find(ns => ns.name === selectedOrgName || ns.full_path === selectedOrgName),
-    [providerNamespaces, selectedOrgName]
+    () => providerNamespaces.find(ns => String(ns.id) === selectedNamespaceId),
+    [providerNamespaces, selectedNamespaceId]
   );
 
   const importList = useImportList({
@@ -133,7 +136,7 @@ const Products: React.FC = () => {
     !!repo.url && (importedUrls.has(normalizeRepoUrl(repo.url)) ||
       pendingImports.has(`${importScope}|${normalizeRepoUrl(repo.url)}`));
 
-  const resolveTargetOrg = async (): Promise<any> => {
+  const resolveTargetOrg = async (): Promise<Organization | null> => {
     if (currentOrganization) return currentOrganization;
     const savedOrgId = localStorage.getItem('selectedOrgId');
     if (!savedOrgId) return null;
@@ -151,18 +154,28 @@ const Products: React.FC = () => {
     return null;
   };
 
-  const resolveDefaultOrgName = async (namespaces: ProviderNamespaceItem[]): Promise<string> => {
-    if (namespaces.length === 0) return '';
+  // GitLab: org de grupo casa por gitlab_group_id e pessoal por gitlab_user_id; sem id GitLab, casa pelo nome
+  const findNamespaceOfOrg = (namespaces: ProviderNamespaceItem[], org: Organization | null | undefined) => {
+    if (provider === 'gitlab' && org?.gitlab_group_id) {
+      return namespaces.find(go => go.kind === 'group' && String(go.id) === String(org.gitlab_group_id));
+    }
+    if (provider === 'gitlab' && org?.gitlab_user_id) {
+      return namespaces.find(go => go.kind === 'user' && String(go.id) === String(org.gitlab_user_id));
+    }
+    const byName = namespaces.filter(go => isSameGithubOrg(go.name, org?.name, org?.key, org?.github_org_name));
+    return byName.find(go => go.kind !== 'group') ?? byName[0];
+  };
+
+  const resolveDefaultNamespace = async (namespaces: ProviderNamespaceItem[]): Promise<ProviderNamespaceItem | undefined> => {
+    if (namespaces.length === 0) return undefined;
     const targetOrg = await resolveTargetOrg();
     if (targetOrg) {
-      const matchGo = namespaces.find(go =>
-        isSameGithubOrg(go.name, targetOrg?.name, targetOrg?.key, (targetOrg as any)?.github_org_name)
-      );
+      const matchGo = findNamespaceOfOrg(namespaces, targetOrg);
       if (matchGo) {
-        return matchGo.name;
+        return matchGo;
       }
     }
-    return namespaces[0].name;
+    return namespaces[0];
   };
 
   // Busca as organizações/namespaces do provedor e converte para o formato único da tela.
@@ -223,9 +236,9 @@ const Products: React.FC = () => {
 
       setProviderNamespaces(res.value);
       if (res.value.length === 0) return;
-      const defaultName = await resolveDefaultOrgName(res.value);
+      const defaultNamespace = await resolveDefaultNamespace(res.value);
       if (!estaAtivo()) return;
-      setSelectedOrgName(defaultName);
+      setSelectedNamespaceId(defaultNamespace ? String(defaultNamespace.id) : '');
     } catch (error) {
       if (!estaAtivo()) return;
       console.error(error);
@@ -238,7 +251,7 @@ const Products: React.FC = () => {
   const getBackendOrgId = async (orgName: string): Promise<string> => {
     const res = await organizationQuery.getAllOrganization();
     if (res.type !== 'success') return '';
-    const match = res.value.find((o: any) =>
+    const match = res.value.find((o) =>
       isSameGithubOrg(orgName, o.name, o.key, o.github_org_name)
     );
     return match?.id || '';
@@ -252,17 +265,12 @@ const Products: React.FC = () => {
     return String(importRes.value.id);
   };
 
-  // espaço pessoal do GitLab: uma Organization própria, ou a que já existe com o mesmo nome
-  const importGitlabPersonalOrg = async (orgName: string): Promise<string> => {
-    const createRes = await organizationQuery.createOrganization({ name: orgName });
-    if (createRes.type === 'success' && createRes.value?.id) {
-      await fetchOrganizations();
-      return String(createRes.value.id);
-    }
-    const res = await organizationQuery.getAllOrganization();
-    if (res.type !== 'success') return '';
-    const found = res.value.find((o: any) => o.name?.toLowerCase() === orgName.toLowerCase());
-    return found?.id ? String(found.id) : '';
+  // espaço pessoal do GitLab: Organization vinculada ao gitlab_user_id pelo endpoint dedicado
+  const importGitlabPersonalOrg = async (): Promise<string> => {
+    const importRes = await organizationQuery.importGitlabPersonal();
+    if (importRes.type !== 'success' || !importRes.value?.id) return '';
+    await fetchOrganizations();
+    return String(importRes.value.id);
   };
 
   const importGithubOrg = async (orgName: string): Promise<string> => {
@@ -272,12 +280,9 @@ const Products: React.FC = () => {
     return importResult.value.id;
   };
 
-  const importOrg = async (orgName: string): Promise<string> => {
-    if (provider !== 'gitlab') return importGithubOrg(orgName);
-    const group = providerNamespaces.find(
-      ns => ns.kind === 'group' && (ns.name === orgName || ns.full_path === orgName)
-    );
-    return group ? importGitlabGroupOrg(group.id) : importGitlabPersonalOrg(orgName);
+  const importOrg = async (ns: ProviderNamespaceItem): Promise<string> => {
+    if (provider !== 'gitlab') return importGithubOrg(ns.name);
+    return ns.kind === 'group' ? importGitlabGroupOrg(ns.id) : importGitlabPersonalOrg();
   };
 
   const handleSelectOrgRef = useRef<boolean>(false);
@@ -299,21 +304,19 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleSelectOrganization = async (orgName: string) => {
-    if (!orgName) return;
+  const handleSelectOrganization = async (ns: ProviderNamespaceItem) => {
     if (handleSelectOrgRef.current) return;
     handleSelectOrgRef.current = true;
     setLoadingProducts(true);
     setProducts([]);
     try {
-      let orgDbId = await getBackendOrgId(orgName);
-
+      // GitLab sempre importa (POST idempotente): reaproveitar a org pelo nome deixa a pessoa de fora do grupo
+      const orgDbId = provider === 'gitlab'
+        ? await importOrg(ns)
+        : (await getBackendOrgId(ns.name)) || (await importOrg(ns));
       if (!orgDbId) {
-        orgDbId = await importOrg(orgName);
-        if (!orgDbId) {
-          toast.error(`Erro ao importar ${terms.organization} no MeasureSoftGram.`);
-          return;
-        }
+        toast.error(`Erro ao importar ${terms.organization} no MeasureSoftGram.`);
+        return;
       }
 
       setSelectedOrgDbId(orgDbId);
@@ -338,7 +341,8 @@ const Products: React.FC = () => {
         url: repo.url,
         description: repo.description || '',
         platform: provider === 'gitlab' ? 'gitlab' : 'github',
-        imported: true
+        imported: true,
+        ...(provider === 'gitlab' && { gitlab_project_id: repo.gitlab_project_id })
       });
       if (response.type === 'success') {
         toast.success(`${terms.Repository} ${repo.name} importado com sucesso!`);
@@ -361,30 +365,34 @@ const Products: React.FC = () => {
     window.location.assign(`/auth/oauth/${targetProvider}?returnTo=${encodeURIComponent('/products')}&reauthorize=1`);
   };
 
+  // Espera a lista de organizações: sem ela a tela não sabe qual é a organização atual, escolheria o primeiro
+  // namespace (a conta pessoal) e a importaria no MeasureSoftGram antes de voltar para a organização certa.
+  // O provider já chega pronto da sessão do servidor.
   useEffect(() => {
+    if (!hasFetched) return;
     let ativo = true;
     void loadProviderNamespaces(() => ativo);
     return () => { ativo = false; };
-  }, [provider]);
+  }, [provider, hasFetched]);
 
   useEffect(() => {
-    if (selectedOrgName) {
-      void handleSelectOrganization(selectedOrgName);
+    if (currentNamespace) {
+      void handleSelectOrganization(currentNamespace);
     }
-  }, [selectedOrgName]);
+  }, [currentNamespace?.id]);
 
+  // `provider` fica fora das deps de propósito: trocar de provedor exige logout (US11.01),
+  // que limpa a organização atual; reagir a ele aqui reimportaria a org do provedor antigo.
   // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
-      const matchGo = providerNamespaces.find(go =>
-        isSameGithubOrg(go.name, currentOrganization?.name, currentOrganization?.key, (currentOrganization as any)?.github_org_name)
-      );
+      const matchGo = findNamespaceOfOrg(providerNamespaces, currentOrganization);
       if (matchGo) {
-        if (matchGo.name !== selectedOrgName) {
-          setSelectedOrgName(matchGo.name);
+        if (String(matchGo.id) !== selectedNamespaceId) {
+          setSelectedNamespaceId(String(matchGo.id));
         }
-      } else if (selectedOrgName !== '') {
-        setSelectedOrgName('');
+      } else if (selectedNamespaceId !== '') {
+        setSelectedNamespaceId('');
         setProducts([]);
         setSelectedProductId('');
       }
@@ -564,12 +572,12 @@ const Products: React.FC = () => {
                 </InputLabel>
                 <Select
                   labelId="org-select-label"
-                  value={selectedOrgName}
+                  value={selectedNamespaceId}
                   label={`${terms.Organizations} do ${terms.providerName}`}
-                  onChange={(e) => setSelectedOrgName(e.target.value)}
+                  onChange={(e) => setSelectedNamespaceId(e.target.value)}
                 >
                   {providerNamespaces.map((o) => (
-                    <MenuItem key={o.id} value={o.name}>
+                    <MenuItem key={o.id} value={String(o.id)}>
                       <strong>{o.name}</strong> {o.description ? `(${o.description})` : ''}
                     </MenuItem>
                   ))}

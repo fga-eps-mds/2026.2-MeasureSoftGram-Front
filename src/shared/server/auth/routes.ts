@@ -20,6 +20,7 @@ export const PROTECTED_ROUTES = [
   '/products/[product]/repositories',
   '/products/[product]/repositories/manage-repository',
   '/products/[product]/repositories/[repository]',
+  '/products/[product]/settings',
   '/products/[product]/dashboards/overview',
   '/products/[product]/dashboards/temporal',
   '/products/[product]/dashboards/metamodelo',

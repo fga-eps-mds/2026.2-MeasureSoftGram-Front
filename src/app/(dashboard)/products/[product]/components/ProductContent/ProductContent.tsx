@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { formatRelative } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -29,9 +29,14 @@ const ProductContent: React.FC = () => {
     data: releaseHistoryData,
     isLoading: isReleasesLoading,
     error: releaseHistoryError,
+    mutate: invalidateReleaseHistory,
   } = useRequest<ProductTsqmiReleaseHistory>(
     organizationId && productId ? productQuery.getProductTsqmiReleaseHistoryConfig(organizationId, productId) : null
   );
+
+  // O _app não refaz um pedido de menos de 60 s. Ao sair da tela, o mutate (já sem ninguém montado) só apaga essa marca:
+  // a próxima visita confere o histórico, e a release criada nas Releases tira o empty state na volta (CA7 da US06.01).
+  useEffect(() => () => void invalidateReleaseHistory(), [invalidateReleaseHistory]);
 
   // Mesma requisição do PulseChart (o SWR deduplica): a última atualização é a medição de TSQMI mais recente.
   const { data: tsqmiHistoryData } = useRequest<RepositoriesTsqmiHistory>(

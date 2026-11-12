@@ -1,0 +1,45 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "repository": {
+    "id": 11,
+    "name": "MeasureSoftGram-Action"
+  },
+  "level": "tsqmi",
+  "key": "tsqmi",
+  "period": {
+    "count": 0,
+    "first": null,
+    "last": null
+  },
+  "entity": {
+    "key": "tsqmi",
+    "name": "TSQMI",
+    "level": "tsqmi",
+    "metric_type": null,
+    "analyses": [],
+    "summary": {
+      "count": 0,
+      "min": null,
+      "p10": null,
+      "q1": null,
+      "median": null,
+      "q3": null,
+      "p90": null,
+      "max": null,
+      "iqr": null,
+      "lower_limit": null,
+      "upper_limit": null,
+      "outliers": 0,
+      "mean": null,
+      "std": null,
+      "variance": null,
+      "skewness": null
+    }
+  },
+  "children": []
+}

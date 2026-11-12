@@ -1,7 +1,7 @@
 import { CharacteristicComparison } from '@utils/comparePlannedAccomplished';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { TotalItem, TsqmiBar } from '@utils/formatOverviewCharts';
-import { getQualityBandClamped } from '@utils/qualityBands';
+import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 /** Nome do dashboard e de cada gráfico nos arquivos exportados: `msgram-overview-<grafico>-<data>.csv`. */
 export const OVERVIEW_CSV = {
@@ -17,7 +17,8 @@ type ReleaseField = { release: string };
 
 const RELEASE_COLUMN = { key: 'release', title: 'Release' } as const;
 
-export type TotalsCsvRow = ReleaseField & { total: string; quantity: number };
+/** `quantity` fica vazia no total que não se aplica à release, como nos outros CSVs do produto. */
+export type TotalsCsvRow = ReleaseField & { total: string; quantity: number | null };
 
 const TOTALS_CSV_COLUMNS: CsvColumn<TotalsCsvRow>[] = [
   RELEASE_COLUMN,
@@ -46,7 +47,11 @@ const INDICATOR_CSV_COLUMNS: CsvColumn<IndicatorCsvRow>[] = [
 ];
 
 /** CSV do Indicador Total da Qualidade: o valor e o grau (A a E) de cada barra da tela, na mesma ordem. */
-export function formatIndicatorCsv(releaseName: string, bars: TsqmiBar[]): CsvChart<IndicatorCsvRow> {
+export function formatIndicatorCsv(
+  releaseName: string,
+  bars: TsqmiBar[],
+  bands: QualityBand[] = QUALITY_BANDS
+): CsvChart<IndicatorCsvRow> {
   return {
     name: OVERVIEW_CSV.indicator,
     columns: INDICATOR_CSV_COLUMNS,
@@ -54,7 +59,7 @@ export function formatIndicatorCsv(releaseName: string, bars: TsqmiBar[]): CsvCh
       release: releaseName,
       repository: bar.name,
       indicator: bar.value,
-      grade: getQualityBandClamped(bar.value).grade
+      grade: getQualityBandClamped(bar.value, bands).grade
     }))
   };
 }

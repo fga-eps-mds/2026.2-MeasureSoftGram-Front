@@ -254,6 +254,8 @@ describe('formatDistributionCsv', () => {
         ['Limite superior', 0.73125],
         ['Discrepantes', 2],
         ['Média', 0.5716666],
+        ['Desvio padrão', 0.1899],
+        ['Variância', 0.0361],
         ['Assimetria', 0.48]
       ]);
     });
@@ -262,28 +264,45 @@ describe('formatDistributionCsv', () => {
       const chart = formatSummaryCsv(fewAnalyses());
 
       expect(chart.rows.find((row) => row.statistic === 'Assimetria')?.value).toBeNull();
-      expect(toCsv(chart).split('\r\n').at(-1)).toBe('R2,MeasureSoftGram-Service,TSQMI,TSQMI,Assimetria,');
+      expect(toCsv(chart).split('\r\n').at(-1)).toBe('R2;MeasureSoftGram-Service;TSQMI;TSQMI;Assimetria;');
+    });
+
+    it('com menos de 2 análises, o desvio padrão e a variância ficam vazios', () => {
+      const lines = toCsv(
+        formatSummaryCsv(
+          distribution({
+            main: {
+              ...entity('tsqmi', 'TSQMI', 'tsqmi', [0.5]),
+              summary: { ...summary, count: 1, std: null, variance: null }
+            }
+          })
+        )
+      ).split('\r\n');
+
+      expect(lines).toContain('R2;MeasureSoftGram-Service;TSQMI;TSQMI;Desvio padrão;');
+      expect(lines).toContain('R2;MeasureSoftGram-Service;TSQMI;TSQMI;Variância;');
     });
   });
 
-  it('escreve os valores no CSV como o Service devolve, com ponto e todas as casas', () => {
+  // todas as casas que o Service devolve, sem arredondar; só a casa decimal vira vírgula, para o Excel somar a coluna
+  it('escreve os valores no CSV com todas as casas e a vírgula decimal', () => {
     const charts = formatDistributionCsvs(characteristic());
 
     expect(toCsv(charts.summary).split('\r\n').slice(0, 2)).toEqual([
-      'Release,Repositório,Nível,Entidade,Estatística,Valor',
-      'R2,MeasureSoftGram-Service,Característica,Reliability,Análises,6'
+      'Release;Repositório;Nível;Entidade;Estatística;Valor',
+      'R2;MeasureSoftGram-Service;Característica;Reliability;Análises;6'
     ]);
     expect(toCsv(charts.summary).split('\r\n')[11]).toBe(
-      'R2,MeasureSoftGram-Service,Característica,Reliability,Média,0.5716666'
+      'R2;MeasureSoftGram-Service;Característica;Reliability;Média;0,5716666'
     );
     expect(toCsv(charts.boxplot).split('\r\n')[2]).toBe(
-      'R2,MeasureSoftGram-Service,Subcaracterística,Testing Status,0.385,0.5125,0.555,0.6,0.75,0.0875,0.38125,0.73125,2'
+      'R2;MeasureSoftGram-Service;Subcaracterística;Testing Status;0,385;0,5125;0,555;0,6;0,75;0,0875;0,38125;0,73125;2'
     );
     expect(toCsv(charts.histogram).split('\r\n')[4]).toBe(
-      'R2,MeasureSoftGram-Service,Característica,Reliability,0.3,0.4,1'
+      'R2;MeasureSoftGram-Service;Característica;Reliability;0,3;0,4;1'
     );
     expect(toCsv(charts.scatter).split('\r\n')[1]).toBe(
-      'R2,MeasureSoftGram-Service,Característica,Reliability,2026-08-17T10:00:00-03:00,0.31,sim'
+      'R2;MeasureSoftGram-Service;Característica;Reliability;2026-08-17T10:00:00-03:00;0,31;sim'
     );
   });
 });

@@ -246,7 +246,7 @@ describe('AuthProvider', () => {
       );
 
       await waitFor(() => expect(assign).toHaveBeenCalledWith('/'));
-      expect(flash()).toEqual({ type: 'warning', text: 'Sua sessão expirou por segurança (limite de 2h).' });
+      expect(flash()).toEqual({ type: 'warning', text: 'Sua sessão expirou. Por favor, faça login novamente!' });
     });
   });
 

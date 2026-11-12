@@ -6,7 +6,9 @@ import { Box, Button, Container, Typography } from '@mui/material';
 
 import DashboardCard from '@components/DashboardCard';
 import { ExportAllCsvButton } from '@components/ExportCsvButton';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
 import { usePreloadECharts } from '@components/ECharts';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { DISTRIBUTION_LEVEL_LABELS } from '@utils/distributionCascade';
@@ -33,9 +35,13 @@ function formatReleaseDay(date: Date | string): string {
   return `${day}/${month}`;
 }
 
+/** Cada célula também é grade, para o cartão esticar até a altura da linha sem alargar a coluna. */
+const GRID_CELL = { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', minWidth: 0 };
+
 /**
  * Grade da referência (CA4 a CA8): histograma e densidade lado a lado, boxplot na largura toda, dispersão e resumo
- * lado a lado. Em tela estreita, uma coluna na ordem dos quadros, sem as áreas vazias.
+ * lado a lado, com os cartões de cada linha na mesma altura. Em tela estreita, uma coluna na ordem dos quadros, sem as
+ * áreas vazias.
  */
 function DistributionGrid({
   histogram,
@@ -58,7 +64,7 @@ function DistributionGrid({
       aria-busy={busy}
       display="grid"
       gap="24px"
-      alignItems="start"
+      alignItems="stretch"
       sx={{
         gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' },
         gridTemplateAreas: { lg: '"hist dens" "box box" "disp summary"' },
@@ -66,11 +72,11 @@ function DistributionGrid({
         transition: 'opacity 150ms'
       }}
     >
-      <Box sx={{ gridArea: { lg: 'hist' }, minWidth: 0 }}>{histogram}</Box>
-      <Box sx={{ gridArea: { lg: 'dens' }, minWidth: 0 }}>{density}</Box>
-      <Box sx={{ gridArea: { lg: 'box' }, minWidth: 0 }}>{boxplot}</Box>
-      <Box sx={{ gridArea: { lg: 'disp' }, minWidth: 0 }}>{scatter}</Box>
-      <Box sx={{ gridArea: { lg: 'summary' }, minWidth: 0 }}>{summary}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'hist' } }}>{histogram}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'dens' } }}>{density}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'box' } }}>{boxplot}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'disp' } }}>{scatter}</Box>
+      <Box sx={{ ...GRID_CELL, gridArea: { lg: 'summary' } }}>{summary}</Box>
     </Box>
   );
 }
@@ -80,6 +86,13 @@ const DistributionDashboard: React.FC = () => {
   const { terms } = useProviderTerms();
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
+
+  // a régua do produto pinta o histograma e a curva (US30.02); sem ela, os gráficos seguem na régua padrão
+  const {
+    bands,
+    isError: isQualityBandsError,
+    retry: retryQualityBands
+  } = useProductQualityBands(organizationId, productId);
 
   const dashboard = useDistributionDashboard(organizationId, productId);
   const { release, level, selectedEntity, distribution, entity, children, period, status, isUpdating, retry } =
@@ -171,8 +184,8 @@ const DistributionDashboard: React.FC = () => {
       return (
         <DistributionGrid
           busy={isUpdating}
-          histogram={<DistributionHistogram entity={entity} csv={csv?.histogram} />}
-          density={<DistributionDensity entity={entity} csv={csv?.density} />}
+          histogram={<DistributionHistogram entity={entity} csv={csv?.histogram} bands={bands} />}
+          density={<DistributionDensity entity={entity} csv={csv?.density} bands={bands} />}
           boxplot={<DistributionBoxplot entity={entity} childEntities={children ?? []} csv={csv?.boxplot} />}
           scatter={<DistributionScatter entity={entity} csv={csv?.scatter} />}
           summary={<DistributionSummary summary={entity.summary} csv={csv?.summary} />}
@@ -211,6 +224,9 @@ const DistributionDashboard: React.FC = () => {
           </Box>
 
           <DistributionFilters {...dashboard} />
+
+          {/* a régua do produto não veio: os gráficos continuam na tela com a régua padrão (CA4) */}
+          {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}
 
           {status === 'ready' && distribution && period?.first && period.last && (
             <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid="distribution-period">

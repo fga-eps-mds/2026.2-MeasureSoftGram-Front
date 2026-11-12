@@ -8,6 +8,7 @@ import {
   PulseMeasurement,
   PULSE_GRID,
 } from '@utils/formatPulseChart';
+import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 interface Props {
   name: string;
@@ -21,6 +22,7 @@ interface Props {
    * em relação ao da release ("▼ 3,37% vs. Release 2"), numa linha própria. Sem ela, é em relação à medição anterior.
    */
   reference?: { name: string; value: number };
+  bands?: QualityBand[];
 }
 
 // "▼ 3,37%": seta, percentual sem sinal e vírgula decimal.
@@ -47,6 +49,7 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
   valueLabel = 'último TSQMI',
   showIcon = true,
   reference,
+  bands = QUALITY_BANDS,
 }) => {
   const sorted = [...measurements].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -56,7 +59,7 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
   const previousMeasurement = sorted[sorted.length - 2];
 
   const latestVal = latestMeasurement?.value ?? 0;
-  const status = getQualityStatus(latestVal);
+  const status = getQualityStatus(latestVal, bands);
   const variation = calculateVariation(latestVal, previousMeasurement?.value);
   const referenceVariation =
     reference && reference.value !== 0 && latestMeasurement

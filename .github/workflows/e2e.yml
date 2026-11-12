@@ -1,0 +1,74 @@
+name: Testes E2E
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 'Regravar as baselines dos snapshots (baixe o artefato e2e-snapshots e commite)'
+        type: boolean
+        default: false
+  # para o fluxo de release candidate chamar
+  workflow_call:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Instalar dependência libssl1.1 para o SWC do Next.js
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSOL https://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb || curl --proto '=https' --tlsv1.2 -sSOL https://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Instalar o Chromium do Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      # o build e o servidor sobem pelo webServer do playwright.config.ts
+      - name: Rodar testes E2E
+        # as baselines dos snapshots são geradas aqui (Linux), nunca no Mac: com update_snapshots, o run regrava
+        run: pnpm e2e ${{ inputs.update_snapshots && '--update-snapshots' || '' }}
+
+      - name: Publicar relatório do Playwright
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      # no push para develop e main, o resultado por critério vai para a issue de cada US no DOC
+      # (mapa em e2e/acceptance-issues.json); sem o secret DOC_ISSUES_TOKEN, o passo só avisa
+      - name: Publicar resultado nas issues das US
+        if: always() && github.event_name == 'push'
+        continue-on-error: true
+        env:
+          DOC_ISSUES_TOKEN: ${{ secrets.DOC_ISSUES_TOKEN }}
+        run: node scripts/e2e-acceptance-comment.mjs e2e-results.json
+
+      - name: Publicar baselines dos snapshots
+        if: inputs.update_snapshots
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-snapshots
+          path: e2e/**/*-snapshots/
+          retention-days: 7

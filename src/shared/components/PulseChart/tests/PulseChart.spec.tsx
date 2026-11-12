@@ -1,12 +1,17 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv } from '@utils/exportCsv';
+import { QUALITY_BANDS } from '@utils/qualityBands';
 import PulseChart, { getReferenceRelease } from '../PulseChart';
 
 const mockUsePulseChartData = jest.fn();
+const mockUseProductQualityBands = jest.fn();
 
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
+jest.mock('@hooks/useProductQualityBands', () => ({
+  useProductQualityBands: () => mockUseProductQualityBands(),
+}));
 jest.mock('../usePulseChartData', () => ({
   usePulseChartData: () => mockUsePulseChartData(),
 }));
@@ -30,11 +35,13 @@ const defaultChartData = () => ({
   setStartDate: jest.fn(),
   endDate: '',
   setEndDate: jest.fn(),
+  totalMeasurements: 10,
   selectedMeasurements: 10,
   latestDate: '25/09/2026',
   releasesInPeriod: 2,
   isLoading: false,
   error: null,
+  retry: jest.fn(),
 });
 
 const mockEchartsOption = jest.fn();
@@ -48,6 +55,50 @@ describe('<PulseChart />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePulseChartData.mockReturnValue(defaultChartData());
+    mockUseProductQualityBands.mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: false,
+      isLoading: false,
+      retry: jest.fn(),
+    });
+  });
+
+  // o jsdom não tem a API de fontes; o teste que a simula não pode deixá-la para os seguintes
+  afterEach(() => {
+    delete (document as unknown as { fonts?: unknown }).fonts;
+  });
+
+  it('mostra o aviso quando o carregamento das faixas do produto falha e segue renderizando o gráfico com o padrão', () => {
+    const retryBands = jest.fn();
+    mockUseProductQualityBands.mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: true,
+      isLoading: false,
+      retry: retryBands,
+    });
+
+    const { getByText, getByTestId, getByRole } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Não foi possível carregar as faixas do produto')).toBeInTheDocument();
+    expect(getByTestId('echarts-mock')).toBeInTheDocument();
+    expect(getByText('A · Ótimo (0,80 a 1,00)')).toBeInTheDocument();
+
+    fireEvent.click(getByRole('button', { name: 'Tentar novamente' }));
+    expect(retryBands).toHaveBeenCalledTimes(1);
+  });
+
+  it('o tooltip de release usa as faixas do produto: com A a partir de 0,85, 0,82 é B', () => {
+    const limits: Record<string, object> = { B: { max: 0.85 }, A: { min: 0.85 } };
+    const productBands = QUALITY_BANDS.map((band) => ({ ...band, ...limits[band.grade] }));
+    mockUseProductQualityBands.mockReturnValue({ bands: productBands, isError: false, isLoading: false, retry: jest.fn() });
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    const { formatter } = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0].tooltip;
+    const release = { name: 'Release 1', version: 'v2025.3.0', end_at: '2026-08-21T12:00:00Z' };
+    const tooltip = formatter([{ seriesName: 'CLI', seriesIndex: 1, dataIndex: 0, data: { release, value: [0, 0.82] } }]);
+
+    expect(tooltip).toContain('Muito bom');
+    expect(tooltip).not.toContain('Ótimo');
   });
 
   it('refaz o gráfico a cada atualização, sem mesclar com as faixas do filtro anterior', () => {
@@ -55,6 +106,28 @@ describe('<PulseChart />', () => {
 
     const [, notMerge] = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1];
     expect(notMerge).toBe(true);
+  });
+
+  // o canvas não troca a fonte quando ela chega: desenhando antes, os eixos e as etiquetas ficam na fonte reserva
+  it('só desenha o pulso depois de a fonte do canvas carregar', async () => {
+    let fontArrived: () => void = () => undefined;
+    const load = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          fontArrived = resolve;
+        })
+    );
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load } });
+    const lastOption = () => mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0];
+
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(load).toHaveBeenCalledWith('11px Roboto');
+    expect(lastOption()).toEqual({});
+
+    await act(async () => fontArrived());
+
+    expect(lastOption().series).toHaveLength(1);
   });
 
   it('desenha o pulso sem linhas horizontais e sem a etiqueta de início das releases', () => {
@@ -94,6 +167,63 @@ describe('<PulseChart />', () => {
     const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
 
     expect(getByText('Não foi possível carregar os dados do gráfico de pulso.')).toBeInTheDocument();
+  });
+
+  // CA4 da US07.01: o erro precisa de "Tentar novamente", e o estado sem dados, de uma mensagem que diga o que fazer.
+  // A tela dava sempre "ajuste as datas", mesmo quando o filtro não era a causa (ressalva do PO em 03/11/2026).
+  it('refaz a busca pelo "Tentar novamente" do alerta de erro', () => {
+    const chartData = { ...defaultChartData(), error: new Error('falhou') };
+    mockUsePulseChartData.mockReturnValue(chartData);
+
+    const { getByRole } = render(<PulseChart organizationId="1" productId="1" />);
+    fireEvent.click(getByRole('button', { name: 'Tentar novamente' }));
+
+    expect(chartData.retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('manda importar um repositório quando o produto não tem nenhum', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      allRepositories: [],
+      filteredRepositories: [],
+      totalMeasurements: 0,
+      selectedMeasurements: 0,
+    });
+
+    const { getByText, queryByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Este produto ainda não tem repositórios')).toBeInTheDocument();
+    expect(getByText(/Importe um repositório ao produto/)).toBeInTheDocument();
+    expect(queryByText(/Ajuste as datas/)).not.toBeInTheDocument();
+  });
+
+  it('manda rodar a coleta quando o produto tem repositório mas nenhuma medição', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      filteredRepositories: [{ id: 1, name: '2022-1-MeasureSoftGram-CLI', measurements: [], releases: [] }],
+      totalMeasurements: 0,
+      selectedMeasurements: 0,
+    });
+
+    const { getByText, queryByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Ainda não há medições neste produto')).toBeInTheDocument();
+    expect(getByText(/Action do MeasureSoftGram analisa os repositórios/)).toBeInTheDocument();
+    expect(queryByText(/Ajuste as datas/)).not.toBeInTheDocument();
+  });
+
+  it('manda ajustar o período só quando há medições fora da janela escolhida', () => {
+    mockUsePulseChartData.mockReturnValue({
+      ...defaultChartData(),
+      filteredRepositories: [{ id: 1, name: '2022-1-MeasureSoftGram-CLI', measurements: [], releases: [] }],
+      totalMeasurements: 10,
+      selectedMeasurements: 0,
+    });
+
+    const { getByText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Nenhuma medição no período selecionado')).toBeInTheDocument();
+    expect(getByText(/Ajuste as datas De\/Até/)).toBeInTheDocument();
   });
 
   it('exporta os repositórios filtrados em CSV pelo botão padrão dos dashboards', () => {
@@ -148,6 +278,15 @@ describe('<PulseChart />', () => {
     const exportButton = getByRole('button', { name: 'Exportar .csv' });
     // eslint-disable-next-line no-bitwise
     expect(endDate.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // pedido do PO em 08/10 (US06.01): o filtro fica abaixo do gráfico
+  it('põe o filtro de período depois do gráfico', () => {
+    const { getByTestId, getByLabelText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    const chart = getByTestId('echarts-mock');
+    // eslint-disable-next-line no-bitwise
+    expect(chart.compareDocumentPosition(getByLabelText('De')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('mostra na barra lateral a variação em relação à última release com indicador', () => {

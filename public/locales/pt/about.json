@@ -4,26 +4,36 @@
   "description": "Aqui você poderá obter algumas informações sobre nosso produto.",
   "organization": {
     "id": "Organizações",
+    "id_gitlab": "Grupos",
     "title": "Organizações",
+    "title_gitlab": "Grupos",
     "description": "Na página de organizações, você pode encontrar uma lista de todas as organizações que estão utilizando o MeasureSoftGram, além de encontrar também todos os seus produtos cadastrados.",
+    "description_gitlab": "Na página de grupos, você pode encontrar uma lista de todos os grupos que estão utilizando o MeasureSoftGram, além de encontrar também todos os seus produtos cadastrados.",
     "view-organization": "Visualizar organização e produtos",
-    "create-organization": "Criar organização"
+    "view-organization_gitlab": "Visualizar grupo e produtos",
+    "create-organization": "Criar organização",
+    "create-organization_gitlab": "Criar grupo"
   },
   "product": {
     "id": "Produtos",
     "title": "Produtos",
     "description": "Os produtos são softwares que pertencem à alguma organização e que possuem algum cliente. Por conta de sua natureza, um mesmo produto pode possuir vários repositórios associados à ele, o que permite uma implementação contínua em mais de uma frente de trabalho.",
+    "description_gitlab": "Os produtos são softwares que pertencem à algum grupo e que possuem algum cliente. Por conta de sua natureza, um mesmo produto pode possuir vários projetos associados à ele, o que permite uma implementação contínua em mais de uma frente de trabalho.",
     "create-product": "Criar Produto"
   },
   "repository": {
     "id": "Repositórios",
+    "id_gitlab": "Projetos",
     "title": "Repositórios",
-    "description": "Repositórios são espaços de armazenamento de pacotes de software. Esses pacotes podem ser acessados e instalados por qualquer um que tenha acesso a eles, porém, o repositório armazena apenas modificações de quem é autorizado para isso. Tal característica permite que um único produto possua diversos repositórios, sendo que cada um possui as próprias modificações, permitindo o desenvolvimento simultâneo de funcionalidades diferentes."
+    "title_gitlab": "Projetos",
+    "description": "Repositórios são espaços de armazenamento de pacotes de software. Esses pacotes podem ser acessados e instalados por qualquer um que tenha acesso a eles, porém, o repositório armazena apenas modificações de quem é autorizado para isso. Tal característica permite que um único produto possua diversos repositórios, sendo que cada um possui as próprias modificações, permitindo o desenvolvimento simultâneo de funcionalidades diferentes.",
+    "description_gitlab": "Projetos são espaços de armazenamento de pacotes de software. Esses pacotes podem ser acessados e instalados por qualquer um que tenha acesso a eles, porém, o projeto armazena apenas modificações de quem é autorizado para isso. Tal característica permite que um único produto possua diversos projetos, sendo que cada um possui as próprias modificações, permitindo o desenvolvimento simultâneo de funcionalidades diferentes."
   },
   "release": {
     "id": "Releases",
     "title": "Releases",
-    "description": "Releases representam as versões de lançamentos de um produto. Um produto, sistema computacional e seus subsistemas pode ter seu código-fonte centralizado em um repositório ou distribuído em múltiplos. No caso de múltiplos repositórios, cada um possui suas respectivas releases. Além disso, existem dois tipos de releases: as majors e minors. O MeasureSoftGram atua no planejamento das releases majors utilizando a pré-configuração e suas subsequentes configurações."
+    "description": "Releases representam as versões de lançamentos de um produto. Um produto, sistema computacional e seus subsistemas pode ter seu código-fonte centralizado em um repositório ou distribuído em múltiplos. No caso de múltiplos repositórios, cada um possui suas respectivas releases. Além disso, existem dois tipos de releases: as majors e minors. O MeasureSoftGram atua no planejamento das releases majors utilizando a pré-configuração e suas subsequentes configurações.",
+    "description_gitlab": "Releases representam as versões de lançamentos de um produto. Um produto, sistema computacional e seus subsistemas pode ter seu código-fonte centralizado em um projeto ou distribuído em múltiplos. No caso de múltiplos projetos, cada um possui suas respectivas releases. Além disso, existem dois tipos de releases: as majors e minors. O MeasureSoftGram atua no planejamento das releases majors utilizando a pré-configuração e suas subsequentes configurações."
   },
   "pre-config": {
     "id": "Pré-configuração",

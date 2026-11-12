@@ -128,6 +128,38 @@ export function buildCurvePath(values: (number | null)[], tracks: TrackGeometry[
     .join(' ');
 }
 
+/**
+ * Sigla de vetor com a seta em cima (notação de vetor do modelo: Rp, Rd e Rc são vetores com um valor por
+ * característica). A seta é um SVG só de enfeite, então o texto continua "Rp" para leitores de tela e testes.
+ */
+export function VectorSymbol({ children }: { children: string }) {
+  return (
+    <Box
+      component="span"
+      data-testid={`vector-symbol-${children}`}
+      sx={{ position: 'relative', display: 'inline-block', paddingTop: '0.45em', lineHeight: 1.1 }}
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 6"
+        preserveAspectRatio="none"
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '0.4em', overflow: 'visible' }}
+      >
+        <path
+          d="M0.5 3 H19 M15.5 0.5 L19 3 L15.5 5.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      {children}
+    </Box>
+  );
+}
+
 function LegendItem({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Stack direction="row" alignItems="center" gap={1}>
@@ -179,6 +211,11 @@ export default function PlannedVsAccomplishedEqualizer({
 
     const observer = new ResizeObserver(() => measureTracks());
     observer.observe(containerRef.current);
+    // o trilho também anda sem o contêiner mudar: um rótulo mais largo que a coluna (ex.: antes da tradução) alarga o
+    // item do slider e tira o slider do centro
+    sliderRefs.current.forEach((slider) => {
+      if (slider?.parentElement) observer.observe(slider.parentElement);
+    });
     return () => observer.disconnect();
   }, [measureTracks]);
 
@@ -201,13 +238,14 @@ export default function PlannedVsAccomplishedEqualizer({
         {characteristicLabel(item.key)}
       </Typography>
       <Typography fontSize="12px">
-        {t('planned')} (Rp): {formatComparisonValue(item.rp)}
+        {t('planned')} (<VectorSymbol>Rp</VectorSymbol>): {formatComparisonValue(item.rp)}
       </Typography>
       <Typography fontSize="12px">
-        {t('accomplised')} (Rd): {formatComparisonValue(item.rd, t('equalizer.noData'))}
+        {t('accomplised')} (<VectorSymbol>Rd</VectorSymbol>): {formatComparisonValue(item.rd, t('equalizer.noData'))}
       </Typography>
       <Typography fontSize="12px">
-        {t('diff')} (Rp − Rd): {formatComparisonValue(item.delta)}
+        {t('diff')} (<VectorSymbol>Rp</VectorSymbol> − <VectorSymbol>Rd</VectorSymbol>):{' '}
+        {formatComparisonValue(item.delta)}
       </Typography>
       <Typography fontSize="12px">
         {t('equalizer.situation')}: {STATUS_SYMBOL[item.status]} {statusLabel(item.status)}
@@ -347,7 +385,7 @@ export default function PlannedVsAccomplishedEqualizer({
 
   const cellSx = { fontSize: '13px', whiteSpace: 'nowrap' as const, px: 1.5 };
 
-  const renderRow = (label: string, testId: string, renderCell: (item: CharacteristicComparison) => React.ReactNode) => (
+  const renderRow = (label: React.ReactNode, testId: string, renderCell: (item: CharacteristicComparison) => React.ReactNode) => (
     <TableRow data-testid={testId}>
       <TableCell component="th" scope="row" sx={{ ...cellSx, fontWeight: 600, color: COLORS.primary }}>
         {label}
@@ -374,10 +412,24 @@ export default function PlannedVsAccomplishedEqualizer({
           </TableRow>
         </TableHead>
         <TableBody>
-          {renderRow('Rp', 'vector-rp', (item) => formatComparisonValue(item.rp))}
-          {renderRow('Rd', 'vector-rd', (item) => formatComparisonValue(item.rd, t('equalizer.noData')))}
-          {renderRow('Rc = max(0, Rp − Rd)', 'vector-rc', (item) => formatComparisonValue(item.rc))}
-          {renderRow('Rp − Rd', 'vector-delta', (item) => formatComparisonValue(item.delta))}
+          {renderRow(<VectorSymbol>Rp</VectorSymbol>, 'vector-rp', (item) => formatComparisonValue(item.rp))}
+          {renderRow(<VectorSymbol>Rd</VectorSymbol>, 'vector-rd', (item) =>
+            formatComparisonValue(item.rd, t('equalizer.noData')),
+          )}
+          {renderRow(
+            <>
+              <VectorSymbol>Rc</VectorSymbol> = max(0, <VectorSymbol>Rp</VectorSymbol> − <VectorSymbol>Rd</VectorSymbol>)
+            </>,
+            'vector-rc',
+            (item) => formatComparisonValue(item.rc),
+          )}
+          {renderRow(
+            <>
+              <VectorSymbol>Rp</VectorSymbol> − <VectorSymbol>Rd</VectorSymbol>
+            </>,
+            'vector-delta',
+            (item) => formatComparisonValue(item.delta),
+          )}
           {hasAccomplished &&
             renderRow(t('equalizer.situation'), 'vector-status', (item) => (
               <Typography component="span" fontSize="13px" fontWeight={500} color={STATUS_COLOR[item.status]}>

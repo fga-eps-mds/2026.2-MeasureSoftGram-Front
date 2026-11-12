@@ -204,7 +204,8 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
                   showCopyButton={false}
                 />
               </TableCell>
-              <TableCell align="right">
+              {/* o clique nos botões não chega à linha, que leva à tela do projeto */}
+              <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                 <IconButton
                   aria-label="edit"
                   onClick={() =>

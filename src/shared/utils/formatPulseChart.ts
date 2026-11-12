@@ -1,7 +1,7 @@
 import { TsqmiReleasePoint } from '@customTypes/product';
 import { escapeHtml, formatDecimal, formatVariation } from './formatNumber';
-import { getQualityBandClamped, QualityGrade } from './qualityBands';
-import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
+import { getQualityBandClamped, QUALITY_BANDS, QualityBand, QualityGrade } from './qualityBands';
+import { getPulseHalfWidth, PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
 
 export const COLOR_TOKENS = {
   primary: '#2B4D6F',
@@ -26,13 +26,17 @@ export interface QualityStatus {
 }
 
 /** Faixa do Indicador Total da Qualidade (A a E, US06.01) de um valor; as faixas ficam em `qualityBands`. */
-export function getQualityStatus(value: number): QualityStatus {
-  const band = getQualityBandClamped(value);
+export function getQualityStatus(value: number, bands: QualityBand[] = QUALITY_BANDS): QualityStatus {
+  const band = getQualityBandClamped(value, bands);
   return { key: band.grade, label: band.label, color: band.color };
 }
 
 /** Medidas das faixas do gráfico de pulso, em px: as mesmas no pulso do produto e no do repositório. */
 export const PULSE_GRID = { topOffset: 60, height: 82, gap: 34 };
+
+const FONT_FAMILY = 'Roboto';
+/** A fonte do texto do canvas do pulso: os gráficos só desenham depois de ela carregar (ver `useFontLoaded`). */
+export const PULSE_CANVAS_FONT = `11px ${FONT_FAMILY}`;
 
 export interface PulseChartOptions {
   /**
@@ -49,6 +53,8 @@ export interface PulseChartOptions {
   horizontalLines?: boolean;
   /** Conteúdo do tooltip quando o cursor encaixa no ponto de uma release; sem ele, o tooltip só mostra as medições. */
   releaseTooltip?: (points: PulseReleaseHover[]) => string;
+  /** Faixas de qualidade a aplicar ao pulso e aos pontos de release. */
+  bands?: QualityBand[];
 }
 
 /** Ponto de release sob o cursor: um por repositório que tem a release. */
@@ -137,16 +143,31 @@ export interface PulseRepositoryData {
  * da medição que muda de faixa. A cor vem do tempo, não da altura: os picos são ampliados e passariam por outras
  * faixas. No ECharts, o `visualMap` de uma série `line` só pinta pela dimensão de um eixo.
  */
-export function getBandTimePieces(sortedMeasurements: PulseMeasurement[]) {
-  const pieces: { gte?: number; lt?: number; color: string }[] = [];
+export function getBandTimePieces(
+  sortedMeasurements: PulseMeasurement[],
+  bands: QualityBand[] = QUALITY_BANDS
+) {
+  const pieces: { gte?: number; lt?: number; lte?: number; color: string }[] = [];
   sortedMeasurements.forEach((measurement) => {
-    const { color } = getQualityStatus(measurement.value);
+    const { color } = getQualityStatus(measurement.value, bands);
     const last = pieces[pieces.length - 1];
     if (last?.color === color) return;
     const time = new Date(measurement.created_at).getTime();
     if (last) last.lt = time;
     pieces.push(last ? { gte: time, color } : { color });
   });
+
+  // O ECharts só gera parada de gradiente para trecho com os dois limites: o primeiro, sem `gte`, vira
+  // [-Infinito, x] e sai na cor de fora da linha, que é o que pinta o complexo antes da primeira medição. Com duas
+  // faixas, o último trecho também era aberto, não sobrava parada nenhuma e o ECharts parava de desenhar a linha
+  // (TypeError em `getVisualGradient`): o pulso ficava vazio na carga e a tela inteira quebrava ao redesenhar.
+  // Fechar o último trecho resolve, mas no fim do desenho, não na última medição: o complexo dela segue por mais
+  // duas meias larguras, e fechar antes disso deixaria esse fim sem cor (falha achada pelos testes E2E da
+  // @LuizaMaluf, no Front#128).
+  if (pieces.length > 1) {
+    const times = sortedMeasurements.map((measurement) => new Date(measurement.created_at).getTime());
+    pieces[pieces.length - 1].lte = times[times.length - 1] + 2 * getPulseHalfWidth(times);
+  }
   return pieces;
 }
 
@@ -173,28 +194,6 @@ function getTimeRange(repositories: PulseRepositoryData[]): { min?: number; max?
   return { min, max: max + (max - min) * TIME_AXIS_RIGHT_PADDING };
 }
 
-const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
-
-/**
- * Dá limites finitos ao primeiro e ao último trecho. Com uma só troca de faixa (dois trechos), os dois ficam abertos
- * (`-∞..t` e `t..∞`), o visualMap não gera nenhuma parada de cor e o ECharts quebra ao pintar a linha
- * ("Cannot read properties of undefined (reading 'coord')"). Folgar um ano além das medições não muda o desenho.
- */
-export function withFiniteBandLimits(
-  pieces: ReturnType<typeof getBandTimePieces>,
-  sortedMeasurements: PulseMeasurement[]
-) {
-  if (pieces.length < 2) return pieces;
-  const first = new Date(sortedMeasurements[0].created_at).getTime();
-  const last = new Date(sortedMeasurements[sortedMeasurements.length - 1].created_at).getTime();
-
-  return pieces.map((piece, index) => {
-    if (index === 0) return { ...piece, gte: first - YEAR_MS };
-    if (index === pieces.length - 1) return { ...piece, lt: last + YEAR_MS };
-    return piece;
-  });
-}
-
 export function formatPulseChartOptions(
   repositories: PulseRepositoryData[],
   {
@@ -202,7 +201,9 @@ export function formatPulseChartOptions(
     releaseStartLabels = true,
     horizontalLines = true,
     releaseTooltip,
-  }: PulseChartOptions = {}
+    bands: optionBands,
+  }: PulseChartOptions = {},
+  bands: QualityBand[] = optionBands ?? QUALITY_BANDS
 ) {
   if (!repositories || !repositories.length) {
     return {};
@@ -233,10 +234,10 @@ export function formatPulseChartOptions(
 
     sortedByRepository.push(sortedMeasurements);
     // Com troca de faixa, a cor vem do visualMap; sem troca, fica na série (a cor da série teria prioridade).
-    const bandPieces = getBandTimePieces(sortedMeasurements);
+    const bandPieces = getBandTimePieces(sortedMeasurements, bands);
     const changesBand = bandPieces.length > 1;
     if (changesBand) {
-      bandVisualMaps.push({ show: false, seriesIndex: index, dimension: 0, pieces: withFiniteBandLimits(bandPieces, sortedMeasurements) });
+      bandVisualMaps.push({ show: false, seriesIndex: index, dimension: 0, pieces: bandPieces });
     }
 
     const ts = sortedMeasurements.map((m) => new Date(m.created_at).getTime());
@@ -271,7 +272,7 @@ export function formatPulseChartOptions(
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
               color: '#FFFFFF',
               fontSize: 10,
-              fontFamily: 'Roboto',
+              fontFamily: FONT_FAMILY,
               padding: [2, 5],
               borderRadius: 3,
             },
@@ -291,7 +292,7 @@ export function formatPulseChartOptions(
           if (tsqmiValue !== undefined && tsqmiValue !== null) {
             releasePoints.push({
               value: [endMs, tsqmiValue],
-              itemStyle: { color: getQualityStatus(tsqmiValue).color },
+              itemStyle: { color: getQualityStatus(tsqmiValue, bands).color },
               release: rel,
             });
           }
@@ -306,7 +307,7 @@ export function formatPulseChartOptions(
               backgroundColor: COLOR_TOKENS.primary,
               color: '#FFFFFF',
               fontSize: 10.5,
-              fontFamily: 'Roboto',
+              fontFamily: FONT_FAMILY,
               padding: [3, 6],
               borderRadius: 3,
             },
@@ -343,7 +344,7 @@ export function formatPulseChartOptions(
       axisLabel: {
         color: COLOR_TOKENS.axisText,
         fontSize: 11,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
         formatter: (val: number) => {
           const date = new Date(val);
           const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -371,7 +372,7 @@ export function formatPulseChartOptions(
       axisLabel: {
         color: COLOR_TOKENS.axisText,
         fontSize: 11,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
         formatter: (v: number) => v.toFixed(1),
       },
       splitLine: {
@@ -384,7 +385,7 @@ export function formatPulseChartOptions(
     });
 
     const latestVal = values[values.length - 1] ?? 0;
-    const latestStatus = getQualityStatus(latestVal);
+    const latestStatus = getQualityStatus(latestVal, bands);
 
     seriesList.push({
       name: repo.name,
@@ -397,7 +398,7 @@ export function formatPulseChartOptions(
       clip: false,
       lineStyle: {
         width: 2,
-        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? COLOR_TOKENS.secondary }),
+        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? latestStatus.color }),
       },
       data: pulseData,
       markLine: {
@@ -425,6 +426,9 @@ export function formatPulseChartOptions(
 
   return {
     height: totalHeight,
+    // No ECharts 5.6, a animação de entrada termina com o recorte na borda da faixa e perde o `clip: false` da série:
+    // os picos que passam de 0 ou de 1 saíam cortados até o gráfico ser redesenhado.
+    animation: false,
     axisPointer: {
       link: [{ xAxisIndex: 'all' }],
       lineStyle: {
@@ -443,7 +447,7 @@ export function formatPulseChartOptions(
       textStyle: {
         color: '#1F2937',
         fontSize: 12,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
       },
       formatter: (allParams: any[]) => {
         // Com o cursor no ponto de uma release, o eixo encaixa nele e os params trazem os pontos dessa release.
@@ -470,7 +474,7 @@ export function formatPulseChartOptions(
           const measurement = measurementOf(p);
           if (!measurement) return;
           const val = measurement.value;
-          const status = getQualityStatus(val);
+          const status = getQualityStatus(val, bands);
           let varText = '';
 
           if (rawIdx > 0) {

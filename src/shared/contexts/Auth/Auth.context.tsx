@@ -19,6 +19,7 @@ export const AuthContext = createContext<authContextType>(authContextDefaultValu
 const SESSION_LIMIT_MS = 2 * 60 * 60 * 1000;
 const WARNING_BEFORE_LIMIT_MS = 10 * 60 * 1000;
 const CHECK_INTERVAL_MS = 60 * 1000;
+const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Por favor, faça login novamente!';
 const EXPIRING_MESSAGE = 'Sua sessão expirará em menos de 10 minutos. Salve seu trabalho para evitar perda de dados.';
 // chaves da época em que o token ficava no localStorage: não devem continuar guardadas
 const LEGACY_STORAGE_KEYS = ['token', 'session', 'provider', 'login_timestamp'];
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children, initialUser = null, provider = 'credent
 
       if (elapsed >= SESSION_LIMIT_MS) {
         setIsWarningOpen(false);
-        void logout('Sua sessão expirou por segurança (limite de 2h).', 'warning');
+        void logout(SESSION_EXPIRED_MESSAGE, 'warning');
       } else if (elapsed >= SESSION_LIMIT_MS - WARNING_BEFORE_LIMIT_MS && !warningShownRef.current) {
         warningShownRef.current = true;
         setIsWarningOpen(true);

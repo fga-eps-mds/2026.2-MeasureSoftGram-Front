@@ -8,7 +8,7 @@ import { buildHistogram, formatAxisValue } from '@utils/distributionHistogram';
 import { CsvChart } from '@utils/exportCsv';
 import { formatHistogramOptions, HISTOGRAM_CHART_HEIGHT, HISTOGRAM_GRID_SIDES } from '@utils/formatDistributionCharts';
 import { DISTRIBUTION_CSV, HistogramCsvRow } from '@utils/formatDistributionCsv';
-import { QUALITY_BANDS } from '@utils/qualityBands';
+import { QualityBand } from '@utils/qualityBands';
 import DistributionChart from './DistributionChart';
 
 export const HISTOGRAM_TITLE = 'Histograma';
@@ -57,19 +57,42 @@ export function bandLabelRules() {
   };
 }
 
+/** Maior divisor comum, para a proporção das colunas sair na forma mais simples (ver bandColumns). */
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
 /**
- * Régua das faixas A a E abaixo do eixo de 0 a 1, nas margens do grid do histograma: cada faixa ocupa 0,2 do eixo,
- * então cinco colunas iguais ficam alinhadas às barras. Fica fora do ECharts para seguir a largura do cartão. Cada
- * faixa decide pela própria largura se mostra a letra e o rótulo, com a fonte menor se precisar, ou só a letra
- * (ver bandLabelRules): no desktop o rótulo aparece; em telas estreitas, como 360 px, só a letra.
+ * Colunas da régua: cada faixa ocupa no eixo a sua própria largura, então a coluna mede o tanto que ela vale de 0 a 1.
+ * Com a régua padrão isso dá cinco colunas iguais; com a régua do produto (US30.02), não — uma faixa A a partir de
+ * 0,85 vale 0,15 do eixo, e uma coluna de 0,2 deixaria a cor fora de lugar em relação às barras. O `minmax(0, …)`
+ * deixa a faixa encolher abaixo do rótulo, que é o que permite a régua caber em telas estreitas.
+ *
+ * A proporção sai na forma mais simples (as faixas iguais da régua padrão viram `1fr`, e não `20fr`): números
+ * grandes mudam o arredondamento do navegador em uma fração de pixel, e com isso a cor da última faixa deslizava
+ * para fora da última barra.
  */
-export function QualityBandRuler() {
+export function bandColumns(bands: QualityBand[]): string {
+  // décimos de milésimo do eixo, para a conta ser entre inteiros mesmo com limites quebrados como 0,125
+  const widths = bands.map((band) => Math.round((band.max - band.min) * 10000));
+  // a régua cobre o eixo inteiro, então o divisor nunca é zero
+  const divisor = widths.reduce((divisorSoFar, width) => gcd(divisorSoFar, width), 0);
+  return widths.map((width) => `minmax(0, ${width / divisor}fr)`).join(' ');
+}
+
+/**
+ * Régua das faixas A a E abaixo do eixo de 0 a 1, nas margens do grid do histograma: cada coluna acompanha a largura
+ * da faixa no eixo, e assim fica alinhada às barras (ver bandColumns). Fica fora do ECharts para seguir a largura do
+ * cartão. Cada faixa decide pela própria largura se mostra a letra e o rótulo, com a fonte menor se precisar, ou só a
+ * letra (ver bandLabelRules): no desktop o rótulo aparece; em telas estreitas, como 360 px, só a letra.
+ */
+export function QualityBandRuler({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box
       component="ul"
       aria-label="Faixas de qualidade de A a E"
       display="grid"
-      gridTemplateColumns="repeat(5, minmax(0, 1fr))"
+      gridTemplateColumns={bandColumns(bands)}
       gap="2px"
       margin={0}
       padding={0}
@@ -79,7 +102,7 @@ export function QualityBandRuler() {
         marginRight: `${HISTOGRAM_GRID_SIDES.right}px`
       }}
     >
-      {QUALITY_BANDS.map((band) => (
+      {bands.map((band) => (
         <Box
           component="li"
           key={band.grade}
@@ -109,11 +132,14 @@ export function QualityBandRuler() {
 /** Quantas análises caem em cada faixa de valor (CA4); nos valores de 0 a 1, com a régua A a E. */
 export default function DistributionHistogram({
   entity,
-  csv
+  csv,
+  bands
 }: {
   entity: DistributionEntity;
   /** O CSV do quadro, montado pela página; com ele, o cabeçalho ganha o botão "Exportar .csv". */
   csv?: CsvChart<HistogramCsvRow>;
+  /** Régua do produto (US30.02); sem ela, a régua padrão. */
+  bands: QualityBand[];
 }) {
   const histogram = useMemo(
     () =>
@@ -124,7 +150,7 @@ export default function DistributionHistogram({
       ),
     [entity]
   );
-  const option = useMemo(() => formatHistogramOptions(histogram, entity.name), [histogram, entity.name]);
+  const option = useMemo(() => formatHistogramOptions(histogram, entity), [histogram, entity]);
   const caption = histogram.unit
     ? 'Quantas análises caem em cada faixa de 0,10. A régua mostra as faixas A a E do Indicador Total da Qualidade.'
     : `Quantas análises caem em cada faixa de ${formatAxisValue(histogram.width)} de ${
@@ -139,7 +165,7 @@ export default function DistributionHistogram({
     >
       <Box>
         <DistributionChart option={option} height={HISTOGRAM_CHART_HEIGHT} />
-        {histogram.unit && <QualityBandRuler />}
+        {histogram.unit && <QualityBandRuler bands={bands} />}
       </Box>
       <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
         {caption}

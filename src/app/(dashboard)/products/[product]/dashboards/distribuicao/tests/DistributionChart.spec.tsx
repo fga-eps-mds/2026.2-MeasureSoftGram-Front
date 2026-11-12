@@ -59,4 +59,16 @@ describe('<DistributionChart />', () => {
 
     expect(screen.getByTestId('distribution-chart')).toHaveAttribute('data-render-ms', '5');
   });
+
+  it('com fill, ocupa a altura que sobrar no cartão, sem ficar menor que a altura pedida', () => {
+    render(<DistributionChart option={{ series: [] }} height={300} fill />);
+
+    expect(screen.getByTestId('distribution-chart')).toHaveStyle({ minHeight: '300px', flexGrow: '1' });
+  });
+
+  it('sem fill, não cresce', () => {
+    render(<DistributionChart option={{ series: [] }} height={300} />);
+
+    expect(screen.getByTestId('distribution-chart')).not.toHaveStyle({ flexGrow: '1' });
+  });
 });

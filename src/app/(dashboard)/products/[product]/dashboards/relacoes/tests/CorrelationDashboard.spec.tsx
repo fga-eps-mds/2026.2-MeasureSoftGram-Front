@@ -66,8 +66,41 @@ describe('<CorrelationDashboard />', () => {
       'Como as características de MeasureSoftGram-Service variam juntas ao longo das releases'
     );
     expect(screen.getByTestId('correlation-info')).toHaveTextContent(
-      '20 releases de MeasureSoftGram-Service · 3 características · coeficiente aplicado: Spearman (distribuição não normal em 3 de 3 características)'
+      '20 releases de MeasureSoftGram-Service · 3 características · coeficiente aplicado: Spearman (distribuição não normal em 3 de 3 características: Reliability, Maintainability e Functional Suitability)'
     );
+  });
+
+  it('mostra num diálogo quais releases entraram na análise e quais ficaram de fora (CA3)', async () => {
+    const data = correlation();
+    const [excluded, ...used] = data.release_values;
+    mockRequests({
+      respond: () => ({
+        data: {
+          ...data,
+          excluded_releases: 1,
+          release_values: [{ ...excluded, values: { ...excluded.values, maintainability: null }, used: false }, ...used]
+        }
+      })
+    });
+    render(<CorrelationDashboard />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver releases da análise' }));
+
+    const table = within(screen.getByRole('dialog')).getByRole('table', {
+      name: 'Releases da análise de MeasureSoftGram-Service'
+    });
+    const [header, first, second] = within(table).getAllByRole('row');
+    expect(header).toHaveTextContent('ReleasePeríodoReliabilityMaintainabilityFunctional SuitabilitySituação');
+    expect(first).toHaveTextContent('R1');
+    expect(first).toHaveTextContent('0,63—0,45Fora: sem valor de Maintainability');
+    expect(second).toHaveTextContent('R2');
+    expect(second).toHaveTextContent('Usada');
+
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Exportar .csv' }));
+    expect((downloadCsv as jest.Mock).mock.calls[0][1].name).toBe('dados-rd');
+
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Fechar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('tem os seletores de repositório e de nível (CA2)', () => {
@@ -113,7 +146,7 @@ describe('<CorrelationDashboard />', () => {
     });
   });
 
-  it('exporta cada matriz em CSV e as duas num .zip, com os filtros da tela (CA7)', async () => {
+  it('exporta cada matriz em CSV e as duas com os dados de RD num .zip, com os filtros da tela (CA7)', async () => {
     render(<CorrelationDashboard />);
     choose('Repositório', 'MeasureSoftGram-Front');
     fireEvent.click(screen.getByRole('button', { name: 'Subcaracterística' }));
@@ -129,7 +162,11 @@ describe('<CorrelationDashboard />', () => {
     ]);
     const [dashboard, zipCharts] = (downloadCsvZip as jest.Mock).mock.calls[0];
     expect(dashboard).toBe('relacoes');
-    expect(zipCharts.map((chart: { name: string }) => chart.name)).toEqual(['matriz-correlacao', 'matriz-bolhas']);
+    expect(zipCharts.map((chart: { name: string }) => chart.name)).toEqual([
+      'matriz-correlacao',
+      'matriz-bolhas',
+      'dados-rd'
+    ]);
     expect(zipCharts[0].rows[0]).toMatchObject({
       repository: 'MeasureSoftGram-Front',
       level: 'Subcaracterística',

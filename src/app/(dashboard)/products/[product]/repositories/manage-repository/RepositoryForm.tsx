@@ -196,6 +196,8 @@ const RepositoryForm: React.FC = () => {
 
   return (
     <Container>
+      {/* sem título, o anunciador de rota do Next lê a URL, que traz "repository" também na sessão do GitLab */}
+      <title>{isEditMode ? t('edit.title') : t('register.title')}</title>
       <Header>{isEditMode ? t('edit.title') : t('register.title')}</Header>
       <Wrapper>
         <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>

@@ -26,12 +26,17 @@ export function correlation({
     repository,
     level,
     entities: [
-      { key: 'reliability', name: 'Reliability' },
-      { key: 'maintainability', name: 'Maintainability' },
-      { key: 'functional_suitability', name: 'Functional Suitability' }
+      { key: 'reliability', name: 'Reliability', normal: false },
+      { key: 'maintainability', name: 'Maintainability', normal: false },
+      { key: 'functional_suitability', name: 'Functional Suitability', normal: false }
     ],
     releases,
     excluded_releases: 0,
+    release_values: releases.map((release) => ({
+      release,
+      values: { reliability: 0.63, maintainability: 0.63, functional_suitability: 0.45 },
+      used: true
+    })),
     method: 'spearman',
     non_normal: 3,
     critical_value: 0.4438,

@@ -7,11 +7,18 @@ import {
   PulseRepositoryData,
 } from '../formatPulseChart';
 import * as echarts from 'echarts';
-import { QUALITY_BANDS } from '../qualityBands';
-import { PULSE_POINTS_PER_MEASUREMENT } from '../toPulseSeries';
+import { QUALITY_BANDS, QualityBand } from '../qualityBands';
+import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from '../toPulseSeries';
 
+/** Meia largura mínima do complexo do pulso, em milissegundos: o piso de `getPulseHalfWidth` para períodos curtos. */
+const HOUR = 60 * 60 * 1000;
 
-const YEAR = 365 * 24 * 60 * 60 * 1000;
+const CUSTOM_BANDS: QualityBand[] = QUALITY_BANDS.map((band) => {
+  if (band.grade === 'B') return { ...band, min: 0.6, max: 0.85 };
+  if (band.grade === 'A') return { ...band, min: 0.85, max: 1 };
+  return band;
+});
+
 
 describe('formatPulseChart Utility', () => {
   describe('getQualityStatus', () => {
@@ -35,9 +42,47 @@ describe('formatPulseChart Utility', () => {
       expect(getQualityStatus(-0.1).key).toBe('E');
       expect(getQualityStatus(1.2).key).toBe('A');
     });
+
+    it('classifica com as faixas configuradas no produto (A a partir de 0,85: 0,82 fica na faixa B)', () => {
+      expect(getQualityStatus(0.82, CUSTOM_BANDS)).toEqual({
+        key: 'B',
+        label: 'Muito bom',
+        color: '#0DC889',
+      });
+    });
   });
 
   describe('formatPulseChartOptions', () => {
+    it('aplica as faixas configuradas no produto à cor da série e dos pontos (0,82 sai na cor de B com A em 0,85)', () => {
+      const repos: PulseRepositoryData[] = [
+        {
+          id: 1,
+          name: 'repo',
+          measurements: [{ created_at: '2026-01-01T12:00:00Z', value: 0.82 }],
+          releases: [
+            {
+              id: 1,
+              name: 'R1',
+              version: 'R1',
+              end_at: '2026-01-01T12:00:00Z',
+              tsqmi: {
+                release_id: 1,
+                value: 0.82,
+                created_at: null,
+                previous_value: null,
+                variation: null,
+                variation_percent: null,
+              },
+            },
+          ],
+        },
+      ];
+
+      const options: any = formatPulseChartOptions(repos, {}, CUSTOM_BANDS);
+
+      expect(options.series[0].lineStyle.color).toBe('#0DC889');
+      expect(options.series[1].data[0].itemStyle.color).toBe('#0DC889');
+    });
     it('pinta o pulso com as 5 faixas, trocando a cor no instante da medição que muda de faixa', () => {
       const at = (day: number) => `2026-01-0${day}T12:00:00Z`;
       const ms = (day: number) => new Date(at(day)).getTime();
@@ -57,11 +102,12 @@ describe('formatPulseChart Utility', () => {
           seriesIndex: 0,
           dimension: 0,
           pieces: [
-            { gte: ms(1) - YEAR, lt: ms(2), color: '#BE2E0E' },
+            { lt: ms(2), color: '#BE2E0E' },
             { gte: ms(2), lt: ms(3), color: '#F16141' },
             { gte: ms(3), lt: ms(4), color: '#EBA133' },
             { gte: ms(4), lt: ms(5), color: '#0DC889' },
-            { gte: ms(5), lt: ms(5) + YEAR, color: '#04724D' },
+            // o último trecho fecha no fim do desenho, duas meias larguras depois da medição (aqui, 2h)
+            { gte: ms(5), lte: ms(5) + 2 * HOUR, color: '#04724D' },
           ],
         },
       ]);
@@ -96,9 +142,30 @@ describe('formatPulseChart Utility', () => {
         ])
       ).toEqual([
         { lt: new Date(at(3)).getTime(), color: '#04724D' },
-        { gte: new Date(at(3)).getTime(), color: '#EBA133' },
+        { gte: new Date(at(3)).getTime(), lte: new Date(at(4)).getTime() + 2 * HOUR, color: '#EBA133' },
       ]);
       expect(getBandTimePieces([])).toEqual([]);
+    });
+
+    // o último trecho ficava sem limite de cima, e aí nenhum dos dois trechos tinha os dois limites: o ECharts não
+    // gerava parada de gradiente nenhuma e parava de desenhar a linha, deixando o pulso vazio na carga e quebrando a
+    // tela inteira ao redesenhar (falha achada pelos testes E2E da @LuizaMaluf, no Front#128)
+    it('fecha o último trecho mesmo com uma única troca de faixa, o caso de só dois trechos', () => {
+      const at = (day: number) => `2026-01-0${day}T12:00:00Z`;
+      const pieces = getBandTimePieces([
+        { created_at: at(1), value: 0.9 },
+        { created_at: at(2), value: 0.3 },
+      ]);
+
+      expect(pieces).toEqual([
+        { lt: new Date(at(2)).getTime(), color: '#04724D' },
+        { gte: new Date(at(2)).getTime(), lte: new Date(at(2)).getTime() + 2 * HOUR, color: '#F16141' },
+      ]);
+      // o desenho do último complexo termina dentro do trecho, senão esse fim sairia sem cor
+      const lastDrawnAt = toPulseSeries([new Date(at(1)).getTime(), new Date(at(2)).getTime()], [0.9, 0.3]).slice(
+        -1
+      )[0][0];
+      expect(pieces[1].lte).toBeGreaterThanOrEqual(lastDrawnAt);
     });
   });
 
@@ -416,6 +483,8 @@ describe('formatPulseChart Utility', () => {
         const options: any = formatPulseChartOptions([repoWithReleases]);
 
         expect(options.series[0].clip).toBe(false);
+        // com a animação de entrada, o ECharts 5.6 corta os picos no primeiro desenho
+        expect(options.animation).toBe(false);
         expect(options.series[0].data).toHaveLength(3 * PULSE_POINTS_PER_MEASUREMENT);
       });
 

@@ -1,9 +1,12 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { SWRConfig } from 'swr';
+import api from '@services/api';
 import { useRequest } from '@hooks/useRequest';
 import ProductContent from '../ProductContent';
 
 jest.mock('@hooks/useRequest', () => ({ useRequest: jest.fn() }));
+jest.mock('@services/api', () => ({ __esModule: true, default: { request: jest.fn() } }));
 jest.mock('@components/PulseChart', () => ({ PulseChart: () => <div data-testid="pulse-chart" /> }));
 jest.mock('../NoReleasesState', () => () => <div data-testid="no-releases" />);
 jest.mock('@contexts/ProductProvider', () => {
@@ -24,7 +27,7 @@ describe('<ProductContent />', () => {
 
   it('mostra o skeleton enquanto a rota ainda nao tem o produto', () => {
     mockQuery = {};
-    (useRequest as jest.Mock).mockReturnValue({ data: undefined, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: undefined, isLoading: false });
 
     const { container } = render(<ProductContent />);
 
@@ -33,7 +36,7 @@ describe('<ProductContent />', () => {
   });
 
   it('mostra o skeleton enquanto as releases carregam', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: undefined, isLoading: true });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: undefined, isLoading: true });
 
     const { container } = render(<ProductContent />);
 
@@ -42,7 +45,7 @@ describe('<ProductContent />', () => {
   });
 
   it('renderiza o grafico de pulso quando existem releases', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: WITH_RELEASES, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: WITH_RELEASES, isLoading: false });
 
     const { container } = render(<ProductContent />);
 
@@ -51,7 +54,7 @@ describe('<ProductContent />', () => {
   });
 
   it('decide o empty state pelo historico do TSQMI por release', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: WITH_RELEASES, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: WITH_RELEASES, isLoading: false });
 
     render(<ProductContent />);
 
@@ -72,7 +75,7 @@ describe('<ProductContent />', () => {
               ]
             }
           }
-        : { data: WITH_RELEASES, isLoading: false }
+        : { mutate: jest.fn(), data: WITH_RELEASES, isLoading: false }
     );
 
     render(<ProductContent />);
@@ -82,7 +85,7 @@ describe('<ProductContent />', () => {
   });
 
   it('mostra traco na ultima atualizacao quando nao ha medicoes', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: WITH_RELEASES, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: WITH_RELEASES, isLoading: false });
 
     render(<ProductContent />);
 
@@ -90,7 +93,7 @@ describe('<ProductContent />', () => {
   });
 
   it('renderiza NoReleasesState quando nao existem releases (Cenario 6)', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: WITHOUT_RELEASES, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: WITHOUT_RELEASES, isLoading: false });
 
     render(<ProductContent />);
 
@@ -99,19 +102,47 @@ describe('<ProductContent />', () => {
   });
 
   it('troca o empty state pelo grafico quando o produto passa a ter releases (Cenario 7)', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: WITHOUT_RELEASES, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: WITHOUT_RELEASES, isLoading: false });
     const { rerender } = render(<ProductContent />);
     expect(screen.getByTestId('no-releases')).toBeTruthy();
 
-    (useRequest as jest.Mock).mockReturnValue({ data: WITH_RELEASES, isLoading: false });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: WITH_RELEASES, isLoading: false });
     rerender(<ProductContent />);
 
     expect(screen.queryByTestId('no-releases')).toBeNull();
     expect(screen.getByTestId('pulse-chart')).toBeTruthy();
   });
 
+  it('ao voltar a tela, pede o historico por release de novo, apesar dos 60 s do _app (Cenario 7)', async () => {
+    (useRequest as jest.Mock).mockImplementation(jest.requireActual('@hooks/useRequest').useRequest);
+    let releaseHistory = WITHOUT_RELEASES;
+    (api.request as jest.Mock).mockImplementation(({ url }: { url: string }) =>
+      Promise.resolve({ data: url.includes('release-history') ? releaseHistory : { results: [] } })
+    );
+    const historyRequests = () =>
+      (api.request as jest.Mock).mock.calls.filter(([{ url }]) => url.includes('release-history')).length;
+
+    // a config do _app, com o cache global entre as telas: trocar de pagina so troca o filho
+    const swrConfig = { revalidateOnFocus: false, dedupingInterval: 60000, shouldRetryOnError: false };
+    const App = ({ page }: { page: 'overview' | 'releases' }) => (
+      <SWRConfig value={swrConfig}>{page === 'overview' ? <ProductContent /> : <div>Releases</div>}</SWRConfig>
+    );
+
+    const { rerender } = render(<App page="overview" />);
+    expect(await screen.findByTestId('no-releases')).toBeTruthy();
+    expect(historyRequests()).toBe(1);
+
+    rerender(<App page="releases" />);
+    releaseHistory = WITH_RELEASES;
+    rerender(<App page="overview" />);
+
+    expect(await screen.findByTestId('pulse-chart')).toBeTruthy();
+    expect(screen.queryByTestId('no-releases')).toBeNull();
+    await waitFor(() => expect(historyRequests()).toBe(2));
+  });
+
   it('com erro no historico por release, deixa o grafico mostrar o alerta em vez do empty state', () => {
-    (useRequest as jest.Mock).mockReturnValue({ data: undefined, isLoading: false, error: new Error('falhou') });
+    (useRequest as jest.Mock).mockReturnValue({ mutate: jest.fn(), data: undefined, isLoading: false, error: new Error('falhou') });
 
     render(<ProductContent />);
 

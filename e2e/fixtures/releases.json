@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "release_name": "R1",
+    "start_at": "2026-06-01T00:00:00-03:00",
+    "end_at": "2026-08-16T00:00:00-03:00",
+    "created_by": "msgramteste",
+    "product": 1,
+    "description": "Primeira release",
+    "goal": 70
+  },
+  {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00",
+    "created_by": "msgramteste",
+    "product": 1,
+    "description": "Segunda release",
+    "goal": 80
+  }
+]

@@ -20,7 +20,7 @@ Object {
               title
             </h4>
             <button
-              aria-label="add repository"
+              aria-label="add"
               class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorPrimary MuiIconButton-sizeMedium css-1kuq5xv-MuiButtonBase-root-MuiIconButton-root"
               style="background-color: rgb(51, 86, 142); margin-left: auto; border-radius: 50%; width: 25px; height: 25px;"
               tabindex="0"
@@ -159,7 +159,7 @@ Object {
             title
           </h4>
           <button
-            aria-label="add repository"
+            aria-label="add"
             class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorPrimary MuiIconButton-sizeMedium css-1kuq5xv-MuiButtonBase-root-MuiIconButton-root"
             style="background-color: rgb(51, 86, 142); margin-left: auto; border-radius: 50%; width: 25px; height: 25px;"
             tabindex="0"

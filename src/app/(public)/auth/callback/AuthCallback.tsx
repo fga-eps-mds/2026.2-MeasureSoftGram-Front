@@ -8,6 +8,7 @@ import { setFlashMessage } from '../../../../shared/utils/flashMessage';
 
 const LOGIN_PAGE = '/auth';
 const ERROR_PAGE = '/auth/error';
+const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Por favor, faça login novamente!';
 const OAUTH_REJECTED_MESSAGE = 'Não foi possível confirmar o login. Tente entrar novamente.';
 
 interface SessionResponse {
@@ -31,8 +32,8 @@ export function resolveCallbackResult(status: number, data: SessionResponse) {
     return { flash: { type: 'error', text: 'Erro na autorização do provedor.' }, destination: data.redirectTo || LOGIN_PAGE } as const;
   }
 
-  const reason = status >= 500 && !data.message ? 'Serviço indisponível' : data.message || 'Erro desconhecido';
-  return { flash: { type: 'error', text: `Erro ao realizar login: ${reason}` }, destination: LOGIN_PAGE } as const;
+  // Sem o detalhe técnico do Service (US11.01 CA5): a sessão foi limpa e o login recomeça.
+  return { flash: { type: 'error', text: SESSION_EXPIRED_MESSAGE }, destination: LOGIN_PAGE } as const;
 }
 
 const AuthCallback: React.FC = () => {
@@ -84,7 +85,7 @@ const AuthCallback: React.FC = () => {
       </Box>
       <CircularProgress />
       <Typography variant="body1" color="text.secondary">
-        Entrando no MeasureSoftGram...
+        Autenticando no MeasureSoftGram...
       </Typography>
     </Box>
   );

@@ -7,9 +7,11 @@ import { formatRepositoryPulseCsv } from '@utils/formatPulseCsv';
 import { useRepositoryPulse } from '../../../hooks/useRepositoryPulse';
 import RepositoryPulseChart from '../RepositoryPulseChart';
 import { PULSE_POINTS_PER_MEASUREMENT } from '@utils/toPulseSeries';
+import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 jest.mock('@hooks/useRequest', () => ({ useRequest: jest.fn() }));
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
+jest.mock('@hooks/useFontLoaded', () => ({ useFontLoaded: () => true }));
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({ terms: { Repository: 'Repositório', repository: 'repositório' } }),
 }));
@@ -65,12 +67,12 @@ const defaultResponse = (request: NonNullable<Request>) =>
   request.url.endsWith('/release/') ? { data: releases } : { data: characteristics };
 
 // a página sobe o hook e o CSV para o botão do topo e o do card usarem os mesmos dados
-function PulseWithData() {
+function PulseWithData({ bands = QUALITY_BANDS }: Readonly<{ bands?: QualityBand[] }>) {
   const pulse = useRepositoryPulse('1', '2', 7);
-  return <RepositoryPulseChart pulse={pulse} csv={formatRepositoryPulseCsv('api', pulse.rows)} />;
+  return <RepositoryPulseChart pulse={pulse} csv={formatRepositoryPulseCsv('api', pulse.rows, bands)} bands={bands} />;
 }
 
-const renderChart = () => render(<PulseWithData />);
+const renderChart = (bands?: QualityBand[]) => render(<PulseWithData bands={bands} />);
 
 describe('<RepositoryPulseChart />', () => {
   beforeEach(() => {
@@ -101,12 +103,20 @@ describe('<RepositoryPulseChart />', () => {
     expect(screen.getByText('A · Ótimo (0,80 a 1,00)')).toBeTruthy();
   });
 
+  it('pinta e nomeia as faixas pela régua do produto: com A a partir de 0,85, o 0,80 é B · Muito bom', () => {
+    const limits: Record<string, object> = { B: { max: 0.85 }, A: { min: 0.85 } };
+    renderChart(QUALITY_BANDS.map((band) => ({ ...band, ...limits[band.grade] })));
+
+    expect(screen.getByText('A · Ótimo (0,85 a 1,00)')).toBeTruthy();
+    expect(screen.getByText('B · Muito bom (0,60 a 0,84)')).toBeTruthy();
+    expect(screen.queryByText('A · Ótimo (0,80 a 1,00)')).toBeNull();
+  });
+
+  // só o fim de cada release é etiquetado: o início cai no fim da anterior e os dois nomes se sobrepunham
   it('marca as releases do repositório, com o nome uma vez só e sem linhas horizontais', () => {
     renderChart();
 
-    expect(screen.getByTestId('release-labels').textContent).toBe(
-      'Início v1 Release 1,v1 Release 1,Início todos,todos|'
-    );
+    expect(screen.getByTestId('release-labels').textContent).toBe('v1 Release 1,todos|');
     expect(screen.getByTestId('horizontal-lines').textContent).toBe('false');
   });
 

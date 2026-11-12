@@ -43,8 +43,9 @@ describe('proxy', () => {
       }
     );
 
-    it('/ e /auth com token válido vão para /home', async () => {
+    it('/, /landing e /auth com token válido vão para /home', async () => {
       expect(location(await call('/', 'good'))).toBe(`${ORIGIN}/home/`);
+      expect(location(await call('/landing', 'good'))).toBe(`${ORIGIN}/home/`);
       expect(location(await call('/auth/', 'good'))).toBe(`${ORIGIN}/home/`);
     });
 
@@ -82,8 +83,8 @@ describe('proxy', () => {
       expect(clearedCookies(response)).toEqual([]);
     });
 
-    it('rotas públicas além de / e /auth não consultam o Service mesmo com cookie', async () => {
-      await call('/landing', 'good');
+    it('rotas públicas além de /, /landing e /auth não consultam o Service mesmo com cookie', async () => {
+      await call('/auth/error', 'good');
       await call('/auth/callback/', 'good');
 
       expect(validateToken).not.toHaveBeenCalled();
@@ -188,6 +189,10 @@ describe('proxy', () => {
 
       expect(cookie).toBeDefined();
       expect(cookie).not.toMatch(/HttpOnly/i);
+    });
+
+    it('/landing com token válido também pede as boas-vindas', async () => {
+      expect(welcome(await call('/landing', 'good'))).toBeDefined();
     });
 
     it('/auth com token válido não pede as boas-vindas', async () => {

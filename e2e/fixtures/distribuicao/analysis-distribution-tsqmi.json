@@ -1,0 +1,219 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "repository": {
+    "id": 7,
+    "name": "MeasureSoftGram-Service"
+  },
+  "level": "tsqmi",
+  "key": "tsqmi",
+  "period": {
+    "count": 8,
+    "first": "2026-08-18T10:00:00-03:00",
+    "last": "2026-10-10T10:00:00-03:00"
+  },
+  "entity": {
+    "key": "tsqmi",
+    "name": "TSQMI",
+    "level": "tsqmi",
+    "metric_type": null,
+    "analyses": [
+      {
+        "date": "2026-08-18T10:00:00-03:00",
+        "value": 0.31,
+        "is_outlier": true
+      },
+      {
+        "date": "2026-08-25T10:00:00-03:00",
+        "value": 0.52,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-01T10:00:00-03:00",
+        "value": 0.56,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-08T10:00:00-03:00",
+        "value": 0.57,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-15T10:00:00-03:00",
+        "value": 0.59,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-09-22T10:00:00-03:00",
+        "value": 0.6,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-10-01T10:00:00-03:00",
+        "value": 0.64,
+        "is_outlier": false
+      },
+      {
+        "date": "2026-10-10T10:00:00-03:00",
+        "value": 0.9,
+        "is_outlier": true
+      }
+    ],
+    "summary": {
+      "count": 8,
+      "min": 0.31,
+      "p10": 0.457,
+      "q1": 0.55,
+      "median": 0.58,
+      "q3": 0.61,
+      "p90": 0.718,
+      "max": 0.9,
+      "iqr": 0.06,
+      "lower_limit": 0.46,
+      "upper_limit": 0.7,
+      "outliers": 2,
+      "mean": 0.58625,
+      "std": 0.16177,
+      "variance": 0.02617,
+      "skewness": 0.434104
+    }
+  },
+  "children": [
+    {
+      "key": "reliability",
+      "name": "Reliability",
+      "level": "characteristic",
+      "metric_type": null,
+      "analyses": [
+        {
+          "date": "2026-08-18T10:00:00-03:00",
+          "value": 0.4,
+          "is_outlier": true
+        },
+        {
+          "date": "2026-08-25T10:00:00-03:00",
+          "value": 0.55,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-01T10:00:00-03:00",
+          "value": 0.58,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-08T10:00:00-03:00",
+          "value": 0.6,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-15T10:00:00-03:00",
+          "value": 0.61,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-22T10:00:00-03:00",
+          "value": 0.63,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-10-01T10:00:00-03:00",
+          "value": 0.66,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-10-10T10:00:00-03:00",
+          "value": 0.88,
+          "is_outlier": true
+        }
+      ],
+      "summary": {
+        "count": 8,
+        "min": 0.4,
+        "p10": 0.505,
+        "q1": 0.5725,
+        "median": 0.605,
+        "q3": 0.6375,
+        "p90": 0.726,
+        "max": 0.88,
+        "iqr": 0.065,
+        "lower_limit": 0.475,
+        "upper_limit": 0.735,
+        "outliers": 2,
+        "mean": 0.61375,
+        "std": 0.133303,
+        "variance": 0.01777,
+        "skewness": 0.716572
+      }
+    },
+    {
+      "key": "maintainability",
+      "name": "Maintainability",
+      "level": "characteristic",
+      "metric_type": null,
+      "analyses": [
+        {
+          "date": "2026-08-18T10:00:00-03:00",
+          "value": 0.22,
+          "is_outlier": true
+        },
+        {
+          "date": "2026-08-25T10:00:00-03:00",
+          "value": 0.49,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-01T10:00:00-03:00",
+          "value": 0.52,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-08T10:00:00-03:00",
+          "value": 0.52,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-15T10:00:00-03:00",
+          "value": 0.55,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-09-22T10:00:00-03:00",
+          "value": 0.57,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-10-01T10:00:00-03:00",
+          "value": 0.58,
+          "is_outlier": false
+        },
+        {
+          "date": "2026-10-10T10:00:00-03:00",
+          "value": 0.92,
+          "is_outlier": true
+        }
+      ],
+      "summary": {
+        "count": 8,
+        "min": 0.22,
+        "p10": 0.409,
+        "q1": 0.5125,
+        "median": 0.535,
+        "q3": 0.5725,
+        "p90": 0.682,
+        "max": 0.92,
+        "iqr": 0.06,
+        "lower_limit": 0.4225,
+        "upper_limit": 0.6625,
+        "outliers": 2,
+        "mean": 0.54625,
+        "std": 0.189882,
+        "variance": 0.036055,
+        "skewness": 0.481896
+      }
+    }
+  ]
+}

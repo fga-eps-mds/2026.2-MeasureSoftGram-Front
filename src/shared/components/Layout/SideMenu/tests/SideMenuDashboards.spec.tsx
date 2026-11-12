@@ -78,6 +78,7 @@ describe('SideMenu Dashboards Submenu (CA1)', () => {
       `${base}/dashboards/entidade`,
       `${base}/dashboards/distribuicao`,
       `${base}/dashboards/relacoes`,
+      `${base}/settings`,
     ]);
   });
 

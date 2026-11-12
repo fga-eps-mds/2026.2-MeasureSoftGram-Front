@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import DashboardCard from '@components/DashboardCard';
 import ExportCsvButton from '@components/ExportCsvButton';
 import { DistributionEntity } from '@customTypes/product';
@@ -10,7 +10,9 @@ import { formatAnalysisCount } from '@utils/distributionSummary';
 import { CsvChart } from '@utils/exportCsv';
 import { formatDensityOptions, HISTOGRAM_CHART_HEIGHT } from '@utils/formatDistributionCharts';
 import { DensityCsvRow, DISTRIBUTION_CSV } from '@utils/formatDistributionCsv';
+import { QualityBand } from '@utils/qualityBands';
 import DistributionChart from './DistributionChart';
+import { QualityBandRuler } from './DistributionHistogram';
 
 export const DENSITY_TITLE = 'Curva de densidade';
 
@@ -35,11 +37,14 @@ function getMissingDensity(count: number) {
 /** Forma da distribuição das análises (CA5), no mesmo eixo do histograma, com a linha da mediana. */
 export default function DistributionDensity({
   entity,
-  csv
+  csv,
+  bands
 }: {
   entity: DistributionEntity;
   /** O CSV do quadro, montado pela página; sem curva ele não tem linhas, e o botão fica desabilitado. */
   csv?: CsvChart<DensityCsvRow>;
+  /** Régua do produto (US30.02); sem ela, a régua padrão. */
+  bands: QualityBand[];
 }) {
   const { histogram, points } = useMemo(() => {
     const values = entity.analyses.map((analysis) => analysis.value);
@@ -50,8 +55,8 @@ export default function DistributionDensity({
     };
   }, [entity]);
   const option = useMemo(
-    () => points && formatDensityOptions(points, histogram, entity.summary.median, entity.name),
-    [points, histogram, entity.summary.median, entity.name]
+    () => points && formatDensityOptions(points, histogram, entity.summary.median, entity),
+    [points, histogram, entity]
   );
 
   const exportButton = csv && <ExportCsvButton dashboard={DISTRIBUTION_CSV.dashboard} chart={csv} />;
@@ -72,7 +77,10 @@ export default function DistributionDensity({
 
   return (
     <DashboardCard title={DENSITY_TITLE} status="ready" headerAction={exportButton}>
-      <DistributionChart option={option} height={HISTOGRAM_CHART_HEIGHT} />
+      <Box>
+        <DistributionChart option={option} height={HISTOGRAM_CHART_HEIGHT} />
+        {histogram.unit && <QualityBandRuler bands={bands} />}
+      </Box>
       <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
         A área sob a curva soma 1: quanto mais alta a curva num trecho, mais análises se concentram nele. A linha
         tracejada marca a mediana.

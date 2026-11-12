@@ -12,6 +12,7 @@ import {
   FiPieChart,
   FiTrendingUp,
   FiShare2,
+  FiSettings,
 } from 'react-icons/fi';
 import { useAuth } from '@contexts/Auth';
 import { useProductContext } from '@contexts/ProductProvider';
@@ -125,11 +126,23 @@ function SideMenu() {
     },
   ];
 
+  // fica depois dos dashboards: é onde o produto é configurado, não uma tela de consulta (US30.01)
+  const settingsItem: SideMenuItemType = {
+    startIcon: <FiSettings fontSize={28} />,
+    text: 'Configurações',
+    tooltip: 'Configurações do produto',
+    path: `/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/settings`,
+    disable: !currentProduct,
+    selected: router.pathname === '/products/[product]/settings',
+  };
+
   const isAnyDashboardSelected = router.pathname?.includes('/dashboards/') ?? false;
 
   // O menu navega com router.push, que não adianta o JS da página como o <Link> faz: sem o prefetch, cada aba
   // só começava a baixar o próprio código depois do clique. No `next dev` o prefetch não faz nada.
-  const prefetchPaths = currentProduct ? [...MenuItems, ...dashboardSubItems].map((item) => item.path).join('\n') : '';
+  const prefetchPaths = currentProduct
+    ? [...MenuItems, ...dashboardSubItems, settingsItem].map((item) => item.path).join('\n')
+    : '';
   useEffect(() => {
     if (!prefetchPaths) return undefined;
     const prefetchAll = () =>
@@ -207,6 +220,15 @@ function SideMenu() {
                   />
                 </Box>
               ))}
+
+            <SideMenuItem
+              key={settingsItem.text}
+              {...settingsItem}
+              onClick={() => {
+                closeOverlay();
+                void router.push(settingsItem.path);
+              }}
+            />
           </>
         )
       }

@@ -93,7 +93,9 @@ export function OrganizationProvider({ children }: Props) {
           description: org.description ?? '',
           url: org.url ?? '',
           products: org.products ?? [],
-          key: org.key ?? ''
+          key: org.key ?? '',
+          gitlab_group_id: org.gitlab_group_id ?? null,
+          gitlab_user_id: org.gitlab_user_id ?? null
         }));
 
         setOrganizationList(organizations);

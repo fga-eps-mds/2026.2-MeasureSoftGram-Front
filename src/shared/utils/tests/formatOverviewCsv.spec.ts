@@ -9,6 +9,13 @@ import {
   formatRadarCsv,
   formatTotalsCsv
 } from '../formatOverviewCsv';
+import { QUALITY_BANDS, QualityBand } from '../qualityBands';
+
+const CUSTOM_BANDS: QualityBand[] = QUALITY_BANDS.map((band) => {
+  if (band.grade === 'B') return { ...band, min: 0.6, max: 0.85 };
+  if (band.grade === 'A') return { ...band, min: 0.85, max: 1 };
+  return band;
+});
 
 const RELEASE = '2026.2 R2';
 const nameOf = (key: string) => `Nome ${key}`;
@@ -36,6 +43,19 @@ describe('getTotalItems', () => {
   it('deixa o valor indefinido enquanto os totais não chegam', () => {
     expect(getTotalItems(undefined, 'Repositórios').every((item) => item.value === undefined)).toBe(true);
   });
+
+  // o Service devolve 0 nos quatro níveis do modelo quando a release não tem configuração; ali o 0 não é medição
+  it('marca como não aplicável os totais do modelo quando a release não tem configuração', () => {
+    const totals = { ...summary().totals, characteristics: 0, subcharacteristics: 0, measures: 0, metrics: 0 };
+
+    expect(getTotalItems(totals, 'Repositórios').map((item) => item.value)).toEqual([null, null, null, null, 2, 1284]);
+  });
+
+  it('mantém o zero medido de verdade quando o modelo existe', () => {
+    const totals = { ...summary().totals, metrics: 0, repositories: 0, files: 0 };
+
+    expect(getTotalItems(totals, 'Repositórios').map((item) => item.value)).toEqual([3, 6, 10, 0, 0, 0]);
+  });
 });
 
 describe('formatTotalsCsv', () => {
@@ -44,18 +64,27 @@ describe('formatTotalsCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.totals);
     expect(lines(chart)).toEqual([
-      'Release,Total,Quantidade',
-      '2026.2 R2,Características,3',
-      '2026.2 R2,Subcaracterísticas,6',
-      '2026.2 R2,Medidas,10',
-      '2026.2 R2,Métricas,14',
-      '2026.2 R2,Repositórios,2',
-      '2026.2 R2,Arquivos analisados,1284'
+      'Release;Total;Quantidade',
+      '2026.2 R2;Características;3',
+      '2026.2 R2;Subcaracterísticas;6',
+      '2026.2 R2;Medidas;10',
+      '2026.2 R2;Métricas;14',
+      '2026.2 R2;Repositórios;2',
+      '2026.2 R2;Arquivos analisados;1284'
     ]);
   });
 
   it('não exporta os totais que ainda não chegaram', () => {
     expect(formatTotalsCsv(RELEASE, getTotalItems(undefined, 'Repositórios')).rows).toEqual([]);
+  });
+
+  // a linha existe, porque o total faz parte da release; o que não existe é a quantidade
+  it('exporta com a quantidade vazia o total que não se aplica à release', () => {
+    const totals = { ...summary().totals, characteristics: 0, subcharacteristics: 0, measures: 0, metrics: 0 };
+    const chart = formatTotalsCsv(RELEASE, getTotalItems(totals, 'Repositórios'));
+
+    expect(lines(chart).slice(1, 3)).toEqual(['2026.2 R2;Características;', '2026.2 R2;Subcaracterísticas;']);
+    expect(lines(chart)[5]).toBe('2026.2 R2;Repositórios;2');
   });
 });
 
@@ -65,9 +94,9 @@ describe('formatIndicatorCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.indicator);
     expect(lines(chart)).toEqual([
-      'Release,Repositório,Indicador,Grau',
-      '2026.2 R2,service,0.81,A',
-      '2026.2 R2,front,0.72,B'
+      'Release;Repositório;Indicador;Grau',
+      '2026.2 R2;service;0,81;A',
+      '2026.2 R2;front;0,72;B'
     ]);
   });
 
@@ -87,6 +116,16 @@ describe('formatIndicatorCsv', () => {
   it('fica sem linhas quando nenhum repositório tem indicador', () => {
     expect(formatIndicatorCsv(RELEASE, []).rows).toEqual([]);
   });
+
+  it('usa as faixas configuradas no produto (A a partir de 0,85: 0,82 sai como B)', () => {
+    const [row] = formatIndicatorCsv(
+      RELEASE,
+      [{ id: 1, name: 'service', value: 0.82, previous: null }],
+      CUSTOM_BANDS
+    ).rows;
+
+    expect(row.grade).toBe('B');
+  });
 });
 
 describe('formatPlannedAccomplishedCsv', () => {
@@ -95,16 +134,16 @@ describe('formatPlannedAccomplishedCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.plannedAccomplished);
     expect(lines(chart)).toEqual([
-      'Release,Repositório,Característica,Planejado (Rp),Realizado (Rd),Diferença,Desvio geral',
-      '2026.2 R2,service,Nome reliability,0.7,0.74,-0.040000000000000036,0.05',
-      '2026.2 R2,service,Nome maintainability,0.8,0.78,0.020000000000000018,0.05'
+      'Release;Repositório;Característica;Planejado (Rp);Realizado (Rd);Diferença;Desvio geral',
+      '2026.2 R2;service;Nome reliability;0,7;0,74;-0,040000000000000036;0,05',
+      '2026.2 R2;service;Nome maintainability;0,8;0,78;0,020000000000000018;0,05'
     ]);
   });
 
   it('deixa vazios o realizado e a diferença da característica sem análise', () => {
     const chart = formatPlannedAccomplishedCsv(RELEASE, 'front', comparisonsOf('front'), 0.2, nameOf);
 
-    expect(lines(chart)[2]).toBe('2026.2 R2,front,Nome maintainability,0.8,,,0.2');
+    expect(lines(chart)[2]).toBe('2026.2 R2;front;Nome maintainability;0,8;;;0,2');
   });
 
   it('deixa vazio o desvio geral quando o Service não o envia', () => {
@@ -113,10 +152,10 @@ describe('formatPlannedAccomplishedCsv', () => {
     expect(chart.rows.every((row) => row.normDiff === null)).toBe(true);
   });
 
-  it('escapa vírgula e aspas no nome do repositório', () => {
-    const chart = formatPlannedAccomplishedCsv(RELEASE, 'a,"b"', comparisonsOf('service'), 0, nameOf);
+  it('escapa ponto e vírgula e aspas no nome do repositório', () => {
+    const chart = formatPlannedAccomplishedCsv(RELEASE, 'a;"b"', comparisonsOf('service'), 0, nameOf);
 
-    expect(lines(chart)[1].startsWith('2026.2 R2,"a,""b""",')).toBe(true);
+    expect(lines(chart)[1].startsWith('2026.2 R2;"a;""b""";')).toBe(true);
   });
 });
 
@@ -126,15 +165,15 @@ describe('formatRadarCsv', () => {
 
     expect(chart.name).toBe(OVERVIEW_CSV.radar);
     expect(lines(chart)).toEqual([
-      'Release,Repositório,Característica,Valor',
-      '2026.2 R2,service,Nome reliability,0.74',
-      '2026.2 R2,service,Nome maintainability,0.78'
+      'Release;Repositório;Característica;Valor',
+      '2026.2 R2;service;Nome reliability;0,74',
+      '2026.2 R2;service;Nome maintainability;0,78'
     ]);
   });
 
   it('deixa o valor vazio no eixo sem realizado, como o radar sem ponto', () => {
     const chart = formatRadarCsv(RELEASE, 'front', comparisonsOf('front'), nameOf);
 
-    expect(lines(chart)[2]).toBe('2026.2 R2,front,Nome maintainability,');
+    expect(lines(chart)[2]).toBe('2026.2 R2;front;Nome maintainability;');
   });
 });

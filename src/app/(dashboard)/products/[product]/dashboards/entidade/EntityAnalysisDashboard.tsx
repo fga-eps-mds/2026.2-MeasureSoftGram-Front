@@ -7,6 +7,8 @@ import { Box, Button, Container, Tab, Tabs, Typography } from '@mui/material';
 import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
 import ReleaseSelect from '@components/ReleaseSelect';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { EntityMatrix, EntityMatrixLevel } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
@@ -89,6 +91,13 @@ const EntityAnalysisDashboard: React.FC = () => {
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
 
+  // a régua do produto dá a cor e o grau das células, da legenda, do ranking e dos CSVs (US30.02); sem ela, a padrão
+  const {
+    bands,
+    isError: isQualityBandsError,
+    retry: retryQualityBands
+  } = useProductQualityBands(organizationId, productId);
+
   const {
     releases,
     releaseId,
@@ -120,12 +129,12 @@ const EntityAnalysisDashboard: React.FC = () => {
     () =>
       readyMatrix
         ? {
-            heatmap: formatEntityHeatmapCsv(readyMatrix),
+            heatmap: formatEntityHeatmapCsv(readyMatrix, bands),
             contribution: formatEntityContributionCsv(readyMatrix, contributions),
-            ranking: formatEntityRankingCsv(readyMatrix, worstPairs)
+            ranking: formatEntityRankingCsv(readyMatrix, worstPairs, bands)
           }
         : undefined,
-    [readyMatrix, contributions, worstPairs]
+    [readyMatrix, contributions, worstPairs, bands]
   );
 
   const heatmapTitle = `Mapa de calor: repositório × ${levelNoun(level)}`;
@@ -261,8 +270,8 @@ const EntityAnalysisDashboard: React.FC = () => {
             Linhas do pior para o melhor TSQMI. Cada célula mostra o valor normalizado [0, 1] e o grau; clique numa
             célula para ver a composição da entidade naquele {terms.repository}.{deltaCaption}
           </Typography>
-          <EntityHeatmap matrix={matrix} highlighted={highlighted} onSelectCell={setSelectedCell} />
-          <QualityGradeLegend />
+          <EntityHeatmap matrix={matrix} highlighted={highlighted} onSelectCell={setSelectedCell} bands={bands} />
+          <QualityGradeLegend bands={bands} />
           <Reading matrix={matrix} />
         </DashboardCard>
 
@@ -290,7 +299,7 @@ const EntityAnalysisDashboard: React.FC = () => {
             <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
               {terms.repository} × {levelNoun(matrix.level)}, do menor valor para o maior.{deltaCaption}
             </Typography>
-            <WorstPairsRanking pairs={worstPairs} />
+            <WorstPairsRanking pairs={worstPairs} bands={bands} />
           </DashboardCard>
         </Box>
 
@@ -301,6 +310,7 @@ const EntityAnalysisDashboard: React.FC = () => {
           level={matrix.level}
           cell={selectedCell}
           onClose={closeDetail}
+          bands={bands}
         />
       </>
     );
@@ -370,6 +380,9 @@ const EntityAnalysisDashboard: React.FC = () => {
               </Typography>
             </Box>
           )}
+
+          {/* a régua do produto não veio: o mapa continua na tela com a régua padrão (CA4) */}
+          {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}
 
           {renderContent()}
         </Box>

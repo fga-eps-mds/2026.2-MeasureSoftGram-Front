@@ -4,6 +4,9 @@ import '@testing-library/jest-dom';
 import { useRequest } from '@hooks/useRequest';
 import { downloadCsv, downloadCsvZip } from '@utils/exportCsv';
 import { DistributionLevel, ReleaseDashboardRepository } from '@customTypes/product';
+import { QUALITY_BANDS } from '@utils/qualityBands';
+import { PRODUCT_BANDS, PRODUCT_BANDS_RESPONSE } from '@utils/tests/productQualityBandsFixture';
+import { bandColumns } from '../DistributionHistogram';
 import DistributionDashboard from '../DistributionDashboard';
 import { action, catalog, distribution, entity, front, releaseRepositories, releases, service, tree } from './fixtures';
 
@@ -49,16 +52,20 @@ function answer(params: Params): Response {
 function mockRequests({
   releasesData = { results: releases },
   repositories = [action, service, front],
-  respond = answer
+  respond = answer,
+  qualityBands = {}
 }: {
   releasesData?: unknown;
   repositories?: ReleaseDashboardRepository[];
   respond?: typeof answer;
+  /** Resposta das faixas do produto (US30.02); sem ela, os gráficos caem na régua padrão. */
+  qualityBands?: Response;
 } = {}) {
   (useRequest as jest.Mock).mockImplementation((request: Request) => {
     const result = (response: Response) => ({ isLoading: false, mutate, ...response });
     if (!request) return result({});
     const { url, params = {} } = request;
+    if (url.endsWith('/quality-bands/')) return result(qualityBands);
     if (url.endsWith('/release/')) return result({ data: releasesData });
     if (url.includes('release-dashboard/characteristics')) {
       return result({ data: releaseRepositories(repositories, params.release_id) });
@@ -91,6 +98,22 @@ async function exportAll() {
 }
 const zipCharts = (): { name: string; rows: Record<string, unknown>[] }[] =>
   (downloadCsvZip as jest.Mock).mock.calls.at(-1)[1];
+
+/**
+ * Larguras das colunas da régua de um cartão. O jsdom não calcula layout, então o teste lê a regra que o emotion
+ * escreveu para a lista: é ela que põe cada faixa embaixo do trecho do eixo que a faixa vale.
+ */
+function rulerColumns(cardName: string) {
+  const list = within(card(cardName)).getByRole('list', { name: 'Faixas de qualidade de A a E' });
+  const listClass = Array.from(list.classList).find((name) => name.startsWith('css-'));
+  const rules = Array.from(document.styleSheets).flatMap((sheet) =>
+    Array.from(sheet.cssRules).map((rule) => rule.cssText)
+  );
+  return rules.find((rule) => rule.startsWith(`.${listClass} {`))?.match(/grid-template-columns: ([^;]+);/)?.[1];
+}
+
+/** Colunas da régua nas faixas do produto: o E vale 0,25 do eixo e o A, 0,15. */
+const PRODUCT_RULER = bandColumns(PRODUCT_BANDS);
 
 function optionsOf(label: string) {
   fireEvent.mouseDown(screen.getByRole('combobox', { name: label }));
@@ -222,6 +245,31 @@ describe('<DistributionDashboard />', () => {
     ]);
   });
 
+  it('a régua do histograma e a da curva seguem as faixas configuradas no produto (US30.02 CA1)', () => {
+    mockRequests({ qualityBands: { data: PRODUCT_BANDS_RESPONSE } });
+    render(<DistributionDashboard />);
+
+    // as faixas do produto não têm a mesma largura: o E vale 0,25 do eixo e o A, 0,15
+    expect(rulerColumns('Histograma')).toBe(PRODUCT_RULER);
+    expect(rulerColumns('Curva de densidade')).toBe(PRODUCT_RULER);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('sem a régua do produto, os gráficos ficam na tela com a padrão e um aviso explica (US30.02 CA4)', () => {
+    mockRequests({ qualityBands: { error: new Error('500') } });
+    render(<DistributionDashboard />);
+
+    const alert = screen.getByRole('status');
+    expect(alert).toHaveTextContent('Não foi possível carregar as faixas do produto');
+    expect(alert).toHaveTextContent('Os gráficos estão sendo exibidos com as faixas padrão.');
+    // o histograma continua na tela, na régua padrão: cinco faixas de 0,20
+    expect(rulerColumns('Histograma')).toBe(bandColumns(QUALITY_BANDS));
+    expect(within(card('Histograma')).getByTestId('echarts')).toBeInTheDocument();
+
+    fireEvent.click(within(alert).getByRole('button', { name: 'Tentar novamente' }));
+    expect(mutate).toHaveBeenCalled();
+  });
+
   it('numa métrica, o eixo segue a escala dela, sem a régua (CA4)', () => {
     render(<DistributionDashboard />);
 
@@ -248,6 +296,16 @@ describe('<DistributionDashboard />', () => {
         'Resumo estatístico e IQR'
       ].map((name) => within(grid).getByRole('region', { name }))
     );
+  });
+
+  it('estica a dispersão e o resumo até a altura da linha da grade (CA7)', () => {
+    render(<DistributionDashboard />);
+
+    expect(screen.getByTestId('distribution-grid')).toHaveStyle({ alignItems: 'stretch' });
+    // a célula também é grade: é ela que estica o cartão, que não define a própria altura
+    ['Dispersão das análises no tempo', 'Resumo estatístico e IQR'].forEach((name) => {
+      expect(card(name).parentElement).toHaveStyle({ display: 'grid' });
+    });
   });
 
   it('desenha no boxplot a entidade e os filhos que vêm na resposta (CA6)', () => {
@@ -347,7 +405,7 @@ describe('<DistributionDashboard />', () => {
         ['distribuicao', 'densidade', 120],
         ['distribuicao', 'boxplot', 2],
         ['distribuicao', 'dispersao', 6],
-        ['distribuicao', 'resumo', 12]
+        ['distribuicao', 'resumo', 14]
       ]);
       expect((downloadCsv as jest.Mock).mock.calls[0][1].rows[0]).toMatchObject({
         release: 'R2',

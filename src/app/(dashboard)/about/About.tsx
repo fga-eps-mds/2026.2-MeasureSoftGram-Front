@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useProviderTranslation as useTranslation } from "@hooks/useProviderTranslation";
 
 import { InfoData } from "@customTypes/home";
 import { Container, Box, Typography } from "@mui/material";

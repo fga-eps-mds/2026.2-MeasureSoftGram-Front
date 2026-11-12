@@ -6,27 +6,34 @@ import ExportCsvButton from '@components/ExportCsvButton';
 import { PulseChartFilters } from '@components/PulseChart/PulseChartFilters';
 import { PulseChartRepoSidebar } from '@components/PulseChart/PulseChartRepoSidebar';
 import { QualityLegend } from '@components/PulseChart/QualityLegend';
+import { useFontLoaded } from '@hooks/useFontLoaded';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { CsvChart } from '@utils/exportCsv';
-import { PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
+import { PULSE_CANVAS_FONT, PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, RepositoryPulseCsvRow } from '@utils/formatPulseCsv';
+import { QualityBand } from '@utils/qualityBands';
 import { useRepositoryPulse } from '../../hooks/useRepositoryPulse';
 
 const TITLE = 'Indicador das Características';
-// as recomendações do PO para o pulso (US06.01): sem linhas horizontais e com o nome de cada release uma vez só
-const PULSE_OPTIONS = { releaseLabels: 'first-row', horizontalLines: false } as const;
+// as recomendações do PO para o pulso (US06.01): sem linhas horizontais e com o nome de cada release uma vez só.
+// `releaseStartLabels: false` como no pulso do produto: o início de uma release cai no fim da anterior e as duas
+// etiquetas se sobrepunham, o que o PO leu como "sombra" do nome da release (homologação da US07.01 em 03/11/2026).
+const PULSE_OPTIONS = { releaseLabels: 'first-row', horizontalLines: false, releaseStartLabels: false } as const;
 
 interface Props {
   /** Os dados do pulso: a página os busca, para o botão do topo e o deste card usarem os mesmos. */
   pulse: ReturnType<typeof useRepositoryPulse>;
   /** O CSV das medições do período filtrado. */
   csv: CsvChart<RepositoryPulseCsvRow>;
+  /** A régua do produto (US30.02), a mesma do CSV. */
+  bands: QualityBand[];
 }
 
 /** Gráfico de pulso (metáfora do eletrocardiograma) de cada característica do repositório, como o pulso do produto. */
-export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
+export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Props>) {
   const { terms } = useProviderTerms();
-  const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS), [pulse.rows]);
+  const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS, bands), [pulse.rows, bands]);
+  const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
   let status: 'loading' | 'error' | 'empty' | 'ready' = 'ready';
   if (pulse.hasError) status = 'error';
@@ -39,7 +46,7 @@ export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
       status={status}
       headerAction={
         <Box display="flex" alignItems="center" flexWrap="wrap" gap="12px">
-          <QualityLegend />
+          <QualityLegend bands={bands} />
           <ExportCsvButton dashboard={PULSE_CSV.repository} chart={csv} />
         </Box>
       }
@@ -84,9 +91,14 @@ export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
               topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
               valueLabel="último valor"
               showIcon={false}
+              bands={bands}
             />
           ))}
-          <ReactEcharts option={options} notMerge style={{ height: `${options.height}px`, width: '100%' }} />
+          <ReactEcharts
+            option={fontLoaded ? options : {}}
+            notMerge
+            style={{ height: `${options.height}px`, width: '100%' }}
+          />
         </Box>
       )}
     </DashboardCard>
