@@ -263,6 +263,21 @@ describe('<TemporalDashboard />', () => {
     expect(chart('Medidas').getAllByText(/depois que a Action do MeasureSoftGram analisa o repositório/)).toBeTruthy();
   });
 
+  it('avisa quais medidas não têm valores sem esconder as que têm', () => {
+    const partial = [entity('passed_tests', [record(0.4, '2026-03-01T10:00:00')]), entity('test_coverage', [])];
+    responses = (request) =>
+      request.url.includes('historical-values/measures') ? { data: { results: partial } } : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+
+    expect(
+      chart('Medidas').getByText('Medidas sem valores neste repositório: Test Coverage, CI Feedback Time')
+    ).toBeTruthy();
+    expect(chart('Medidas').getByText(/As demais seguem no gráfico/)).toBeTruthy();
+    expect(chart('Medidas').getByTestId('echarts').textContent).toBe('Passed Tests:1');
+    expect(chart('Subcaracterísticas').queryByText(/sem valores neste repositório/)).toBeNull();
+  });
+
   it('mostra estado vazio quando o produto não tem repositórios', () => {
     responses = (request) =>
       request.url.endsWith('/repositories/') ? { data: { results: [] } } : defaultResponse(request);
@@ -271,6 +286,44 @@ describe('<TemporalDashboard />', () => {
 
     expect(screen.getByText('Este produto ainda não tem repositórios')).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Característica' })).toBeNull();
+  });
+
+  // a lista falha e chega vazia, então a tela acusava produto sem repositório e escondia o erro, sem dar a saída
+  // do "Tentar novamente" que o CA4 da US07.01 exige (falha achada pelos E2E da @LuizaMaluf, no Front#128)
+  it('mostra o erro da lista de repositórios, e não o estado vazio do produto', () => {
+    responses = (request) =>
+      request.url.endsWith('/repositories/') ? { error: new Error('falhou') } : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+
+    expect(screen.getByText('Não foi possível carregar os repositórios do produto')).toBeTruthy();
+    expect(screen.queryByText('Este produto ainda não tem repositórios')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Característica' })).toBeNull();
+  });
+
+  it('refaz a busca da lista de repositórios pelo "Tentar novamente"', () => {
+    responses = (request) =>
+      request.url.endsWith('/repositories/') ? { error: new Error('falhou') } : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    expect(mutate).toHaveBeenCalled();
+  });
+
+  // o SWR revalida a lista ao voltar para a aba e guarda a anterior quando essa conferência falha, então o `error`
+  // aparece com a lista ainda na mão: trocar os gráficos pelo card de erro aí tiraria da tela dados que já estavam
+  // certos, e o CA4 pede o erro no lugar do estado vazio, não no de uma lista carregada (revisão do @thegm445)
+  it('mantém os gráficos quando a revalidação da lista falha mas a lista anterior continua no cache', () => {
+    responses = (request) =>
+      request.url.endsWith('/repositories/')
+        ? { data: { results: repositories }, error: new Error('falhou') }
+        : defaultResponse(request);
+
+    render(<TemporalDashboard />);
+
+    expect(screen.getByRole('region', { name: 'Característica' })).toBeTruthy();
+    expect(screen.queryByText('Não foi possível carregar os repositórios do produto')).toBeNull();
   });
 
   describe('exportação de CSV', () => {

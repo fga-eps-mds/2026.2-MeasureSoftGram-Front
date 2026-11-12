@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "type": "tsqmi",
+    "key": "tsqmi",
+    "name": "TSQMI",
+    "description": null,
+    "weight": null,
+    "children": [
+      {
+        "id": 9,
+        "type": "characteristic",
+        "key": "maintainability",
+        "name": "Maintainability",
+        "description": null,
+        "weight": 100,
+        "children": [
+          {
+            "id": 10,
+            "type": "subcharacteristic",
+            "key": "modifiability",
+            "name": "Modifiability",
+            "description": null,
+            "weight": 100,
+            "children": [
+              {
+                "id": 11,
+                "type": "measure",
+                "key": "non_complex_file_density",
+                "name": "Non Complex File Density",
+                "description": null,
+                "weight": 100,
+                "min_threshold": 0,
+                "max_threshold": 10,
+                "children": [
+                  {
+                    "id": 12,
+                    "type": "metric",
+                    "key": "complexity",
+                    "name": "complexity",
+                    "description": null,
+                    "weight": null,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

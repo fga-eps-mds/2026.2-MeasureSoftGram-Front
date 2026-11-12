@@ -4,6 +4,7 @@ import organizations from '../../src/mocks/fixtures/organizations.json';
 import products from '../../src/mocks/fixtures/products.json';
 import repositories from '../../src/mocks/fixtures/repositories.json';
 import releaseConfig from '../../src/mocks/fixtures/releaseConfig.json';
+import releaseList from './releases.json';
 
 /** Organização e produto das fixtures de src/mocks: a URL das páginas do produto é /products/{org}-{produto}-{nome}/. */
 export const ORGANIZATION_ID = 1;
@@ -12,6 +13,10 @@ export const PRODUCT_PATH = `/products/${ORGANIZATION_ID}-${PRODUCT_ID}-MeasureS
 export const PRODUCT_API = `/v1/organizations/${ORGANIZATION_ID}/products/${PRODUCT_ID}`;
 
 export const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
+
+/** Releases do produto usadas pelos dashboards: R1 (encerrada) e R2 (atual). */
+export const RELEASES_API = `${PRODUCT_API}/release/`;
+export const releases = releaseList;
 
 /** O que o layout, o AuthContext e os providers pedem em qualquer página do produto. */
 export const common: ApiHandlers = {
@@ -26,4 +31,9 @@ export const common: ApiHandlers = {
   // a Visão Geral do produto, de onde o menu leva aos dashboards
   [`${PRODUCT_API}/repositories-tsqmi-historical-values/`]: EMPTY_PAGE,
   [`${PRODUCT_API}/repositories-tsqmi-release-history/`]: { releases: [], repositories: [] }
+};
+
+/** Organização sem produto: o menu lateral fica sem os itens do produto. */
+export const semProduto: ApiHandlers = {
+  [`/v1/organizations/${ORGANIZATION_ID}/products/`]: EMPTY_PAGE
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv } from '@utils/exportCsv';
 import PulseChart, { getReferenceRelease } from '../PulseChart';
@@ -55,11 +55,38 @@ describe('<PulseChart />', () => {
     mockUsePulseChartData.mockReturnValue(defaultChartData());
   });
 
+  // o jsdom não tem a API de fontes; o teste que a simula não pode deixá-la para os seguintes
+  afterEach(() => {
+    delete (document as unknown as { fonts?: unknown }).fonts;
+  });
+
   it('refaz o gráfico a cada atualização, sem mesclar com as faixas do filtro anterior', () => {
     render(<PulseChart organizationId="1" productId="1" />);
 
     const [, notMerge] = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1];
     expect(notMerge).toBe(true);
+  });
+
+  // o canvas não troca a fonte quando ela chega: desenhando antes, os eixos e as etiquetas ficam na fonte reserva
+  it('só desenha o pulso depois de a fonte do canvas carregar', async () => {
+    let fontArrived: () => void = () => undefined;
+    const load = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          fontArrived = resolve;
+        })
+    );
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load } });
+    const lastOption = () => mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0];
+
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(load).toHaveBeenCalledWith('11px Roboto');
+    expect(lastOption()).toEqual({});
+
+    await act(async () => fontArrived());
+
+    expect(lastOption().series).toHaveLength(1);
   });
 
   it('desenha o pulso sem linhas horizontais e sem a etiqueta de início das releases', () => {
@@ -210,6 +237,15 @@ describe('<PulseChart />', () => {
     const exportButton = getByRole('button', { name: 'Exportar .csv' });
     // eslint-disable-next-line no-bitwise
     expect(endDate.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // pedido do PO em 08/10 (US06.01): o filtro fica abaixo do gráfico
+  it('põe o filtro de período depois do gráfico', () => {
+    const { getByTestId, getByLabelText } = render(<PulseChart organizationId="1" productId="1" />);
+
+    const chart = getByTestId('echarts-mock');
+    // eslint-disable-next-line no-bitwise
+    expect(chart.compareDocumentPosition(getByLabelText('De')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('mostra na barra lateral a variação em relação à última release com indicador', () => {

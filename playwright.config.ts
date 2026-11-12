@@ -13,7 +13,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // o JSON fica fora de playwright-report (o reporter HTML limpa a pasta) e alimenta scripts/e2e-acceptance-comment.mjs
+  reporter: [['list'], ['html', { open: 'never' }], ['json', { outputFile: 'e2e-results.json' }]],
   use: {
     baseURL: BASE_URL,
     locale: 'pt-BR',
@@ -28,6 +29,11 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 5 * 60 * 1000,
-    env: { NEXT_PUBLIC_API_URL: `${BASE_URL}/api` }
+    env: {
+      NEXT_PUBLIC_API_URL: `${BASE_URL}/api`,
+      // sem o client id, o botão do GitLab vai direto a /auth/error; o redirect volta para este servidor
+      GITLAB_CLIENT_ID: 'e2e-gitlab',
+      NEXT_PUBLIC_LOGIN_REDIRECT_URL: `${BASE_URL}/`
+    }
   }
 });

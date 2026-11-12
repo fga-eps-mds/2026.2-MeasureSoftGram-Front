@@ -16,6 +16,7 @@ import { formatTimeEvolutionOptions } from '@utils/formatTimeEvolutionChart';
 import { CsvChart } from '@utils/exportCsv';
 import { TimeGranularity } from '@utils/historicalValues';
 import { getPathId } from '@utils/pathDestructer';
+import MSGAlert from '../../../../../components/idv/feedback';
 
 import { MultiSelectFilter, SingleSelectFilter } from './TemporalFilters';
 import { EvolutionChartData, EvolutionLevel, useTemporalEvolution } from './useTemporalEvolution';
@@ -50,9 +51,18 @@ interface EvolutionChartCardProps {
   csv: CsvChart<TemporalCsvRow>;
   emptyTitle: string;
   emptyDescription: string;
+  repositoryTerm: string;
 }
 
-function EvolutionChartCard({ chart, data, granularity, csv, emptyTitle, emptyDescription }: EvolutionChartCardProps) {
+function EvolutionChartCard({
+  chart,
+  data,
+  granularity,
+  csv,
+  emptyTitle,
+  emptyDescription,
+  repositoryTerm
+}: EvolutionChartCardProps) {
   const options = useMemo(
     () => formatTimeEvolutionOptions(data.series, granularity, chart.normalized),
     [data.series, granularity, chart.normalized]
@@ -72,6 +82,15 @@ function EvolutionChartCard({ chart, data, granularity, csv, emptyTitle, emptyDe
       errorTitle={`Não foi possível carregar a evolução das ${chart.label}`}
       onRetry={data.retry}
     >
+      {/* a entidade sem medição não vira linha: sem o aviso, ela some do gráfico sem explicação (CA5 da US01.02) */}
+      {data.missing.length > 0 && (
+        <MSGAlert
+          severity="warning"
+          title={`${chart.title} sem valores neste ${repositoryTerm}: ${data.missing.join(', ')}`}
+        >
+          As demais seguem no gráfico. {emptyDescription}
+        </MSGAlert>
+      )}
       <ReactEcharts option={options} notMerge style={{ height: CHART_HEIGHT, width: '100%' }} />
     </DashboardCard>
   );
@@ -85,7 +104,7 @@ const TemporalDashboard: NextPageWithLayout = () => {
   const { query } = useRouter();
   const [organizationId, productId] = getPathId(query?.product as string);
   const evolution = useTemporalEvolution(organizationId, productId);
-  const { repositories, isLoadingRepositories, granularity, measures } = evolution;
+  const { repositories, isLoadingRepositories, hasRepositoriesError, granularity, measures } = evolution;
 
   // os CSVs levam o que os gráficos mostram: o gráfico carregando, com erro ou sem dados não exporta nada
   const repositoryName = repositories.find((repository) => repository.id === evolution.repositoryId)?.name ?? '';
@@ -126,6 +145,18 @@ const TemporalDashboard: NextPageWithLayout = () => {
   };
 
   const renderContent = () => {
+    // a falha ao buscar a lista precisa vir antes do estado vazio: sem ela, a lista chega vazia e a tela acusava
+    // produto sem repositório, escondendo o erro e o "Tentar novamente" que o CA4 exige
+    if (hasRepositoriesError) {
+      return (
+        <DashboardCard
+          title="Evolução Temporal"
+          status="error"
+          errorTitle={`Não foi possível carregar os ${terms.repositories} do produto`}
+          onRetry={evolution.retryRepositories}
+        />
+      );
+    }
     if (!isLoadingRepositories && repositories.length === 0) {
       return (
         <DashboardCard
@@ -145,6 +176,7 @@ const TemporalDashboard: NextPageWithLayout = () => {
         csv={csvs[chart.level]}
         emptyTitle={emptyMessages[chart.level].title}
         emptyDescription={emptyMessages[chart.level].description}
+        repositoryTerm={terms.repository}
       />
     ));
   };

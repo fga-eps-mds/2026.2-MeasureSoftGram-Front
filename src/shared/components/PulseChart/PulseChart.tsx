@@ -2,13 +2,20 @@ import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Button, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
-import { PULSE_GRID, PulseMeasurement, PulseRelease, formatPulseChartOptions } from '@utils/formatPulseChart';
+import {
+  PULSE_CANVAS_FONT,
+  PULSE_GRID,
+  PulseMeasurement,
+  PulseRelease,
+  formatPulseChartOptions,
+} from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
 import { formatPulseReleaseTooltip } from '@utils/formatPulseReleaseTooltip';
 import { usePulseChartData } from './usePulseChartData';
 import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
 import { QualityLegend } from './QualityLegend';
+import { useFontLoaded } from '@hooks/useFontLoaded';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { ProviderTerms } from '@utils/providerTerminology';
 
@@ -67,6 +74,7 @@ interface Props {
 export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
   const { terms } = useProviderTerms();
   const echartsRef = useRef<any>(null);
+  const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
   const {
     allRepositories,
@@ -133,18 +141,6 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         backgroundColor: '#FFFFFF',
       }}
     >
-      {/* Filters Bar */}
-      <PulseChartFilters
-        repositories={allRepositories}
-        selectedRepo={selectedRepo}
-        onRepoChange={setSelectedRepo}
-        startDate={startDate}
-        onStartDateChange={setStartDate}
-        endDate={endDate}
-        onEndDateChange={setEndDate}
-        exportAction={<ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />}
-      />
-
       {/* Card do gráfico: título, subtítulo e legenda logo abaixo, à esquerda (protótipo) */}
       <Box sx={{ border: '1px solid #E0E0E0', borderRadius: '8px', padding: '24px' }}>
         <Box display="flex" flexDirection="column" gap="4px" marginBottom="16px">
@@ -196,7 +192,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
             {/* notMerge: a cada filtro, o gráfico é refeito; mesclando, ficariam as faixas e séries anteriores */}
             <ReactEcharts
               ref={echartsRef}
-              option={chartOptions}
+              option={fontLoaded ? chartOptions : {}}
               notMerge
               style={{
                 height: `${chartOptions.height || 400}px`,
@@ -205,6 +201,22 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
             />
           </Box>
         )}
+      </Box>
+
+      {/* Filtros abaixo do gráfico, a pedido do PO (US06.01, 08/10) */}
+      <Box marginTop="16px">
+        <PulseChartFilters
+          repositories={allRepositories}
+          selectedRepo={selectedRepo}
+          onRepoChange={setSelectedRepo}
+          startDate={startDate}
+          onStartDateChange={setStartDate}
+          endDate={endDate}
+          onEndDateChange={setEndDate}
+          exportAction={
+            <ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />
+          }
+        />
       </Box>
 
       {/* Footer summary */}

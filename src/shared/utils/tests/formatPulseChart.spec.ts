@@ -7,7 +7,10 @@ import {
   PulseRepositoryData,
 } from '../formatPulseChart';
 import { QUALITY_BANDS } from '../qualityBands';
-import { PULSE_POINTS_PER_MEASUREMENT } from '../toPulseSeries';
+import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from '../toPulseSeries';
+
+/** Meia largura mínima do complexo do pulso, em milissegundos: o piso de `getPulseHalfWidth` para períodos curtos. */
+const HOUR = 60 * 60 * 1000;
 
 
 describe('formatPulseChart Utility', () => {
@@ -58,7 +61,8 @@ describe('formatPulseChart Utility', () => {
             { gte: ms(2), lt: ms(3), color: '#F16141' },
             { gte: ms(3), lt: ms(4), color: '#EBA133' },
             { gte: ms(4), lt: ms(5), color: '#0DC889' },
-            { gte: ms(5), color: '#04724D' },
+            // o último trecho fecha no fim do desenho, duas meias larguras depois da medição (aqui, 2h)
+            { gte: ms(5), lte: ms(5) + 2 * HOUR, color: '#04724D' },
           ],
         },
       ]);
@@ -77,9 +81,30 @@ describe('formatPulseChart Utility', () => {
         ])
       ).toEqual([
         { lt: new Date(at(3)).getTime(), color: '#04724D' },
-        { gte: new Date(at(3)).getTime(), color: '#EBA133' },
+        { gte: new Date(at(3)).getTime(), lte: new Date(at(4)).getTime() + 2 * HOUR, color: '#EBA133' },
       ]);
       expect(getBandTimePieces([])).toEqual([]);
+    });
+
+    // o último trecho ficava sem limite de cima, e aí nenhum dos dois trechos tinha os dois limites: o ECharts não
+    // gerava parada de gradiente nenhuma e parava de desenhar a linha, deixando o pulso vazio na carga e quebrando a
+    // tela inteira ao redesenhar (falha achada pelos testes E2E da @LuizaMaluf, no Front#128)
+    it('fecha o último trecho mesmo com uma única troca de faixa, o caso de só dois trechos', () => {
+      const at = (day: number) => `2026-01-0${day}T12:00:00Z`;
+      const pieces = getBandTimePieces([
+        { created_at: at(1), value: 0.9 },
+        { created_at: at(2), value: 0.3 },
+      ]);
+
+      expect(pieces).toEqual([
+        { lt: new Date(at(2)).getTime(), color: '#04724D' },
+        { gte: new Date(at(2)).getTime(), lte: new Date(at(2)).getTime() + 2 * HOUR, color: '#F16141' },
+      ]);
+      // o desenho do último complexo termina dentro do trecho, senão esse fim sairia sem cor
+      const lastDrawnAt = toPulseSeries([new Date(at(1)).getTime(), new Date(at(2)).getTime()], [0.9, 0.3]).slice(
+        -1
+      )[0][0];
+      expect(pieces[1].lte).toBeGreaterThanOrEqual(lastDrawnAt);
     });
   });
 
@@ -397,6 +422,8 @@ describe('formatPulseChart Utility', () => {
         const options: any = formatPulseChartOptions([repoWithReleases]);
 
         expect(options.series[0].clip).toBe(false);
+        // com a animação de entrada, o ECharts 5.6 corta os picos no primeiro desenho
+        expect(options.animation).toBe(false);
         expect(options.series[0].data).toHaveLength(3 * PULSE_POINTS_PER_MEASUREMENT);
       });
 

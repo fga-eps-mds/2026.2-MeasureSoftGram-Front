@@ -17,15 +17,16 @@ Partes deste fluxo chegam com PRs que podem ainda não estar no `develop`. Confi
 | --- | --- | --- |
 | `RELEASES_API` e `releases` exportados por `e2e/fixtures/common.ts` | PR do E2E da US21.01 | Defina a rota `${PRODUCT_API}/release/` e um `releases.json` na fixture da própria página, como `e2e/fixtures/distribuicao/` faz |
 | `e2e/acceptance-issues.json` e o comentário automático na issue (passo do `e2e.yml` com o secret `DOC_ISSUES_TOKEN`) | #109 | Pule o Passo 8 e diga que o resultado não vai sozinho para a issue |
-| Exemplo do clique com nova tentativa (`toPass`, função `chooseLevel` na US21.03) | #108 | Use o trecho do Passo 5 mesmo assim; ele não depende do PR |
+| Helpers comuns em `e2e/support/helpers.ts`, `api.hold` e as opções de idioma e sessão do fixture base | PR de follow-up da revisão dos E2E por critério | Copie o helper que faltar para o arquivo da US e avise no PR |
 
 ## Como a infraestrutura funciona (não reconfigure)
 
 - Playwright só com Chromium. `pnpm e2e` faz o build do Next e sobe `next start` em `localhost:3000`; nada depende do Service nem da VM.
 - `e2e/support/api.ts`: `page.route` responde a cada `/api/v1/...` pelo **caminho exato**. Rota sem handler responde 501 e o teste **falha no fim** (`rotas da API pedidas sem handler`).
 - `e2e/support/session.ts`: sessão fake no `localStorage`; o usuário já está logado.
-- `e2e/support/fixtures.ts`: `test` já semeia a sessão e os handlers de `e2e/fixtures/common.ts`. Cada `describe` escolhe o cenário com `test.use({ scenario })`; `api.set(path, handler)` troca uma resposta no meio do teste.
-- `e2e/fixtures/common.ts` exporta `ORGANIZATION_ID`, `PRODUCT_ID`, `PRODUCT_PATH`, `PRODUCT_API`, `EMPTY_PAGE` e `common`. Com o PR da US21.01, também `RELEASES_API` e `releases` (R1 encerrada, R2 atual). Reaproveite; não duplique.
+- `e2e/support/fixtures.ts`: `test` já grava o idioma (`locale_lang = 'pt'`), semeia a sessão e os handlers de `e2e/fixtures/common.ts`. Cada `describe` escolhe o cenário com `test.use({ scenario })`; `test.use({ session: false })` começa sem sessão (tela de login); `api.set(path, handler)` troca uma resposta no meio do teste; `api.hold(...paths)` segura as respostas até o teste chamar a função que ele devolve. Não repita o `beforeEach` do idioma nem recrie o fixture.
+- `e2e/support/helpers.ts`: `card`, `select`, `choose`, `levelButton`/`chooseLevel` (botões), `levelTab`/`chooseLevelTab` (abas), `downloadCsv`, `csvLines` e `bandSwatch`. Use esses em vez de escrever outros iguais no arquivo da US.
+- `e2e/fixtures/common.ts` exporta `ORGANIZATION_ID`, `PRODUCT_ID`, `PRODUCT_PATH`, `PRODUCT_API`, `EMPTY_PAGE`, `RELEASES_API`, `releases` (R1 encerrada, R2 atual), `semProduto` (organização sem produto) e `common`. Reaproveite; não duplique.
 - O CI (`.github/workflows/e2e.yml`) roda em todo PR e push para `develop` e `main`. Com o #109, no push, publica o resultado por CA num comentário da issue da US (mapa em `e2e/acceptance-issues.json`).
 
 ## Passo 1: ler os critérios da issue
@@ -62,6 +63,7 @@ Em `e2e/fixtures/<pagina>/`: JSONs no formato do Service e um `index.ts` com um 
 ```ts
 import { ApiHandlers, serverError } from '../../support/api';
 import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+// semProduto (organização sem produto, para o CA do menu) já vem de ../common
 import dados from './dados.json';
 import dadosR1 from './dados-r1.json';
 
@@ -104,19 +106,15 @@ test.describe('@US22.01-CA1 <resumo do critério>', () => {
 Padrões que já existem e devem ser repetidos:
 
 - **Esperar o gráfico desenhar:** `await expect(area).toHaveAttribute('data-render-ms', /^\d+$/)`.
-- **Card do dashboard:** `page.getByRole('region', { name: '<título do card>' })`.
-- **Seletor do MUI:** `page.getByRole('combobox', { name: /^Release/ })`, depois `getByRole('option', { name, exact: true })`.
-- **CSV:** `const [download] = await Promise.all([page.waitForEvent('download'), botão.click()])`; o arquivo começa com `'\uFEFF'`, usa `;` entre colunas e vírgula decimal.
-- **Erro e "Tentar novamente":** cenário `erro500`; conferir `not.toContainText(/500|Erro interno|Request failed/)`; depois `api.set(rota, handlerBom)`, clicar e ver a página carregar.
+- **Card do dashboard:** `card(page, '<título do card>')` (o `region` com aria-label, nome exato).
+- **Seletor do MUI:** `select(page, 'Release')` e `choose(page, 'Release', 'R1')`.
+- **CSV:** `const linhas = await downloadCsv(page, botão, /^msgram-<pagina>-\d{4}-\d{2}-\d{2}\.csv$/)`; ele confere o nome e a marca de ordem de bytes do começo. O arquivo usa `;` entre colunas e vírgula decimal. Para o CSV de dentro de um `.zip`, `csvLines(conteúdo)`.
+- **Erro e "Tentar novamente":** cenário `erro500`; conferir `not.toContainText(/500|Erro interno|Request failed/)`; depois `api.set(rota, handlerBom)`, clicar e ver os dados voltarem.
+- **Carregando:** cenário com dados e `const libera = api.hold(rota)` antes do `goto`; confira o selo e a mensagem, chame `libera()` e veja os dados. Não use atraso fixo na fixture: numa CI lenta ele acaba antes ou depois da hora.
 - **Manual:** `test.skip('<o que seria testado> (manual)', async () => {});` com um comentário do motivo (ex.: tooltip em canvas).
-- **Snapshot:** `test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');` e `await expect(locator).toHaveScreenshot('<nome>.png')`.
-- **Clique que às vezes não pega logo depois da carga** (`chooseLevel` da US21.03, com o #108): clique e espere o estado; se não mudar, clique de novo:
-  ```ts
-  await expect(async () => {
-    await botao.click();
-    await expect(botao).toHaveAttribute('aria-pressed', 'true', { timeout: 1000 });
-  }).toPass();
-  ```
+- **Snapshot:** `test.skip(!process.env.CI, 'a baseline do snapshot é gerada no CI (Linux), nunca no Mac');` e `await expect(locator).toHaveScreenshot('<nome>.png')`, sem `maxDiffPixels`: a tolerância esconde regressões pequenas, como a cor de um marcador, e também afrouxa a espera do Playwright por duas capturas seguidas iguais, então num gráfico animado (ex.: a árvore do Metamodelo) a baseline sai no meio da animação. Sem ela, o Playwright espera o desenho parar.
+- **Nível do modelo:** `chooseLevel(page, 'Característica')` (botões) ou `chooseLevelTab` (abas): um clique só e a espera pelo `aria-pressed`/`aria-selected`. Não ponha o clique dentro de `toPass`: a nova tentativa pode desfazer o primeiro clique de um botão que alterna. Se o clique se perder logo depois da carga, espere o estado que mostra a página pronta (o `data-render-ms`, o `aria-busy` da grade) antes de clicar.
+- **Locators:** papel acessível, `data-testid`, aria-label ou escopo no card. Nada de `locator('..')`, xpath de irmão ou `nth()` quando um rótulo resolve (ex.: `totals.filter({ has: page.getByText('Repositórios', { exact: true }) })`). Se não houver gancho em `src/`, diga no PR qual `data-testid` falta.
 - Nunca use `waitForTimeout`. Espere por estado.
 
 ## Passo 6: rodar

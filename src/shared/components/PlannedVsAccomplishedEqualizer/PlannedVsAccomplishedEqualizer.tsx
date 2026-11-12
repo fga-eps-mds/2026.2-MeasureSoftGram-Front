@@ -211,6 +211,11 @@ export default function PlannedVsAccomplishedEqualizer({
 
     const observer = new ResizeObserver(() => measureTracks());
     observer.observe(containerRef.current);
+    // o trilho também anda sem o contêiner mudar: um rótulo mais largo que a coluna (ex.: antes da tradução) alarga o
+    // item do slider e tira o slider do centro
+    sliderRefs.current.forEach((slider) => {
+      if (slider?.parentElement) observer.observe(slider.parentElement);
+    });
     return () => observer.disconnect();
   }, [measureTracks]);
 

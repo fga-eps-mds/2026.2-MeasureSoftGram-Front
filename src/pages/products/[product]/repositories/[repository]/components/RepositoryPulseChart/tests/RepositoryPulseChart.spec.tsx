@@ -10,6 +10,7 @@ import { PULSE_POINTS_PER_MEASUREMENT } from '@utils/toPulseSeries';
 
 jest.mock('@hooks/useRequest', () => ({ useRequest: jest.fn() }));
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
+jest.mock('@hooks/useFontLoaded', () => ({ useFontLoaded: () => true }));
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({ terms: { Repository: 'Repositório', repository: 'repositório' } }),
 }));

@@ -21,6 +21,7 @@ export const authContextDefaultValues: authContextType = {
 export const AuthContext = createContext<authContextType>(authContextDefaultValues);
 
 const OAUTH_ERROR_PAGE = '/auth/error';
+const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Por favor, faça login novamente!';
 const OAUTH_REJECTED_MESSAGE = 'Não foi possível confirmar o login. Tente entrar novamente.';
 
 export const AuthProvider = ({ children }: { children: JSX.Element }) => {
@@ -112,7 +113,8 @@ export const AuthProvider = ({ children }: { children: JSX.Element }) => {
 
       if (response.type === 'error') {
         void removeAuthStorage();
-        toast.error(`Erro ao realizar login: ${response.error.message || 'Erro desconhecido'}`);
+        // Sem o detalhe técnico do Service ou do axios (US11.01 CA5).
+        toast.error(SESSION_EXPIRED_MESSAGE);
         return response;
       }
 
@@ -162,10 +164,12 @@ useEffect(() => {
 
       // Passou de 2 horas -> Logout automático
       if (elapsed >= limitMs) {
+        // O efeito roda de novo enquanto o logout limpa a sessão: sem o timer, não desloga nem avisa duas vezes.
+        localStorage.removeItem('login_timestamp');
         void logout();
         warningShownRef.current = false;
         setIsWarningOpen(false);
-        toast.warning('Sua sessão expirou por segurança (limite de 2h).');
+        toast.warning(SESSION_EXPIRED_MESSAGE);
       }
       // Aviso apenas UMA VEZ quando atingir o tempo limite
       else if (elapsed >= warningMs && !warningShownRef.current) {
@@ -220,7 +224,11 @@ useEffect(() => {
       const signIn = oauthState.provider === 'gitlab' ? signInWithGitlab : signInWithGithub;
       const response = await signIn(code);
 
-      if (response.type === 'success' && oauthState.returnTo) {
+      if (response.type === 'error') {
+        // A sessão foi limpa: volta ao login para tentar de novo, em vez de ficar na tela de espera.
+        oauthRedirectRef.current = '/auth';
+        await router.replace('/auth');
+      } else if (oauthState.returnTo) {
         await router.replace(oauthState.returnTo);
       }
     },

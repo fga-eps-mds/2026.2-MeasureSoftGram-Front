@@ -1,7 +1,7 @@
 import { TsqmiReleasePoint } from '@customTypes/product';
 import { escapeHtml, formatDecimal, formatVariation } from './formatNumber';
 import { getQualityBandClamped, QualityGrade } from './qualityBands';
-import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
+import { getPulseHalfWidth, PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
 
 export const COLOR_TOKENS = {
   primary: '#2B4D6F',
@@ -33,6 +33,10 @@ export function getQualityStatus(value: number): QualityStatus {
 
 /** Medidas das faixas do gráfico de pulso, em px: as mesmas no pulso do produto e no do repositório. */
 export const PULSE_GRID = { topOffset: 60, height: 82, gap: 34 };
+
+const FONT_FAMILY = 'Roboto';
+/** A fonte do texto do canvas do pulso: os gráficos só desenham depois de ela carregar (ver `useFontLoaded`). */
+export const PULSE_CANVAS_FONT = `11px ${FONT_FAMILY}`;
 
 export interface PulseChartOptions {
   /**
@@ -138,7 +142,7 @@ export interface PulseRepositoryData {
  * faixas. No ECharts, o `visualMap` de uma série `line` só pinta pela dimensão de um eixo.
  */
 export function getBandTimePieces(sortedMeasurements: PulseMeasurement[]) {
-  const pieces: { gte?: number; lt?: number; color: string }[] = [];
+  const pieces: { gte?: number; lt?: number; lte?: number; color: string }[] = [];
   sortedMeasurements.forEach((measurement) => {
     const { color } = getQualityStatus(measurement.value);
     const last = pieces[pieces.length - 1];
@@ -147,6 +151,18 @@ export function getBandTimePieces(sortedMeasurements: PulseMeasurement[]) {
     if (last) last.lt = time;
     pieces.push(last ? { gte: time, color } : { color });
   });
+
+  // O ECharts só gera parada de gradiente para trecho com os dois limites: o primeiro, sem `gte`, vira
+  // [-Infinito, x] e sai na cor de fora da linha, que é o que pinta o complexo antes da primeira medição. Com duas
+  // faixas, o último trecho também era aberto, não sobrava parada nenhuma e o ECharts parava de desenhar a linha
+  // (TypeError em `getVisualGradient`): o pulso ficava vazio na carga e a tela inteira quebrava ao redesenhar.
+  // Fechar o último trecho resolve, mas no fim do desenho, não na última medição: o complexo dela segue por mais
+  // duas meias larguras, e fechar antes disso deixaria esse fim sem cor (falha achada pelos testes E2E da
+  // @LuizaMaluf, no Front#128).
+  if (pieces.length > 1) {
+    const times = sortedMeasurements.map((measurement) => new Date(measurement.created_at).getTime());
+    pieces[pieces.length - 1].lte = times[times.length - 1] + 2 * getPulseHalfWidth(times);
+  }
   return pieces;
 }
 
@@ -249,7 +265,7 @@ export function formatPulseChartOptions(
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
               color: '#FFFFFF',
               fontSize: 10,
-              fontFamily: 'Roboto',
+              fontFamily: FONT_FAMILY,
               padding: [2, 5],
               borderRadius: 3,
             },
@@ -284,7 +300,7 @@ export function formatPulseChartOptions(
               backgroundColor: COLOR_TOKENS.primary,
               color: '#FFFFFF',
               fontSize: 10.5,
-              fontFamily: 'Roboto',
+              fontFamily: FONT_FAMILY,
               padding: [3, 6],
               borderRadius: 3,
             },
@@ -321,7 +337,7 @@ export function formatPulseChartOptions(
       axisLabel: {
         color: COLOR_TOKENS.axisText,
         fontSize: 11,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
         formatter: (val: number) => {
           const date = new Date(val);
           const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -349,7 +365,7 @@ export function formatPulseChartOptions(
       axisLabel: {
         color: COLOR_TOKENS.axisText,
         fontSize: 11,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
         formatter: (v: number) => v.toFixed(1),
       },
       splitLine: {
@@ -403,6 +419,9 @@ export function formatPulseChartOptions(
 
   return {
     height: totalHeight,
+    // No ECharts 5.6, a animação de entrada termina com o recorte na borda da faixa e perde o `clip: false` da série:
+    // os picos que passam de 0 ou de 1 saíam cortados até o gráfico ser redesenhado.
+    animation: false,
     axisPointer: {
       link: [{ xAxisIndex: 'all' }],
       lineStyle: {
@@ -421,7 +440,7 @@ export function formatPulseChartOptions(
       textStyle: {
         color: '#1F2937',
         fontSize: 12,
-        fontFamily: 'Roboto',
+        fontFamily: FONT_FAMILY,
       },
       formatter: (allParams: any[]) => {
         // Com o cursor no ponto de uma release, o eixo encaixa nele e os params trazem os pontos dessa release.

@@ -1,0 +1,97 @@
+{
+  "release": {
+    "id": 2,
+    "release_name": "R2",
+    "start_at": "2026-08-17T00:00:00-03:00",
+    "end_at": "2026-10-16T00:00:00-03:00"
+  },
+  "previous_release": {
+    "id": 1,
+    "release_name": "R1",
+    "start_at": "2026-06-01T00:00:00-03:00",
+    "end_at": "2026-08-16T00:00:00-03:00"
+  },
+  "level": "characteristic",
+  "columns": [
+    {
+      "key": "reliability",
+      "name": "Reliability",
+      "weight": 34,
+      "path": []
+    },
+    {
+      "key": "maintainability",
+      "name": "Maintainability",
+      "weight": 33,
+      "path": []
+    }
+  ],
+  "repositories": [
+    {
+      "id": 1,
+      "name": "MeasureSoftGram-Service",
+      "tsqmi": {
+        "value": 0.67,
+        "previous_value": 0.7
+      },
+      "cells": [
+        {
+          "key": "reliability",
+          "value": 0.86,
+          "previous_value": 0.88,
+          "contribution": -0.007
+        },
+        {
+          "key": "maintainability",
+          "value": 0.49,
+          "previous_value": 0.48,
+          "contribution": 0.003
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "MeasureSoftGram-Action",
+      "tsqmi": {
+        "value": 0.41,
+        "previous_value": 0.5
+      },
+      "cells": [
+        {
+          "key": "reliability",
+          "value": 0.42,
+          "previous_value": 0.52,
+          "contribution": -0.034
+        },
+        {
+          "key": "maintainability",
+          "value": 0.3,
+          "previous_value": 0.41,
+          "contribution": -0.036
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "MeasureSoftGram-Front",
+      "tsqmi": {
+        "value": 0.53,
+        "previous_value": 0.6
+      },
+      "cells": [
+        {
+          "key": "reliability",
+          "value": 0.62,
+          "previous_value": 0.79,
+          "contribution": -0.058
+        },
+        {
+          "key": "maintainability",
+          "value": 0.22,
+          "previous_value": 0.24,
+          "contribution": -0.007
+        }
+      ]
+    }
+  ]
+}

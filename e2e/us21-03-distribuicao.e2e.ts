@@ -1,16 +1,8 @@
-import { readFileSync } from 'fs';
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { PRODUCT_PATH } from './fixtures/common';
-import {
-  comDados,
-  DISTRIBUTION_PATH,
-  erro500,
-  poucasAnalises,
-  semAnalise,
-  semProduto,
-  semRelease
-} from './fixtures/distribuicao';
+import { card, choose, chooseLevel, downloadCsv, levelButton, select } from './support/helpers';
+import { PRODUCT_PATH, semProduto } from './fixtures/common';
+import { comDados, DISTRIBUTION_PATH, erro500, poucasAnalises, semAnalise, semRelease } from './fixtures/distribuicao';
 
 const TITLE = '5. Distribuição Estatística';
 const HISTOGRAM = 'Histograma';
@@ -19,20 +11,6 @@ const BOXPLOT = 'Boxplot e percentis do nível';
 const SCATTER = 'Dispersão das análises no tempo';
 const SUMMARY = 'Resumo estatístico e IQR';
 const RULER = 'Faixas de qualidade de A a E';
-
-/** O cartão de um quadro (section com aria-label). */
-const card = (page: Page, title: string) => card.in(page, title);
-card.in = (page: Page, title: string): Locator => page.getByRole('region', { name: title });
-
-/** Os seletores da tela: o nome acessível do combobox do MUI começa pelo rótulo. */
-const select = (page: Page, label: string) => page.getByRole('combobox', { name: new RegExp(`^${label}`) });
-const levelButton = (page: Page, label: string) =>
-  page.getByRole('group', { name: 'Nível do modelo' }).getByRole('button', { name: label, exact: true });
-
-async function choose(page: Page, label: string, option: string) {
-  await select(page, label).click();
-  await page.getByRole('option', { name: option, exact: true }).click();
-}
 
 /**
  * Abre a página com dados e espera os quadros carregarem: a linha do período só aparece com a distribuição pronta
@@ -109,7 +87,7 @@ test.describe('@US21.03-CA2 Seleção de release, repositório, nível e entidad
 
   test('no nível característica, só as características da configuração da release', async ({ page }) => {
     await openDistribution(page);
-    await levelButton(page, 'Característica').click();
+    await chooseLevel(page, 'Característica');
     await expect(page.getByTestId('distribution-subtitle')).toContainText('Como os valores de Reliability');
     await expectChartDrawn(card(page, HISTOGRAM), /^Histograma de Reliability/);
 
@@ -121,7 +99,7 @@ test.describe('@US21.03-CA2 Seleção de release, repositório, nível e entidad
     page
   }) => {
     await openDistribution(page);
-    await levelButton(page, 'Métrica').click();
+    await chooseLevel(page, 'Métrica');
     // um seletor por nível, do topo até a métrica
     await expect(page.getByTestId('entity-selectors').getByRole('combobox')).toHaveCount(4);
     await expect(page.getByTestId('distribution-subtitle')).toContainText('Como os valores de sum_ci_feedback_times');
@@ -169,7 +147,7 @@ test.describe('@US21.03-CA4 Histograma por faixa de valor, com a régua A–E s�
 
   test('nas métricas: eixo na escala da métrica, sem a régua A–E', async ({ page }) => {
     await openDistribution(page);
-    await levelButton(page, 'Métrica').click();
+    await chooseLevel(page, 'Métrica');
     await choose(page, 'Métrica', 'total_builds');
     const histogram = card(page, HISTOGRAM);
     await expectChartDrawn(
@@ -188,7 +166,7 @@ test.describe('@US21.03-CA4 Histograma por faixa de valor, com a régua A–E s�
     await expectChartDrawn(histogram, /^Histograma de TSQMI/);
     await expect(histogram).toHaveScreenshot('histograma-tsqmi.png');
 
-    await levelButton(page, 'Métrica').click();
+    await chooseLevel(page, 'Métrica');
     await choose(page, 'Métrica', 'total_builds');
     await expectChartDrawn(histogram, /^Histograma de total_builds/);
     await expect(histogram).toHaveScreenshot('histograma-metrica.png');
@@ -208,7 +186,7 @@ test.describe('@US21.03-CA5 Curva de densidade no eixo do histograma, com a medi
 
   test('nas métricas, sem a régua A–E', async ({ page }) => {
     await openDistribution(page);
-    await levelButton(page, 'Métrica').click();
+    await chooseLevel(page, 'Métrica');
     await choose(page, 'Métrica', 'total_builds');
     const density = card(page, DENSITY);
     await expectChartDrawn(density, /^Curva de densidade de total_builds/);
@@ -242,14 +220,14 @@ test.describe('@US21.03-CA6 Boxplot da entidade e dos filhos, com os percentis a
 
   test('numa característica: a característica e as subcaracterísticas dela', async ({ page }) => {
     await openDistribution(page);
-    await levelButton(page, 'Característica').click();
+    await chooseLevel(page, 'Característica');
     const rows = card(page, BOXPLOT).getByTestId('percentile-row');
     await expect(rows.getByRole('rowheader')).toHaveText(['Reliability', 'Testing Status']);
   });
 
   test('numa métrica, que não tem filhos, só a linha dela', async ({ page }) => {
     await openDistribution(page);
-    await levelButton(page, 'Métrica').click();
+    await chooseLevel(page, 'Métrica');
     await choose(page, 'Métrica', 'total_builds');
     const boxplot = card(page, BOXPLOT);
     await expectChartDrawn(boxplot, /^Boxplot de total_builds, de 10 a 45\./);
@@ -319,15 +297,11 @@ test.describe('@US21.03-CA8 Resumo estatístico com duas casas, nota e assimetri
 
   test('exporta o resumo em CSV e todos os quadros em .zip', async ({ page }) => {
     await openDistribution(page);
-    const [csv] = await Promise.all([
-      page.waitForEvent('download'),
-      card(page, SUMMARY).getByRole('button', { name: 'Exportar .csv' }).click()
-    ]);
-    expect(csv.suggestedFilename()).toMatch(/^msgram-distribuicao-resumo-\d{4}-\d{2}-\d{2}\.csv$/);
-    const content = readFileSync((await csv.path()) ?? '', 'utf8');
-    // o arquivo baixado começa com a marca de ordem de bytes, senão o Excel troca os acentos de "Característica"
-    expect(content.startsWith('\uFEFF')).toBe(true);
-    const lines = content.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+    const lines = await downloadCsv(
+      page,
+      card(page, SUMMARY).getByRole('button', { name: 'Exportar .csv' }),
+      /^msgram-distribuicao-resumo-\d{4}-\d{2}-\d{2}\.csv$/
+    );
     // ponto e vírgula separando as colunas e vírgula na casa decimal, que é como o Excel em português abre e soma
     expect(lines[0]).toBe('Release;Repositório;Nível;Entidade;Estatística;Valor');
     expect(lines).toContain('R2;MeasureSoftGram-Service;TSQMI;TSQMI;Desvio padrão;0,16177');

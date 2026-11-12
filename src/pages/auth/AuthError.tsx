@@ -21,11 +21,11 @@ const AuthError: NextPageWithLayout = () => {
           <SentimentDissatisfied sx={{ fontSize: '3rem', color: 'text.secondary' }} />
 
           <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
-            Ops! Problema no redirecionamento
+            Sua sessão expirou. Por favor, faça login novamente!
           </Typography>
 
           <Typography variant="body1" color="text.secondary">
-            Não conseguimos concluir o seu login neste momento. Isso geralmente acontece devido a uma falha temporária de comunicação.
+            Por segurança, você precisa entrar de novo. Volte para o login e tente novamente.
           </Typography>
         </Box>
 
