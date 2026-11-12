@@ -136,6 +136,15 @@ describe('Header', () => {
     expect(screen.queryByText('edit_intervals')).toBeNull();
   });
 
+  it('sem o produto na URL, ainda mostra o velocímetro com as faixas que o hook devolver', () => {
+    (useRouter as jest.Mock).mockReturnValue({});
+
+    render(<Header />);
+
+    expect(useProductQualityBands).toHaveBeenCalled();
+    expect(screen.getByTestId('gauge')).toBeInTheDocument();
+  });
+
   it('exibe o título com o nome e a descrição do repositório', () => {
     render(<Header />);
 
