@@ -56,7 +56,8 @@ describe('Products Component', () => {
       organizationList: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }],
       currentOrganization: { id: 'org-1', name: 'Org 1', key: 'org-1' },
       setCurrentOrganizations: mockSetCurrentOrgs,
-      fetchOrganizations: mockFetchOrgs
+      fetchOrganizations: mockFetchOrgs,
+      hasFetched: true
     });
     
     (useProductContext as jest.Mock).mockReturnValue({
@@ -155,6 +156,8 @@ describe('Products Component', () => {
       expect(repository.createRepository).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalledWith('Repositório Repo 1 importado com sucesso!');
     });
+    // o identificador do GitLab só vai com conta do GitLab
+    expect((repository.createRepository as jest.Mock).mock.calls[0][2]).not.toHaveProperty('gitlab_project_id');
     expect(toast.error).not.toHaveBeenCalled();
   });
   
@@ -330,7 +333,8 @@ describe('Products Component', () => {
         organizationList: [{ id: 'org-1', name: 'Org 1', key: 'org-1' }, { id: 'org-2', name: 'Org 2', key: 'org-2' }],
         currentOrganization: undefined,
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
       let releaseOrg2: () => void = () => undefined;
       (organizationQuery.getGithubRepos as jest.Mock).mockImplementation((orgId: string) => {
@@ -429,7 +433,8 @@ describe('Products Component', () => {
       organizationList: [{ id: 'org-2', name: 'Org 2', key: 'org-2' }],
       currentOrganization: undefined,
       setCurrentOrganizations: mockSetCurrentOrgs,
-      fetchOrganizations: mockFetchOrgs
+      fetchOrganizations: mockFetchOrgs,
+      hasFetched: true
     });
     
     localStorage.setItem('selectedOrgId', '"org-2"');
@@ -452,7 +457,8 @@ describe('Products Component', () => {
       organizationList: [],
       currentOrganization: undefined,
       setCurrentOrganizations: mockSetCurrentOrgs,
-      fetchOrganizations: mockFetchOrgs
+      fetchOrganizations: mockFetchOrgs,
+      hasFetched: true
     });
     
     localStorage.setItem('selectedOrgId', '"org-3"');
@@ -615,6 +621,28 @@ describe('Products Component', () => {
       });
     });
 
+    it('não busca os namespaces enquanto a lista de organizações não chegou e busca uma vez depois', async () => {
+      const context = (useOrganizationContext as jest.Mock)();
+      (useOrganizationContext as jest.Mock).mockReturnValue({
+        ...context,
+        organizationList: [],
+        currentOrganization: null,
+        hasFetched: false
+      });
+
+      const { rerender } = renderProducts();
+      await act(async () => {});
+      expect(organizationQuery.getGithubOrganizations).not.toHaveBeenCalled();
+      expect(organizationQuery.importOrganization).not.toHaveBeenCalled();
+
+      (useOrganizationContext as jest.Mock).mockReturnValue(context);
+      rerender(withSWR(<Products />));
+
+      await waitFor(() => {
+        expect(organizationQuery.getGithubOrganizations).toHaveBeenCalledTimes(1);
+      });
+    });
+
     it('mostra um único toast de token inválido quando o provider muda de provisório para github', async () => {
       (organizationQuery.getGithubOrganizations as jest.Mock).mockResolvedValue({
         type: 'error',
@@ -706,7 +734,8 @@ describe('Products Component', () => {
         organizationList: [{ id: 'org-gl-1', name: 'GitLab Group 1', key: 'gitlab-group-1' }],
         currentOrganization: { id: 'org-gl-1', name: 'GitLab Group 1', key: 'gitlab-group-1' },
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
 
       (productQuery.getAllProducts as jest.Mock).mockResolvedValue({
@@ -774,7 +803,8 @@ describe('Products Component', () => {
           url: 'https://gitlab.com/gitlab-group-1/project-1',
           description: 'GitLab Project 1 Description',
           platform: 'gitlab',
-          imported: true
+          imported: true,
+          gitlab_project_id: 201
         });
         expect(toast.success).toHaveBeenCalledWith('Projeto project-1 importado com sucesso!');
       });
@@ -927,7 +957,8 @@ describe('Products Component', () => {
         organizationList: [],
         currentOrganization: undefined,
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
 
       renderProducts();
@@ -957,7 +988,8 @@ describe('Products Component', () => {
         organizationList: [],
         currentOrganization: undefined,
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
 
       renderProducts();
@@ -1005,7 +1037,8 @@ describe('Products Component', () => {
         organizationList: [{ id: 'org-joao-pessoal', name: 'joao-7', key: 'joao-7', gitlab_user_id: 7 }],
         currentOrganization: { id: 'org-joao-pessoal', name: 'joao-7', key: 'joao-7', gitlab_user_id: 7 },
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
       (organizationQuery.importGitlabPersonal as jest.Mock).mockResolvedValue({
         type: 'success',
@@ -1078,7 +1111,8 @@ describe('Products Component', () => {
         organizationList: [{ id: 'org-grupo', name: 'joao', key: 'joao', gitlab_group_id: 8 }],
         currentOrganization: { id: 'org-grupo', name: 'joao', key: 'joao', gitlab_group_id: 8 },
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
       (organizationQuery.importGitlabGroup as jest.Mock).mockResolvedValue({ type: 'success', value: { id: 'org-grupo' } });
 
@@ -1107,7 +1141,8 @@ describe('Products Component', () => {
         organizationList: [{ id: 'org-joao', name: 'joao', key: 'joao', gitlab_group_id: null }],
         currentOrganization: { id: 'org-joao', name: 'joao', key: 'joao', gitlab_group_id: null },
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
 
       renderProducts();
@@ -1133,7 +1168,8 @@ describe('Products Component', () => {
         organizationList: [{ id: 'org-time', name: 'time', key: 'time', gitlab_group_id: 99 }],
         currentOrganization: { id: 'org-time', name: 'time', key: 'time', gitlab_group_id: 99 },
         setCurrentOrganizations: mockSetCurrentOrgs,
-        fetchOrganizations: mockFetchOrgs
+        fetchOrganizations: mockFetchOrgs,
+        hasFetched: true
       });
 
       renderProducts();
