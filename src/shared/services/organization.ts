@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios';
 import type { Organization } from '@customTypes/organization';
 import api from './api';
+import { DuplicateMessages, saveError } from './saveError';
 
 export interface OrganizationFormData {
   id?: string;
@@ -18,6 +19,11 @@ export interface OrganizationFormData {
 export type ResultSuccess<T> = { type: 'success'; value: T };
 export type ResultError = { type: 'error'; error: Error | AxiosError };
 export type Result<T> = ResultSuccess<T> | ResultError;
+
+const ORGANIZATION_DUPLICATES: DuplicateMessages = {
+  name: { server: 'Organization with this name already exists.', message: 'Já existe uma organização com este nome.' },
+  key: { server: 'Organization with this key already exists.', message: 'Já existe uma organização com esta chave.' }
+};
 
 // O GitLab manda X-Next-Page vazio na última página e omite X-Total-Pages acima de 10 mil itens.
 const parsePageHeader = (value?: string): number | null => {
@@ -40,19 +46,7 @@ class OrganizationQuery {
       const response = await api.post('/v1/organizations/', data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      const error = err as AxiosError;
-
-      const responseData = error.response?.data as { name?: string[]; key?: string[] };
-      if (error.response && error.response.status === 400) {
-        if (responseData.name && responseData.name[0] === 'Organization with this name already exists.') {
-          return { type: 'error', error: new Error('Já existe uma organização com este nome.') };
-        }
-        if (responseData.key && responseData.key[0] === 'Organization with this key already exists.') {
-          return { type: 'error', error: new Error('Já existe uma organização com esta chave.') };
-        }
-      }
-
-      return { type: 'error', error: new Error('Ocorreu um erro ao criar organização.') };
+      return { type: 'error', error: saveError(err, ORGANIZATION_DUPLICATES, 'Ocorreu um erro ao criar organização.') };
     }
   }
 
@@ -71,19 +65,10 @@ class OrganizationQuery {
       const response = await api.put(`/v1/organizations/${id}/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      const error = err as AxiosError;
-
-      const responseData = error.response?.data as { name?: string[]; key?: string[] };
-      if (error.response && error.response.status === 400) {
-        if (responseData.name && responseData.name[0] === 'Organization with this name already exists.') {
-          return { type: 'error', error: new Error('Já existe uma organização com este nome.') };
-        }
-        if (responseData.key && responseData.key[0] === 'Organization with this key already exists.') {
-          return { type: 'error', error: new Error('Já existe uma organização com esta chave.') };
-        }
-      }
-
-      return { type: 'error', error: new Error('Ocorreu um erro ao atualizar organização.') };
+      return {
+        type: 'error',
+        error: saveError(err, ORGANIZATION_DUPLICATES, 'Ocorreu um erro ao atualizar organização.')
+      };
     }
   }
 
