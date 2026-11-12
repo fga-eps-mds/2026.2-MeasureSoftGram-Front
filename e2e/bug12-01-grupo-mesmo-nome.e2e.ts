@@ -48,29 +48,26 @@ test.describe('@BUG12.01-CA1 Grupo e usuário com o mesmo nome: o grupo escolhid
     );
   });
 
-  test.fixme(
-    'escolher o grupo joao mantém o grupo no seletor e lista os projetos dele (bug: o OrganizationProvider descarta gitlab_group_id e gitlab_user_id da lista; OrganizationProvider.tsx:90-97)',
-    async ({ page }) => {
-      await page.goto(IMPORT_PATH);
-      await expect(page.getByRole('heading', { name: 'Importação de Projetos' })).toBeVisible();
-      await expect(groupSelect(page)).toHaveText(JOAO_GROUP.name);
+  test('escolher o grupo joao mantém o grupo no seletor e lista os projetos dele', async ({ page }) => {
+    await page.goto(IMPORT_PATH);
+    await expect(page.getByRole('heading', { name: 'Importação de Projetos' })).toBeVisible();
+    await expect(groupSelect(page)).toHaveText(JOAO_GROUP.name);
 
-      const importGroup = page.waitForRequest((r) => r.url().endsWith('/import-gitlab/'));
-      const groupProjects = groupProjectsRequest(page);
-      await groupSelect(page).click();
-      await page.getByRole('option', { name: GROUP_LABEL }).click();
-      expect((await importGroup).postDataJSON()).toEqual({ gitlab_group_id: JOAO_GROUP.id });
-      // a partir daqui a organização atual é a do grupo; o defeito voltava para o pessoal e reimportava
-      const reimports = personalImports(page);
-      await groupProjects;
+    const importGroup = page.waitForRequest((r) => r.url().endsWith('/import-gitlab/'));
+    const groupProjects = groupProjectsRequest(page);
+    await groupSelect(page).click();
+    await page.getByRole('option', { name: GROUP_LABEL }).click();
+    expect((await importGroup).postDataJSON()).toEqual({ gitlab_group_id: JOAO_GROUP.id });
+    // a partir daqui a organização atual é a do grupo; o defeito voltava para o pessoal e reimportava
+    const reimports = personalImports(page);
+    await groupProjects;
 
-      await expect(groupSelect(page)).toHaveText(GROUP_LABEL);
-      await expect(productSelect(page)).toHaveText('MeasureSoftGram');
-      await expect(projectNames(page)).toHaveText(FIRST_PAGE);
-      await expect(groupSelect(page)).toHaveText(GROUP_LABEL);
-      expect(reimports).toEqual([]);
-    }
-  );
+    await expect(groupSelect(page)).toHaveText(GROUP_LABEL);
+    await expect(productSelect(page)).toHaveText('MeasureSoftGram');
+    await expect(projectNames(page)).toHaveText(FIRST_PAGE);
+    await expect(groupSelect(page)).toHaveText(GROUP_LABEL);
+    expect(reimports).toEqual([]);
+  });
 });
 
 test.describe('@BUG12.01-CA2 A organização atual de um grupo abre a importação com esse grupo, casado pelo id', () => {
@@ -81,19 +78,16 @@ test.describe('@BUG12.01-CA2 A organização atual de um grupo abre a importaç�
     await page.addInitScript(() => localStorage.setItem('selectedOrgId', JSON.stringify('1')));
   });
 
-  test.fixme(
-    'o seletor mostra o grupo joao, e não o namespace pessoal joao (bug: o OrganizationProvider descarta gitlab_group_id e gitlab_user_id da lista; OrganizationProvider.tsx:90-97)',
-    async ({ page }) => {
-      const reimports = personalImports(page);
-      const groupProjects = groupProjectsRequest(page);
-      await page.goto(IMPORT_PATH);
-      await expect(page.getByRole('heading', { name: 'Importação de Projetos' })).toBeVisible();
-      await groupProjects;
+  test('o seletor mostra o grupo joao, e não o namespace pessoal joao', async ({ page }) => {
+    const reimports = personalImports(page);
+    const groupProjects = groupProjectsRequest(page);
+    await page.goto(IMPORT_PATH);
+    await expect(page.getByRole('heading', { name: 'Importação de Projetos' })).toBeVisible();
+    await groupProjects;
 
-      await expect(groupSelect(page)).toHaveText(GROUP_LABEL);
-      await expect(productSelect(page)).toHaveText('MeasureSoftGram');
-      await expect(projectNames(page)).toHaveText(FIRST_PAGE);
-      expect(reimports).toEqual([]);
-    }
-  );
+    await expect(groupSelect(page)).toHaveText(GROUP_LABEL);
+    await expect(productSelect(page)).toHaveText('MeasureSoftGram');
+    await expect(projectNames(page)).toHaveText(FIRST_PAGE);
+    expect(reimports).toEqual([]);
+  });
 });
