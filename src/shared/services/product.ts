@@ -26,8 +26,8 @@ export interface ProductFormData {
   key?: string;
 }
 
-/** O produto como o Service devolve no detalhe, com a organização dona. */
-export type ProductDetail = Product & Pick<ProductFormData, 'organizationId'>;
+/** O detalhe do produto no Service: a organização e os repositórios vêm como URLs da API. */
+export type ProductDetail = Product & { organization: string; repositories: string[] };
 
 class ProductQuery {
   async getAllProducts(organizationId: string) {

@@ -33,8 +33,7 @@ function repository(id: number, name: string, tsqmi: number | null): ReleaseDash
   return {
     id,
     name,
-    tsqmi: { value: tsqmi, created_at: tsqmi === null ? null : '2026-10-16T18:40:00-03:00' },
-    characteristics: []
+    tsqmi: { value: tsqmi, created_at: tsqmi === null ? null : '2026-10-16T18:40:00-03:00' }
   };
 }
 
@@ -55,7 +54,6 @@ export function releaseRepositories(
       start_at: String(release.start_at),
       end_at: String(release.end_at)
     },
-    characteristics: [],
     repositories
   };
 }

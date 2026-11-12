@@ -183,7 +183,7 @@ describe('ProductsCreation Component', () => {
       value: {
         name: editingProductTitle,
         description: editingProductDesc,
-        organizationId: 123,
+        organization: 'http://localhost:8080/api/v1/organizations/123/',
       },
     });
 
@@ -222,7 +222,7 @@ describe('ProductsCreation Component', () => {
       value: {
         name: editingProductTitle,
         description: editingProductDesc,
-        organizationId: 123,
+        organization: 'http://localhost:8080/api/v1/organizations/123/',
       },
     });
     mockUpdateProduct.mockResolvedValue({ type: 'success' });
@@ -254,7 +254,7 @@ describe('ProductsCreation Component', () => {
       value: {
         name: editingProductTitle,
         description: editingProductDesc,
-        organizationId: 123,
+        organization: 'http://localhost:8080/api/v1/organizations/123/',
       },
     });
     mockUpdateProduct.mockResolvedValue({
@@ -284,7 +284,7 @@ describe('ProductsCreation Component', () => {
       value: {
         name: editingProductTitle,
         description: editingProductDesc,
-        organizationId: 123,
+        organization: 'http://localhost:8080/api/v1/organizations/123/',
       },
     });
     mockUpdateProduct.mockResolvedValue({

@@ -35,7 +35,7 @@ const ProductsCreation: React.FC = () => {
           if (result.type === 'success') {
             setName(result.value.name);
             setDescription(result.value.description || '');
-            setOrganizationId(result.value.organizationId || 0);
+            // o detalhe traz a organização como URL, não o id: o formulário usa a organização da rota (id_organization)
           }
         }
         catch (e) {
