@@ -8,7 +8,7 @@ let capturedEvents: any = null;
 let capturedOption: any = null;
 
 jest.mock('next/dynamic', () => () => {
-  const MockECharts = React.forwardRef(({ onEvents, option }: any, ref: any) => {
+  const MockECharts = React.forwardRef(({ onEvents, option }: any, _ref: any) => {
     capturedEvents = onEvents;
     capturedOption = option;
     return (

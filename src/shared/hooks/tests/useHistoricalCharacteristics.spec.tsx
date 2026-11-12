@@ -69,11 +69,11 @@ describe('useHistoricalCharacteristics', () => {
     });
 
     expect(api.get).toHaveBeenCalled();
-    await waitFor(() => result.current.isLoading === true);
+    await waitFor(() => (result.current as unknown as { isLoading: boolean }).isLoading === true);
     rerender();
-    await waitFor(() => result.current.isLoading === false);
+    await waitFor(() => (result.current as unknown as { isLoading: boolean }).isLoading === false);
     rerender();
-    await waitFor(() => result.current.isLoading === false);
+    await waitFor(() => (result.current as unknown as { isLoading: boolean }).isLoading === false);
     rerender();
     await expect(result.current).resolves.toMatchSnapshot();
   });

@@ -157,7 +157,6 @@ function SideMenu() {
     }
     const timer = window.setTimeout(prefetchAll, 1000);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefetchPaths]);
 
   return (
@@ -182,7 +181,6 @@ function SideMenu() {
               endIcon={isDashboardMenuOpen ? <FiChevronUp fontSize={20} /> : <FiChevronDown fontSize={20} />}
               text="Dashboards"
               tooltip="Dashboards"
-              path=""
               disable={!currentProduct}
               selected={isAnyDashboardSelected}
               onClick={() => setIsDashboardMenuOpen((prev) => !prev)}

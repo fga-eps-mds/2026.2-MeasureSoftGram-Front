@@ -10,9 +10,7 @@ jest.mock('@services/api', () => jest.fn());
 // Mock SWR Infinite
 jest.mock('swr/infinite', () => jest.fn());
 
-const mockApi = require('@services/api');
-
-const mockUseSWRInfinite = useSWRInfinite as jest.MockedFunction<typeof useSWRInfinite>;
+const mockUseSWRInfinite = useSWRInfinite as unknown as jest.Mock;
 
 describe('useRequestInfinite', () => {
   const mockGetRequest = jest.fn();

@@ -11,8 +11,7 @@ interface AuthFooterProps {
 export const AuthFooter = memo(({ text, link, changeAuthState }: AuthFooterProps) => (
   <Box display="flex" gap="0.25rem">
     <Typography sx={{ fontSize: '0.9rem' }}>{text}</Typography>
-    {/*  eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-    <Link sx={{ fontSize: '0.9rem' }} component="button" href="#" onClick={changeAuthState}>
+    <Link sx={{ fontSize: '0.9rem' }} component="button" onClick={changeAuthState}>
       {link}
     </Link>
   </Box>

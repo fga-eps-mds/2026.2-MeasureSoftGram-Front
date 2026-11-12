@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { downloadCsv } from '@utils/exportCsv';
 import { QUALITY_BANDS } from '@utils/qualityBands';
 import PulseChart, { getReferenceRelease } from '../PulseChart';
+import type { TsqmiReleasePoint } from '@customTypes/product';
 
 const mockUsePulseChartData = jest.fn();
 const mockUseProductQualityBands = jest.fn();
@@ -276,7 +277,6 @@ describe('<PulseChart />', () => {
 
     const endDate = getByLabelText('Até');
     const exportButton = getByRole('button', { name: 'Exportar .csv' });
-    // eslint-disable-next-line no-bitwise
     expect(endDate.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -285,7 +285,6 @@ describe('<PulseChart />', () => {
     const { getByTestId, getByLabelText } = render(<PulseChart organizationId="1" productId="1" />);
 
     const chart = getByTestId('echarts-mock');
-    // eslint-disable-next-line no-bitwise
     expect(chart.compareDocumentPosition(getByLabelText('De')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -311,7 +310,8 @@ describe('<PulseChart />', () => {
   });
 
   it('a variação da barra lateral não usa a release cuja janela inclui a última medição', () => {
-    const tsqmi = (value: number) => ({ value });
+    // só o valor importa aqui; os outros campos do ponto não entram na conta
+    const tsqmi = (value: number) => ({ value }) as TsqmiReleasePoint;
     const releases = [
       { id: 1, name: 'Release 1', version: 'Release 1', end_at: '2026-08-10T12:00:00Z', tsqmi: tsqmi(0.9) },
       // encerra depois da última medição (21/08): o indicador dela é essa mesma medição

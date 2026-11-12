@@ -72,8 +72,9 @@ jest.mock('@utils/pathDestructer', () => ({
   getPathId: jest.fn((str: string) => (str ? str.split('-') : []))
 }));
 
-const mockedRepository = repository as jest.Mocked<typeof repository>;
-const mockedProductQuery = productQuery as jest.Mocked<typeof productQuery>;
+// os mocks devolvem só os campos que o hook lê
+const mockedRepository = repository as unknown as Record<keyof typeof repository, jest.Mock>;
+const mockedProductQuery = productQuery as unknown as Record<keyof typeof productQuery, jest.Mock>;
 
 describe('useQuery', () => {
   let logSpy: jest.SpyInstance;

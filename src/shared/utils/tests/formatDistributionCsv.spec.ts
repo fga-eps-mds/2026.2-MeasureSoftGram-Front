@@ -74,7 +74,7 @@ describe('formatDistributionCsv', () => {
     const charts = formatDistributionCsvs(distribution());
 
     Object.values(charts).forEach((chart) => {
-      expect(chart.columns.slice(0, 4).map((column) => column.title)).toEqual(FILTER_TITLES);
+      expect(chart.columns.slice(0, 4).map((column: { title: string }) => column.title)).toEqual(FILTER_TITLES);
       expect(chart.rows[0]).toMatchObject(TSQMI_FILTERS);
     });
     expect(Object.values(charts).map((chart) => chart.name)).toEqual([

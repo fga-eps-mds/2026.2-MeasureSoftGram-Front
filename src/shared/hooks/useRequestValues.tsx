@@ -74,7 +74,8 @@ export function useRequestValues({
   let returnData = _.cloneDeep(data?.results ?? []);
 
   if (addHistoricalTSQMI && !_.isEmpty(returnData) && !_.find(returnData, { key: 'TSQMI' })) {
-    returnData.push(historicalTSQMI);
+    // como antes: o histórico do TSQMI pode ainda não ter chegado
+    returnData.push(historicalTSQMI as Historical);
   }
 
   if (returnData?.length && collectionSource) {

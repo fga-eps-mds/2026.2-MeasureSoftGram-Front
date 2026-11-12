@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import api from './api';
 import { stripTrailingSlashes } from '../utils/stripTrailingSlashes';
 
@@ -101,11 +101,11 @@ class Repository {
     }
   }
 
-  getRepository(organizationId: string, productId: string, repositoryId: string): Promise<Result<any>> {
+  getRepository(organizationId: string, productId: string, repositoryId: string): Promise<AxiosResponse<any>> {
     return this.apiClient.get(`${buildRepositoryBasePath(organizationId, productId, repositoryId)}/`);
   }
 
-  getHistorical(props: HistoricalCharacteristicsProps): Promise<Result<any>> {
+  getHistorical(props: HistoricalCharacteristicsProps): Promise<AxiosResponse<any>> {
     const { organizationId, entity, productId, repositoryId } = props;
     const basePath = buildRepositoryBasePath(organizationId as string, productId as string, repositoryId as string);
     return this.apiClient.get(`${basePath}/historical-values/${entity}/`);

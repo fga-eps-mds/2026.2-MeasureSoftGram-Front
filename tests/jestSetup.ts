@@ -16,7 +16,6 @@ export const createMockedRoute = (
     prefetch: jest.fn().mockResolvedValue(undefined),
    } as unknown as ReturnType<typeof import('@hooks/useRouter').useRouter>);
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.fetch = jest.fn();
 

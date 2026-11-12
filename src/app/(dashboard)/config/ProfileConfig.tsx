@@ -17,7 +17,6 @@ const ProfileConfig: React.FC = () => {
         setApiToken(`Token ${res.value.key}`); // Changed to use template literals
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleToggleVisibility = () => {

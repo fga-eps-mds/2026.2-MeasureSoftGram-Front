@@ -211,6 +211,8 @@ export interface ReleasesPaginated {
 }
 
 export interface Characteristic {
+  /** A chave da característica (ex.: reliability), presente no planejado. */
+  key?: string;
   name: string;
   value: number;
   diff: number;
@@ -347,6 +349,8 @@ export interface ReleaseDashboardRepository {
   name: string;
   /** Indicador Total da Qualidade (TSQMI) do repositório na release. */
   tsqmi: ReleaseValue;
+  /** O Service também devolve as características; o Front não as usa nesta tela. */
+  characteristics?: unknown[];
 }
 
 /**
@@ -355,6 +359,7 @@ export interface ReleaseDashboardRepository {
  */
 export interface ReleaseDashboardCharacteristics {
   release: ReleaseDashboardRelease;
+  characteristics?: unknown[];
   repositories: ReleaseDashboardRepository[];
 }
 

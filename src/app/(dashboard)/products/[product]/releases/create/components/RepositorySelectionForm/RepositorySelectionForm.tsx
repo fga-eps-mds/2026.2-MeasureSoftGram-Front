@@ -36,7 +36,6 @@ export default function RepositorySelectionForm({ organizationId, productId, wat
           setLoading(false);
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, productId, setValue]);
 
   const handleToggle = (id: number) => {

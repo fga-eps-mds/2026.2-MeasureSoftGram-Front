@@ -1,4 +1,3 @@
-import React from 'react';
 import { useRequestValues } from '@hooks/useRequestValues';
 import { renderHook, waitFor } from '@testing-library/react';
 import api from '@services/api';

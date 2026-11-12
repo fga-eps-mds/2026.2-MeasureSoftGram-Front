@@ -27,7 +27,7 @@ describe('Auth', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    window.location = originalLocation as string & Location;
   });
 
   afterAll(() => {

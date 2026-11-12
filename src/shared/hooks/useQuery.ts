@@ -18,7 +18,6 @@ export function useQuery() {
   const { repositories } = useRepositoryList(routeOrganizationId, routeProductId);
   useEffect(() => {
     if (repositories) setRepositoryList(repositories);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repositories]);
 
   const loadRepositoriesNoContext = async (organizationId: string, productId: string): Promise<Repository[]> => {
@@ -35,7 +34,7 @@ export function useQuery() {
     if (currentProduct && String(currentProduct.id) === String(productId)) return;
     try {
       const result = await productQuery.getProductById(organizationId, productId);
-      setCurrentProduct(result.value);
+      setCurrentProduct('value' in result ? result.value : undefined);
     } catch (error) {
       console.error(error);
     }
@@ -70,7 +69,6 @@ export function useQuery() {
     if (routeOrganizationId && routeProductId) {
       loadProduct(routeOrganizationId, routeProductId).catch((error) => console.error(error));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query?.product]);
 
   return { handleRepositoryAction, loadRepositoriesNoContext, loadProduct };

@@ -65,7 +65,6 @@ export default function CharacteristicsBalanceForm({
           <Switch
             data-testid="allowBalanceGoal"
             checked={dinamicBalance}
-            // eslint-disable-next-line react/jsx-no-bind
             onChange={() => setDinamicBalance(!dinamicBalance)}
             color="primary" 
           />
@@ -102,7 +101,6 @@ export default function CharacteristicsBalanceForm({
                   data-testid={`characteristic-${characteristic.key}`}
                   sx={{ minHeight: "15rem" }}
                   value={characteristic.goal}
-                  // eslint-disable-next-line react/jsx-no-bind
                   onChange={(event: any) => handleCharacteristicChange(event, characteristic.key)}
                   orientation="vertical"
                   valueLabelDisplay="auto"

@@ -22,7 +22,7 @@ const nameOf = (key: string) => `Nome ${key}`;
 
 const comparisonsOf = (repositoryName: string) => {
   const { planned, accomplished } = analysis();
-  const repository = accomplished.find((item) => item.repository_name === repositoryName);
+  const repository = accomplished?.find((item) => item.repository_name === repositoryName);
   return comparePlannedAccomplished(planned, repository?.characteristics);
 };
 

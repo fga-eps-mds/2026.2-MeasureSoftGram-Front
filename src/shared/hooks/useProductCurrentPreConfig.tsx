@@ -14,7 +14,7 @@ export function useProductCurrentPreConfig() {
     currentOrganization?.id && currentProduct?.id
       ? `/v1/organizations/${currentOrganization.id}/products/${currentProduct.id}/current/release-config/`
       : null,
-    (url) => {
+    (url: string) => {
       setLoading();
       return api
         .get(url)

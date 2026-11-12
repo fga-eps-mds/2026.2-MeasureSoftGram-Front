@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import {
   PreConfigEntitiesRelationship,
   MeasuresHistory,
@@ -27,12 +26,15 @@ export interface ProductFormData {
   key?: string;
 }
 
+/** O produto como o Service devolve no detalhe, com a organização dona. */
+export type ProductDetail = Product & Pick<ProductFormData, 'organizationId'>;
+
 class ProductQuery {
   async getAllProducts(organizationId: string) {
     return api.get(`/v1/organizations/${organizationId}/products/`);
   }
 
-  async getProductById(organizationId: string, productId: string): Promise<Result<ProductFormData>> {
+  async getProductById(organizationId: string, productId: string): Promise<Result<ProductDetail>> {
     try {
       const response = await api.get(`/v1/organizations/${organizationId}/products/${productId}/`);
       return { type: 'success', value: response?.data };
@@ -339,7 +341,7 @@ class ProductQuery {
     };
   }
 
-  getReleaseList(organizationId: string, productId: string, releaseId?: number): GetRequest {
+  getReleaseList(organizationId: string, productId: string, _releaseId?: number): GetRequest {
     if (!organizationId || !productId) return null;
     const url = `/v1/organizations/${organizationId}/products/${productId}/release/`;
     return {

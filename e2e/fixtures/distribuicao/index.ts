@@ -22,7 +22,8 @@ export const DISTRIBUTION_API = {
   distribution: `${PRODUCT_API}/analysis-distribution/`
 };
 
-type Distribution = typeof tsqmi;
+/** Os JSONs variam no resto (summary, metric_type); a função só mexe na release e no repositório. */
+type Distribution = Pick<typeof tsqmi, 'release' | 'repository'> & Record<string, unknown>;
 
 /** Uma resposta por nível e chave pedidos (?level=&key=); no TSQMI a chave não vai na URL. */
 const distributions: Record<string, Distribution> = {

@@ -56,7 +56,6 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
   const savedKey = savedLimits.join(';');
   useEffect(() => {
     setDrafts(formatLimits(savedLimits));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedKey]);
 
   const errors = getLimitErrors(drafts);

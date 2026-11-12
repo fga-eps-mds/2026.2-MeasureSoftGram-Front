@@ -80,7 +80,7 @@ describe('RepositoryForm', () => {
   });
 
   it('Renders correctly and allows input', async () => {
-    const { getByLabelText, getByText } = render(
+    render(
       <RepositoryForm />
     );
 

@@ -70,7 +70,7 @@ describe('ProductsCreation Component', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    window.location = originalLocation as string & Location;
   });
 
   it('renders the "Nome" field', () => {

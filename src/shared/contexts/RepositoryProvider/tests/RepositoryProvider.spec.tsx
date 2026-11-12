@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
+import type { Repository } from '@customTypes/repository';
 import { RepositoryProvider, useRepositoryContext } from '../RepositoryProvider';
 
 describe('RepositoryContext', () => {
@@ -22,10 +23,7 @@ describe('RepositoryContext', () => {
       const {
         repositoryList, setRepositoryList,
         currentRepository, setCurrentRepository,
-        characteristics, setCharacteristics,
-        latestTSQMI, setLatestTSQMI,
-        characteristicBadgeUrls, setCharacteristicBadgeUrls,
-        repositoriesLatestTsqmi, setRepositoriesLatestTsqmi
+        characteristics
       } = useRepositoryContext();
 
       return (
@@ -33,8 +31,8 @@ describe('RepositoryContext', () => {
           <span data-testid="repo-len">{repositoryList?.length || 0}</span>
           <span data-testid="curr-repo">{currentRepository?.name || 'none'}</span>
           <span data-testid="char-len">{characteristics.length}</span>
-          <button onClick={() => setRepositoryList([{ id: 1, name: 'Repo 1', description: '', created_at: '', updated_at: '' }])}>Set List</button>
-          <button onClick={() => setCurrentRepository({ id: 2, name: 'Repo 2', description: '', created_at: '', updated_at: '' })}>Set Curr</button>
+          <button onClick={() => setRepositoryList([({ id: 1, name: 'Repo 1', description: '', created_at: '', updated_at: '' } as unknown as Repository)])}>Set List</button>
+          <button onClick={() => setCurrentRepository(({ id: 2, name: 'Repo 2', description: '', created_at: '', updated_at: '' } as unknown as Repository))}>Set Curr</button>
           <button onClick={() => setRepositoryList([])}>Clear List</button>
         </div>
       );
@@ -80,8 +78,8 @@ describe('RepositoryContext', () => {
             localStorage.setItem('selectedRepositoryId', '"99"');
             window.dispatchEvent(new Event('local-storage'));
             setRepositoryList([
-              { id: 1, name: 'Repo 1', description: '', created_at: '', updated_at: '' },
-              { id: 99, name: 'Repo 99', description: '', created_at: '', updated_at: '' }
+              ({ id: 1, name: 'Repo 1', description: '', created_at: '', updated_at: '' } as unknown as Repository),
+              ({ id: 99, name: 'Repo 99', description: '', created_at: '', updated_at: '' } as unknown as Repository)
             ]);
           }}>Set List</button>
         </div>

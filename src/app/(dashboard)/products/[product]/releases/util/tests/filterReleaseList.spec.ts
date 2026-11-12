@@ -1,4 +1,4 @@
-import { IReleases, ReleasesPaginated } from '@customTypes/product';
+import { ReleasesPaginated } from '@customTypes/product';
 import filterReleaseList from '../filterReleaseList';
 
 describe('Filter Release List', () => {

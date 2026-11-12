@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FiBox } from 'react-icons/fi';
 import LetterAvatar from '@components/LetterAvatar';
 import { useProductContext } from '@contexts/ProductProvider';

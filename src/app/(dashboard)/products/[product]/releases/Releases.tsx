@@ -64,7 +64,7 @@ const Releases: React.FC = () => {
                 <SearchButton
                   placeHolder={t('searchPlaceholder')}
                   aria-label={t('searchButtonLabel')}
-                  onInput={(e) => setName(e.target.value)}
+                  onInput={(e) => setName((e.target as HTMLInputElement).value)}
                 />
               </Box>
             </Grid>

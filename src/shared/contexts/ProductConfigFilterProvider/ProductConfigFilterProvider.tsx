@@ -28,7 +28,6 @@ export default function ProductConfigFilterProvider({ children }: Props) {
       setConfigFilter,
       hasKey
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [configFilter, setConfigFilter]
   );
 

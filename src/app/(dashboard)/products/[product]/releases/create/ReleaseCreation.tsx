@@ -52,7 +52,7 @@ function ReleaseCreation() {
       goal: 0,
       release_name: '',
       description: '',
-      repositories_ids: process.env.NODE_ENV === 'test' ? ['1'] : []
+      repositories_ids: process.env.NODE_ENV === 'test' ? [1] : []
     }
   });
 
@@ -112,7 +112,6 @@ function ReleaseCreation() {
 
       void getPreConfig();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, routerParams.product]);
 
   function mergeWithDefault(current: PreConfigData, defaultData: PreConfigData): PreConfigData {
@@ -149,20 +148,16 @@ function ReleaseCreation() {
 
   function formatConfig(data: PreConfigData, currentReleaseGoal: any): PreConfigData {
     data.characteristics.forEach((characteristic: Characteristic) => {
-      // eslint-disable-next-line no-param-reassign
       characteristic.goal = currentReleaseGoal.data[characteristic.key] ?? 0;
       if (characteristic.weight > 0) {
-        // eslint-disable-next-line no-param-reassign
         characteristic.active = true;
       }
       characteristic.subcharacteristics.forEach((subcharacteristic: Subcharacteristic) => {
         if (subcharacteristic.weight > 0 && characteristic.active) {
-          // eslint-disable-next-line no-param-reassign
           subcharacteristic.active = true;
         }
         subcharacteristic.measures.forEach((measure: Measure) => {
           if (measure.weight > 0 && subcharacteristic.active) {
-            // eslint-disable-next-line no-param-reassign
             measure.active = true;
           }
         });
@@ -231,14 +226,14 @@ function ReleaseCreation() {
   function renderStep(): React.ReactNode {
     switch (activeStep) {
       case 0:
-        return <RepositorySelectionForm organizationId={organizationId} productId={productId} register={register} watch={watch} setValue={setValue} />
-      case 1:// eslint-disable-next-line react/jsx-no-bind
+        return <RepositorySelectionForm organizationId={organizationId} productId={productId} watch={watch} setValue={setValue} />
+      case 1: 
         return <BasicInfoForm configPageData={configPageData!} trigger={trigger} register={register} errors={errors} watch={watch} followLastConfig={followLastConfig} setFollowLastConfig={handleSetFollowLastConfig} />
-      case 2:// eslint-disable-next-line react/jsx-no-bind
+      case 2: 
         return <ModelConfigForm changeRefValue={changeRefValue} setChangeRefValue={handleChangeRefValue} configPageData={configPageData!} setConfigPageData={setConfigPageData} />
-      case 3:// eslint-disable-next-line react/jsx-no-bind
+      case 3: 
         return <ReferenceValuesForm configPageData={configPageData!} defaultPageData={defaultPageData!} setConfigPageData={setConfigPageData} />
-      case 4:// eslint-disable-next-line react/jsx-no-bind
+      case 4: 
         return <CharacteristicsBalanceForm characteristicRelations={balanceMatrix} configPageData={configPageData!} setConfigPageData={setConfigPageData} dinamicBalance={dinamicBalance} setDinamicBalance={handleChangeDinamicBalance} />
       default:
         break
@@ -486,29 +481,24 @@ function ReleaseCreation() {
         </Box>
       </Styles.Body >
       <ConfirmModal
-        // eslint-disable-next-line react/jsx-no-bind
         setIsModalOpen={setShowChangeDateModal}
         text={t('conflictDates')}
         btnConfirmText={t('continue')}
         btnDismissText={t('back')}
         isModalOpen={showChangeDateModal}
-        // eslint-disable-next-line react/jsx-no-bind
         handleConfirmBtnClick={handleReleaseDateModal}
         handleDismissBtnClick={() => setShowChangeDateModal(false)}
       />
       <ConfirmModal
-        // eslint-disable-next-line react/jsx-no-bind
         setIsModalOpen={setShowConfirmationModal}
         text={activeStep === 2 ? t('alertRefValue') : t('alertDinamicBalance')}
         btnConfirmText={t('continue')}
         btnDismissText={t('back')}
         isModalOpen={showConfirmationModal}
-        /* eslint-disable no-unused-expressions */
         handleDismissBtnClick={() => {
           setShowConfirmationModal(false)
           activeStep === 2 ? setChangeRefValue(false) : setDinamicBalance(false)
         }}
-        // eslint-disable-next-line react/jsx-no-bind
         handleConfirmBtnClick={handleModalBtnClick} />
     </>
   );

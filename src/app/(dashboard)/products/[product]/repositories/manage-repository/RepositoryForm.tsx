@@ -65,8 +65,8 @@ const RepositoryForm: React.FC = () => {
     { value: 'azure repos', label: 'Azure Repos', icon: <AzureIcon /> },
     { value: 'outros', label: 'Outros', icon: <OutrosIcon /> },
   ];
-  const [errorMessage, setErrorMessage] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [, setErrorMessage] = useState('');
+  const [, setOpenSnackbar] = useState(false);
 
   // Os contextos chegam vazios no primeiro render e escolhem o item atual num efeito depois de a lista carregar:
   // até lá, vazio não significa "sem organização".
@@ -131,7 +131,7 @@ const RepositoryForm: React.FC = () => {
           'update',
           currentOrganization?.id || '',
           currentProduct?.id || '',
-          router.query.id,
+          router.query.id as string,
           data
         );
       } else {
@@ -148,7 +148,7 @@ const RepositoryForm: React.FC = () => {
         toast.success(isEditMode ? t('edit.sucess') : t('register.sucess'));
         void router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}/repositories`);
       } else if (result.type === 'error') {
-        handleResultError(result.error);
+        handleResultError(result.error as AxiosError<ApiErrorResponse>);
       }
     } catch (error: any) {
       handleCatchError(error);

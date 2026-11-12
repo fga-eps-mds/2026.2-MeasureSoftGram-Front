@@ -3,6 +3,7 @@ import { fireEvent, render } from '@testing-library/react';
 import { OrganizationProvider } from '@contexts/OrganizationProvider';
 import { ProductProvider } from '@contexts/ProductProvider';
 import { useRouter } from '@hooks/useRouter';
+import type { IReleases } from '@customTypes/product';
 import ReleasesTable from '../ReleasesTable';
 
 jest.mock('@hooks/useRouter', () => ({
@@ -27,7 +28,7 @@ describe('ReleasesTable component', () => {
         end_at: '2022-01-05T10:00:00Z',
         goal: {}
       }
-    ];
+    ] as unknown as IReleases[];
 
     const { getByTestId } = render(
       <OrganizationProvider>
@@ -37,7 +38,7 @@ describe('ReleasesTable component', () => {
       </OrganizationProvider>
     );
 
-    const firstRow = getByTestId('repository-row').firstChild;
+    const firstRow = getByTestId('repository-row').firstChild as HTMLElement;
     expect(firstRow.textContent).toBe(FIRST_RELEASE_NAME);
     expect(firstRow.nextSibling?.textContent).toBe('01 de janeiro de 2022');
     expect(firstRow.nextSibling?.nextSibling?.textContent).toBe('05 de janeiro de 2022');
@@ -52,7 +53,7 @@ describe('ReleasesTable component', () => {
         end_at: '2022-01-05T10:00:00Z',
         goal: {}
       }
-    ];
+    ] as unknown as IReleases[];
 
     const { getByTestId } = render(
       <OrganizationProvider>
@@ -62,7 +63,7 @@ describe('ReleasesTable component', () => {
       </OrganizationProvider>
     );
 
-    const firstRow = getByTestId('repository-row').firstChild;
+    const firstRow = getByTestId('repository-row').firstChild as HTMLElement;
     fireEvent.click(firstRow);
     expect(useRouter().push).toHaveBeenCalled() as jest.Mocked<any>;
   });

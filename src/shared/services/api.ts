@@ -18,6 +18,7 @@ api.interceptors.response.use(
       if (!pathname.startsWith('/auth')) {
         setFlashMessage({ type: 'warning', text: 'Sua sessão expirou. Entre novamente.' });
         const returnTo = encodeURIComponent(pathname + search);
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- fora do React (interceptor do axios), sem o router; recarrega sem a sessão
         window.location.href = `/auth?returnTo=${returnTo}`;
       }
     }

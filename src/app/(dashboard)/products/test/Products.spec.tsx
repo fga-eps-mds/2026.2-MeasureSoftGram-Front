@@ -493,7 +493,7 @@ describe('Products Component', () => {
     });
 
     afterEach(() => {
-      window.location = originalLocation;
+      window.location = originalLocation as string & Location;
       jest.restoreAllMocks();
     });
 
@@ -776,7 +776,7 @@ describe('Products Component', () => {
       });
 
       const assigned = (window.location.assign as jest.Mock).mock.calls[0][0];
-      window.location = originalLocation;
+      window.location = originalLocation as string & Location;
 
       expect(assigned).toBe('/auth/oauth/gitlab?returnTo=%2Fproducts&reauthorize=1');
     });

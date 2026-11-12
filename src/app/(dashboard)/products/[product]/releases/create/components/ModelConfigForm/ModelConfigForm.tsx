@@ -18,7 +18,6 @@ export default function ModelConfigForm({ configPageData, setConfigPageData, cha
 
   function calculateNewWeight(event: React.ChangeEvent<HTMLInputElement>, inputValue: number, currentWeightSum: number): number {
     const { type } = event.target;
-    // eslint-disable-next-line no-nested-ternary
     let newWeight = type === 'checkbox' ? 0 : type === 'number' ? Number(event.target.value) : Number(inputValue);
 
     if (currentWeightSum + newWeight > 100) {
@@ -81,7 +80,6 @@ export default function ModelConfigForm({ configPageData, setConfigPageData, cha
     }));
   }
 
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   function handleMeasureChange(event: React.ChangeEvent<HTMLInputElement>, inputValue: number,
     characteristicKey: string, subcharacteristicKey: string, measureKey: string) {
     const { checked, type } = event.target;
@@ -139,7 +137,6 @@ export default function ModelConfigForm({ configPageData, setConfigPageData, cha
               label={t(`characteristics.${characteristic.key}`)}
               labelKey={characteristic.key}
               inputValue={characteristic.weight}
-              // eslint-disable-next-line react/jsx-no-bind
               setInputValue={handleCharacteristicChange}
               checkboxValue={characteristic.active}
             />
@@ -175,7 +172,6 @@ export default function ModelConfigForm({ configPageData, setConfigPageData, cha
                   backgroundColor: "transparent",
                   borderColor: "#00000040",
                   borderRadius: 3,
-                  // eslint-disable-next-line sonarjs/no-duplicate-string
                   margin: '0 1rem 1rem !important'
                 }}>
                 <AccordionSummary expandIcon={<ExpandMore />}>
@@ -189,7 +185,6 @@ export default function ModelConfigForm({ configPageData, setConfigPageData, cha
                       labelKey={subcharacteristic.key}
                       secLabel={characteristic.key}
                       inputValue={subcharacteristic.weight}
-                      // eslint-disable-next-line react/jsx-no-bind
                       setInputValue={handleSubcharacteristicChange}
                       checkboxValue={subcharacteristic.active}
                     />
@@ -270,7 +265,6 @@ export default function ModelConfigForm({ configPageData, setConfigPageData, cha
                               secLabel={subcharacteristic.key}
                               terLabel={characteristic.key}
                               inputValue={measure.weight}
-                              // eslint-disable-next-line react/jsx-no-bind
                               setInputValue={handleMeasureChange}
                               checkboxValue={measure.active}
                             />

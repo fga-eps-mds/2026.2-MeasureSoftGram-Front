@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, act, waitFor, fireEvent } from '@testing-library/react';
 import { productQuery } from '@services/product';
+import type { Product } from '@customTypes/product';
 import * as OrgContext from '@contexts/OrganizationProvider';
 import * as LocalStorageHook from '@hooks/useLocalStorage';
 import { ProductProvider, useProductContext } from '../ProductProvider';
@@ -100,10 +101,10 @@ describe('ProductProvider', () => {
       return (
         <div>
           <span data-testid="curr-prod">{currentProduct?.name || 'none'}</span>
-          <button onClick={() => updateProductList([{ id: 'prod-2', name: 'Prod 2', description: '', github_id: 1 }])}>
+          <button onClick={() => updateProductList([{ id: 'prod-2', name: 'Prod 2', description: '', github_id: 1 } as unknown as Product])}>
             Update List
           </button>
-          <button onClick={() => setCurrentProduct({ id: 'prod-3', name: 'Prod 3', description: '', github_id: 2 })}>
+          <button onClick={() => setCurrentProduct({ id: 'prod-3', name: 'Prod 3', description: '', github_id: 2 } as unknown as Product)}>
             Set Curr
           </button>
         </div>

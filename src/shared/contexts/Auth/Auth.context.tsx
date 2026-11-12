@@ -73,6 +73,7 @@ export const AuthProvider = ({ children, initialUser = null, provider = 'credent
 
     await endSession();
     setFlashMessage({ type, text: message });
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarrega a página para descartar o estado da sessão encerrada
     globalThis.location.assign('/');
   }, []);
 

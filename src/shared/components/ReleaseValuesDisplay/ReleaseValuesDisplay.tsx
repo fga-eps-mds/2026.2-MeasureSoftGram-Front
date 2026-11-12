@@ -14,7 +14,7 @@ export default function ReleaseValuesDisplay({ planned, accomplised, normDiff }:
   const { t } = useTranslation('release');
 
   const [spacing, setSpacing] = useState(0);
-  const [normDiffMarginLeft, setNormDiffMarginLeft] = useState(0);
+  const [, setNormDiffMarginLeft] = useState(0);
   const [diff, setDiff] = useState<number[]>([]);
 
   useEffect(() => {

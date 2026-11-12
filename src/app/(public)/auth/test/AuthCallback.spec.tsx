@@ -23,7 +23,7 @@ describe('AuthCallback', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    window.location = originalLocation as string & Location;
   });
 
   it('mostra só o loading, sem nenhum botão', () => {

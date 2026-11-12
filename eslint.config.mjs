@@ -39,7 +39,12 @@ export default defineConfig([
   {
     files: ['**/*.spec.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
     ...jest.configs['flat/recommended'],
-    languageOptions: { globals: { ...jest.environments.globals.globals } }
+    languageOptions: { globals: { ...jest.environments.globals.globals } },
+    rules: {
+      ...jest.configs['flat/recommended'].rules,
+      // os helpers `expectAlgo(...)` e o clickButtonAndWaitFor fazem as asserções dos testes
+      'jest/expect-expect': ['warn', { assertFunctionNames: ['expect', 'expect*', 'clickButtonAndWaitFor'] }]
+    }
   },
   prettier,
   {
@@ -61,6 +66,19 @@ export default defineConfig([
       'no-console': 'off',
       'no-empty': 'off',
       eqeqeq: 'off'
+    }
+  },
+  {
+    // a regra base não entende tipos: acusava os nomes de parâmetro das assinaturas e das interfaces
+    files: ['**/*.{ts,tsx,mts,cts}'],
+    rules: {
+      'no-unused-vars': 'off',
+      // como o no-unused-vars do ESLint 8, que a develop usava: o catch sem uso do erro e o resto que descarta campos
+      // não contam; o prefixo `_` marca o parâmetro que a assinatura exige e o corpo não usa
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { caughtErrors: 'none', ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+      ]
     }
   },
   globalIgnores(['.next/**', 'coverage/**', 'public/**', 'node_modules/**', 'next-env.d.ts', 'src/shared/i18n/locales/**'])

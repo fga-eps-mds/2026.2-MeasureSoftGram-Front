@@ -86,6 +86,7 @@ function CopyBadgeModal({ badgeUrl, badgeLabel = 'MeasureSoftGram' }: CopyBadgeM
                   {badgeMarkdown}
                 </Box>
                 <Box display="flex" justifyContent="center" mb={2}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- o badge é um SVG da API, com a URL pública que vai para o README; o next/image o passaria pelo otimizador */}
                   <img src={resolvedBadgeUrl} alt="Badge Preview" style={{ height: '20px' }} />
                 </Box>
                 <Box

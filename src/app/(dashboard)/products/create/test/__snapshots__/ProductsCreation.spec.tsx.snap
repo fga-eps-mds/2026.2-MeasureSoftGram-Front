@@ -21,9 +21,7 @@ Object {
           >
             description
           </div>
-          <form
-            sx="[object Object]"
-          >
+          <form>
             <div
               class="sc-b5d02efd-5 dGbvpc"
             >
@@ -190,7 +188,7 @@ Object {
                 class="sc-b5d02efd-6 bVVEQe"
               >
                 <button
-                  class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary sc-1abc015f-0 qInHZ css-1rwt2y5-MuiButtonBase-root-MuiButton-root"
+                  class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary sc-7329237d-0 kLNLGz css-1rwt2y5-MuiButtonBase-root-MuiButton-root"
                   style="width: 200px;"
                   tabindex="0"
                   type="button"
@@ -201,7 +199,7 @@ Object {
                   />
                 </button>
                 <button
-                  class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary sc-1abc015f-0 qInHZ css-sghohy-MuiButtonBase-root-MuiButton-root"
+                  class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary sc-7329237d-0 kLNLGz css-sghohy-MuiButtonBase-root-MuiButton-root"
                   style="width: 200px;"
                   tabindex="0"
                   type="submit"
@@ -235,9 +233,7 @@ Object {
         >
           description
         </div>
-        <form
-          sx="[object Object]"
-        >
+        <form>
           <div
             class="sc-b5d02efd-5 dGbvpc"
           >
@@ -404,7 +400,7 @@ Object {
               class="sc-b5d02efd-6 bVVEQe"
             >
               <button
-                class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary sc-1abc015f-0 qInHZ css-1rwt2y5-MuiButtonBase-root-MuiButton-root"
+                class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary sc-7329237d-0 kLNLGz css-1rwt2y5-MuiButtonBase-root-MuiButton-root"
                 style="width: 200px;"
                 tabindex="0"
                 type="button"
@@ -415,7 +411,7 @@ Object {
                 />
               </button>
               <button
-                class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary sc-1abc015f-0 qInHZ css-sghohy-MuiButtonBase-root-MuiButton-root"
+                class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary sc-7329237d-0 kLNLGz css-sghohy-MuiButtonBase-root-MuiButton-root"
                 style="width: 200px;"
                 tabindex="0"
                 type="submit"

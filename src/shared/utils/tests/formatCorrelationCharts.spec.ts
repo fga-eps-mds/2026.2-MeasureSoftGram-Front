@@ -1,4 +1,3 @@
-import { RepositoryCorrelation } from '@customTypes/product';
 import {
   CORRELATION_COLORS,
   correlationColor,

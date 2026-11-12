@@ -26,7 +26,7 @@ interface Props {
   maxCount?: number;
 }
 
-const HoverIcon = styled('span')(({ theme }) => ({
+const HoverIcon = styled('span')(() => ({
   cursor: 'pointer',
   transition: 'opacity 0.3s',
   '&:hover': {
@@ -44,6 +44,8 @@ const platformIcons = {
   'azure repos': () => <SiMicrosoftazure size="1.5em" />,
   'outros': () => <FaCodeBranch size="1.5em" />,
 };
+
+type PlatformKey = keyof typeof platformIcons;
 
 const NO_REPOSITORIES: Repository[] = [];
 
@@ -71,7 +73,6 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
     if (!currentProduct && organizationId && productId) {
       void loadProduct(organizationId, productId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -165,7 +166,7 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
           <TableRow>
             <TableCell style={{ paddingBottom: '35px' }}>Nome</TableCell>
             <TableCell align="right" style={{ paddingBottom: '35px' }}>
-              <SearchButton onInput={(e) => handleRepositoriesFilter(e.target.value)} label={t('input-placeholder')} />
+              <SearchButton onInput={(e) => handleRepositoriesFilter((e.target as HTMLInputElement).value)} label={t('input-placeholder')} />
             </TableCell>
             <TableCell style={{ paddingBottom: '35px' }} />
           </TableRow>
@@ -184,12 +185,12 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
                   {repo.url ? (
                     <a href={repo.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                       <HoverIcon>
-                        {platformIcons[repo.platform] ? platformIcons[repo.platform]() : platformIcons.outros()}
+                        {(platformIcons[repo.platform as PlatformKey] ?? platformIcons.outros)()}
                       </HoverIcon>
                     </a>
                   ) : (
                     <HoverIcon>
-                      {platformIcons[repo.platform] ? platformIcons[repo.platform]() : platformIcons.outros()}
+                      {(platformIcons[repo.platform as PlatformKey] ?? platformIcons.outros)()}
                     </HoverIcon>
                   )}
                   <span data-testid="repo-name" style={{ marginLeft: 10 }}>

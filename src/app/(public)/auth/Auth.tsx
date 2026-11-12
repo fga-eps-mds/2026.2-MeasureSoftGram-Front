@@ -32,6 +32,7 @@ const Auth: React.FC = () => {
     const loginOrigin = getLoginOrigin();
     const origin = loginOrigin && loginOrigin !== window.location.origin ? loginOrigin : '';
 
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- /auth/oauth é um Route Handler que redireciona ao provedor, não uma página: precisa de navegação completa
     window.location.assign(`${origin}/auth/oauth/${provider}${query}`);
   };
 

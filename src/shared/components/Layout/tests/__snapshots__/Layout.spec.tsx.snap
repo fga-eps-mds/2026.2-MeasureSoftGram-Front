@@ -21,7 +21,7 @@ Object {
             >
               <svg
                 aria-hidden="true"
-                class="MuiSvgIcon-root MuiSvgIcon-color#f5f5f5 MuiSvgIcon-fontSizeLarge css-tzssek-MuiSvgIcon-root"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeLarge css-tzssek-MuiSvgIcon-root"
                 data-testid="NavigateBeforeRoundedIcon"
                 focusable="false"
                 viewBox="0 0 24 24"
@@ -640,7 +640,7 @@ Object {
           >
             <svg
               aria-hidden="true"
-              class="MuiSvgIcon-root MuiSvgIcon-color#f5f5f5 MuiSvgIcon-fontSizeLarge css-tzssek-MuiSvgIcon-root"
+              class="MuiSvgIcon-root MuiSvgIcon-fontSizeLarge css-tzssek-MuiSvgIcon-root"
               data-testid="NavigateBeforeRoundedIcon"
               focusable="false"
               viewBox="0 0 24 24"

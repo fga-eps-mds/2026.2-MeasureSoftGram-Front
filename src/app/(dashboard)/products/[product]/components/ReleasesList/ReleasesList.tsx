@@ -6,7 +6,7 @@ import { productQuery } from '@services/product';
 import { useProductContext } from '@contexts/ProductProvider';
 import { useOrganizationContext } from '@contexts/OrganizationProvider';
 import { useRequest } from '@hooks/useRequest';
-import { ReleasesPaginated } from '@customTypes/product';
+import { IReleases, ReleasesPaginated } from '@customTypes/product';
 import { useRouter } from '@hooks/useRouter';
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import ReleasesTable from './ReleasesTable';
@@ -20,11 +20,11 @@ function ReleasesList() {
   const router = useRouter();
   const { t } = useTranslation('sidebar');
 
-  const { data: release, isLoading } = useRequest<any>(
+  const { data: release, isLoading } = useRequest<ReleasesPaginated>(
     productQuery.getReleaseList(currentOrganization?.id as string, currentProduct?.id as string)
   );
 
-  const releaseList: ReleasesPaginated = release?.results || [];
+  const releaseList: IReleases[] = release?.results || [];
 
   if (isLoading) return <Skeleton />;
 

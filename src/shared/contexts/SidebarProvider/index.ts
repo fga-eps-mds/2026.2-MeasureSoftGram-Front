@@ -1,1 +1,1 @@
-export { default } from './SideMenuProvider';
+export * from './SideMenuProvider';

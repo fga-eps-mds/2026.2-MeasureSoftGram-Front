@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import SideMenu from '../SideMenu';
 
 const mockPush = jest.fn();
-const mockPrefetch = jest.fn(() => Promise.resolve());
+const mockPrefetch = jest.fn<Promise<void>, [string]>(() => Promise.resolve());
 
 jest.mock('@hooks/useRouter', () => ({
   useRouter: () => ({

@@ -67,7 +67,6 @@ const About: React.FC = () => {
 
   const navListData: Array<string> = cardsData.map(cardData => cardData.id);
 
-  // eslint-disable-next-line no-shadow
 
   return (
     <>

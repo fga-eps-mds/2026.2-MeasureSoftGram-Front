@@ -13,7 +13,7 @@ interface Props {
 
 export interface IProductContext {
   currentProduct?: Product | null;
-  setCurrentProduct: (product: Product | null) => void;
+  setCurrentProduct: (product: Product | null | undefined) => void;
   productsList?: Product[];
   updateProductList: (products: Product[]) => void;
   loadAllProducts: () => Promise<void>;

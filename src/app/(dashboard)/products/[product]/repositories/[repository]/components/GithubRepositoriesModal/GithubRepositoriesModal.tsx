@@ -2,8 +2,6 @@ import { Box, Typography, Modal, TextField, List, ListItemButton, ListItem } fro
 import { useEffect, useState } from 'react';
 import { getUserRepos, Repo } from '@services/user';
 import { useRouter } from '@hooks/useRouter';
-import { useOrganizationContext } from '@contexts/OrganizationProvider';
-import { useProductContext } from '@contexts/ProductProvider';
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import { toast } from 'react-toastify';
 import { getPathId } from '@utils/pathDestructer';
@@ -86,7 +84,6 @@ export function GithubRepositoriesModal({ handleCloseModal, open }: GithubReposi
   useEffect(() => {
     if (code)
       void fetchUserRepos()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code])
 
   function handleRepositoriesFilter(name: string) {

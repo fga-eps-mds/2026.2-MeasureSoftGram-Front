@@ -7,7 +7,7 @@ export type dateFormats = 'numeric' | 'long';
 
 export const formatDate = (date: Date | number | string, format: 'numeric' | 'long' = 'long'): string => {
   const currentLanguage: string | null = window.localStorage.getItem('locale_lang');
-  const locale = currentLanguage ? locales[currentLanguage] : 'pt-BR';
+  const locale = currentLanguage ? locales[currentLanguage as keyof typeof locales] : 'pt-BR';
 
   const formatMap: Record<string, Intl.DateTimeFormatOptions> = {
     numeric: {
@@ -33,9 +33,9 @@ export const formatDate = (date: Date | number | string, format: 'numeric' | 'lo
   }
 };
 
-export const formatDateTime = (date: Date | number | string, format: dateFormats = 'long'): string => {
+export const formatDateTime = (date: Date | number | string, _format: dateFormats = 'long'): string => {
   const currentLanguage: string | null = window.localStorage.getItem('locale_lang');
-  const locale = currentLanguage ? locales[currentLanguage] : 'pt-BR';
+  const locale = currentLanguage ? locales[currentLanguage as keyof typeof locales] : 'pt-BR';
 
   const formatMap = {
     numeric: {

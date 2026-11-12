@@ -30,7 +30,6 @@ jest.mock('@hooks/useRequest', () => ({
 jest.mock('../util/filterReleaseList', () => jest.fn(() => []));
 
 interface MockPaginationProps {
-  // eslint-disable-next-line no-unused-vars
   onChange: (_event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 

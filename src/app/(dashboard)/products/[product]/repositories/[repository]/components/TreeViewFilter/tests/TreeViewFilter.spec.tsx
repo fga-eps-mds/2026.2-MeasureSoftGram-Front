@@ -80,7 +80,7 @@ const data = [
 
 describe('<TreeViewFilter />', () => {
   it("should render correctly", () => {
-    useProductCurrentPreConfig.mockReturnValue({
+    (useProductCurrentPreConfig as jest.Mock).mockReturnValue({
       data,
     })
 
@@ -92,7 +92,7 @@ describe('<TreeViewFilter />', () => {
   });
 
   it("should render correctly with selected nodes", () => {
-    useProductCurrentPreConfig.mockReturnValue({
+    (useProductCurrentPreConfig as jest.Mock).mockReturnValue({
       data,
     })
 
@@ -101,12 +101,12 @@ describe('<TreeViewFilter />', () => {
     });
 
     fireEvent.click(container.querySelector('input[type="checkbox"]') as Element);
-    rerender();
+    rerender(undefined as unknown as React.ReactElement);
     expect(container).toMatchSnapshot();
   });
 
   it("should render correctly with selected nodes and expanded nodes", () => {
-    useProductCurrentPreConfig.mockReturnValue({
+    (useProductCurrentPreConfig as jest.Mock).mockReturnValue({
       data,
     })
 
@@ -115,12 +115,12 @@ describe('<TreeViewFilter />', () => {
     });
 
     fireEvent.click(container.querySelector('div[class="MuiTreeItem-label"]') as Element);
-    rerender();
+    rerender(undefined as unknown as React.ReactElement);
     expect(container).toMatchSnapshot();
   });
 
   it("should render correctly with input search", () => {
-    useProductCurrentPreConfig.mockReturnValue({
+    (useProductCurrentPreConfig as jest.Mock).mockReturnValue({
       data,
     })
 
@@ -129,7 +129,7 @@ describe('<TreeViewFilter />', () => {
     });
 
     fireEvent.change(container.querySelector('input[type="text"]') as Element, { target: { value: 'test' } });
-    rerender();
+    rerender(undefined as unknown as React.ReactElement);
     expect(container).toMatchSnapshot();
   });
 });

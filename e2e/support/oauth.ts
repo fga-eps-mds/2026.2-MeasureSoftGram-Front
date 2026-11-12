@@ -11,7 +11,7 @@ export async function followOAuthRedirectsInPage(page: Page): Promise<void> {
     const location = response.headers().location;
     if (!location || !/^https?:\/\//.test(location)) return route.fulfill({ response });
 
-    const headers = { ...response.headers(), 'content-type': 'text/html' };
+    const headers: Record<string, string> = { ...response.headers(), 'content-type': 'text/html' };
     delete headers.location;
     return route.fulfill({
       status: 200,

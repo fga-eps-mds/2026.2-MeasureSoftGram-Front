@@ -25,6 +25,7 @@ function CharacteristicsBadges() {
           return (
             <Box key={key} display="flex" alignItems="center" gap="4px">
               <Tooltip title={key} placement="top">
+                {/* eslint-disable-next-line @next/next/no-img-element -- o badge é um SVG da API, com a URL pública que vai para o README; o next/image o passaria pelo otimizador */}
                 <img
                   src={url}
                   alt={`${key} Badge`}

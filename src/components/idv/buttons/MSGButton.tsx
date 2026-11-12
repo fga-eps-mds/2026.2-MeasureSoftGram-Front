@@ -43,7 +43,6 @@ const MSGButton: React.FC<ButtonProps> = ({
   variant = 'primary'
 }) => (
   <MSGButtonStyle
-    // eslint-disable-next-line react/button-has-type
     type={type}
     onClick={onClick}
     disabled={disabled}

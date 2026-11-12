@@ -35,12 +35,13 @@ export const useQuery = () => {
         repositoryId,
         entity: 'tsqmi'
       };
-      const { data: result } = await repository.getLatest(props);
+      const response = await repository.getLatest(props);
+      if (!response) return;
+      const { data: result } = response;
       const badgeUrl = repository.getTsqmiBadgeUrl(props);
       setLatestTSQMI(result);
       setLatestTSQMIBadgeUrl(badgeUrl);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.log(error);
     }
   }
@@ -64,7 +65,6 @@ export const useQuery = () => {
         setCurrentProduct(result.value);
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(error);
     }
   }
@@ -80,7 +80,6 @@ export const useQuery = () => {
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query?.product, organizationList]);
 
   // Carrega os dados do repositório quando o query muda
@@ -102,7 +101,6 @@ export const useQuery = () => {
       void loadRepository(organizationId, productId, repositoryId);
       void loadLatestTsqmi(organizationId, productId, repositoryId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query?.repository]);
 
   // Re-seta o currentProduct após o ProductProvider resetá-lo (ao trocar de organização).
@@ -116,7 +114,6 @@ export const useQuery = () => {
         void loadProduct(organizationId, productId);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProduct, currentOrganization, query?.product]);
 
   return { repositoryNotFound };

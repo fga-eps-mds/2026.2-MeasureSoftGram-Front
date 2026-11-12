@@ -71,7 +71,6 @@ export default function QualityBandsRuler({ segments }: { segments: RulerSegment
       <Box position="relative" height="0" aria-hidden>
         {limits.map((limit, index) => (
           <Typography
-            // eslint-disable-next-line react/no-array-index-key
             key={index}
             fontSize="12px"
             color={DASHBOARD_COLORS.mutedText}

@@ -12,12 +12,14 @@ jest.mock('@contexts/ProductProvider', () => ({
   useProductContext: () => ({
     currentProduct: {
       name: `aoba`
-    }
+    },
+    // o useQuery da tabela carrega o produto da rota depois do teste: sem a função, o erro saía no console
+    setCurrentProduct: jest.fn()
   })
 }));
 
 jest.mock('@contexts/RepositoryProvider', () => ({
-  useRepositoryContext: () => ({})
+  useRepositoryContext: () => ({ setRepositoryList: jest.fn() })
 }));
 
 jest.mock('@hooks/useRouter', () => ({

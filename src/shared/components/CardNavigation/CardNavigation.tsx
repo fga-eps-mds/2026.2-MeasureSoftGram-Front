@@ -9,7 +9,7 @@ interface Props {
   id: string;
   name: string;
   url: string;
-  description: string;
+  description?: string;
 }
 
 const CardNavigation: React.FC<Props> = ({ id, name, url, description }) => (

@@ -9,8 +9,8 @@ import CopyBadgeModal from '../CopyBadgeModal';
 const BADGE_STALENESS_DAYS = 30;
 
 interface TsqmiBadgeProps {
-  latestTSQMI: TsqmiValue;
-  latestTSQMIBadgeUrl: string;
+  latestTSQMI?: TsqmiValue | null;
+  latestTSQMIBadgeUrl?: string;
   showCopyButton?: boolean;
 }
 
@@ -41,6 +41,7 @@ function TsqmiBadge({ latestTSQMI, latestTSQMIBadgeUrl, showCopyButton = true }:
     >
       <Box display="flex" alignItems="center" gap="8px">
         <Tooltip title={t('repository.badge-tooltip', 'Qualidade do repositório')} placement="bottom">
+          {/* eslint-disable-next-line @next/next/no-img-element -- o badge é um SVG da API, com a URL pública que vai para o README; o next/image o passaria pelo otimizador */}
           <img
             src={latestTSQMIBadgeUrl}
             alt="TSQMI Badge"

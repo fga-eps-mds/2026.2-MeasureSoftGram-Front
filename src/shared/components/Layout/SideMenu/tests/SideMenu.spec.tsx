@@ -1,4 +1,4 @@
-import { findAllByText, findByText, render, } from '@testing-library/react';
+import { findAllByText, render, } from '@testing-library/react';
 import React, { ReactNode } from 'react';
 import { RepositoryProvider } from '@contexts/RepositoryProvider';
 import { OrganizationProvider } from '@contexts/OrganizationProvider';
@@ -37,7 +37,9 @@ jest.mock('../SideMenuWrapper', () => jest.fn().mockImplementation(() => {
           productsList: products,
           currentProduct: undefined,
           setCurrentProduct: jest.fn(),
-          updateProductList: jest.fn()
+          updateProductList: jest.fn(),
+          loadAllProducts: jest.fn(),
+          hasLoadedProducts: true
         }
 
     const menuItems: SideMenuItemType[] = [

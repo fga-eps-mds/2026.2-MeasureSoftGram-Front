@@ -29,7 +29,6 @@ describe('bundledBackend', () => {
   });
 
   it('tem os mesmos arquivos de public/locales nos dois idiomas', async () => {
-    // eslint-disable-next-line global-require
     const fs = require('fs');
     const files = (language: string) =>
       fs

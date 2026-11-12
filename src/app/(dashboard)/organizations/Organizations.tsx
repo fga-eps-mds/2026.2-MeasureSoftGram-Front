@@ -60,7 +60,6 @@ const Organizations: React.FC = () => {
       };
       void fetchOrganizationData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.edit]);
 
 

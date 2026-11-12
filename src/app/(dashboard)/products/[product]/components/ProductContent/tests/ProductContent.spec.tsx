@@ -115,7 +115,7 @@ describe('<ProductContent />', () => {
 
   it('ao voltar a tela, pede o historico por release de novo, apesar dos 60 s do _app (Cenario 7)', async () => {
     (useRequest as jest.Mock).mockImplementation(jest.requireActual('@hooks/useRequest').useRequest);
-    let releaseHistory = WITHOUT_RELEASES;
+    let releaseHistory: typeof WITH_RELEASES | typeof WITHOUT_RELEASES = WITHOUT_RELEASES;
     (api.request as jest.Mock).mockImplementation(({ url }: { url: string }) =>
       Promise.resolve({ data: url.includes('release-history') ? releaseHistory : { results: [] } })
     );

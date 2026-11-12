@@ -395,7 +395,6 @@ describe('ReleaseInfo Component', () => {
 
     const { t } = useTranslation('plan_release');
 
-    // eslint-disable-next-line sonarjs/no-duplicate-string
     const releaseIntput = screen.getByTestId('apelido-release') as HTMLInputElement;
 
     fireEvent.change(releaseIntput, { target: { value: 'release 1' } });
@@ -527,9 +526,7 @@ describe('ReleaseInfo Component', () => {
 
     const { t } = useTranslation('plan_release');
 
-    // eslint-disable-next-line sonarjs/no-duplicate-string
     const releaseNameInput = screen.getByTestId('apelido-release') as HTMLInputElement;
-    // eslint-disable-next-line sonarjs/no-duplicate-string
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
     const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
@@ -1309,7 +1306,6 @@ describe('ReleaseInfo Component', () => {
   });
 
   it('should test release date change', async () => {
-    // eslint-disable-next-line sonarjs/no-duplicate-string
     const mockError = new Error('Erro ao verificar release') as any;
     mockError.response = {
       data: {

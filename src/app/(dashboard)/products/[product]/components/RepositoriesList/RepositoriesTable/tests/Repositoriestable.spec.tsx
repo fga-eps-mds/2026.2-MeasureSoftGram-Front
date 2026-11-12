@@ -65,16 +65,16 @@ const repoName = 'Repository 1';
 describe('RepositoriesTable', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useRouter.mockReturnValue({ push: jest.fn(), query: { product: '1-3-2024-measure' } });
-    useProductContext.mockReturnValue({ currentProduct: { id: '1', name: 'Product A' } });
-    useOrganizationContext.mockReturnValue({ currentOrganization: { id: '1' } });
-    useRepositoryContext.mockReturnValue({ repositoriesLatestTsqmi: { results: [] } });
-    useQuery.mockReturnValue({ handleRepositoryAction: jest.fn(), loadProduct: jest.fn() });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn(), query: { product: '1-3-2024-measure' } });
+    (useProductContext as jest.Mock).mockReturnValue({ currentProduct: { id: '1', name: 'Product A' } });
+    (useOrganizationContext as jest.Mock).mockReturnValue({ currentOrganization: { id: '1' } });
+    (useRepositoryContext as jest.Mock).mockReturnValue({ repositoriesLatestTsqmi: { results: [] } });
+    (useQuery as jest.Mock).mockReturnValue({ handleRepositoryAction: jest.fn(), loadProduct: jest.fn() });
   });
 
   it('renders repository list correctly', async () => {
     const mockRepositories = { data: { results: [{ id: 1, name: repoName, platform: 'github' }] } };
-    api.request.mockResolvedValue(mockRepositories);
+    (api.request as jest.Mock).mockResolvedValue(mockRepositories);
 
     await act(() => {
       renderTable();
@@ -90,7 +90,7 @@ describe('RepositoriesTable', () => {
 
   it('handles search input and filters repositories', async () => {
     const mockRepositories = { data: { results: [{ id: 1, name: repoName, platform: 'github' }] } };
-    api.request.mockResolvedValue(mockRepositories);
+    (api.request as jest.Mock).mockResolvedValue(mockRepositories);
 
     renderTable();
 
@@ -99,7 +99,7 @@ describe('RepositoriesTable', () => {
     });
 
     act(() => {
-      const searchInput = document.getElementById('search-bar');
+      const searchInput = document.getElementById('search-bar') as HTMLElement;
       fireEvent.change(searchInput, { target: { value: 'Repo' } });
     })
 
@@ -108,9 +108,9 @@ describe('RepositoriesTable', () => {
 
   it('removes the last repository from the table after deleting it', async () => {
     const mockRepositories = { data: { results: [{ id: 1, name: repoName, platform: 'github' }] } };
-    api.request.mockResolvedValue(mockRepositories);
+    (api.request as jest.Mock).mockResolvedValue(mockRepositories);
     const handleRepositoryAction = jest.fn().mockResolvedValue({ type: 'success' });
-    useQuery.mockReturnValue({ handleRepositoryAction, loadProduct: jest.fn() });
+    (useQuery as jest.Mock).mockReturnValue({ handleRepositoryAction, loadProduct: jest.fn() });
 
     renderTable();
 
@@ -136,9 +136,9 @@ describe('RepositoriesTable', () => {
   });
 
   it('o lápis leva à edição e a lixeira abre a confirmação, sem ir para a tela do projeto', async () => {
-    api.request.mockResolvedValue({ data: { results: [{ id: 1, name: repoName, platform: 'github' }] } });
+    (api.request as jest.Mock).mockResolvedValue({ data: { results: [{ id: 1, name: repoName, platform: 'github' }] } });
     const push = jest.fn();
-    useRouter.mockReturnValue({ push, query: { product: '1-3-2024-measure' } });
+    (useRouter as jest.Mock).mockReturnValue({ push, query: { product: '1-3-2024-measure' } });
 
     renderTable();
 
@@ -161,7 +161,7 @@ describe('RepositoriesTable', () => {
     const cache = new Map();
     const key = JSON.stringify({ url: '/v1/organizations/1/products/3/repositories/', method: 'get' });
     cache.set(key, { data: { data: { results: [{ id: 1, name: repoName, platform: 'github' }] } } });
-    api.request.mockReturnValue(new Promise(() => {}));
+    (api.request as jest.Mock).mockReturnValue(new Promise(() => {}));
 
     render(
       <SWRConfig value={{ provider: () => cache }}>

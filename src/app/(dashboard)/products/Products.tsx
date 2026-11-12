@@ -362,6 +362,7 @@ const Products: React.FC = () => {
 
   const handleReauthorize = () => {
     const targetProvider = provider === 'gitlab' ? 'gitlab' : 'github';
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- /auth/oauth é um Route Handler que redireciona ao provedor, não uma página: precisa de navegação completa
     window.location.assign(`/auth/oauth/${targetProvider}?returnTo=${encodeURIComponent('/products')}&reauthorize=1`);
   };
 
@@ -383,7 +384,6 @@ const Products: React.FC = () => {
 
   // `provider` fica fora das deps de propósito: trocar de provedor exige logout (US11.01),
   // que limpa a organização atual; reagir a ele aqui reimportaria a org do provedor antigo.
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   useEffect(() => {
     if (currentOrganization && providerNamespaces.length > 0) {
       const matchGo = findNamespaceOfOrg(providerNamespaces, currentOrganization);
@@ -505,7 +505,7 @@ const Products: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search size={20} />
+                  <Search />
                 </InputAdornment>
               )
             }}

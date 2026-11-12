@@ -1,11 +1,11 @@
 import { Product } from '@customTypes/product';
-import { ProductFormData, productQuery } from '@services/product';
+import { ProductDetail, ProductFormData, productQuery } from '@services/product';
 
 export const useProductQuery = () => {
   const createProduct = async (data: ProductFormData): Promise<Result<ProductFormData>> =>
     productQuery.createProduct(data);
 
-  const getProductById = async (organizationId: string, productId: string): Promise<Result<ProductFormData>> =>
+  const getProductById = async (organizationId: string, productId: string): Promise<Result<ProductDetail>> =>
     productQuery.getProductById(organizationId, productId);
 
   const updateProduct = async (productId: string, data: ProductFormData): Promise<Result<Product>> =>

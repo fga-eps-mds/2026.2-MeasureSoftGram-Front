@@ -25,9 +25,8 @@ export const useQuery = () => {
     if (currentProduct && String(currentProduct.id) === String(productId)) return;
     try {
       const result = await productQuery.getProductById(organizationId, productId);
-      setCurrentProduct(result.value);
+      setCurrentProduct('value' in result ? result.value : undefined);
     } catch (error) {
-      // eslint-disable-next-line no-console
     }
   }
 
@@ -41,18 +40,15 @@ export const useQuery = () => {
 
   useEffect(() => {
     if (repositories) setRepositoryList(repositories);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repositories]);
 
   useEffect(() => {
     if (latestTsqmi) setRepositoriesLatestTsqmi(latestTsqmi);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestTsqmi]);
 
   useEffect(() => {
     if (organizationId && productId) {
       void loadProduct(organizationId, productId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query?.product]);
 };

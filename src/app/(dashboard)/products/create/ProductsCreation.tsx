@@ -46,7 +46,6 @@ const ProductsCreation: React.FC = () => {
     }
   }, [router.query.id_product]);
 
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -90,7 +89,7 @@ const ProductsCreation: React.FC = () => {
             const finalOrgId = organizationId || (currentOrganizationId ? parseInt(currentOrganizationId as string, 10) : null);
             if (finalOrgId) {
               localStorage.setItem('selectedOrgId', JSON.stringify(finalOrgId.toString()));
-              const selectedOrg = organizationList?.find(org => org.id === finalOrgId);
+              const selectedOrg = organizationList?.find(org => String(org.id) === String(finalOrgId));
               if (selectedOrg) {
                 setCurrentOrganizations([selectedOrg]);
               }
@@ -118,7 +117,7 @@ const ProductsCreation: React.FC = () => {
           {t('description')}
         </Description>
 
-        <form onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        <form onSubmit={handleSubmit}>
           <Form>
             <TextField
               select

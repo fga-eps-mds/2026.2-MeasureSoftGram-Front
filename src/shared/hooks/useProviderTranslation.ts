@@ -27,7 +27,7 @@ export function useProviderTranslation(ns?: string | string[]) {
       return (baseT as any)(key, opts, ...rest);
     },
     [baseT, i18nContext]
-  ) as typeof baseT;
+  ) as unknown as typeof baseT;
 
   return { ...translation, t };
 }

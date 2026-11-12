@@ -3,7 +3,6 @@ import React from 'react';
 import { IReleases } from '@customTypes/product';
 
 import ReactEcharts from '@components/ECharts';
-import type ReactEchartsType from 'echarts-for-react';
 import formatCompareGoalsChart from '@utils/formatCompareGoalsChart';
 import { Box } from '@mui/material';
 import * as Styles from './styles';
