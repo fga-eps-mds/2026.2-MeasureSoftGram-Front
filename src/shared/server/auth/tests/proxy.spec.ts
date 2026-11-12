@@ -56,8 +56,8 @@ describe('proxy', () => {
       expect(location(response)).toBe(`${ORIGIN}/products/1-2-x?tab=1`);
     });
 
-    it.each(['//evil.com', '/\\evil.com', 'https://evil.com', '/auth', '/auth/error', '/'])(
-      'returnTo %s não serve de destino e cai em /home',
+    it.each(['//evil.com', '/\\evil.com', 'https://evil.com', '/\t/evil.com', '/\r\n/evil.com/x', '/auth', '/auth/error', '/'])(
+      'returnTo %j não serve de destino e cai em /home',
       async (returnTo) => {
         const response = await call(`/auth?returnTo=${encodeURIComponent(returnTo)}`, 'good');
 

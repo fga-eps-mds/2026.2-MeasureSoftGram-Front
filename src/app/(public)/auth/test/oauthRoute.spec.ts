@@ -75,7 +75,7 @@ describe('/auth/oauth/[provider]', () => {
     expect(location(response).searchParams.get('prompt')).toBe('select_account');
   });
 
-  it.each(['//evil.com', 'https://evil.com', '/auth', '/'])('descarta o returnTo %s', async (returnTo) => {
+  it.each(['//evil.com', 'https://evil.com', '/\t/evil.com', '/\r\n/evil.com/x', '/auth', '/'])('descarta o returnTo %j', async (returnTo) => {
     const response = await call('github', `?returnTo=${encodeURIComponent(returnTo)}`);
     const value = (stateCookie(response) as string).split(';')[0].split('=')[1];
 

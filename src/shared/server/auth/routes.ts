@@ -55,9 +55,23 @@ export const isProtectedPath = (pathname: string): boolean => {
   return PROTECTED_ROUTES.some((pattern) => matchesPattern(pattern, path));
 };
 
-/** '//host' e '/\host' o navegador trata como outro domínio. */
-export const isInternalPath = (path: unknown): path is string =>
-  typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/\\');
+const INTERNAL_BASE = 'http://internal.invalid';
+
+/**
+ * '//host' e '/\host' o navegador trata como outro domínio, e ele também descarta tab e quebra de linha antes de
+ * interpretar a URL ('/\t/host' vira '//host'). Por isso recusa caractere de controle e '\' em qualquer posição e,
+ * por garantia, confere que a URL resolvida continua na mesma origem.
+ */
+export const isInternalPath = (path: unknown): path is string => {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) return false;
+  if (/[\u0000-\u001f\u007f\\]/.test(path)) return false;
+
+  try {
+    return new URL(path, INTERNAL_BASE).origin === INTERNAL_BASE;
+  } catch {
+    return false;
+  }
+};
 
 /** Rotas de autenticação não servem de destino depois do login (levariam de volta ao login). */
 export const sanitizeReturnTo = (path: unknown): string | null => {

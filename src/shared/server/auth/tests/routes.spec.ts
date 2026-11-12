@@ -68,6 +68,11 @@ describe('routes', () => {
     it.each(['//evil.com', '/\\evil.com', 'https://evil.com', 'home', '', null, undefined, 3])('recusa %s', (path) =>
       expect(isInternalPath(path)).toBe(false)
     );
+
+    // o navegador descarta tab e quebra de linha: '/\t/evil.com' vira '//evil.com'
+    it.each(['/%09/evil.com', '/%0a/evil.com', '/%0d/evil.com', '/%0d%0a/evil.com/x', '/%00/evil.com', '/x\\..\\\\evil.com'].map((p) =>
+      decodeURIComponent(p)
+    ))('recusa %j', (path) => expect(isInternalPath(path)).toBe(false));
   });
 
   describe('sanitizeReturnTo', () => {
@@ -75,7 +80,7 @@ describe('routes', () => {
       expect(sanitizeReturnTo('/products/1-2-x?tab=1')).toBe('/products/1-2-x?tab=1');
     });
 
-    it.each(['/', '/auth', '/auth/', '/auth/error', '/auth?returnTo=%2Fhome', '/landing', '//evil.com', 'javascript:alert(1)', null])(
+    it.each(['/', '/auth', '/auth/', '/auth/error', '/auth?returnTo=%2Fhome', '/landing', '//evil.com', '/\t/evil.com', '/\r\n/evil.com/x', 'javascript:alert(1)', null])(
       'descarta %s',
       (path) => {
         expect(sanitizeReturnTo(path)).toBeNull();
