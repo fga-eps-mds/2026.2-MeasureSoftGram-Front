@@ -36,6 +36,41 @@ function hasAnalyses(repository: ReleaseDashboardRepository): boolean {
   return repository.tsqmi.value !== null;
 }
 
+/** A resposta é da release, do repositório, do nível e da entidade escolhidos (no TSQMI não há entidade). */
+function isSameSelection(
+  distribution: AnalysisDistribution,
+  releaseId: number | undefined,
+  repositoryId: number | undefined,
+  level: DistributionLevel,
+  entityKey: string | undefined
+): boolean {
+  return (
+    distribution.release.id === releaseId &&
+    distribution.repository.id === repositoryId &&
+    distribution.level === level &&
+    (level === 'tsqmi' || distribution.key === entityKey)
+  );
+}
+
+interface StatusInput {
+  hasError: boolean;
+  isLoadingReleases: boolean;
+  hasReleases: boolean;
+  hasNoRepositories: boolean;
+  hasNoEntities: boolean;
+  distribution?: AnalysisDistribution;
+}
+
+function distributionStatus(input: StatusInput): DistributionStatus {
+  if (input.hasError) return 'error';
+  if (input.isLoadingReleases) return 'loading';
+  if (!input.hasReleases) return 'noRelease';
+  if (input.hasNoRepositories) return 'noRepository';
+  if (input.hasNoEntities) return 'noEntities';
+  if (input.distribution) return input.distribution.period.count ? 'ready' : 'noAnalyses';
+  return 'loading';
+}
+
 /**
  * Dados da Distribuição Estatística (US21.03): os valores de uma entidade do modelo nas análises de um repositório na
  * release. Abre na release atual, no TSQMI e no primeiro repositório da release que tem análise. Os repositórios vêm
@@ -117,11 +152,7 @@ export function useDistributionDashboard(organizationId: string, productId: stri
     ? distributionRequest.data
     : undefined;
   const isUpdating =
-    !!distribution &&
-    (distribution.release.id !== release?.id ||
-      distribution.repository.id !== repository?.id ||
-      distribution.level !== level ||
-      (level !== 'tsqmi' && distribution.key !== selectedEntity?.key));
+    !!distribution && !isSameSelection(distribution, release?.id, repository?.id, level, selectedEntity?.key);
 
   // sem os ids da URL o pedido ainda nem começou, e isso também é carregamento
   const isLoadingReleases = !organizationId || !productId || releasesRequest.isLoading;
@@ -131,13 +162,14 @@ export function useDistributionDashboard(organizationId: string, productId: stri
     (level !== 'tsqmi' && (treeRequest.error || entitiesRequest.error)) ||
     distributionRequest.error;
 
-  let status: DistributionStatus = 'loading';
-  if (error) status = 'error';
-  else if (isLoadingReleases) status = 'loading';
-  else if (!releases.length) status = 'noRelease';
-  else if (isCurrentList && !repositories.length) status = 'noRepository';
-  else if (hasNoEntities) status = 'noEntities';
-  else if (distribution) status = distribution.period.count ? 'ready' : 'noAnalyses';
+  const status = distributionStatus({
+    hasError: !!error,
+    isLoadingReleases,
+    hasReleases: releases.length > 0,
+    hasNoRepositories: isCurrentList && !repositories.length,
+    hasNoEntities,
+    distribution
+  });
 
   const retry = () => {
     void releasesRequest.mutate();

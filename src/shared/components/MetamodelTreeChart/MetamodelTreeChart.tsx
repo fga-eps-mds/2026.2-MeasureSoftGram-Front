@@ -24,6 +24,33 @@ export interface MetamodelTreeChartProps {
   minHeight?: number;
 }
 
+const RENDER_START = 'metamodelo-render-start';
+const RENDER_END = 'metamodelo-render-end';
+const RENDER_TIME = 'metamodelo-render-time';
+
+/** Duração entre as marcas de início e fim, em ms, se o navegador souber medir. */
+function measureRenderTime(perf: Performance): number | undefined {
+  if (typeof perf.measure !== 'function') return undefined;
+  perf.measure(RENDER_TIME, RENDER_START, RENDER_END);
+  const measures = perf.getEntriesByName(RENDER_TIME);
+  const lastMeasure = measures[measures.length - 1];
+  return lastMeasure ? Math.round(lastMeasure.duration) : undefined;
+}
+
+/** Fecha a medição aberta quando a árvore chega e devolve a duração (CA8); undefined sem medição. */
+function finishRenderMeasure(): number | undefined {
+  const perf = typeof window === 'undefined' ? undefined : window.performance;
+  if (typeof perf?.getEntriesByName !== 'function' || typeof perf.mark !== 'function') return undefined;
+  if (perf.getEntriesByName(RENDER_START).length === 0) return undefined;
+  perf.mark(RENDER_END);
+  const duration = measureRenderTime(perf);
+  if (typeof perf.clearMarks === 'function') {
+    perf.clearMarks(RENDER_START);
+    perf.clearMarks(RENDER_END);
+  }
+  return duration;
+}
+
 export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
   treeData,
   onPerformanceMeasured,
@@ -42,7 +69,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof window.performance?.mark === 'function' && treeData) {
       try {
-        window.performance.mark('metamodelo-render-start');
+        window.performance.mark(RENDER_START);
       } catch (e) {
         // ignora se a marcação não for suportada
       }
@@ -50,39 +77,13 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
   }, [treeData]);
 
   const handleChartFinished = useCallback(() => {
-    if (
-      typeof window !== 'undefined' &&
-      typeof window.performance?.getEntriesByName === 'function' &&
-      typeof window.performance?.mark === 'function'
-    ) {
-      try {
-        const startMarks = window.performance.getEntriesByName('metamodelo-render-start');
-        if (startMarks.length > 0) {
-          window.performance.mark('metamodelo-render-end');
-          if (typeof window.performance.measure === 'function') {
-            window.performance.measure(
-              'metamodelo-render-time',
-              'metamodelo-render-start',
-              'metamodelo-render-end'
-            );
-            const measures = window.performance.getEntriesByName('metamodelo-render-time');
-            const lastMeasure = measures[measures.length - 1];
-            if (lastMeasure) {
-              const duration = Math.round(lastMeasure.duration);
-              setRenderMs(duration);
-              if (onPerformanceMeasured) {
-                onPerformanceMeasured(duration);
-              }
-            }
-          }
-          if (typeof window.performance.clearMarks === 'function') {
-            window.performance.clearMarks('metamodelo-render-start');
-            window.performance.clearMarks('metamodelo-render-end');
-          }
-        }
-      } catch (e) {
-        // ignora erro de medição
-      }
+    try {
+      const duration = finishRenderMeasure();
+      if (duration === undefined) return;
+      setRenderMs(duration);
+      onPerformanceMeasured?.(duration);
+    } catch (e) {
+      // ignora erro de medição
     }
   }, [onPerformanceMeasured]);
 
@@ -151,7 +152,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
     setIsAllExpanded((prev) => !prev);
     setExpandedPaths(null);
     if (typeof window !== 'undefined' && typeof window.performance?.mark === 'function') {
-      window.performance.mark('metamodelo-render-start');
+      window.performance.mark(RENDER_START);
     }
   };
 
