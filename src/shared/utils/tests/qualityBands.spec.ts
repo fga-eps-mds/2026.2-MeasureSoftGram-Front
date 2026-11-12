@@ -3,8 +3,15 @@ import {
   getQualityBand,
   getQualityBandClamped,
   getQualityVisualMapPieces,
-  QUALITY_BANDS
+  QUALITY_BANDS,
+  QualityBand
 } from '../qualityBands';
+
+const CUSTOM_BANDS: QualityBand[] = QUALITY_BANDS.map((band) => {
+  if (band.grade === 'B') return { ...band, min: 0.6, max: 0.85 };
+  if (band.grade === 'A') return { ...band, min: 0.85, max: 1 };
+  return band;
+});
 
 describe('QUALITY_BANDS', () => {
   it('cobre de 0 a 1 sem buracos, com as cores e os rótulos da US06.01', () => {
@@ -39,6 +46,11 @@ describe('getQualityBand', () => {
     expect(getQualityBand(-0.1)).toBeUndefined();
     expect(getQualityBand(1.01)).toBeUndefined();
   });
+
+  it('usa as faixas configuradas no produto quando informadas', () => {
+    expect(getQualityBand(0.82, CUSTOM_BANDS)?.grade).toBe('B');
+    expect(getQualityBand(0.85, CUSTOM_BANDS)?.grade).toBe('A');
+  });
 });
 
 describe('getQualityBandClamped', () => {
@@ -46,6 +58,11 @@ describe('getQualityBandClamped', () => {
     expect(getQualityBandClamped(-0.1).grade).toBe('E');
     expect(getQualityBandClamped(1.2).grade).toBe('A');
     expect(getQualityBandClamped(0.6).grade).toBe('B');
+  });
+
+  it('classifica com as faixas não padrão quando informadas', () => {
+    expect(getQualityBandClamped(0.82, CUSTOM_BANDS).grade).toBe('B');
+    expect(getQualityBandClamped(0.85, CUSTOM_BANDS).grade).toBe('A');
   });
 });
 
@@ -59,6 +76,14 @@ describe('formatQualityBandRange', () => {
       '0,80 a 1,00'
     ]);
   });
+
+  it('formata os intervalos de faixas não padrão com A começando em 0,85 e B terminando em 0,84', () => {
+    const bandB = CUSTOM_BANDS.find((band) => band.grade === 'B')!;
+    const bandA = CUSTOM_BANDS.find((band) => band.grade === 'A')!;
+
+    expect(formatQualityBandRange(bandB)).toBe('0,60 a 0,84');
+    expect(formatQualityBandRange(bandA)).toBe('0,85 a 1,00');
+  });
 });
 
 describe('getQualityVisualMapPieces', () => {
@@ -69,6 +94,16 @@ describe('getQualityVisualMapPieces', () => {
       { gte: 0.4, lt: 0.6, color: '#EBA133' },
       { gte: 0.6, lt: 0.8, color: '#0DC889' },
       { gte: 0.8, color: '#04724D' }
+    ]);
+  });
+
+  it('gera as peças do visualMap com os cortes das faixas não padrão', () => {
+    expect(getQualityVisualMapPieces(CUSTOM_BANDS)).toEqual([
+      { lt: 0.2, color: '#BE2E0E' },
+      { gte: 0.2, lt: 0.4, color: '#F16141' },
+      { gte: 0.4, lt: 0.6, color: '#EBA133' },
+      { gte: 0.6, lt: 0.85, color: '#0DC889' },
+      { gte: 0.85, color: '#04724D' }
     ]);
   });
 });

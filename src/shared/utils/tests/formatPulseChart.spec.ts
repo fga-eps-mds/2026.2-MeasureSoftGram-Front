@@ -6,11 +6,17 @@ import {
   COLOR_TOKENS,
   PulseRepositoryData,
 } from '../formatPulseChart';
-import { QUALITY_BANDS } from '../qualityBands';
+import { QUALITY_BANDS, QualityBand } from '../qualityBands';
 import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from '../toPulseSeries';
 
 /** Meia largura mínima do complexo do pulso, em milissegundos: o piso de `getPulseHalfWidth` para períodos curtos. */
 const HOUR = 60 * 60 * 1000;
+
+const CUSTOM_BANDS: QualityBand[] = QUALITY_BANDS.map((band) => {
+  if (band.grade === 'B') return { ...band, min: 0.6, max: 0.85 };
+  if (band.grade === 'A') return { ...band, min: 0.85, max: 1 };
+  return band;
+});
 
 
 describe('formatPulseChart Utility', () => {
@@ -35,9 +41,47 @@ describe('formatPulseChart Utility', () => {
       expect(getQualityStatus(-0.1).key).toBe('E');
       expect(getQualityStatus(1.2).key).toBe('A');
     });
+
+    it('classifica com as faixas configuradas no produto (A a partir de 0,85: 0,82 fica na faixa B)', () => {
+      expect(getQualityStatus(0.82, CUSTOM_BANDS)).toEqual({
+        key: 'B',
+        label: 'Muito bom',
+        color: '#0DC889',
+      });
+    });
   });
 
   describe('formatPulseChartOptions', () => {
+    it('aplica as faixas configuradas no produto à cor da série e dos pontos (0,82 sai na cor de B com A em 0,85)', () => {
+      const repos: PulseRepositoryData[] = [
+        {
+          id: 1,
+          name: 'repo',
+          measurements: [{ created_at: '2026-01-01T12:00:00Z', value: 0.82 }],
+          releases: [
+            {
+              id: 1,
+              name: 'R1',
+              version: 'R1',
+              end_at: '2026-01-01T12:00:00Z',
+              tsqmi: {
+                release_id: 1,
+                value: 0.82,
+                created_at: null,
+                previous_value: null,
+                variation: null,
+                variation_percent: null,
+              },
+            },
+          ],
+        },
+      ];
+
+      const options: any = formatPulseChartOptions(repos, {}, CUSTOM_BANDS);
+
+      expect(options.series[0].lineStyle.color).toBe('#0DC889');
+      expect(options.series[1].data[0].itemStyle.color).toBe('#0DC889');
+    });
     it('pinta o pulso com as 5 faixas, trocando a cor no instante da medição que muda de faixa', () => {
       const at = (day: number) => `2026-01-0${day}T12:00:00Z`;
       const ms = (day: number) => new Date(at(day)).getTime();

@@ -7,9 +7,11 @@ import { Box, Button, Container, Link, MenuItem, Paper, TextField, Typography } 
 import { NextPageWithLayout } from '@pages/_app.next';
 import getLayout from '@components/Layout';
 import DashboardCard, { dashboardCardSx, SkeletonBlock } from '@components/DashboardCard';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
 import ReleaseSelect from '@components/ReleaseSelect';
 import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
 import useRequireAuth from '@hooks/useRequireAuth';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { ReleaseDashboardSummary } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
@@ -34,7 +36,7 @@ import {
   formatTotalsCsv
 } from '@utils/formatOverviewCsv';
 import { getPathId } from '@utils/pathDestructer';
-import { QUALITY_BANDS, formatQualityBandRange } from '@utils/qualityBands';
+import { QualityBand, formatQualityBandRange } from '@utils/qualityBands';
 import { useTranslation } from 'react-i18next';
 import MSGAlert from '../../../../../components/idv/feedback';
 
@@ -165,13 +167,13 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
 }
 
 /** Legenda das 5 faixas do Indicador Total da Qualidade (US06.01), da melhor para a pior. */
-function QualityBandsLegend() {
+function QualityBandsLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box display="flex" flexDirection="column" gap="8px" data-testid="quality-bands-legend">
       <Typography fontWeight="bold" fontSize="13px" color={DASHBOARD_COLORS.text}>
         Faixas
       </Typography>
-      {[...QUALITY_BANDS].reverse().map((band) => (
+      {[...bands].reverse().map((band) => (
         <Box key={band.grade} display="flex" alignItems="center" gap="8px">
           <Box sx={{ width: 14, height: 14, borderRadius: '3px', backgroundColor: band.color, flexShrink: 0 }} />
           <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
@@ -189,6 +191,12 @@ const OverviewDashboard: NextPageWithLayout = () => {
   const { terms } = useProviderTerms();
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
+
+  const {
+    bands,
+    isError: isQualityBandsError,
+    retry: retryQualityBands
+  } = useProductQualityBands(organizationId, productId);
 
   const {
     releases,
@@ -237,6 +245,10 @@ const OverviewDashboard: NextPageWithLayout = () => {
     [characteristics, previousCharacteristics]
   );
   const releaseName = release?.release_name ?? '';
+  const tsqmiBarOptions = useMemo(
+    () => formatTsqmiBarOptions(tsqmiBars, releaseName, previousRelease?.release_name, bands),
+    [tsqmiBars, releaseName, previousRelease?.release_name, bands]
+  );
 
   const isLoadingCharacteristics = isLoadingReleases || (!!release && !characteristics);
   const tsqmiStatus = getStatus(characteristicsError, isLoadingCharacteristics, tsqmiBars.length === 0);
@@ -251,7 +263,7 @@ const OverviewDashboard: NextPageWithLayout = () => {
   const hasRadar = analysisStatus === 'ready' && hasAccomplishedValues(selectedRepository);
   const csv = {
     totals: formatTotalsCsv(releaseName, summaryError ? [] : getTotalItems(summary?.totals, terms.Repositories)),
-    indicator: formatIndicatorCsv(releaseName, tsqmiStatus === 'ready' ? tsqmiBars : []),
+    indicator: formatIndicatorCsv(releaseName, tsqmiStatus === 'ready' ? tsqmiBars : [], bands),
     plannedAccomplished: formatPlannedAccomplishedCsv(
       releaseName,
       repositoryName,
@@ -306,15 +318,16 @@ const OverviewDashboard: NextPageWithLayout = () => {
           onRetry={retryCharacteristics}
           headerAction={<ExportCsvButton dashboard={OVERVIEW_CSV.dashboard} chart={csv.indicator} />}
         >
+          {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}
           <Box display="flex" flexWrap="wrap" alignItems="center" gap="32px">
             <Box flex="1 1 480px" minWidth={0}>
               <ReactEcharts
-                option={formatTsqmiBarOptions(tsqmiBars, releaseName, previousRelease?.release_name)}
+                option={tsqmiBarOptions}
                 notMerge
                 style={{ height: Math.max(160, tsqmiBars.length * 34 + 40), width: '100%' }}
               />
             </Box>
-            <QualityBandsLegend />
+            <QualityBandsLegend bands={bands} />
           </Box>
         </DashboardCard>
 
