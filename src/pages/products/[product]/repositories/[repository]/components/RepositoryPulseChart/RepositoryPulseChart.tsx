@@ -11,6 +11,7 @@ import { useProviderTerms } from '@hooks/useProviderTerms';
 import { CsvChart } from '@utils/exportCsv';
 import { PULSE_CANVAS_FONT, PULSE_GRID, formatPulseChartOptions } from '@utils/formatPulseChart';
 import { PULSE_CSV, RepositoryPulseCsvRow } from '@utils/formatPulseCsv';
+import { QualityBand } from '@utils/qualityBands';
 import { useRepositoryPulse } from '../../hooks/useRepositoryPulse';
 
 const TITLE = 'Indicador das Características';
@@ -24,12 +25,14 @@ interface Props {
   pulse: ReturnType<typeof useRepositoryPulse>;
   /** O CSV das medições do período filtrado. */
   csv: CsvChart<RepositoryPulseCsvRow>;
+  /** A régua do produto (US30.02), a mesma do CSV. */
+  bands: QualityBand[];
 }
 
 /** Gráfico de pulso (metáfora do eletrocardiograma) de cada característica do repositório, como o pulso do produto. */
-export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
+export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Props>) {
   const { terms } = useProviderTerms();
-  const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS), [pulse.rows]);
+  const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS, bands), [pulse.rows, bands]);
   const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
   let status: 'loading' | 'error' | 'empty' | 'ready' = 'ready';
@@ -43,7 +46,7 @@ export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
       status={status}
       headerAction={
         <Box display="flex" alignItems="center" flexWrap="wrap" gap="12px">
-          <QualityLegend />
+          <QualityLegend bands={bands} />
           <ExportCsvButton dashboard={PULSE_CSV.repository} chart={csv} />
         </Box>
       }
@@ -88,6 +91,7 @@ export default function RepositoryPulseChart({ pulse, csv }: Readonly<Props>) {
               topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
               valueLabel="último valor"
               showIcon={false}
+              bands={bands}
             />
           ))}
           <ReactEcharts
