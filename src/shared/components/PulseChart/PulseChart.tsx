@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Button, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
+import QualityBandsUnavailableAlert from '@components/QualityBandsUnavailableAlert';
 import {
   PULSE_CANVAS_FONT,
   PULSE_GRID,
@@ -11,6 +12,7 @@ import {
 } from '@utils/formatPulseChart';
 import { PULSE_CSV, formatProductPulseCsv } from '@utils/formatPulseCsv';
 import { formatPulseReleaseTooltip } from '@utils/formatPulseReleaseTooltip';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { usePulseChartData } from './usePulseChartData';
 import { PulseChartFilters } from './PulseChartFilters';
 import { PulseChartRepoSidebar } from './PulseChartRepoSidebar';
@@ -76,6 +78,8 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
   const echartsRef = useRef<any>(null);
   const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
+  const { bands, isError: isQualityBandsError, retry: retryQualityBands } = useProductQualityBands(organizationId, productId);
+
   const {
     allRepositories,
     filteredRepositories,
@@ -94,7 +98,14 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     retry,
   } = usePulseChartData(organizationId, productId);
 
-  const chartOptions = formatPulseChartOptions(filteredRepositories, PULSE_OPTIONS);
+  const chartOptions = formatPulseChartOptions(
+    filteredRepositories,
+    {
+      ...PULSE_OPTIONS,
+      releaseTooltip: (points) => formatPulseReleaseTooltip(points, bands),
+    },
+    bands
+  );
 
   // Sem medição no período não há pulso para desenhar, mas a causa muda a instrução: o produto pode não ter
   // nenhum repositório, nunca ter sido analisado, ou só não ter medição na janela De/Até. Antes a tela dava
@@ -143,6 +154,11 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     >
       {/* Card do gráfico: título, subtítulo e legenda logo abaixo, à esquerda (protótipo) */}
       <Box sx={{ border: '1px solid #E0E0E0', borderRadius: '8px', padding: '24px' }}>
+        {isQualityBandsError && (
+          <Box marginBottom="16px">
+            <QualityBandsUnavailableAlert onRetry={retryQualityBands} />
+          </Box>
+        )}
         <Box display="flex" flexDirection="column" gap="4px" marginBottom="16px">
           <Typography variant="h6" fontWeight="bold" color="#1F2937">
             Gráfico MSG — Evolução de Qualidade por Release
@@ -151,7 +167,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
             Gráfico de pulso por {terms.repository} (indicador TSQMI) • pico = variação entre medições • marcador = Release
             • ponto = indicador consolidado no encerramento da Release • cor = faixa de qualidade
           </Typography>
-          <QualityLegend />
+          <QualityLegend bands={bands} />
         </Box>
 
         {/* Main ECharts + Sidebar Area */}
@@ -185,6 +201,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
                 valueLabel="último indicador TSQMI"
                 showIcon={false}
                 reference={getReferenceRelease(repo.releases, repo.measurements)}
+                bands={bands}
               />
             ))}
 
@@ -214,7 +231,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
           endDate={endDate}
           onEndDateChange={setEndDate}
           exportAction={
-            <ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories)} />
+            <ExportCsvButton dashboard={PULSE_CSV.product} chart={formatProductPulseCsv(filteredRepositories, bands)} />
           }
         />
       </Box>

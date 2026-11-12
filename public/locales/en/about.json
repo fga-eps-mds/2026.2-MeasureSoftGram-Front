@@ -4,26 +4,36 @@
   "description": "Here you can get some information about our product.",
   "organization": {
     "id": "Organizations",
+    "id_gitlab": "Groups",
     "title": "Organizations",
+    "title_gitlab": "Groups",
     "description": "On the organizations page, you can find a list of all the organizations using MeasureSoftGram, as well as all their registered products.",
+    "description_gitlab": "On the groups page, you can find a list of all the groups using MeasureSoftGram, as well as all their registered products.",
     "view-organization": "VIEW ORGANIZATIONS AND PRODUCTS",
-    "create-organization": "Create organization"
+    "view-organization_gitlab": "View group and products",
+    "create-organization": "Create organization",
+    "create-organization_gitlab": "Create group"
   },
   "product": {
     "id": "Products",
     "title": "Products",
     "description": "Products are software that belong to an organization and have a client. Due to their nature, the same product can have multiple repositories associated with it, allowing continuous implementation on more than one work front.",
+    "description_gitlab": "Products are software that belong to a group and have a client. Due to their nature, the same product can have multiple projects associated with it, allowing continuous implementation on more than one work front.",
     "create-product": "Create Product"
   },
   "repository": {
     "id": "Repositories",
+    "id_gitlab": "Projects",
     "title": "Repositories",
-    "description": "Repositories are storage spaces for software packages. These packages can be accessed and installed by anyone who has access to them, but the repository only stores modifications made by those authorized to do so. This characteristic allows a single product to have multiple repositories, each with its own modifications, enabling the simultaneous development of different functionalities."
+    "title_gitlab": "Projects",
+    "description": "Repositories are storage spaces for software packages. These packages can be accessed and installed by anyone who has access to them, but the repository only stores modifications made by those authorized to do so. This characteristic allows a single product to have multiple repositories, each with its own modifications, enabling the simultaneous development of different functionalities.",
+    "description_gitlab": "Projects are storage spaces for software packages. These packages can be accessed and installed by anyone who has access to them, but the project only stores modifications made by those authorized to do so. This characteristic allows a single product to have multiple projects, each with its own modifications, enabling the simultaneous development of different functionalities."
   },
   "release": {
     "id": "Releases",
     "title": "Releases",
-    "description": "Releases represent the versions of a product launch. A product, computing system, and its subsystems may have their source code centralized in a repository or distributed across multiple ones. In the case of multiple repositories, each has its respective releases. Additionally, there are two types of releases: major and minor. MeasureSoftGram acts in the planning of major releases using pre-configuration and subsequent configurations."
+    "description": "Releases represent the versions of a product launch. A product, computing system, and its subsystems may have their source code centralized in a repository or distributed across multiple ones. In the case of multiple repositories, each has its respective releases. Additionally, there are two types of releases: major and minor. MeasureSoftGram acts in the planning of major releases using pre-configuration and subsequent configurations.",
+    "description_gitlab": "Releases represent the versions of a product launch. A product, computing system, and its subsystems may have their source code centralized in a project or distributed across multiple ones. In the case of multiple projects, each has its respective releases. Additionally, there are two types of releases: major and minor. MeasureSoftGram acts in the planning of major releases using pre-configuration and subsequent configurations."
   },
   "pre-config": {
     "id": "Pre-configuration",

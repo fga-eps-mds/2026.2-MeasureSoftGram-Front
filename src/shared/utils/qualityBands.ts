@@ -23,14 +23,14 @@ export const QUALITY_BANDS: QualityBand[] = [
 ];
 
 /** Faixa de um valor de 0 a 1; fora disso, undefined. */
-export function getQualityBand(value: number): QualityBand | undefined {
+export function getQualityBand(value: number, bands: QualityBand[] = QUALITY_BANDS): QualityBand | undefined {
   if (value < 0 || value > 1) return undefined;
-  return QUALITY_BANDS.find((band) => value < band.max) ?? QUALITY_BANDS[QUALITY_BANDS.length - 1];
+  return bands.find((band) => value < band.max) ?? bands[bands.length - 1];
 }
 
 /** Faixa de um valor, levando o que passar de 0 a 1 para a faixa da ponta (E abaixo de 0, A acima de 1). */
-export function getQualityBandClamped(value: number): QualityBand {
-  return getQualityBand(Math.min(1, Math.max(0, value))) as QualityBand;
+export function getQualityBandClamped(value: number, bands: QualityBand[] = QUALITY_BANDS): QualityBand {
+  return getQualityBand(Math.min(1, Math.max(0, value)), bands) as QualityBand;
 }
 
 const decimal = (value: number) => value.toFixed(2).replace('.', ',');
@@ -42,10 +42,10 @@ export function formatQualityBandRange(band: QualityBand): string {
 }
 
 /** Peças do `visualMap` do ECharts que pintam uma série pela faixa do valor. */
-export function getQualityVisualMapPieces() {
-  return QUALITY_BANDS.map((band, index) => {
+export function getQualityVisualMapPieces(bands: QualityBand[] = QUALITY_BANDS) {
+  return bands.map((band, index) => {
     const isFirst = index === 0;
-    const isLast = index === QUALITY_BANDS.length - 1;
+    const isLast = index === bands.length - 1;
     return {
       ...(isFirst ? {} : { gte: band.min }),
       ...(isLast ? {} : { lt: band.max }),

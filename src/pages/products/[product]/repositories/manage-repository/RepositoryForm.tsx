@@ -3,6 +3,7 @@ import { Container, Form, Header, Wrapper } from '@pages/organizations/styles';
 import { FaGithub, FaGitlab, FaBitbucket, FaAws, FaCodeBranch } from 'react-icons/fa';
 import { NextPageWithLayout } from '@pages/_app.next';
 import getLayout from '@components/Layout';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useOrganizationContext } from '@contexts/OrganizationProvider';
 import { useProductContext } from '@contexts/ProductProvider';
@@ -192,6 +193,10 @@ const RepositoryForm: NextPageWithLayout = () => {
 
   return (
     <Container>
+      {/* sem título, o anunciador de rota do Next lê a URL, que traz "repository" também na sessão do GitLab */}
+      <Head>
+        <title>{isEditMode ? t('edit.title') : t('register.title')}</title>
+      </Head>
       <Header>{isEditMode ? t('edit.title') : t('register.title')}</Header>
       <Wrapper>
         <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>

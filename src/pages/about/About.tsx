@@ -1,6 +1,6 @@
 import React from "react";
 import Head from "next/head";
-import { useTranslation } from "react-i18next";
+import { useProviderTranslation as useTranslation } from "@hooks/useProviderTranslation";
 
 import { NextPageWithLayout } from "@pages/_app.next";
 import getLayout from "@components/Layout";

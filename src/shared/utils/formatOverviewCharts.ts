@@ -2,7 +2,7 @@ import { AccomplishedRepository, ReleaseDashboardCharacteristics, ReleaseDashboa
 import { CharacteristicComparison } from '@utils/comparePlannedAccomplished';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { escapeHtml, formatDecimal, formatVariation } from '@utils/formatNumber';
-import { getQualityBandClamped } from '@utils/qualityBands';
+import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 // Continuam exportados daqui para os imports existentes; a definição fica em formatNumber.
 export { escapeHtml, formatDecimal, formatVariation };
@@ -78,15 +78,20 @@ export function getTsqmiBars(
 }
 
 /** "B · Muito bom": grau e rótulo da faixa do Indicador Total da Qualidade (US06.01). */
-export function formatQualityGrade(value: number): string {
-  const band = getQualityBandClamped(value);
+export function formatQualityGrade(value: number, bands: QualityBand[] = QUALITY_BANDS): string {
+  const band = getQualityBandClamped(value, bands);
   return `${band.grade} · ${band.label}`;
 }
 
-export function formatTsqmiTooltip(bar: TsqmiBar, releaseName: string, previousReleaseName?: string): string {
+export function formatTsqmiTooltip(
+  bar: TsqmiBar,
+  releaseName: string,
+  previousReleaseName?: string,
+  bands: QualityBand[] = QUALITY_BANDS
+): string {
   const lines = [
     `<strong>${escapeHtml(bar.name)} · ${escapeHtml(releaseName)}</strong>`,
-    `Indicador Total da Qualidade: ${formatDecimal(bar.value)} (${formatQualityGrade(bar.value)})`
+    `Indicador Total da Qualidade: ${formatDecimal(bar.value)} (${formatQualityGrade(bar.value, bands)})`
   ];
   if (bar.previous !== null && previousReleaseName) {
     lines.push(
@@ -96,14 +101,19 @@ export function formatTsqmiTooltip(bar: TsqmiBar, releaseName: string, previousR
   return lines.join('<br/>');
 }
 
-export function formatTsqmiBarOptions(bars: TsqmiBar[], releaseName: string, previousReleaseName?: string) {
+export function formatTsqmiBarOptions(
+  bars: TsqmiBar[],
+  releaseName: string,
+  previousReleaseName?: string,
+  bands: QualityBand[] = QUALITY_BANDS
+) {
   return {
     animation: false,
     grid: { left: 8, right: 48, top: 8, bottom: 8, containLabel: true },
     tooltip: {
       trigger: 'item',
       formatter: ({ dataIndex }: { dataIndex: number }) =>
-        formatTsqmiTooltip(bars[dataIndex], releaseName, previousReleaseName)
+        formatTsqmiTooltip(bars[dataIndex], releaseName, previousReleaseName, bands)
     },
     xAxis: {
       type: 'value',
@@ -125,7 +135,10 @@ export function formatTsqmiBarOptions(bars: TsqmiBar[], releaseName: string, pre
       {
         type: 'bar',
         // cada barra com a cor da faixa do valor (A a E)
-        data: bars.map((bar) => ({ value: bar.value, itemStyle: { color: getQualityBandClamped(bar.value).color } })),
+        data: bars.map((bar) => ({
+          value: bar.value,
+          itemStyle: { color: getQualityBandClamped(bar.value, bands).color }
+        })),
         barMaxWidth: 22,
         itemStyle: { borderRadius: 3 },
         label: {
@@ -133,7 +146,8 @@ export function formatTsqmiBarOptions(bars: TsqmiBar[], releaseName: string, pre
           position: 'right',
           ...VALUE_LABEL,
           fontSize: 13,
-          formatter: ({ value }: { value: number }) => `${formatDecimal(value)} · ${getQualityBandClamped(value).grade}`
+          formatter: ({ value }: { value: number }) =>
+            `${formatDecimal(value)} · ${getQualityBandClamped(value, bands).grade}`
         }
       }
     ]

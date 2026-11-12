@@ -25,8 +25,6 @@ export interface ProductFormData {
   organizationId?: number;
   description?: string;
   key?: string;
-  gaugeRedLimit?: number;
-  gaugeYellowLimit?: number;
 }
 
 class ProductQuery {

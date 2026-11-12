@@ -138,3 +138,82 @@ export const github: ApiHandlers = {
     }
   ]
 };
+
+/** BUG12.01: o usuário `joao` é membro do grupo `joao`; os dois namespaces têm o mesmo nome. */
+export const JOAO_USER = { id: 11, name: 'joao', full_path: 'joao', avatar_url: '', description: '', kind: 'user' };
+export const JOAO_GROUP = {
+  id: 201,
+  name: 'joao',
+  full_path: 'joao-grupo',
+  avatar_url: '',
+  description: 'Grupo do joao',
+  kind: 'group'
+};
+
+/** A organização do grupo é a 1 (a do common); a do namespace pessoal é a 3. As duas se chamam joao. */
+export const JOAO_GROUP_ORGANIZATION = {
+  ...organizations.results[0],
+  name: 'joao',
+  key: 'joao',
+  description: 'Organização do grupo joao.',
+  gitlab_group_id: JOAO_GROUP.id
+};
+export const JOAO_PERSONAL_ORGANIZATION = {
+  ...organizations.results[0],
+  id: '3',
+  url: 'http://localhost:8080/api/v1/organizations/3/',
+  name: 'joao',
+  key: 'joao-pessoal',
+  description: 'Organização do namespace pessoal de joao.',
+  products: [],
+  gitlab_user_id: JOAO_USER.id
+};
+const JOAO_PERSONAL_API = `/v1/organizations/${JOAO_PERSONAL_ORGANIZATION.id}`;
+
+/** Usuário e grupo com o mesmo nome, cada um com a sua organização no MeasureSoftGram (BUG12.01). */
+export const grupoComNomeDoUsuario: ApiHandlers = {
+  ...comProjetos,
+  [IMPORT_API.namespaces]: [JOAO_USER, JOAO_GROUP],
+  '/v1/organizations/': {
+    ...organizations,
+    count: 2,
+    results: [JOAO_GROUP_ORGANIZATION, JOAO_PERSONAL_ORGANIZATION]
+  },
+  [`/v1/organizations/${ORGANIZATION_ID}/`]: JOAO_GROUP_ORGANIZATION,
+  [IMPORT_API.importGroup]: JOAO_GROUP_ORGANIZATION,
+  '/v1/organizations/import-gitlab-user/': JOAO_PERSONAL_ORGANIZATION,
+  [`${JOAO_PERSONAL_API}/`]: JOAO_PERSONAL_ORGANIZATION,
+  [`${JOAO_PERSONAL_API}/products/`]: EMPTY_PAGE,
+  [`${JOAO_PERSONAL_API}/gitlab-projects/`]: pagesOf([])
+};
+
+/** O produto da organização pessoal de joao, para a tela mostrar de qual organização são os produtos (BUG12.02). */
+export const JOAO_PERSONAL_PRODUCT = {
+  ...products.results[0],
+  id: '5',
+  name: 'Produto do joao',
+  key: 'produto-do-joao'
+};
+const comProdutoPessoal: ApiHandlers = {
+  [`${JOAO_PERSONAL_API}/products/`]: { ...products, results: [JOAO_PERSONAL_PRODUCT] },
+  [`${JOAO_PERSONAL_API}/products/${JOAO_PERSONAL_PRODUCT.id}/repositories/`]: EMPTY_PAGE,
+  // na troca, o menu lateral pede por um instante o produto anterior (1) na organização nova
+  [`${JOAO_PERSONAL_API}/products/1/repositories/`]: EMPTY_PAGE
+};
+
+/** Cenário 1 do BUG12.02: a organização do grupo joao existe e é a atual; joao escolhe o namespace pessoal. */
+export const pessoalComNomeDeGrupo: ApiHandlers = { ...grupoComNomeDoUsuario, ...comProdutoPessoal };
+
+/**
+ * Cenário 2 do BUG12.02: existe uma organização joao de outra pessoa, que joao não enxerga (não vem na lista); ele só
+ * tem o namespace pessoal e entra na importação pela primeira vez, com a organização 1 (de outro nome) como atual.
+ */
+export const pessoalComNomeDeOutraOrg: ApiHandlers = {
+  ...comProjetos,
+  [IMPORT_API.namespaces]: [JOAO_USER],
+  '/v1/organizations/': { ...organizations, count: 2, results: [organizations.results[0], JOAO_PERSONAL_ORGANIZATION] },
+  '/v1/organizations/import-gitlab-user/': JOAO_PERSONAL_ORGANIZATION,
+  [`${JOAO_PERSONAL_API}/`]: JOAO_PERSONAL_ORGANIZATION,
+  [`${JOAO_PERSONAL_API}/gitlab-projects/`]: pagesOf([]),
+  ...comProdutoPessoal
+};
