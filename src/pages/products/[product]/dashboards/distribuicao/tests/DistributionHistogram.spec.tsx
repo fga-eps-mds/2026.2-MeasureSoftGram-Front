@@ -21,7 +21,7 @@ const columns = (...widths: number[]) => widths.map((width) => `minmax(0, ${widt
 
 describe('<QualityBandRuler />', () => {
   it('tem as cinco faixas, de E a A, com a letra e o rótulo no texto e no title', () => {
-    render(<QualityBandRuler />);
+    render(<QualityBandRuler bands={QUALITY_BANDS} />);
 
     const bands = within(screen.getByRole('list', { name: 'Faixas de qualidade de A a E' })).getAllByRole('listitem');
     expect(bands.map((band) => band.textContent)).toEqual([
@@ -35,7 +35,7 @@ describe('<QualityBandRuler />', () => {
   });
 
   it('cada faixa é o próprio container: a decisão de mostrar o rótulo é pela largura da faixa, não da régua', () => {
-    render(<QualityBandRuler />);
+    render(<QualityBandRuler bands={QUALITY_BANDS} />);
 
     const [band] = screen.getAllByTestId('quality-band');
     const bandClass = Array.from(band.classList).find((name) => name.startsWith('css-'));

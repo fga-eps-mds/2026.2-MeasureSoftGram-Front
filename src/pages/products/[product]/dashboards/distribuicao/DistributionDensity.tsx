@@ -44,7 +44,7 @@ export default function DistributionDensity({
   /** O CSV do quadro, montado pela página; sem curva ele não tem linhas, e o botão fica desabilitado. */
   csv?: CsvChart<DensityCsvRow>;
   /** Régua do produto (US30.02); sem ela, a régua padrão. */
-  bands?: QualityBand[];
+  bands: QualityBand[];
 }) {
   const { histogram, points } = useMemo(() => {
     const values = entity.analyses.map((analysis) => analysis.value);

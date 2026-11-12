@@ -8,7 +8,7 @@ import {
 } from '@customTypes/product';
 import { LEVEL_LABELS } from '@utils/entityLevels';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
-import { getQualityBand, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { getQualityBand, QualityBand } from '@utils/qualityBands';
 
 export const MATRIX_LEVELS: EntityMatrixLevel[] = ['characteristic', 'subcharacteristic', 'measure'];
 
@@ -285,7 +285,7 @@ const HEATMAP_CSV_COLUMNS: CsvColumn<EntityHeatmapCsvRow>[] = [
  */
 export function formatEntityHeatmapCsv(
   matrix: EntityMatrix,
-  bands: QualityBand[] = QUALITY_BANDS
+  bands: QualityBand[]
 ): CsvChart<EntityHeatmapCsvRow> {
   return {
     name: ENTITY_CSV.heatmap,
@@ -381,7 +381,7 @@ const RANKING_CSV_COLUMNS: CsvColumn<EntityRankingCsvRow>[] = [
 export function formatEntityRankingCsv(
   matrix: EntityMatrix,
   worstPairs: MatrixPair[],
-  bands: QualityBand[] = QUALITY_BANDS
+  bands: QualityBand[]
 ): CsvChart<EntityRankingCsvRow> {
   return {
     name: ENTITY_CSV.ranking,

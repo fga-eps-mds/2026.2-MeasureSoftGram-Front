@@ -8,7 +8,7 @@ import { buildHistogram, formatAxisValue } from '@utils/distributionHistogram';
 import { CsvChart } from '@utils/exportCsv';
 import { formatHistogramOptions, HISTOGRAM_CHART_HEIGHT, HISTOGRAM_GRID_SIDES } from '@utils/formatDistributionCharts';
 import { DISTRIBUTION_CSV, HistogramCsvRow } from '@utils/formatDistributionCsv';
-import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { QualityBand } from '@utils/qualityBands';
 import DistributionChart from './DistributionChart';
 
 export const HISTOGRAM_TITLE = 'Histograma';
@@ -86,7 +86,7 @@ export function bandColumns(bands: QualityBand[]): string {
  * cartão. Cada faixa decide pela própria largura se mostra a letra e o rótulo, com a fonte menor se precisar, ou só a
  * letra (ver bandLabelRules): no desktop o rótulo aparece; em telas estreitas, como 360 px, só a letra.
  */
-export function QualityBandRuler({ bands = QUALITY_BANDS }: Readonly<{ bands?: QualityBand[] }>) {
+export function QualityBandRuler({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box
       component="ul"
@@ -139,7 +139,7 @@ export default function DistributionHistogram({
   /** O CSV do quadro, montado pela página; com ele, o cabeçalho ganha o botão "Exportar .csv". */
   csv?: CsvChart<HistogramCsvRow>;
   /** Régua do produto (US30.02); sem ela, a régua padrão. */
-  bands?: QualityBand[];
+  bands: QualityBand[];
 }) {
   const histogram = useMemo(
     () =>
