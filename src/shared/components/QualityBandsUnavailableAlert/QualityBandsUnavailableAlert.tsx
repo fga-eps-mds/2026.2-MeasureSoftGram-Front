@@ -6,7 +6,7 @@ export interface QualityBandsUnavailableAlertProps {
 }
 
 /** Aviso discreto quando as faixas de qualidade do produto não puderam ser carregadas; os gráficos usam o padrão. */
-export default function QualityBandsUnavailableAlert({ onRetry }: QualityBandsUnavailableAlertProps) {
+export default function QualityBandsUnavailableAlert({ onRetry }: Readonly<QualityBandsUnavailableAlertProps>) {
   return (
     <MSGAlert
       severity="warning"
