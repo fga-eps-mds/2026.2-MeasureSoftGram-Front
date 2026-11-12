@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import StyledComponentsRegistry from '@components/StyledComponentsRegistry';
 import '@styles/globals.css';
+import GoogleFonts from '../shared/server/fonts/GoogleFonts';
 import Providers from './providers';
 
 export const metadata: Metadata = {
@@ -14,12 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap"
-          rel="stylesheet"
-        />
+        <GoogleFonts />
       </head>
       <body className="font-sans" suppressHydrationWarning>
         <AppRouterCacheProvider>
