@@ -197,3 +197,46 @@ describe('OrganizationProvider', () => {
     });
   });
 });
+
+describe('OrganizationProvider: ids do GitLab (BUG12.01)', () => {
+  const GitlabIds = () => {
+    const { organizationList } = useOrganizationContext();
+    return (
+      <ul>
+        {organizationList.map((org) => (
+          <li key={org.id} data-testid={`org-${org.id}`}>
+            {`${org.gitlab_group_id ?? '-'}|${org.gitlab_user_id ?? '-'}`}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    sessionStorage.clear();
+    localStorage.clear();
+    (useAuth as jest.Mock).mockReturnValue({ session: { username: 'joao' }, provider: 'gitlab' });
+  });
+
+  it('mantém o gitlab_group_id e o gitlab_user_id que o Service manda, para a importação casar o grupo pelo id', async () => {
+    (organizationQuery.getAllOrganization as jest.Mock).mockResolvedValue({
+      type: 'success',
+      value: [
+        { id: '1', name: 'joao', key: 'joao', gitlab_group_id: 201 },
+        { id: '3', name: 'joao', key: 'joao-pessoal', gitlab_user_id: 11 },
+        { id: '4', name: 'Org sem GitLab', key: 'o4' }
+      ]
+    });
+
+    render(
+      <OrganizationProvider>
+        <GitlabIds />
+      </OrganizationProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId('org-1')).toHaveTextContent('201|-'));
+    expect(screen.getByTestId('org-3')).toHaveTextContent('-|11');
+    expect(screen.getByTestId('org-4')).toHaveTextContent('-|-');
+  });
+});
