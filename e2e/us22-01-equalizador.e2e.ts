@@ -188,8 +188,7 @@ test.describe('@US22.01-CA7 Ao passar o mouse numa característica, planejado, r
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText('Confiabilidade');
     await expect(tooltip).toContainText('Planejado (Rp): 0.70');
-    // o tooltip chama o realizado de "Desenvolvido"; a legenda, de "Realizado (Rd)"
-    await expect(tooltip).toContainText('(Rd): 0.74');
+    await expect(tooltip).toContainText('Realizado (Rd): 0.74');
     await expect(tooltip).toContainText('Diferença (Rp − Rd): -0.04');
     await expect(tooltip).toContainText('Situação: ▲ Acima do planejado');
   });
