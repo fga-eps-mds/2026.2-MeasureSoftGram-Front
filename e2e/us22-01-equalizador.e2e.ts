@@ -27,6 +27,45 @@ async function expectCurveDrawn(curve: Locator) {
   await expect(curve).toHaveAttribute('d', /^M[\d.]+ [\d.]+ [CL]/);
 }
 
+/**
+ * Segura o chunk com as traduções em português (o i18n do app vem num chunk do webpack por idioma, ver
+ * src/shared/i18n/bundledBackend.ts) até o teste chamar a função devolvida. O nome do chunk muda a cada build, então ele
+ * é reconhecido por um texto do equalizador.
+ */
+async function holdPortugueseTranslations(page: Page): Promise<() => void> {
+  let holding = true;
+  let open = () => {};
+  const gate = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  await page.route('**/_next/static/chunks/*.js', async (route) => {
+    // depois de liberar, não lê mais corpo nenhum: um prefetch no fim do teste chegaria com a página já fechada
+    if (!holding) return route.continue();
+    const response = await route.fetch();
+    const body = await response.text();
+    if (body.includes('Cursor: valor planejado')) await gate;
+    return route.fulfill({ response, body });
+  });
+  return () => {
+    holding = false;
+    open();
+  };
+}
+
+/** Maior distância, em px, entre as pontas da curva e o centro do primeiro e do último trilho. */
+async function curveOffsetFromTracks(page: Page, curve: Locator, keys: string[]): Promise<number> {
+  const [box, first, last] = await Promise.all([
+    curve.boundingBox(),
+    page.getByTestId(`equalizer-slider-${keys[0]}`).boundingBox(),
+    page.getByTestId(`equalizer-slider-${keys[keys.length - 1]}`).boundingBox()
+  ]);
+  if (!box || !first || !last) return Infinity;
+  return Math.max(
+    Math.abs(box.x - (first.x + first.width / 2)),
+    Math.abs(box.x + box.width - (last.x + last.width / 2))
+  );
+}
+
 test.describe('@US22.01-CA1 Mesmo equalizador do planejamento, um trilho por característica planejada', () => {
   test.use({ scenario: comDados });
 
@@ -71,6 +110,29 @@ test.describe('@US22.01-CA3 Curvas do planejado (azul) e do realizado (laranja) 
     await expectCurveDrawn(accomplishedCurve);
     await expect(plannedCurve).toHaveAttribute('stroke', '#1F60C4');
     await expect(accomplishedCurve).toHaveAttribute('stroke', '#FF8C00');
+  });
+
+  test.describe('com duas características', () => {
+    test.use({ scenario: duasCaracteristicas });
+
+    // o rótulo sem tradução é mais largo que o trilho e desloca o slider; com a tradução ele volta para o lugar, sem o
+    // contêiner mudar de tamanho, e as curvas têm de ir junto (bug visto no CI: curvas à direita dos trilhos)
+    test('as curvas acompanham os trilhos quando a tradução chega depois do equalizador', async ({ page }) => {
+      const releaseTranslations = await holdPortugueseTranslations(page);
+      // o chunk segurado prende o evento load
+      await page.goto(RELEASE_PATH, { waitUntil: 'commit' });
+      const curves = [page.getByTestId('equalizer-curve-planned'), page.getByTestId('equalizer-curve-accomplished')];
+      await Promise.all(curves.map(expectCurveDrawn));
+      await expect(page.getByTestId('equalizer-track-reliability')).toContainText('characteristics.reliability');
+
+      releaseTranslations();
+      await expect(page.getByTestId('equalizer-track-reliability')).toContainText('Confiabilidade');
+      const keys = ['reliability', 'maintainability'];
+      // a caixa da curva inclui a ponta redonda do traço (3 px de espessura, 1,5 px além do ponto); antes, sobravam 34 px
+      await Promise.all(
+        curves.map((curve) => expect.poll(() => curveOffsetFromTracks(page, curve, keys)).toBeLessThan(2))
+      );
+    });
   });
 });
 

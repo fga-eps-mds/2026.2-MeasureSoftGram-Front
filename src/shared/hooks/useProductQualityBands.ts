@@ -10,7 +10,7 @@ import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
  * Se a resposta ainda não chegou ou não trouxer as 5 faixas completas, devolve a régua padrão.
  */
 export function toQualityBands(productBands?: ProductQualityBands): QualityBand[] {
-  if (!productBands?.bands || productBands.bands.length !== QUALITY_BANDS.length) {
+  if (productBands?.bands?.length !== QUALITY_BANDS.length) {
     return QUALITY_BANDS;
   }
 
@@ -53,7 +53,7 @@ export function useProductQualityBands(organizationId?: string, productId?: stri
   return {
     bands,
     isError: Boolean(error && !data),
-    isLoading: Boolean(isLoading ?? (!data && !error && Boolean(organizationId && productId))),
+    isLoading,
     retry
   };
 }

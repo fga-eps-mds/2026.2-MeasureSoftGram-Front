@@ -10,7 +10,7 @@ export interface QualityLegendProps {
  * Legenda das faixas A a E do indicador (US06.01), a mesma em todos os gráficos de pulso: da pior para a melhor, com
  * marcadores circulares, como no protótipo.
  */
-export function QualityLegend({ bands = QUALITY_BANDS }: QualityLegendProps = {}) {
+export function QualityLegend({ bands = QUALITY_BANDS }: Readonly<QualityLegendProps>) {
   return (
     <Box display="flex" alignItems="center" columnGap={2} rowGap={0.5} flexWrap="wrap">
       {bands.map((band) => (

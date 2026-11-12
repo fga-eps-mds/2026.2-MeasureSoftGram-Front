@@ -1,6 +1,6 @@
 import { Locator, Page, Request } from '@playwright/test';
 import { expect, test } from './support/fixtures';
-import { ORGANIZATION_ID, PRODUCT_ID, PRODUCT_PATH } from './fixtures/common';
+import { PRODUCT_PATH } from './fixtures/common';
 import {
   comProjetos,
   comSubgrupo,
@@ -23,8 +23,7 @@ import projects from './fixtures/importacao-gitlab/gitlab-projects.json';
 import squadProjects from './fixtures/importacao-gitlab/gitlab-projects-squad-01.json';
 
 test.beforeEach(async ({ page }) => {
-  // quem já usou o app tem a organização salva; sem ela, a tela escolhe o primeiro namespace (a conta pessoal) se os
-  // namespaces chegam antes das organizações (Products.tsx:162-174) e só depois troca para o grupo
+  // quem já usou o app tem a organização salva
   await page.addInitScript(() => localStorage.setItem('selectedOrgId', JSON.stringify('1')));
 });
 
@@ -62,18 +61,12 @@ const importRequest = (page: Page) =>
   page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith(`/api${IMPORT_API.repositories}`));
 
 const REPOSITORIES_PATH = `${PRODUCT_PATH}/repositories/`;
-/** O caminho que o lápis da lista de Projetos monta (RepositoriesTable.tsx:211). */
-const EDIT_PATH = `/products/${ORGANIZATION_ID}-${PRODUCT_ID}/repositories/manage-repository?id=${PARSER_REPOSITORY.id}`;
 const parserRow = (page: Page) => page.getByTestId('repository-row').filter({ hasText: PARSER.name });
 
-/**
- * Abre a edição do parser pela navegação do Next, como o lápis faria: o lápis leva à tela do projeto (fixme no CA6) e a
- * URL direta volta para /home antes de a organização carregar (RepositoryForm.tsx:71-74).
- */
+/** Abre a edição do parser pelo lápis da lista de Projetos. */
 async function openEdit(page: Page) {
   await page.goto(REPOSITORIES_PATH);
-  await expect(parserRow(page)).toBeVisible();
-  await page.evaluate((path) => (window as any).next.router.push(path), EDIT_PATH);
+  await parserRow(page).getByRole('button', { name: 'edit' }).click();
   await expect(page.getByText('Editar Projeto', { exact: true })).toBeVisible();
 }
 
@@ -159,6 +152,27 @@ test.describe('@US12.01-CA2 Seletor de grupos e projetos do grupo escolhido, com
       `${GROUP.name} (${GROUP.description})`,
       `${SUBGROUP.name} (${SUBGROUP.description})`
     ]);
+  });
+
+  test('sem organização salva, só busca os grupos depois de a lista de organizações chegar', async ({ page, api }) => {
+    await page.addInitScript(() => localStorage.removeItem('selectedOrgId'));
+    let released = false;
+    const early: string[] = [];
+    page.on('request', (r) => {
+      // antes das organizações a tela escolhia a conta pessoal e a importava no MeasureSoftGram
+      const tooEarly = !released && r.url().includes('/gitlab-namespaces/');
+      if (tooEarly || r.url().includes('/import-gitlab-user/'))
+        early.push(`${r.method()} ${new URL(r.url()).pathname}`);
+    });
+    const release = api.hold('/v1/organizations/');
+    await page.goto(IMPORT_PATH);
+    await expect(page.getByRole('heading', { name: 'Importação de Projetos' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Carregando grupos...' })).toBeDisabled();
+    released = true;
+    release();
+    await openImport(page);
+    await expect(projectNames(page)).toHaveText(FIRST_PAGE);
+    expect(early).toEqual([]);
   });
 
   test('"A Importar" mostra os projetos do grupo, dez por página, e busca a página 2', async ({ page }) => {
@@ -291,7 +305,8 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
         url: PARSER.url,
         description: PARSER.description,
         platform: 'gitlab',
-        imported: true
+        imported: true,
+        gitlab_project_id: PARSER.gitlab_project_id
       });
       await expect(toasts(page)).toHaveText([IMPORTED]);
 
@@ -302,15 +317,12 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
       await expect(page.getByTestId('repo-name')).toHaveText([PARSER.name]);
     });
 
-    test.fixme(
-      'o POST leva o identificador do projeto no GitLab (bug: o Front manda só nome, URL, descrição, plataforma e imported; Products.tsx:339-345)',
-      async ({ page }) => {
-        await openImport(page);
-        const post = importRequest(page);
-        await item(page, PARSER.gitlab_path_with_namespace).getByRole('button', { name: 'Importar' }).click();
-        expect((await post).postDataJSON()).toMatchObject({ gitlab_project_id: PARSER.gitlab_project_id });
-      }
-    );
+    test('o POST leva o identificador do projeto no GitLab', async ({ page }) => {
+      await openImport(page);
+      const post = importRequest(page);
+      await item(page, PARSER.gitlab_path_with_namespace).getByRole('button', { name: 'Importar' }).click();
+      expect((await post).postDataJSON()).toMatchObject({ gitlab_project_id: PARSER.gitlab_project_id });
+    });
   });
 
   test.describe('edição', () => {
@@ -328,15 +340,10 @@ test.describe('@US12.01-CA6 Projeto salvo com plataforma, imported, URL e id; na
       await expect(page.getByRole('button', { name: 'Salvar Alterações' })).toBeDisabled();
     });
 
-    test.fixme(
-      'o lápis da lista de Projetos abre a edição (bug: o clique no lápis também chega à linha, que leva à tela do projeto; RepositoriesTable.tsx:180 e 208-214)',
-      async ({ page }) => {
-        await page.goto(REPOSITORIES_PATH);
-        await parserRow(page).getByRole('button', { name: 'edit' }).click();
-        await expect(page).toHaveURL(/\/repositories\/manage-repository\/?\?id=1$/);
-        await expect(page.getByText('Editar Projeto', { exact: true })).toBeVisible();
-      }
-    );
+    test('o lápis da lista de Projetos abre a edição', async ({ page }) => {
+      await openEdit(page);
+      await expect(page).toHaveURL(/\/repositories\/manage-repository\/?\?id=1$/);
+    });
   });
 });
 

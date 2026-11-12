@@ -398,7 +398,7 @@ export function formatPulseChartOptions(
       clip: false,
       lineStyle: {
         width: 2,
-        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? latestStatus.color ?? COLOR_TOKENS.secondary }),
+        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? latestStatus.color }),
       },
       data: pulseData,
       markLine: {

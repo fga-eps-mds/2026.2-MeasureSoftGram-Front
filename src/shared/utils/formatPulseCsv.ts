@@ -34,7 +34,7 @@ function byDate(measurements: PulseMeasurement[]): PulseMeasurement[] {
   return [...measurements].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 }
 
-function toMeasurementFields({ created_at: date, value }: PulseMeasurement, bands: QualityBand[] = QUALITY_BANDS) {
+function toMeasurementFields({ created_at: date, value }: PulseMeasurement, bands: QualityBand[]) {
   return { date, value, grade: getQualityBandClamped(value, bands).grade };
 }
 

@@ -36,7 +36,7 @@ import {
   formatTotalsCsv
 } from '@utils/formatOverviewCsv';
 import { getPathId } from '@utils/pathDestructer';
-import { QUALITY_BANDS, QualityBand, formatQualityBandRange } from '@utils/qualityBands';
+import { QualityBand, formatQualityBandRange } from '@utils/qualityBands';
 import { useTranslation } from 'react-i18next';
 import MSGAlert from '../../../../../components/idv/feedback';
 
@@ -167,7 +167,7 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
 }
 
 /** Legenda das 5 faixas do Indicador Total da Qualidade (US06.01), da melhor para a pior. */
-function QualityBandsLegend({ bands = QUALITY_BANDS }: { bands?: QualityBand[] }) {
+function QualityBandsLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box display="flex" flexDirection="column" gap="8px" data-testid="quality-bands-legend">
       <Typography fontWeight="bold" fontSize="13px" color={DASHBOARD_COLORS.text}>
@@ -193,7 +193,7 @@ const OverviewDashboard: NextPageWithLayout = () => {
   const [organizationId, productId] = getPathId(router.query?.product as string);
 
   const {
-    bands = QUALITY_BANDS,
+    bands,
     isError: isQualityBandsError,
     retry: retryQualityBands
   } = useProductQualityBands(organizationId, productId);
