@@ -9,6 +9,34 @@ test.use({ session: false });
 const USERNAME = 'usuario-mock';
 const EXPIRED = 'Sua sessão expirou. Por favor, faça login novamente!';
 const TECHNICAL_DETAIL = /\b(400|500|502)\b|Request failed|status code|Bad Gateway|Erro interno/;
+/** A página pública ("/", pelo useRequireAuth) ou o login ("/auth", pelo 401 do Service tratado em services/api.ts). */
+const PUBLIC_PAGE = /^http:\/\/localhost:\d+\/(auth\/?)?$/;
+
+/**
+ * Telas autenticadas de src/pages. As que chamam useRequireAuth voltam a "/"; as outras (organizações, releases,
+ * repositórios) não têm o hook e só saem porque pedem a API e o 401 do Service manda para /auth.
+ */
+const PROTECTED_ROUTES = [
+  '/home/',
+  '/about/',
+  '/config/',
+  '/organizations/',
+  '/products/',
+  `${PRODUCT_PATH}/`,
+  `${PRODUCT_PATH}/settings/`,
+  `${PRODUCT_PATH}/releases/`,
+  `${PRODUCT_PATH}/releases/1/`,
+  `${PRODUCT_PATH}/releases/create/`,
+  `${PRODUCT_PATH}/repositories/`,
+  `${PRODUCT_PATH}/repositories/1/`,
+  `${PRODUCT_PATH}/repositories/manage-repository/`,
+  ...['overview', 'metamodelo', 'entidade', 'distribuicao', 'relacoes', 'temporal'].map(
+    (dashboard) => `${PRODUCT_PATH}/dashboards/${dashboard}/`
+  )
+];
+
+/** Sem useRequireAuth e sem pedir a API ao abrir: o formulário de novo produto continua na tela depois do logout. */
+const UNPROTECTED_ROUTES = ['/products/create/'];
 
 /** O botão mostra "LOGIN COM GITLAB" em maiúsculas; o CA diz "Login com GitLab". */
 const loginButton = (page: Page) => page.getByRole('button', { name: /login com gitlab/i });
@@ -29,13 +57,48 @@ async function gitlabAnswers(page: Page, answer: { code: string } | { error: str
   });
 }
 
+/** O usuário no rodapé do menu lateral, que abre o menu com "Finalizar Sessão". */
+const sideMenuUser = (page: Page) => page.getByTestId('side-menu').getByText(USERNAME, { exact: true });
+
+/** A conta que o Front guardou na sessão. */
+const storedAccount = (page: Page) =>
+  page.evaluate(() => {
+    const { id, username } = JSON.parse(localStorage.getItem('session') ?? 'null') ?? {};
+    return { id, username };
+  });
+
 /** Entra pelo GitLab (autorizando) e espera a página inicial com o usuário no menu. */
 async function loginWithGitlab(page: Page) {
   await gitlabAnswers(page, { code: 'e2e' });
   await page.goto('/auth/');
   await loginButton(page).click();
   await expect(page).toHaveURL(/\/home\/?$/);
-  await expect(page.getByText(USERNAME, { exact: true })).toBeVisible();
+  await expect(sideMenuUser(page)).toBeVisible();
+}
+
+/** "Finalizar Sessão" pelo menu do usuário no menu lateral; espera a sessão sumir do navegador. */
+async function finishSession(page: Page) {
+  await sideMenuUser(page).click();
+  await page.getByRole('menuitem', { name: 'Finalizar Sessão' }).click();
+  await expect(page).toHaveURL('/');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull();
+}
+
+/** Abre cada rota numa aba nova do mesmo navegador (mesma sessão) e confere que ela manda para a página pública. */
+async function expectRedirectsToPublicPage(page: Page, routes: string[]) {
+  await Promise.all(
+    routes.map(async (route) => {
+      const tab = await page.context().newPage();
+      // a aba nova não tem os handlers do teste: sem token, o Service recusaria qualquer pedido
+      await tab.route('**/api/v1/**', (request) =>
+        request.fulfill({ status: 401, json: { detail: 'Sem credenciais.' } })
+      );
+      await tab.goto(route);
+      await expect(tab, route).toHaveURL(PUBLIC_PAGE);
+      await expect(tab.getByTestId('side-menu'), route).toBeHidden();
+      await tab.close();
+    })
+  );
 }
 
 test.describe('@US11.01-CA1 Botão "Login com GitLab" na tela de login', () => {
@@ -83,6 +146,25 @@ test.describe('@US11.01-CA2 Autorizar no GitLab entra logado na página inicial'
     await expect(page).toHaveURL(/\/home\/?$/);
     // nome e e-mail não aparecem em nenhuma tela do Front: o menu lateral mostra o username
     await expect(page.getByText(USERNAME, { exact: true })).toBeVisible();
+  });
+});
+
+test.describe('@US11.01-CA3 Entrar com o GitLab abre a conta existente, sem perfil duplicado', () => {
+  test.use({ scenario: loginOk });
+
+  // Quem reaproveita a conta (e não cria outro perfil para o mesmo usuário do GitLab) é o Service. O Front prova a parte
+  // dele: dois logins seguidos com o mesmo usuário do GitLab abrem a mesma conta, com o mesmo id e o mesmo username.
+  test('dois logins seguidos com o mesmo usuário do GitLab caem na mesma conta', async ({ page }) => {
+    await loginWithGitlab(page);
+    const first = await storedAccount(page);
+    expect(first).toEqual({ id: 1, username: USERNAME });
+
+    await finishSession(page);
+    const [account] = await Promise.all([page.waitForRequest(apiRequest('/v1/accounts/')), loginWithGitlab(page)]);
+
+    expect(account.headers().authorization).toBe(`Token ${GITLAB_TOKEN}`);
+    expect(await storedAccount(page)).toEqual(first);
+    await expect(sideMenuUser(page)).toBeVisible();
   });
 });
 
@@ -170,7 +252,7 @@ test.describe('@US11.01-CA6 "Finalizar Sessão" no menu do usuário encerra a se
 
   test('encerra a sessão no Service e volta à página pública', async ({ page }) => {
     await loginWithGitlab(page);
-    await page.getByText(USERNAME, { exact: true }).click();
+    await sideMenuUser(page).click();
     const [logout] = await Promise.all([
       page.waitForRequest(apiRequest(LOGIN_API.logout)),
       page.getByRole('menuitem', { name: 'Finalizar Sessão' }).click()
@@ -186,17 +268,16 @@ test.describe('@US11.01-CA6 "Finalizar Sessão" no menu do usuário encerra a se
 
   test('depois de sair, as telas autenticadas voltam à página pública', async ({ page }) => {
     await loginWithGitlab(page);
-    await page.getByText(USERNAME, { exact: true }).click();
-    await page.getByRole('menuitem', { name: 'Finalizar Sessão' }).click();
-    await expect(page).toHaveURL('/');
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBeNull();
-
-    await page.goto('/home/');
-    await expect(page.getByText('Usuário(a) não autenticado(a). Por favor, realize o login.')).toBeVisible();
-    await expect(page).toHaveURL('/');
-
-    await page.goto(`${PRODUCT_PATH}/`);
-    await expect(page.getByText('Usuário(a) não autenticado(a). Por favor, realize o login.')).toBeVisible();
-    await expect(page).toHaveURL('/');
+    await finishSession(page);
+    await expectRedirectsToPublicPage(page, PROTECTED_ROUTES);
   });
+
+  test.fixme(
+    'depois de sair, o cadastro de produto também volta à página pública (bug: abre sem sessão)',
+    async ({ page }) => {
+      await loginWithGitlab(page);
+      await finishSession(page);
+      await expectRedirectsToPublicPage(page, UNPROTECTED_ROUTES);
+    }
+  );
 });
