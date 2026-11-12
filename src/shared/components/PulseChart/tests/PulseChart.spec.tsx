@@ -2,11 +2,16 @@ import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv } from '@utils/exportCsv';
+import { QUALITY_BANDS } from '@utils/qualityBands';
 import PulseChart, { getReferenceRelease } from '../PulseChart';
 
 const mockUsePulseChartData = jest.fn();
+const mockUseProductQualityBands = jest.fn();
 
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
+jest.mock('@hooks/useProductQualityBands', () => ({
+  useProductQualityBands: () => mockUseProductQualityBands(),
+}));
 jest.mock('../usePulseChartData', () => ({
   usePulseChartData: () => mockUsePulseChartData(),
 }));
@@ -53,11 +58,50 @@ describe('<PulseChart />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePulseChartData.mockReturnValue(defaultChartData());
+    mockUseProductQualityBands.mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: false,
+      isLoading: false,
+      retry: jest.fn(),
+    });
   });
 
   // o jsdom não tem a API de fontes; o teste que a simula não pode deixá-la para os seguintes
   afterEach(() => {
     delete (document as unknown as { fonts?: unknown }).fonts;
+  });
+
+  it('mostra o aviso quando o carregamento das faixas do produto falha e segue renderizando o gráfico com o padrão', () => {
+    const retryBands = jest.fn();
+    mockUseProductQualityBands.mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: true,
+      isLoading: false,
+      retry: retryBands,
+    });
+
+    const { getByText, getByTestId, getByRole } = render(<PulseChart organizationId="1" productId="1" />);
+
+    expect(getByText('Não foi possível carregar as faixas do produto')).toBeInTheDocument();
+    expect(getByTestId('echarts-mock')).toBeInTheDocument();
+    expect(getByText('A · Ótimo (0,80 a 1,00)')).toBeInTheDocument();
+
+    fireEvent.click(getByRole('button', { name: 'Tentar novamente' }));
+    expect(retryBands).toHaveBeenCalledTimes(1);
+  });
+
+  it('o tooltip de release usa as faixas do produto: com A a partir de 0,85, 0,82 é B', () => {
+    const limits: Record<string, object> = { B: { max: 0.85 }, A: { min: 0.85 } };
+    const productBands = QUALITY_BANDS.map((band) => ({ ...band, ...limits[band.grade] }));
+    mockUseProductQualityBands.mockReturnValue({ bands: productBands, isError: false, isLoading: false, retry: jest.fn() });
+    render(<PulseChart organizationId="1" productId="1" />);
+
+    const { formatter } = mockEchartsOption.mock.calls[mockEchartsOption.mock.calls.length - 1][0].tooltip;
+    const release = { name: 'Release 1', version: 'v2025.3.0', end_at: '2026-08-21T12:00:00Z' };
+    const tooltip = formatter([{ seriesName: 'CLI', seriesIndex: 1, dataIndex: 0, data: { release, value: [0, 0.82] } }]);
+
+    expect(tooltip).toContain('Muito bom');
+    expect(tooltip).not.toContain('Ótimo');
   });
 
   it('refaz o gráfico a cada atualização, sem mesclar com as faixas do filtro anterior', () => {

@@ -9,6 +9,13 @@ import {
   formatRadarCsv,
   formatTotalsCsv
 } from '../formatOverviewCsv';
+import { QUALITY_BANDS, QualityBand } from '../qualityBands';
+
+const CUSTOM_BANDS: QualityBand[] = QUALITY_BANDS.map((band) => {
+  if (band.grade === 'B') return { ...band, min: 0.6, max: 0.85 };
+  if (band.grade === 'A') return { ...band, min: 0.85, max: 1 };
+  return band;
+});
 
 const RELEASE = '2026.2 R2';
 const nameOf = (key: string) => `Nome ${key}`;
@@ -108,6 +115,16 @@ describe('formatIndicatorCsv', () => {
 
   it('fica sem linhas quando nenhum repositório tem indicador', () => {
     expect(formatIndicatorCsv(RELEASE, []).rows).toEqual([]);
+  });
+
+  it('usa as faixas configuradas no produto (A a partir de 0,85: 0,82 sai como B)', () => {
+    const [row] = formatIndicatorCsv(
+      RELEASE,
+      [{ id: 1, name: 'service', value: 0.82, previous: null }],
+      CUSTOM_BANDS
+    ).rows;
+
+    expect(row.grade).toBe('B');
   });
 });
 

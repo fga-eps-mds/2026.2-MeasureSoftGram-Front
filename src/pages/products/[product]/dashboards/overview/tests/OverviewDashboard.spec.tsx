@@ -2,6 +2,8 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { downloadCsv, downloadCsvZip } from '@utils/exportCsv';
+import { QUALITY_BANDS } from '@utils/qualityBands';
+import { useProductQualityBands } from '@hooks/useProductQualityBands';
 import { useOverviewDashboard } from '../useOverviewDashboard';
 import OverviewDashboard from '../OverviewDashboard';
 import {
@@ -29,6 +31,7 @@ jest.mock('@hooks/useProviderTerms', () => ({
   })
 }));
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
+jest.mock('@hooks/useProductQualityBands', () => ({ useProductQualityBands: jest.fn() }));
 jest.mock('../useOverviewDashboard', () => ({ useOverviewDashboard: jest.fn() }));
 // o equalizador tem testes próprios: aqui basta ver o que ele recebe do analysis_data
 jest.mock('@components/PlannedVsAccomplishedEqualizer', () => ({
@@ -111,6 +114,31 @@ describe('<OverviewDashboard />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useOverviewDashboard as jest.Mock).mockReturnValue(dashboard());
+    (useProductQualityBands as jest.Mock).mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: false,
+      isLoading: false,
+      retry: jest.fn()
+    });
+  });
+
+  it('mostra o aviso quando o carregamento das faixas do produto falha e segue renderizando com o padrão', () => {
+    const retryQualityBands = jest.fn();
+    (useProductQualityBands as jest.Mock).mockReturnValue({
+      bands: QUALITY_BANDS,
+      isError: true,
+      isLoading: false,
+      retry: retryQualityBands
+    });
+    render(<OverviewDashboard />);
+    const indicator = card('Indicador Total da Qualidade');
+
+    expect(screen.getByText('Não foi possível carregar as faixas do produto')).toBeInTheDocument();
+    expect(within(indicator).getByTestId('echarts')).toBeInTheDocument();
+    expect(within(indicator).getByText('A · Ótimo (0,80 a 1,00)')).toBeInTheDocument();
+
+    fireEvent.click(within(indicator).getByRole('button', { name: 'Tentar novamente' }));
+    expect(retryQualityBands).toHaveBeenCalledTimes(1);
   });
 
   it('busca os dados do produto da URL', () => {

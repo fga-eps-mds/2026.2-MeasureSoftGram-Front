@@ -1,6 +1,6 @@
 import { TsqmiReleasePoint } from '@customTypes/product';
 import { escapeHtml, formatDecimal, formatVariation } from './formatNumber';
-import { getQualityBandClamped, QualityGrade } from './qualityBands';
+import { getQualityBandClamped, QUALITY_BANDS, QualityBand, QualityGrade } from './qualityBands';
 import { getPulseHalfWidth, PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
 
 export const COLOR_TOKENS = {
@@ -26,8 +26,8 @@ export interface QualityStatus {
 }
 
 /** Faixa do Indicador Total da Qualidade (A a E, US06.01) de um valor; as faixas ficam em `qualityBands`. */
-export function getQualityStatus(value: number): QualityStatus {
-  const band = getQualityBandClamped(value);
+export function getQualityStatus(value: number, bands: QualityBand[] = QUALITY_BANDS): QualityStatus {
+  const band = getQualityBandClamped(value, bands);
   return { key: band.grade, label: band.label, color: band.color };
 }
 
@@ -53,6 +53,8 @@ export interface PulseChartOptions {
   horizontalLines?: boolean;
   /** Conteúdo do tooltip quando o cursor encaixa no ponto de uma release; sem ele, o tooltip só mostra as medições. */
   releaseTooltip?: (points: PulseReleaseHover[]) => string;
+  /** Faixas de qualidade a aplicar ao pulso e aos pontos de release. */
+  bands?: QualityBand[];
 }
 
 /** Ponto de release sob o cursor: um por repositório que tem a release. */
@@ -141,10 +143,13 @@ export interface PulseRepositoryData {
  * da medição que muda de faixa. A cor vem do tempo, não da altura: os picos são ampliados e passariam por outras
  * faixas. No ECharts, o `visualMap` de uma série `line` só pinta pela dimensão de um eixo.
  */
-export function getBandTimePieces(sortedMeasurements: PulseMeasurement[]) {
+export function getBandTimePieces(
+  sortedMeasurements: PulseMeasurement[],
+  bands: QualityBand[] = QUALITY_BANDS
+) {
   const pieces: { gte?: number; lt?: number; lte?: number; color: string }[] = [];
   sortedMeasurements.forEach((measurement) => {
-    const { color } = getQualityStatus(measurement.value);
+    const { color } = getQualityStatus(measurement.value, bands);
     const last = pieces[pieces.length - 1];
     if (last?.color === color) return;
     const time = new Date(measurement.created_at).getTime();
@@ -196,7 +201,9 @@ export function formatPulseChartOptions(
     releaseStartLabels = true,
     horizontalLines = true,
     releaseTooltip,
-  }: PulseChartOptions = {}
+    bands: optionBands,
+  }: PulseChartOptions = {},
+  bands: QualityBand[] = optionBands ?? QUALITY_BANDS
 ) {
   if (!repositories || !repositories.length) {
     return {};
@@ -227,7 +234,7 @@ export function formatPulseChartOptions(
 
     sortedByRepository.push(sortedMeasurements);
     // Com troca de faixa, a cor vem do visualMap; sem troca, fica na série (a cor da série teria prioridade).
-    const bandPieces = getBandTimePieces(sortedMeasurements);
+    const bandPieces = getBandTimePieces(sortedMeasurements, bands);
     const changesBand = bandPieces.length > 1;
     if (changesBand) {
       bandVisualMaps.push({ show: false, seriesIndex: index, dimension: 0, pieces: bandPieces });
@@ -285,7 +292,7 @@ export function formatPulseChartOptions(
           if (tsqmiValue !== undefined && tsqmiValue !== null) {
             releasePoints.push({
               value: [endMs, tsqmiValue],
-              itemStyle: { color: getQualityStatus(tsqmiValue).color },
+              itemStyle: { color: getQualityStatus(tsqmiValue, bands).color },
               release: rel,
             });
           }
@@ -378,7 +385,7 @@ export function formatPulseChartOptions(
     });
 
     const latestVal = values[values.length - 1] ?? 0;
-    const latestStatus = getQualityStatus(latestVal);
+    const latestStatus = getQualityStatus(latestVal, bands);
 
     seriesList.push({
       name: repo.name,
@@ -391,7 +398,7 @@ export function formatPulseChartOptions(
       clip: false,
       lineStyle: {
         width: 2,
-        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? COLOR_TOKENS.secondary }),
+        ...(changesBand ? {} : { color: bandPieces[0]?.color ?? latestStatus.color }),
       },
       data: pulseData,
       markLine: {
@@ -467,7 +474,7 @@ export function formatPulseChartOptions(
           const measurement = measurementOf(p);
           if (!measurement) return;
           const val = measurement.value;
-          const status = getQualityStatus(val);
+          const status = getQualityStatus(val, bands);
           let varText = '';
 
           if (rawIdx > 0) {

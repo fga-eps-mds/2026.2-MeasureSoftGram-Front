@@ -1,5 +1,6 @@
 import { COLOR_TOKENS, PulseRelease, PulseReleaseHover, getQualityStatus } from '@utils/formatPulseChart';
 import { escapeHtml, formatDecimal, formatQualityGrade, formatVariation } from '@utils/formatOverviewCharts';
+import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 
 /** +12,50% ou −3,10%, com o sinal de menos tipográfico. */
 export function formatVariationPercent(percent: number): string {
@@ -42,7 +43,10 @@ function formatReleaseVariation(release: PulseRelease): string {
  * Tooltip do ponto de uma release no pulso do produto (US06.01): nome e encerramento da release e, para cada
  * repositório que a tem, o indicador TSQMI, a faixa e a variação. Pontos de releases diferentes ficam em blocos.
  */
-export function formatPulseReleaseTooltip(points: PulseReleaseHover[]): string {
+export function formatPulseReleaseTooltip(
+  points: PulseReleaseHover[],
+  bands: QualityBand[] = QUALITY_BANDS
+): string {
   const byRelease = new Map<string, PulseReleaseHover[]>();
   points.forEach((point) => {
     const key = point.release.id !== undefined ? String(point.release.id) : `${point.release.name}|${point.release.end_at}`;
@@ -53,12 +57,12 @@ export function formatPulseReleaseTooltip(points: PulseReleaseHover[]): string {
     .map((releasePoints) => {
       const { release } = releasePoints[0];
       const repositories = releasePoints.map(({ repository, value, release: repositoryRelease }) => {
-        const { color } = getQualityStatus(value);
+        const { color } = getQualityStatus(value, bands);
         return [
           `<div style="display:flex; align-items:center; gap:6px; margin-top:6px;">`,
           `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:${color};"></span>`,
           `<strong>${escapeHtml(repository)}</strong></div>`,
-          `<div>Indicador TSQMI: ${formatDecimal(value)} (${formatQualityGrade(value)})</div>`,
+          `<div>Indicador TSQMI: ${formatDecimal(value)} (${formatQualityGrade(value, bands)})</div>`,
           `<div>${formatReleaseVariation(repositoryRelease)}</div>`,
         ].join('');
       });
