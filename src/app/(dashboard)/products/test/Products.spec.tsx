@@ -371,7 +371,7 @@ describe('Products Component', () => {
     
     const createBtn = screen.getByText('Cadastrar Primeiro Produto');
     await act(async () => { fireEvent.click(createBtn); });
-    expect(mockPush).toHaveBeenCalledWith('/products/create?id_organization=org-1');
+    expect(mockPush).toHaveBeenCalledWith('/products/create/?id_organization=org-1');
   });
 
   it('handles getGithubOrganizations error', async () => {

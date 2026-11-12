@@ -470,7 +470,7 @@ const Products: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => router.push(`/products/create?id_organization=${selectedOrgDbId}`)}
+            onClick={() => router.push(`/products/create/?id_organization=${selectedOrgDbId}`)}
             sx={{ marginTop: '1.5rem', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}
           >
             Cadastrar Primeiro Produto
@@ -622,7 +622,7 @@ const Products: React.FC = () => {
               <Button
                 variant="outlined"
                 color="primary"
-                onClick={() => router.push(`/products/create?id_organization=${selectedOrgDbId}`)}
+                onClick={() => router.push(`/products/create/?id_organization=${selectedOrgDbId}`)}
                 disabled={!selectedOrgDbId}
                 sx={{ height: '56px', textTransform: 'none', fontWeight: 'bold', whiteSpace: 'nowrap', borderRadius: '8px' }}
               >

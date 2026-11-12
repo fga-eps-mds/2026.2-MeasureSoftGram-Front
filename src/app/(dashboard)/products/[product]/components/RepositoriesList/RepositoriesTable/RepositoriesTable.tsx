@@ -210,7 +210,7 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
                   aria-label="edit"
                   onClick={() =>
                     router.push(
-                      `/products/${currentOrganization?.id}-${currentProduct?.id}/repositories/manage-repository?id=${repo.id}`
+                      `/products/${currentOrganization?.id}-${currentProduct?.id}/repositories/manage-repository/?id=${repo.id}`
                     )
                   }
                 >

@@ -147,7 +147,7 @@ describe('RepositoriesTable', () => {
     });
 
     fireEvent.click(screen.getByLabelText('edit'));
-    expect(push.mock.calls).toEqual([['/products/1-1/repositories/manage-repository?id=1']]);
+    expect(push.mock.calls).toEqual([['/products/1-1/repositories/manage-repository/?id=1']]);
 
     fireEvent.click(screen.getByLabelText('delete'));
     expect(screen.getByRole('textbox')).toBeInTheDocument();
