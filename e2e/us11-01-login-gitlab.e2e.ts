@@ -30,13 +30,11 @@ const PROTECTED_ROUTES = [
   `${PRODUCT_PATH}/repositories/`,
   `${PRODUCT_PATH}/repositories/1/`,
   `${PRODUCT_PATH}/repositories/manage-repository/`,
+  '/products/create/',
   ...['overview', 'metamodelo', 'entidade', 'distribuicao', 'relacoes', 'temporal'].map(
     (dashboard) => `${PRODUCT_PATH}/dashboards/${dashboard}/`
   )
 ];
-
-/** Sem useRequireAuth e sem pedir a API ao abrir: o formulário de novo produto continua na tela depois do logout. */
-const UNPROTECTED_ROUTES = ['/products/create/'];
 
 /** O botão mostra "LOGIN COM GITLAB" em maiúsculas; o CA diz "Login com GitLab". */
 const loginButton = (page: Page) => page.getByRole('button', { name: /login com gitlab/i });
@@ -271,13 +269,4 @@ test.describe('@US11.01-CA6 "Finalizar Sessão" no menu do usuário encerra a se
     await finishSession(page);
     await expectRedirectsToPublicPage(page, PROTECTED_ROUTES);
   });
-
-  test.fixme(
-    'depois de sair, o cadastro de produto também volta à página pública (bug: abre sem sessão)',
-    async ({ page }) => {
-      await loginWithGitlab(page);
-      await finishSession(page);
-      await expectRedirectsToPublicPage(page, UNPROTECTED_ROUTES);
-    }
-  );
 });

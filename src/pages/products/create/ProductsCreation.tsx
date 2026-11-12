@@ -7,6 +7,7 @@ import { useOrganizationContext } from '@contexts/OrganizationProvider';
 import { useProductContext } from '@contexts/ProductProvider';
 import { Botoes, Container, Description, Form, Header, Wrapper } from '@pages/organizations/styles';
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
+import useRequireAuth from '@hooks/useRequireAuth';
 import MSGButton from '../../../components/idv/buttons/MSGButton';
 import { useProductQuery } from '../hooks/useProductQuery';
 
@@ -15,6 +16,7 @@ interface OrganizationsType extends React.FC {
 }
 
 const ProductsCreation: OrganizationsType = () => {
+  useRequireAuth();
   const router = useRouter();
   const [nome, setName] = useState('');
   const [descricao, setDescription] = useState('');
