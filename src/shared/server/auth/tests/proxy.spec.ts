@@ -123,7 +123,11 @@ describe('proxy', () => {
       );
     });
 
-    it.each(['/products/', '/products/1-2-x/dashboards/overview/', '/products/1-2-x/releases/create/'])(
+    it('produto com ponto no nome também exige login', async () => {
+      expect(location(await call('/products/1-2-msg-2.0/'))).toBe(`${ORIGIN}/auth?returnTo=%2Fproducts%2F1-2-msg-2.0`);
+    });
+
+    it.each(['/products/', '/products/1-2-x/dashboards/overview/','/products/1-2-x/releases/create/'])(
       '%s é página e exige login',
       async (path) => {
         expect(location(await call(path))).toContain('/auth?returnTo=');
@@ -212,7 +216,8 @@ describe('proxy', () => {
   describe('matcher', () => {
     const matcher = new RegExp(`^${config.matcher[0]}$`);
 
-    it.each(['/home', '/products/1-2-x', '/auth', '/'])('cobre %s', (path) => {
+    // a URL do produto leva o nome dele, que pode ter ponto ('MSG 2.0', 'app.js')
+    it.each(['/home', '/products/1-2-x', '/products/1-2-msg-2.0', '/products/1-2-app.js/releases', '/auth', '/'])('cobre %s', (path) => {
       expect(matcher.test(path)).toBe(true);
     });
 

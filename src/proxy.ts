@@ -61,5 +61,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|bff|images|locales|.*\\..*).*)']
+  // Não exclui caminhos com ponto: a URL do produto leva o nome dele ('MSG 2.0'). Um arquivo de `public/` fora das
+  // pastas abaixo passa pelo proxy, mas como não é página ele só o deixa seguir.
+  matcher: ['/((?!_next|bff|images|locales|favicon\\.ico|mockServiceWorker\\.js).*)']
 };
