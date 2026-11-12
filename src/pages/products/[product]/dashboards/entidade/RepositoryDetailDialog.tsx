@@ -54,7 +54,7 @@ export default function RepositoryDetailDialog({
   cell,
   onClose,
   bands
-}: Props) {
+}: Readonly<Props>) {
   const childLevel = CHILD_LEVEL[level];
   const {
     data: analysis,

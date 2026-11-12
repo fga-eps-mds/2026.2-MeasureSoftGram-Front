@@ -76,7 +76,7 @@ export function bandColumns(bands: QualityBand[]): string {
   // décimos de milésimo do eixo, para a conta ser entre inteiros mesmo com limites quebrados como 0,125
   const widths = bands.map((band) => Math.round((band.max - band.min) * 10000));
   // a régua cobre o eixo inteiro, então o divisor nunca é zero
-  const divisor = widths.reduce(gcd, 0);
+  const divisor = widths.reduce((divisorSoFar, width) => gcd(divisorSoFar, width), 0);
   return widths.map((width) => `minmax(0, ${width / divisor}fr)`).join(' ');
 }
 
@@ -86,7 +86,7 @@ export function bandColumns(bands: QualityBand[]): string {
  * cartão. Cada faixa decide pela própria largura se mostra a letra e o rótulo, com a fonte menor se precisar, ou só a
  * letra (ver bandLabelRules): no desktop o rótulo aparece; em telas estreitas, como 360 px, só a letra.
  */
-export function QualityBandRuler({ bands = QUALITY_BANDS }: { bands?: QualityBand[] }) {
+export function QualityBandRuler({ bands = QUALITY_BANDS }: Readonly<{ bands?: QualityBand[] }>) {
   return (
     <Box
       component="ul"

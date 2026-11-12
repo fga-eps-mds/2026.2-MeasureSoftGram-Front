@@ -70,7 +70,7 @@ const headerCellSx = {
   color: DASHBOARD_COLORS.text
 } as const;
 
-function Score({ value, detail, bands }: { value: number | null; detail?: string; bands: QualityBand[] }) {
+function Score({ value, detail, bands }: Readonly<{ value: number | null; detail?: string; bands: QualityBand[] }>) {
   const band = value === null ? undefined : getQualityBand(value, bands);
   if (value === null || !band) {
     return (
@@ -109,7 +109,7 @@ const scoreBoxSx = (value: number | null, highlighted: boolean, bands: QualityBa
   } as const;
 };
 
-function TsqmiCell({ repository, bands }: { repository: EntityMatrixRepository; bands: QualityBand[] }) {
+function TsqmiCell({ repository, bands }: Readonly<{ repository: EntityMatrixRepository; bands: QualityBand[] }>) {
   const { value, previous_value: previousValue } = repository.tsqmi;
   return (
     <Box sx={scoreBoxSx(value, false, bands)} data-testid={`tsqmi-${repository.id}`}>
@@ -119,7 +119,7 @@ function TsqmiCell({ repository, bands }: { repository: EntityMatrixRepository; 
 }
 
 /** Legenda das 5 faixas e do destaque (CA3, CA4), nos limites da régua do produto (US30.02). */
-export function QualityGradeLegend({ bands }: { bands: QualityBand[] }) {
+export function QualityGradeLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
   return (
     <Box display="flex" flexWrap="wrap" alignItems="center" gap="8px 16px" data-testid="quality-grade-legend">
       <Typography fontSize="12px" fontWeight="bold" color={DASHBOARD_COLORS.text}>
@@ -165,7 +165,7 @@ export function QualityGradeLegend({ bands }: { bands: QualityBand[] }) {
  * o grau e a cor da faixa, linhas do pior para o melhor TSQMI. Mede o tempo entre a chegada dos dados e o desenho
  * (diretriz do épico: menos de 1 s) e o expõe em `data-render-ms`.
  */
-export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands }: Props) {
+export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands }: Readonly<Props>) {
   const rows = useMemo(() => sortRepositoriesByTsqmi(matrix.repositories), [matrix]);
   const groups = useMemo(() => getColumnGroups(matrix.columns), [matrix]);
   const containerRef = useRef<HTMLDivElement>(null);
