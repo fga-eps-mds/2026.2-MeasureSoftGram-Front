@@ -55,7 +55,7 @@ export const isProtectedPath = (pathname: string): boolean => {
   return PROTECTED_ROUTES.some((pattern) => matchesPattern(pattern, path));
 };
 
-const INTERNAL_BASE = 'http://internal.invalid';
+const INTERNAL_BASE = 'https://internal.invalid';
 
 /**
  * '//host' e '/\host' o navegador trata como outro domínio, e ele também descarta tab e quebra de linha antes de
