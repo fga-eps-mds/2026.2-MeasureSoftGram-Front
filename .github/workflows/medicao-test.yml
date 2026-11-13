@@ -1,0 +1,109 @@
+# Workflow TEMPORÁRIO de medição — TASK33.04.03 (QA-16a), investigação da mediana do test.yml.
+#
+# Não é para entrar no develop: dispara só por push na branch da investigação e existe para medir, em
+# condições iguais, as hipóteses da issue #271 do DOC. A correção é a QA-16b, que mexe no test.yml de verdade.
+#
+# Como ler os números: cada job repete o caminho do test.yml com uma variante, e o tempo de cada etapa sai da
+# API do Actions (steps[].started_at/completed_at), não de `time` dentro do passo. O Sonar fica fora de
+# propósito — rodar o scanner cinco vezes no mesmo projeto atropelaria a análise do PR, e a mediana dele
+# (0m58s) já veio do histórico das 55 execuções.
+#
+# A primeira push sai fria no cache do buildx: as medianas valem da segunda em diante.
+name: Medição das etapas (temporário, QA-16a)
+
+on:
+  push:
+    branches: [chore/medicao-etapas-test-yml]
+
+jobs:
+  # Ramo que depende do código: install, lint e teste. É o que sobraria no caminho crítico se o Docker saísse
+  # para um job paralelo, então a duração deste job é a resposta da hipótese "etapas em paralelo".
+  teste:
+    name: teste · ${{ matrix.nome }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # repete o test.yml de hoje: sem --maxWorkers, o Jest usa o padrão (núcleos − 1)
+          - nome: baseline
+            jest: ''
+          - nome: workers-2
+            jest: '--maxWorkers=2'
+          - nome: workers-4
+            jest: '--maxWorkers=4'
+          - nome: workers-100
+            jest: '--maxWorkers=100%'
+          # o jest.config.js gera lcov, text, html e json; no CI o Sonar só lê o lcov.info (e o coverage.xml,
+          # que vem do reporter jest-sonar), então html e json são trabalho jogado fora
+          - nome: cov-so-lcov
+            jest: '--coverageReporters=lcov'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Registrar a máquina do runner
+        run: |
+          echo "núcleos: $(nproc)"
+          echo "memória: $(free -g | awk '/Mem:/ {print $2} ') GB"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Instalar dependência libssl1.1 para o SWC do Next.js
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSOL https://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb || curl --proto '=https' --tlsv1.2 -sSOL https://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Linter (ESLint + Prettier)
+        run: pnpm run lint
+
+      - name: Rodar testes e gerar cobertura
+        run: pnpm run ci:test --coverage ${{ matrix.jest }}
+
+  # Ramo que não depende de teste nem de lint: hoje ele é 53% do job (3m00s do build + 42s do export do cache)
+  # e roda em série depois de tudo. Aqui ele roda sozinho, para medir quanto vale como job paralelo.
+  docker:
+    name: docker · ${{ matrix.nome }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # como está no test.yml hoje
+          - nome: cache-max
+            cache_to: 'type=gha,mode=max,scope=medicao-max'
+            cache_from: 'type=gha,scope=medicao-max'
+          # mode=min exporta só a imagem final, não as camadas intermediárias: o export encurta, o build pode
+          # pagar mais caro nas próximas execuções
+          - nome: cache-min
+            cache_to: 'type=gha,mode=min,scope=medicao-min'
+            cache_from: 'type=gha,scope=medicao-min'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      # cada variante tem o seu próprio scope para uma não ler o cache da outra e sujar a comparação
+      - name: Build da imagem Docker
+        run: |
+          docker buildx build \
+            --cache-from=${{ matrix.cache_from }} \
+            --cache-to=${{ matrix.cache_to }} \
+            -t measuresoftgram-front:medicao \
+            --load .
