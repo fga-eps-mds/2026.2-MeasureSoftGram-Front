@@ -75,5 +75,14 @@
   },
   "msw": {
     "workerDirectory": "public"
+  },
+  "pnpm": {
+    "packageExtensions": {
+      "echarts-for-react": {
+        "dependencies": {
+          "tslib": "^2.0.0"
+        }
+      }
+    }
   }
 }
