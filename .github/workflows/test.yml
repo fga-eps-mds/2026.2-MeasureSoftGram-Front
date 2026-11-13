@@ -6,7 +6,16 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Dois jobs em paralelo, e não um em série, por causa do portão M8 (mediana do test.yml <= 5 min). A medição da
+# QA-16a (TASK33.04.03, issue #271 do DOC) sobre 55 execuções mostrou o job único em 6m56s de mediana, dos quais
+# 3m42s (53%) eram o empacotamento — build da imagem mais o export do cache do buildx —, que não depende de lint
+# nem de teste. Separados, a execução dura o maior dos dois ramos, medido em ~3m43s.
 jobs:
+  # Ramo que depende do código. O Sonar fica aqui porque precisa do relatório de cobertura que o teste gera.
+  #
+  # O nome do job precisa continuar `build`: o ruleset do develop exige o check de status com esse nome, e um job
+  # renomeado (ou um `name:` por cima) reporta outro check, deixando o PR preso em "Expected — Waiting for status
+  # to be reported" para sempre. Por isso aqui não tem `name:`.
   build:
     runs-on: ubuntu-latest
 
@@ -14,6 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # o Sonar precisa do histórico para saber o que é código novo no PR
           fetch-depth: 0
 
       - name: Install pnpm
@@ -66,6 +76,16 @@ jobs:
            github.event.pull_request.head.repo.full_name != github.repository)
         run: |
           echo "::notice title=SonarCloud Ignorado::O scan foi ignorado pois foi disparado pelo Dependabot ou originou-se de um fork externo sem acesso aos secrets de repositório."
+
+  # Ramo que não depende de lint nem de teste: a validação de que a imagem continua empacotando. O cache fica em
+  # mode=max; a QA-16a mediu mode=min e ele saiu pior (job de 4m07s contra 3m43s).
+  empacotamento:
+    name: Build da imagem Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
