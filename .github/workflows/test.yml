@@ -12,8 +12,11 @@ on:
 # nem de teste. Separados, a execução dura o maior dos dois ramos, medido em ~3m43s.
 jobs:
   # Ramo que depende do código. O Sonar fica aqui porque precisa do relatório de cobertura que o teste gera.
-  codigo:
-    name: Lint, testes e SonarCloud
+  #
+  # O nome do job precisa continuar `build`: o ruleset do develop exige o check de status com esse nome, e um job
+  # renomeado (ou um `name:` por cima) reporta outro check, deixando o PR preso em "Expected — Waiting for status
+  # to be reported" para sempre. Por isso aqui não tem `name:`.
+  build:
     runs-on: ubuntu-latest
 
     steps:
