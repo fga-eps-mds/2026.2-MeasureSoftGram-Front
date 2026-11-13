@@ -11,7 +11,7 @@ import {
 
 const groupSelect = (page: Page) => page.getByRole('combobox', { name: /^Grupos do GitLab/ });
 const productSelect = (page: Page) => page.getByRole('combobox', { name: /^Produtos do MeasureSoftGram/ });
-const toasts = (page: Page) => page.locator('.Toastify__toast-body');
+const toasts = (page: Page) => page.locator('.Toastify__toast');
 
 /**
  * Os POSTs de organização que a tela faz. O defeito criava a organização pessoal pelo nome (`POST /organizations/`) e,
@@ -20,7 +20,7 @@ const toasts = (page: Page) => page.locator('.Toastify__toast-body');
 function organizationPosts(page: Page): string[] {
   const posts: string[] = [];
   page.on('request', (r) => {
-    if (r.method() === 'POST' && r.url().includes('/api/v1/organizations/')) posts.push(new URL(r.url()).pathname);
+    if (r.method() === 'POST' && r.url().includes('/bff/v1/organizations/')) posts.push(new URL(r.url()).pathname);
   });
   return posts;
 }
@@ -31,7 +31,7 @@ async function expectPersonalOrganization(page: Page, posts: string[]) {
   await expect(productSelect(page)).toHaveText(JOAO_PERSONAL_PRODUCT.name);
   // só o import-gitlab-user; na primeira entrada a tela às vezes o chama duas vezes (idempotente no Service)
   expect(posts.length).toBeGreaterThan(0);
-  expect(new Set(posts)).toEqual(new Set(['/api/v1/organizations/import-gitlab-user/']));
+  expect(new Set(posts)).toEqual(new Set(['/bff/v1/organizations/import-gitlab-user/']));
   await expect(toasts(page)).toHaveCount(0);
 }
 
@@ -52,7 +52,7 @@ test.describe('@BUG12.02-CA1 Nome do usuário já usado por um grupo: o namespac
 
     const posts = organizationPosts(page);
     const personalProducts = page.waitForRequest(
-      (r) => new URL(r.url()).pathname === `/api/v1/organizations/${JOAO_PERSONAL_ORGANIZATION.id}/products/`
+      (r) => new URL(r.url()).pathname === `/bff/v1/organizations/${JOAO_PERSONAL_ORGANIZATION.id}/products/`
     );
     await groupSelect(page).click();
     await page.getByRole('option', { name: JOAO_USER.name, exact: true }).click();
@@ -72,7 +72,7 @@ test.describe('@BUG12.02-CA2 Nome já usado por organização de outra pessoa: a
     const others: string[] = [];
     // a organização joao da outra pessoa não está na lista do usuário; a tela não pode chegar até ela por nenhum id
     page.on('request', (r) => {
-      const match = new URL(r.url()).pathname.match(/^\/api\/v1\/organizations\/(\d+)\//);
+      const match = new URL(r.url()).pathname.match(/^\/bff\/v1\/organizations\/(\d+)\//);
       if (match && !['1', JOAO_PERSONAL_ORGANIZATION.id].includes(match[1])) others.push(r.url());
     });
 

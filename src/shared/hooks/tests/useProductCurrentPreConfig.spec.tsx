@@ -155,7 +155,7 @@ const formattedData = [
 
 describe("useProductCurrentPreConfig", () => {
   it("should return the current pre config", async () => {
-    api.get.mockResolvedValue({
+    (api.get as jest.Mock).mockResolvedValue({
       data
     });
 

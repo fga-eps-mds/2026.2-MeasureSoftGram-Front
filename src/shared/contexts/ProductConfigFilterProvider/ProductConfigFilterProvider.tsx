@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useMemo, useState } from 'react';
 
 interface IContext {
@@ -26,7 +28,6 @@ export default function ProductConfigFilterProvider({ children }: Props) {
       setConfigFilter,
       hasKey
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [configFilter, setConfigFilter]
   );
 

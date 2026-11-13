@@ -1,4 +1,3 @@
-import { RepositoryCorrelation } from '@customTypes/product';
 import {
   CORRELATION_COLORS,
   correlationColor,
@@ -16,7 +15,7 @@ import {
   getCorrelationChartSize
 } from '@utils/formatCorrelationCharts';
 import { toCsv } from '@utils/exportCsv';
-import { correlation } from '@pages/products/[product]/dashboards/relacoes/tests/fixtures';
+import { correlation } from '@app/(dashboard)/products/[product]/dashboards/relacoes/tests/fixtures';
 
 type Series = {
   id: string;

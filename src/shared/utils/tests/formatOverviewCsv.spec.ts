@@ -1,4 +1,4 @@
-import { analysis, characteristics, summary } from '@pages/products/[product]/dashboards/overview/tests/fixtures';
+import { analysis, characteristics, summary } from '@app/(dashboard)/products/[product]/dashboards/overview/tests/fixtures';
 import { comparePlannedAccomplished } from '../comparePlannedAccomplished';
 import { toCsv } from '../exportCsv';
 import { getTotalItems, getTsqmiBars } from '../formatOverviewCharts';
@@ -22,7 +22,7 @@ const nameOf = (key: string) => `Nome ${key}`;
 
 const comparisonsOf = (repositoryName: string) => {
   const { planned, accomplished } = analysis();
-  const repository = accomplished.find((item) => item.repository_name === repositoryName);
+  const repository = accomplished?.find((item) => item.repository_name === repositoryName);
   return comparePlannedAccomplished(planned, repository?.characteristics);
 };
 

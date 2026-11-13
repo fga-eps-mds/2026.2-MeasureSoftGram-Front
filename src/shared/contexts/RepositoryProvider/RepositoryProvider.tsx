@@ -21,15 +21,15 @@ interface IRepositoryContext {
   setMeasures: (measures: string[]) => void;
   metrics: string[];
   setMetrics: (metrics: string[]) => void;
-  historicalTSQMI: Historical;
+  historicalTSQMI?: Historical;
   setHistoricalTSQMI: (historical?: Historical) => void;
-  latestTSQMI: TsqmiValue;
+  latestTSQMI?: TsqmiValue;
   setLatestTSQMI: (result?: TsqmiValue) => void;
-  latestTSQMIBadgeUrl: string;
+  latestTSQMIBadgeUrl?: string;
   setLatestTSQMIBadgeUrl: (result?: string) => void;
   characteristicBadgeUrls: Record<string, string>;
   setCharacteristicBadgeUrls: (urls: Record<string, string>) => void;
-  repositoriesLatestTsqmi: RepositoriesLatestTsqmi;
+  repositoriesLatestTsqmi?: RepositoriesLatestTsqmi;
   setRepositoriesLatestTsqmi: (result?: RepositoriesLatestTsqmi) => void;
 }
 
@@ -54,7 +54,7 @@ export function RepositoryProvider({ children }: Props) {
     if (repositoryList && repositoryList.length > 0) {
       if (currentRepository === undefined) {
         if (storedRepoId) {
-          const found = repositoryList.find(r => r.id === Number(storedRepoId) || r.id === storedRepoId);
+          const found = repositoryList.find(r => r.id === Number(storedRepoId) || String(r.id) === storedRepoId);
           if (found) {
             setCurrentRepository(found);
             return;

@@ -2,7 +2,7 @@ import React from 'react';
 import { OrganizationProvider } from '@contexts/OrganizationProvider';
 import { ProductProvider } from '@contexts/ProductProvider';
 import { RepositoryProvider } from '@contexts/RepositoryProvider';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { useRequestValues } from '@hooks/useRequestValues';
 import LatestValueTable from '../LatestValueTable';
 
@@ -53,7 +53,7 @@ beforeEach(() => {
 
 describe('<LatestValueTable />', () => {
   it('should render correctly', () => {
-    useRequestValues.mockReturnValue({
+    (useRequestValues as jest.Mock).mockReturnValue({
       data,
       error: undefined,
       isLoading: false,
@@ -69,7 +69,7 @@ describe('<LatestValueTable />', () => {
   });
 
   it('should render correctly with empty data', () => {
-    useRequestValues.mockReturnValue({
+    (useRequestValues as jest.Mock).mockReturnValue({
       data: [],
       error: undefined,
       isLoading: false,
@@ -85,7 +85,7 @@ describe('<LatestValueTable />', () => {
   });
 
   it('should render correctly with error', () => {
-    useRequestValues.mockReturnValue({
+    (useRequestValues as jest.Mock).mockReturnValue({
       data: [],
       error: new Error('error'),
       isLoading: false,
@@ -101,7 +101,7 @@ describe('<LatestValueTable />', () => {
   });
 
   it('should render correctly with loading', () => {
-    useRequestValues.mockReturnValue({
+    (useRequestValues as jest.Mock).mockReturnValue({
       data: [],
       error: undefined,
       isLoading: true,

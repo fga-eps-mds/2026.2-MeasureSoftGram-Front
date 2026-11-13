@@ -53,7 +53,7 @@ export function useRequestInfinite<Data = unknown, Error = unknown>(
 
   const path = dataPath ? `data.${String(dataPath)}` : 'data';
 
-  const isEmpty = useMemo(() => !response || get(response, `[0].${path}`)?.length === 0, [path, response]);
+  const isEmpty = useMemo(() => !response || (get(response, `[0].${path}`) as unknown[] | undefined)?.length === 0, [path, response]);
 
   const isLoadingInitialData = useMemo(() => !response && !error, [error, response]);
 
@@ -68,7 +68,7 @@ export function useRequestInfinite<Data = unknown, Error = unknown>(
   );
 
   const isReachingEnd = useMemo(
-    () => isEmpty || Boolean(response && get(response, `[${response?.length - 1}].${path}`)?.length < limit),
+    () => isEmpty || Boolean(response && Number((get(response, `[${response.length - 1}].${path}`) as unknown[] | undefined)?.length) < limit),
     [isEmpty, limit, path, response]
   );
 

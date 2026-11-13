@@ -123,7 +123,8 @@ test.describe('@US22.01-CA3 Curvas do planejado (azul) e do realizado (laranja) 
       await page.goto(RELEASE_PATH, { waitUntil: 'commit' });
       const curves = [page.getByTestId('equalizer-curve-planned'), page.getByTestId('equalizer-curve-accomplished')];
       await Promise.all(curves.map(expectCurveDrawn));
-      await expect(page.getByTestId('equalizer-track-reliability')).toContainText('characteristics.reliability');
+      // antes do português chegar, o rótulo está em outro texto (na stack nova, o inglês já carregado)
+      await expect(page.getByTestId('equalizer-track-reliability')).not.toContainText('Confiabilidade');
 
       releaseTranslations();
       await expect(page.getByTestId('equalizer-track-reliability')).toContainText('Confiabilidade');

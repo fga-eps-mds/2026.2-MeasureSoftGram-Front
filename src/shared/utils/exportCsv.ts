@@ -16,6 +16,16 @@ export interface CsvChart<Row = Record<string, CsvValue>> {
   rows: Row[];
 }
 
+/**
+ * Qualquer gráfico para exportar, seja qual for o formato da linha. As linhas dos formatadores são interfaces, sem
+ * assinatura de índice, e não cabem num `Record<string, CsvValue>`; um `.zip` também junta gráficos de linhas diferentes.
+ */
+export interface AnyCsvChart {
+  name: string;
+  columns: ReadonlyArray<{ key: string; title: string }>;
+  rows: ReadonlyArray<object>;
+}
+
 const CSV_TYPE = 'text/csv;charset=utf-8';
 /**
  * O Excel em português usa `;` como separador de lista: com vírgula ele joga a linha inteira numa célula só, que foi
@@ -36,13 +46,10 @@ function escapeCsvValue(value: CsvValue): string {
 }
 
 /** CSV separado por ponto e vírgula, com o cabeçalho e uma linha por item, nos valores sem arredondar. */
-export function toCsv<Row extends Record<string, CsvValue>>({
-  columns,
-  rows
-}: Pick<CsvChart<Row>, 'columns' | 'rows'>) {
+export function toCsv({ columns, rows }: Pick<AnyCsvChart, 'columns' | 'rows'>) {
   const lines = [
     columns.map((column) => escapeCsvValue(column.title)),
-    ...rows.map((row) => columns.map((column) => escapeCsvValue(row[column.key])))
+    ...rows.map((row) => columns.map((column) => escapeCsvValue((row as Record<string, CsvValue>)[column.key])))
   ];
   return lines.map((line) => line.join(CSV_SEPARATOR)).join('\r\n');
 }
@@ -60,12 +67,12 @@ function downloadFile(content: Blob, fileName: string) {
   URL.revokeObjectURL(url);
 }
 
-export function downloadCsv<Row extends Record<string, CsvValue>>(dashboard: string, chart: CsvChart<Row>) {
+export function downloadCsv(dashboard: string, chart: AnyCsvChart) {
   downloadFile(new Blob([BOM + toCsv(chart)], { type: CSV_TYPE }), csvFileName(dashboard, chart.name));
 }
 
 /** Um `.zip` (`msgram-<dashboard>-<data>.zip`) com um CSV por gráfico, já que cada gráfico tem colunas diferentes. */
-export async function downloadCsvZip<Row extends Record<string, CsvValue>>(dashboard: string, charts: CsvChart<Row>[]) {
+export async function downloadCsvZip(dashboard: string, charts: ReadonlyArray<AnyCsvChart>) {
   const date = new Date();
   const zip = new JSZip();
   charts.forEach((chart) => zip.file(csvFileName(dashboard, chart.name, date), BOM + toCsv(chart)));

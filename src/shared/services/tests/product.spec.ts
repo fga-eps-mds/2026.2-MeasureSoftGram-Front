@@ -121,7 +121,8 @@ describe('ProductQuery', () => {
       description: 'teste',
       release_name: 'teste',
       start_at: '12/12/2002',
-      end_at: '22/12/2002'
+      end_at: '22/12/2002',
+      repositories_ids: []
     };
 
     await productQuery.getIsReleaseValid(organizationId, productId, form);
@@ -325,7 +326,7 @@ describe('ProductQuery', () => {
 
     await productQuery.getReleaseAnalysisDataByReleaseId(organizationId, productId, releaseId);
     expect(api.get).toHaveBeenCalledWith(
-      `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data`
+      `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data/`
     );
   });
 

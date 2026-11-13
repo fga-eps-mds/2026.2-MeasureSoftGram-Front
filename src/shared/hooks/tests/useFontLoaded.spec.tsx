@@ -70,7 +70,11 @@ describe('useFontLoaded', () => {
   it('não atualiza o estado depois de desmontar', async () => {
     jest.useFakeTimers();
     const fonts = mockFonts();
+    const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
     const { result, unmount } = renderHook(() => useFontLoaded(FONT));
+    // o prazo da fonte; o React 19 agenda timers próprios, então não dá para contar todos
+    const fontTimer = setTimeoutSpy.mock.results.find((_, index) => setTimeoutSpy.mock.calls[index][1] === FONT_LOAD_TIMEOUT_MS)?.value;
 
     unmount();
     await act(async () => {
@@ -79,6 +83,9 @@ describe('useFontLoaded', () => {
     });
 
     expect(result.current).toBe(false);
-    expect(jest.getTimerCount()).toBe(0);
+    expect(fontTimer).toBeDefined();
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(fontTimer);
+    setTimeoutSpy.mockRestore();
+    clearTimeoutSpy.mockRestore();
   });
 });

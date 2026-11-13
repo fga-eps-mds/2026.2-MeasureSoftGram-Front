@@ -5,9 +5,7 @@ import { toast } from 'react-toastify';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { withRepositoryTerm } from '@utils/csvRepositoryTerm';
-import { CsvChart, CsvValue, downloadCsv, downloadCsvZip } from '@utils/exportCsv';
-
-type Row = Record<string, CsvValue>;
+import { AnyCsvChart, downloadCsv, downloadCsvZip } from '@utils/exportCsv';
 
 const BUTTON_SX = {
   borderColor: DASHBOARD_COLORS.cardBorder,
@@ -23,11 +21,11 @@ const BUTTON_SX = {
  * "Exportar .csv" de um gráfico, com os dados que ele mostra; desabilitado sem dados. Quando um card tem mais de um
  * gráfico, `ariaLabel` diferencia o botão de cada um (e deve começar com o texto visível).
  */
-export default function ExportCsvButton<T extends Row>({
+export default function ExportCsvButton({
   dashboard,
   chart,
   ariaLabel
-}: Readonly<{ dashboard: string; chart: CsvChart<T>; ariaLabel?: string }>) {
+}: Readonly<{ dashboard: string; chart: AnyCsvChart; ariaLabel?: string }>) {
   const { terms } = useProviderTerms();
 
   return (
@@ -46,10 +44,10 @@ export default function ExportCsvButton<T extends Row>({
 }
 
 /** Exportação geral do topo da página: um `.zip` com um CSV por gráfico com dados; desabilitado se nenhum tiver. */
-export function ExportAllCsvButton<T extends Row>({
+export function ExportAllCsvButton({
   dashboard,
   charts
-}: Readonly<{ dashboard: string; charts: CsvChart<T>[] }>) {
+}: Readonly<{ dashboard: string; charts: ReadonlyArray<AnyCsvChart> }>) {
   const { terms } = useProviderTerms();
   const [isExporting, setIsExporting] = useState(false);
   const withRows = charts.filter((chart) => chart.rows.length > 0);

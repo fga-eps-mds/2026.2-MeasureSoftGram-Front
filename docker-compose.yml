@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        SERVICE_URL: ${SERVICE_URL:-http://localhost:8080/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         NEXT_PUBLIC_LOGIN_REDIRECT_URL: ${NEXT_PUBLIC_LOGIN_REDIRECT_URL:-}
         NEXT_PUBLIC_GITHUB_CLIENT_ID: ${NEXT_PUBLIC_GITHUB_CLIENT_ID:-}
         GITLAB_CLIENT_ID: ${GITLAB_CLIENT_ID:-}
@@ -17,5 +17,7 @@ services:
       - /usr/src/.next
     env_file:
       - .env
+    environment:
+      SERVICE_URL: ${SERVICE_URL:-http://service:8080/api}
     extra_hosts:
       - "host.docker.internal:host-gateway"

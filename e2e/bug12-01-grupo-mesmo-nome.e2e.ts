@@ -22,7 +22,7 @@ const groupProjectsRequest = (page: Page): Promise<Request> =>
   page.waitForRequest((r) => {
     const url = new URL(r.url());
     return (
-      url.pathname === `/api${IMPORT_API.projects}` &&
+      url.pathname === `/bff${IMPORT_API.projects}` &&
       url.searchParams.get('namespace_id') === String(JOAO_GROUP.id) &&
       url.searchParams.get('kind') === 'group'
     );

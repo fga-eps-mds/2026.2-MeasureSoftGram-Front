@@ -51,7 +51,9 @@ test.describe('@US30.03-CA3 Sem o modal antigo: o link "Ajustar faixas" leva à 
 
   test('"Ajustar faixas" abre a aba "Faixas de qualidade" das configurações do produto', async ({ page }) => {
     await openRepository(page);
-    await expect(adjustBandsLink(page)).toHaveAttribute('href', SETTINGS_PATH);
+    // o Link do App Router não acrescenta a barra final do trailingSlash no href; o Next redireciona para ela
+    const settingsHref = new RegExp(`^${SETTINGS_PATH.replace(/\/$/, '')}/?$`);
+    await expect(adjustBandsLink(page)).toHaveAttribute('href', settingsHref);
     await adjustBandsLink(page).click();
     await expect(page).toHaveURL(/\/settings\/?$/);
     await expect(page.getByRole('tab', { name: 'Faixas de qualidade' })).toHaveAttribute('aria-selected', 'true');

@@ -9,12 +9,12 @@ interface Props {
   id: string;
   name: string;
   url: string;
-  description: string;
+  description?: string;
 }
 
 const CardNavigation: React.FC<Props> = ({ id, name, url, description }) => (
   <Button key={id} variant="outlined" style={{ textAlign: 'left', width: '100%', justifyContent: 'space-between' }}>
-    <Link href={url} passHref>
+    <Link href={url} style={{ display: "block", width: "100%" }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" width="100%" padding="10px">
         <Box display="flex" flexDirection="column" width="100%">
           <Typography variant="subtitle1" style={{ color: '#2B4D6F', fontWeight: 'bold' }}>

@@ -1,4 +1,3 @@
-/* eslint-disable react/no-array-index-key */
 import * as React from 'react';
 
 import Box from '@mui/material/Box';
@@ -10,7 +9,7 @@ import * as Styles from './styles';
 
 const { ScrollDiv } = Styles;
 interface DrawerMenuProps {
-  children: JSX.Element;
+  children: React.JSX.Element;
   open: boolean;
   buttons?: Array<ButtonType>;
   subtitle?: string;

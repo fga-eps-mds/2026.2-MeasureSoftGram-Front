@@ -8,7 +8,7 @@ jest.mock('../api', () => ({
     post: jest.fn(),
     put: jest.fn(),
     delete: jest.fn(),
-    getUri: jest.fn(() => 'http://api.test')
+    getUri: jest.fn(() => '/bff')
   }
 }));
 
@@ -222,18 +222,31 @@ describe('Repository', () => {
       expect(result).toBeUndefined();
     });
 
-    it('getTsqmiBadgeUrl monta a URL do badge de TSQMI', () => {
-      const url = repository.getTsqmiBadgeUrl(props);
+    describe('URL dos badges', () => {
+      const original = process.env.NEXT_PUBLIC_API_URL;
+      const TSQMI_PATH = '/v1/organizations/org1/products/prod1/repositories/repo1/latest-values/tsqmi/badge/';
+      const RELIABILITY_PATH =
+        '/v1/organizations/org1/products/prod1/repositories/repo1/latest-values/characteristics/reliability/badge/';
 
-      expect(url).toEqual('http://api.test/v1/organizations/org1/products/prod1/repositories/repo1/latest-values/tsqmi/badge/');
-    });
+      afterEach(() => {
+        if (original === undefined) delete process.env.NEXT_PUBLIC_API_URL;
+        else process.env.NEXT_PUBLIC_API_URL = original;
+      });
 
-    it('getCharacteristicBadgeUrl monta a URL do badge de característica', () => {
-      const url = repository.getCharacteristicBadgeUrl('org1', 'prod1', 'repo1', 'reliability');
+      it('usa NEXT_PUBLIC_API_URL, sem a barra final, e nunca o /bff', () => {
+        process.env.NEXT_PUBLIC_API_URL = 'https://api.example.test/api/';
 
-      expect(url).toEqual(
-        'http://api.test/v1/organizations/org1/products/prod1/repositories/repo1/latest-values/characteristics/reliability/badge/'
-      );
+        expect(repository.getTsqmiBadgeUrl(props)).toEqual(`https://api.example.test/api${TSQMI_PATH}`);
+        expect(repository.getCharacteristicBadgeUrl('org1', 'prod1', 'repo1', 'reliability')).toEqual(
+          `https://api.example.test/api${RELIABILITY_PATH}`
+        );
+      });
+
+      it('sem NEXT_PUBLIC_API_URL, usa a API na mesma origem do site, em /api', () => {
+        delete process.env.NEXT_PUBLIC_API_URL;
+
+        expect(repository.getTsqmiBadgeUrl(props)).toEqual(`${window.location.origin}/api${TSQMI_PATH}`);
+      });
     });
   });
 });

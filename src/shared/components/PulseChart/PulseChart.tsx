@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Button, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import ExportCsvButton from '@components/ExportCsvButton';
@@ -98,13 +98,18 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
     retry,
   } = usePulseChartData(organizationId, productId);
 
-  const chartOptions = formatPulseChartOptions(
-    filteredRepositories,
-    {
-      ...PULSE_OPTIONS,
-      releaseTooltip: (points) => formatPulseReleaseTooltip(points, bands),
-    },
-    bands
+  // refazer o gráfico (notMerge) a cada render, no meio da animação, faz o ECharts mexer em elementos já descartados
+  const chartOptions = useMemo(
+    () =>
+      formatPulseChartOptions(
+        filteredRepositories,
+        {
+          ...PULSE_OPTIONS,
+          releaseTooltip: (points) => formatPulseReleaseTooltip(points, bands),
+        },
+        bands
+      ),
+    [filteredRepositories, bands]
   );
 
   // Sem medição no período não há pulso para desenhar, mas a causa muda a instrução: o produto pode não ter

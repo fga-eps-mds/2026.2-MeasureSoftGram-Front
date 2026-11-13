@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '@contexts/Auth';
 import { useProductContext } from '@contexts/ProductProvider';
-import { useRouter } from 'next/router';
+import { useRouter } from '@hooks/useRouter';
 import { useOrganizationContext } from '@contexts/OrganizationProvider';
 import { useSideMenuContext } from '@contexts/SidebarProvider/SideMenuProvider';
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
@@ -147,9 +147,8 @@ function SideMenu() {
     if (!prefetchPaths) return undefined;
     const prefetchAll = () =>
       prefetchPaths.split('\n').forEach((path) => {
-        router.prefetch?.(path)?.catch(() => {
-          // sem prefetch, a página baixa no clique, como antes
-        });
+        // sem prefetch, a página baixa no clique, como antes
+        router.prefetch?.(path);
       });
     // só quando o navegador fica ocioso, como o <Link>: o código das outras abas não disputa a rede com a página aberta
     if (typeof window.requestIdleCallback === 'function') {
@@ -158,7 +157,6 @@ function SideMenu() {
     }
     const timer = window.setTimeout(prefetchAll, 1000);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefetchPaths]);
 
   return (
@@ -183,7 +181,6 @@ function SideMenu() {
               endIcon={isDashboardMenuOpen ? <FiChevronUp fontSize={20} /> : <FiChevronDown fontSize={20} />}
               text="Dashboards"
               tooltip="Dashboards"
-              path=""
               disable={!currentProduct}
               selected={isAnyDashboardSelected}
               onClick={() => setIsDashboardMenuOpen((prev) => !prev)}

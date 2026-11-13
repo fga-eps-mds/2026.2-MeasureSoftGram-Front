@@ -93,14 +93,14 @@ function render(us, tests, history) {
   const entry = { date: now(), branch: env.GITHUB_REF_NAME ?? 'local', sha: shortSha(), result, run: RUN_URL };
   const nextHistory = [entry, ...history].slice(0, HISTORY_SIZE);
 
+  const runLink = link(`Run ${env.GITHUB_RUN_ID ?? 'local'}`, RUN_URL);
+  const commitLink = link('`' + entry.sha + '`', COMMIT_URL);
   const lines = [
     MARKER,
     '## Aceitação automática (E2E)',
     '',
     `Testes \`@${us}-CAn\` no último push para \`${entry.branch}\`: **${result}**.`,
-    `${link(`Run ${env.GITHUB_RUN_ID ?? 'local'}`, RUN_URL)} · commit ${link(`\`${entry.sha}\``, COMMIT_URL)} · ${
-      entry.date
-    } (Brasília)`,
+    `${runLink} · commit ${commitLink} · ${entry.date} (Brasília)`,
     '',
     '| CA | Testes | Passaram | Instáveis | Falharam | Bug conhecido | Manuais | Resultado |',
     '| --- | --- | --- | --- | --- | --- | --- | --- |',

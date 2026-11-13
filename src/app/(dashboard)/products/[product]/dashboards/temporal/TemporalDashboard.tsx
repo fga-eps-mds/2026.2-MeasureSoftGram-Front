@@ -1,0 +1,260 @@
+'use client';
+
+import React, { useMemo } from 'react';
+import { useRouter } from '@hooks/useRouter';
+import { Box, Container, SxProps, Theme, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+
+import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
+import ReactEcharts, { usePreloadECharts } from '@components/ECharts';
+import ExportCsvButton, { ExportAllCsvButton } from '@components/ExportCsvButton';
+import { useProviderTerms } from '@hooks/useProviderTerms';
+import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import { TEMPORAL_CSV, TemporalCsvRow, formatTemporalCsv } from '@utils/formatTemporalCsv';
+import { formatTimeEvolutionOptions } from '@utils/formatTimeEvolutionChart';
+import { CsvChart } from '@utils/exportCsv';
+import { TimeGranularity } from '@utils/historicalValues';
+import { getPathId } from '@utils/pathDestructer';
+import MSGAlert from '../../../../../../components/idv/feedback';
+
+import { MultiSelectFilter, SingleSelectFilter } from './TemporalFilters';
+import { EvolutionChartData, EvolutionLevel, useTemporalEvolution } from './useTemporalEvolution';
+
+const TITLE = '2. Evolução Temporal';
+const CHART_HEIGHT = 300;
+const TOGGLE_SX: SxProps<Theme> = {
+  textTransform: 'none',
+  fontWeight: 'bold',
+  paddingX: '16px',
+  color: DASHBOARD_COLORS.text,
+  '&.Mui-selected, &.Mui-selected:hover': { backgroundColor: DASHBOARD_COLORS.primary, color: '#FFFFFF' }
+};
+
+const CHARTS: { level: EvolutionLevel; title: string; label: string; normalized: boolean }[] = [
+  { level: 'characteristics', title: 'Característica', label: 'característica', normalized: true },
+  { level: 'subcharacteristics', title: 'Subcaracterísticas', label: 'subcaracterísticas', normalized: true },
+  { level: 'measures', title: 'Medidas', label: 'medidas', normalized: true },
+  { level: 'metrics', title: 'Métricas', label: 'métricas', normalized: false }
+];
+
+function getStatus(data: EvolutionChartData): 'loading' | 'error' | 'empty' | 'ready' {
+  if (data.hasError) return 'error';
+  if (data.isLoading) return 'loading';
+  return data.series.length === 0 ? 'empty' : 'ready';
+}
+
+interface EvolutionChartCardProps {
+  chart: (typeof CHARTS)[number];
+  data: EvolutionChartData;
+  granularity: TimeGranularity;
+  csv: CsvChart<TemporalCsvRow>;
+  emptyTitle: string;
+  emptyDescription: string;
+  repositoryTerm: string;
+}
+
+function EvolutionChartCard({
+  chart,
+  data,
+  granularity,
+  csv,
+  emptyTitle,
+  emptyDescription,
+  repositoryTerm
+}: EvolutionChartCardProps) {
+  const options = useMemo(
+    () => formatTimeEvolutionOptions(data.series, granularity, chart.normalized),
+    [data.series, granularity, chart.normalized]
+  );
+  const exportButton = <ExportCsvButton dashboard={TEMPORAL_CSV.dashboard} chart={csv} />;
+
+  return (
+    <DashboardCard
+      title={chart.title}
+      status={getStatus(data)}
+      headerAction={exportButton}
+      emptyHeaderAction={exportButton}
+      loadingContent={<SkeletonBlock width="100%" height={CHART_HEIGHT} />}
+      loadingMessage={`Carregando a evolução das ${chart.label}…`}
+      emptyTitle={emptyTitle}
+      emptyDescription={emptyDescription}
+      errorTitle={`Não foi possível carregar a evolução das ${chart.label}`}
+      onRetry={data.retry}
+    >
+      {/* a entidade sem medição não vira linha: sem o aviso, ela some do gráfico sem explicação (CA5 da US01.02) */}
+      {data.missing.length > 0 && (
+        <MSGAlert
+          severity="warning"
+          title={`${chart.title} sem valores neste ${repositoryTerm}: ${data.missing.join(', ')}`}
+        >
+          As demais seguem no gráfico. {emptyDescription}
+        </MSGAlert>
+      )}
+      <ReactEcharts option={options} notMerge style={{ height: CHART_HEIGHT, width: '100%' }} />
+    </DashboardCard>
+  );
+}
+
+const TemporalDashboard: React.FC = () => {
+  const { terms } = useProviderTerms();
+  usePreloadECharts();
+
+  const { query } = useRouter();
+  const [organizationId, productId] = getPathId(query?.product as string);
+  const evolution = useTemporalEvolution(organizationId, productId);
+  const { repositories, isLoadingRepositories, hasRepositoriesError, granularity, measures } = evolution;
+
+  // os CSVs levam o que os gráficos mostram: o gráfico carregando, com erro ou sem dados não exporta nada
+  const repositoryName = repositories.find((repository) => repository.id === evolution.repositoryId)?.name ?? '';
+  const csvs = Object.fromEntries(
+    CHARTS.map(({ level }) => {
+      const data = evolution.charts[level];
+      const series = getStatus(data) === 'ready' ? data.series : [];
+      return [level, formatTemporalCsv(level, repositoryName, series, granularity)];
+    })
+  ) as Record<EvolutionLevel, CsvChart<TemporalCsvRow>>;
+
+  const emptyMessages: Record<EvolutionLevel, { title: string; description: string }> = {
+    characteristics: {
+      title: `Ainda não há valores desta característica neste ${terms.repository}`,
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+    },
+    subcharacteristics: {
+      title: `Ainda não há valores das subcaracterísticas escolhidas neste ${terms.repository}`,
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+    },
+    measures: {
+      title: `Ainda não há valores das medidas escolhidas neste ${terms.repository}`,
+      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+    },
+    // o gráfico busca só as métricas com qualifier TRK, então medida cujas métricas são medidas por arquivo fica
+    // vazia aqui mesmo com a coleta em dia: o texto explica isso em vez de acusar falta de dado (ressalva do PO
+    // em 03/11/2026, que citava a Distribuição Estatística, onde esses valores também não aparecem)
+    metrics: {
+      title: `Sem valores de métricas ${measures === 'all' ? 'das medidas' : 'das medidas escolhidas'} neste ${
+        terms.repository
+      }`,
+      description:
+        `Este gráfico mostra só as métricas medidas no ${terms.repository} inteiro. As que são coletadas por ` +
+        'arquivo, como as do SonarQube, não aparecem aqui mesmo com a coleta em dia — as medidas acima já ' +
+        'resumem esses valores. Se os gráficos acima também estão vazios, rode a coleta do MeasureSoftGram ' +
+        `neste ${terms.repository}.`
+    }
+  };
+
+  const renderContent = () => {
+    // a falha ao buscar a lista precisa vir antes do estado vazio: sem ela, a lista chega vazia e a tela acusava
+    // produto sem repositório, escondendo o erro e o "Tentar novamente" que o CA4 exige
+    if (hasRepositoriesError) {
+      return (
+        <DashboardCard
+          title="Evolução Temporal"
+          status="error"
+          errorTitle={`Não foi possível carregar os ${terms.repositories} do produto`}
+          onRetry={evolution.retryRepositories}
+        />
+      );
+    }
+    if (!isLoadingRepositories && repositories.length === 0) {
+      return (
+        <DashboardCard
+          title="Evolução Temporal"
+          status="empty"
+          emptyTitle={`Este produto ainda não tem ${terms.repositories}`}
+          emptyDescription={`Adicione um ${terms.repository} para acompanhar a evolução da qualidade.`}
+        />
+      );
+    }
+    return CHARTS.map((chart) => (
+      <EvolutionChartCard
+        key={chart.level}
+        chart={chart}
+        data={evolution.charts[chart.level]}
+        granularity={granularity}
+        csv={csvs[chart.level]}
+        emptyTitle={emptyMessages[chart.level].title}
+        emptyDescription={emptyMessages[chart.level].description}
+        repositoryTerm={terms.repository}
+      />
+    ));
+  };
+
+  return (
+    <>
+      <title>{TITLE}</title>
+
+      <Container maxWidth="xl">
+        <Box display="flex" flexDirection="column" gap="28px" marginTop="40px" marginBottom="40px">
+          {/* em tela estreita, o botão de exportar desce para baixo do título em vez de alargar a página */}
+          <Box display="flex" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" gap="16px">
+            <Box>
+              <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
+                {TITLE}
+              </Typography>
+              <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
+                Cada nível mostra as filhas do que foi escolhido no nível anterior. Com mais de uma análise no mesmo
+                dia ou mês, vale a última.
+              </Typography>
+            </Box>
+            <ExportAllCsvButton dashboard={TEMPORAL_CSV.dashboard} charts={Object.values(csvs)} />
+          </Box>
+
+          <Box display="flex" alignItems="center" flexWrap="wrap" gap="16px">
+            <SingleSelectFilter
+              label={terms.Repository}
+              value={evolution.repositoryId}
+              options={repositories.map((repository) => ({ key: repository.id, name: repository.name }))}
+              onChange={(value) => evolution.setRepositoryId(Number(value))}
+            />
+            <SingleSelectFilter
+              label="Característica"
+              value={evolution.characteristic}
+              options={evolution.characteristicOptions}
+              onChange={evolution.setCharacteristic}
+            />
+            <MultiSelectFilter
+              label="Subcaracterística"
+              value={evolution.subcharacteristics}
+              options={evolution.subcharacteristicOptions}
+              onChange={evolution.setSubcharacteristics}
+            />
+            <MultiSelectFilter
+              label="Medida"
+              value={evolution.measures}
+              options={evolution.measureOptions}
+              onChange={evolution.setMeasures}
+            />
+            <MultiSelectFilter
+              label="Métrica"
+              value={evolution.metrics}
+              options={evolution.metricOptions}
+              onChange={evolution.setMetrics}
+            />
+
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={granularity}
+              onChange={(_event, value: TimeGranularity | null) => {
+                if (value) evolution.setGranularity(value);
+              }}
+              aria-label="Eixo do tempo"
+              sx={{ marginLeft: { md: 'auto' }, backgroundColor: '#FFFFFF' }}
+            >
+              <ToggleButton value="day" sx={TOGGLE_SX}>
+                Dias
+              </ToggleButton>
+              <ToggleButton value="month" sx={TOGGLE_SX}>
+                Meses
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          {renderContent()}
+        </Box>
+      </Container>
+    </>
+  );
+};
+
+
+export default TemporalDashboard;

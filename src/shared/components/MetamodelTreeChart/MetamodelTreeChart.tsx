@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import ReactEcharts from '@components/ECharts';
-import { Box, Button, Typography, Paper } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { QualityModelNode } from '@customTypes/metamodel';
 import {
   buildEChartsTreeOption,

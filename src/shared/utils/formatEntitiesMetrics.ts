@@ -1,8 +1,7 @@
-const formatEntitiesMetrics = (result: []) => {
-  const metrics = [];
+const formatEntitiesMetrics = (result: { results: { key: string }[] }) => {
+  const metrics: string[] = [];
   const metricsInvalid = ['reliability_rating', 'security_rating', 'test_success_density'];
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const item of result.results) {
     if (!metricsInvalid.includes(item.key)) {
       metrics.push(item.key);

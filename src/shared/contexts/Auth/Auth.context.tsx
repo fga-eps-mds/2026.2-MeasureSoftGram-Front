@@ -1,292 +1,121 @@
+'use client';
+
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { getUserInfo, signInCredentials, signInGithub, signInGitlab, signOut } from '@services/Auth';
-import { consumeOAuthState, OAuthStateContext } from '@services/Auth/oauthState';
+import { getUserInfo } from '@services/Auth';
 import { toast } from 'react-toastify';
-import { useRouter } from 'next/router';
-import { useLocalStorage } from '@hooks/useLocalStorage';
 import ConfirmModal from '@components/ConfirmModal/ConfirmModal';
+import { setFlashMessage } from '../../utils/flashMessage';
+import { WELCOME_COOKIE } from '../../server/auth/cookies';
 
 export const authContextDefaultValues: authContextType = {
   session: null,
   loading: 'loading',
-  signInWithGithub: async () => ({ type: 'error', error: new Error('Implementation missing') }),
-  signInWithGitlab: async () => ({ type: 'error', error: new Error('Implementation missing') }),
-  signInWithCredentials: async () => ({ type: 'error', error: new Error('Implementation missing') }),
-  logout: async () => { },
-  provider: 'credentials',
-  isProviderReady: false,
-  setProvider: () => { }
+  logout: async () => {},
+  provider: 'credentials'
 };
 
 export const AuthContext = createContext<authContextType>(authContextDefaultValues);
 
-const OAUTH_ERROR_PAGE = '/auth/error';
+const SESSION_LIMIT_MS = 2 * 60 * 60 * 1000;
+const WARNING_BEFORE_LIMIT_MS = 10 * 60 * 1000;
+const CHECK_INTERVAL_MS = 60 * 1000;
 const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Por favor, faça login novamente!';
-const OAUTH_REJECTED_MESSAGE = 'Não foi possível confirmar o login. Tente entrar novamente.';
+const EXPIRING_MESSAGE = 'Sua sessão expirará em menos de 10 minutos. Salve seu trabalho para evitar perda de dados.';
+// chaves da época em que o token ficava no localStorage: não devem continuar guardadas
+const LEGACY_STORAGE_KEYS = ['token', 'session', 'provider', 'login_timestamp'];
 
-export const AuthProvider = ({ children }: { children: JSX.Element }) => {
-  const [loading, setLoading] = useState<'loading' | 'loaded'>('loading');
-  const [isWarningOpen, setIsWarningOpen] = useState(false); // ESTADO PARA O MODAL
-  const router = useRouter();
-  const hasExecuted = useRef(false);
-  const warningShownRef = useRef(false); // NOVO: Rastreia se o aviso já foi mostrado
-  // Destino escolhido pelo callback do OAuth; enquanto existir, o getUser não leva a /home.
-  const oauthRedirectRef = useRef<string | null>(null);
+interface AuthProviderProps {
+  children: React.ReactNode;
+  initialUser?: User | null;
+  provider?: Providers;
+  loginAt?: number | null;
+}
 
-  const {
-    storedValue: session,
-    setValue: setSession,
-    removeValue: removeSession
-  } = useLocalStorage<Session['user'] | null>('session', null);
+async function endSession(): Promise<void> {
+  await fetch('/bff/session', { method: 'DELETE', credentials: 'same-origin' }).catch(() => undefined);
+}
 
-  const {
-    storedValue: token,
-    setValue: setToken,
-    removeValue: removeToken
-  } = useLocalStorage<Session['token'] | null>('token', null);
+export const AuthProvider = ({ children, initialUser = null, provider = 'credentials', loginAt = null }: AuthProviderProps) => {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
+  const warningShownRef = useRef(false);
+  const loggingOutRef = useRef(false);
 
-  const {
-    storedValue: provider,
-    setValue: setProvider,
-    removeValue: removeProvider,
-    isHydrated: isProviderReady
-  } = useLocalStorage<Providers>('provider', 'credentials');
+  useEffect(() => {
+    LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  }, []);
 
-  const removeAuthStorage = useCallback(async () => {
-    removeSession();
-    removeToken();
-    removeProvider();
-    localStorage.removeItem('login_timestamp'); // GARANTE A LIMPEZA DO TIMER
-  }, [removeProvider, removeSession, removeToken]);
+  useEffect(() => {
+    if (!user || !document.cookie.split('; ').includes(`${WELCOME_COOKIE}=1`)) return;
 
-  const logout = useCallback(async () => {
-    const response = await signOut();
+    document.cookie = `${WELCOME_COOKIE}=; Max-Age=0; path=/`;
+    toast.success(`Bem vindo ao MeasureSoftGram ${user.username}!`);
+  }, [user]);
 
-    if (response.type === 'success') {
-      await router.push('/');
-      toast.success('Volte logo para acompanhar seus produtos!');
-    }
+  // O servidor não conseguiu consultar o Service: o usuário é buscado aqui. Se o token foi rejeitado, o
+  // interceptor do axios leva ao login.
+  useEffect(() => {
+    if (initialUser) return;
+    let active = true;
 
-    await removeAuthStorage();
-  }, [removeAuthStorage, router]);
+    void getUserInfo().then((response) => {
+      if (active && response.type === 'success') setUser(response.value);
+    });
 
-  const getUser = useCallback(async () => {
-    const response = await getUserInfo();
-    if (response.type === 'success') {
-      setSession(response.value);
+    return () => {
+      active = false;
+    };
+  }, [initialUser]);
 
-      const isAtLanding = router?.pathname === '/' || router?.pathname === '/landing';
-      if (isAtLanding && !oauthRedirectRef.current) {
-        await router.push('/home');
-        toast.success(`Bem vindo ao MeasureSoftGram ${response?.value?.username}!`);
-      }
-    } else {
-      await removeAuthStorage();
-    }
+  const logout = useCallback(async (message: string = 'Volte logo para acompanhar seus produtos!', type: 'success' | 'warning' = 'success') => {
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
 
-    setLoading('loaded');
-  }, [removeAuthStorage, router, setSession]);
+    await endSession();
+    setFlashMessage({ type, text: message });
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarrega a página para descartar o estado da sessão encerrada
+    globalThis.location.assign('/');
+  }, []);
 
-  const signInWithOAuth = useCallback(
-    async (signIn: typeof signInGithub, code: string): Promise<Result<User>> => {
-      const response = await signIn(code);
+  useEffect(() => {
+    if (!loginAt) return;
 
-      if (response.type === 'success' && response?.value?.key) {
-        setToken(response.value.key);
-        localStorage.setItem('login_timestamp', Date.now().toString()); // MARCA O INÍCIO DA SESSÃO
-        toast.success('Login realizado com sucesso!');
-
-        return {
-          type: 'success',
-          value: {
-            key: response.value.key,
-            username: '',
-            first_name: '',
-            last_name: '',
-            email: '',
-            avatar_url: '',
-            repos_url: '',
-            organizations_url: ''
-          }
-        };
-      }
-
-      if (response.type === 'error') {
-        void removeAuthStorage();
-        // Sem o detalhe técnico do Service ou do axios (US11.01 CA5).
-        toast.error(SESSION_EXPIRED_MESSAGE);
-        return response;
-      }
-
-      return { type: 'error', error: new Error('Erro desconhecido') };
-    },
-    [removeAuthStorage, setToken]
-  );
-
-  const signInWithGithub = useCallback((code: string) => signInWithOAuth(signInGithub, code), [signInWithOAuth]);
-
-  const signInWithGitlab = useCallback((code: string) => signInWithOAuth(signInGitlab, code), [signInWithOAuth]);
-
-  const signInWithCredentials = useCallback(
-    async (data: LoginFormData): Promise<Result<User>> => {
-      setProvider('credentials');
-      const response = await signInCredentials(data);
-
-      if (response.type === 'success' && response?.value?.key) {
-        setToken(response.value.key);
-        localStorage.setItem('login_timestamp', Date.now().toString()); // MARCA O INÍCIO DA SESSÃO
-        toast.success('Login realizado com sucesso!');
-        await router.push('/home');
-        return response;
-      }
-      if (response.type === 'error') {
-        toast.error(`Erro ao realizar login: ${response.error.message === 'Request failed with status code 400' ? 'Erro nas credenciais' : response.error.message || 'Erro desconhecido'}`);
-        return response;
-      }
-
-      return { type: 'error', error: new Error('Erro desconhecido') };
-    },
-    [router, setProvider, setToken]
-  );
-
-
-useEffect(() => {
     const checkSessionTime = () => {
-      const loginTime = localStorage.getItem('login_timestamp');
+      const elapsed = Date.now() - loginAt;
 
-      // Só monitora se o usuário tiver feito login
-      if (!loginTime || (!session && !token)) return;
-
-      const limitMs = 2 * 60 * 60 * 1000; // 2 horas
-      const warningMs = limitMs - (10 * 60 * 1000); // 1h e 50min
-      const now = Date.now();
-      const elapsed = now - parseInt(loginTime);
-
-      // Passou de 2 horas -> Logout automático
-      if (elapsed >= limitMs) {
-        // O efeito roda de novo enquanto o logout limpa a sessão: sem o timer, não desloga nem avisa duas vezes.
-        localStorage.removeItem('login_timestamp');
-        void logout();
-        warningShownRef.current = false;
+      if (elapsed >= SESSION_LIMIT_MS) {
         setIsWarningOpen(false);
-        toast.warning(SESSION_EXPIRED_MESSAGE);
-      }
-      // Aviso apenas UMA VEZ quando atingir o tempo limite
-      else if (elapsed >= warningMs && !warningShownRef.current) {
+        void logout(SESSION_EXPIRED_MESSAGE, 'warning');
+      } else if (elapsed >= SESSION_LIMIT_MS - WARNING_BEFORE_LIMIT_MS && !warningShownRef.current) {
         warningShownRef.current = true;
         setIsWarningOpen(true);
-        toast.warning('Sua sessão expirará em menos de 10 minutos. Salve seu trabalho para evitar perda de dados.');
+        toast.warning(EXPIRING_MESSAGE);
       }
     };
 
     checkSessionTime();
-
-    // Checa a condição a cada 1 minuto para o caso do usuário ficar ocioso
-    const interval = setInterval(checkSessionTime, 60000);
+    const interval = setInterval(checkSessionTime, CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [logout, session, token]);
-  const handleOAuthError = useCallback(
-    async (error: string, oauthState: OAuthStateContext | null) => {
-      if (error === 'access_denied') {
-        toast.info('Login cancelado');
-      } else {
-        toast.error('Erro na autorização do provedor.');
-      }
+  }, [loginAt, logout]);
 
-      // Reautorização cancelada: a sessão continua e o usuário volta para onde estava.
-      if (oauthState?.returnTo) {
-        oauthRedirectRef.current = oauthState.returnTo;
-        await router.replace(oauthState.returnTo);
-        return;
-      }
-
-      oauthRedirectRef.current = '/auth';
-      await removeAuthStorage();
-      if (router?.pathname !== '/auth') {
-        await router.push('/auth');
-      }
-    },
-    [removeAuthStorage, router]
-  );
-
-  // O code não foi pedido por esta aba (state ausente, divergente ou expirado): não chega ao Service.
-  const rejectOAuthCallback = useCallback(async () => {
-    oauthRedirectRef.current = OAUTH_ERROR_PAGE;
-    toast.error(OAUTH_REJECTED_MESSAGE);
-    await router.replace(OAUTH_ERROR_PAGE);
-  }, [router]);
-
-  const completeOAuthCallback = useCallback(
-    async (code: string, oauthState: OAuthStateContext) => {
-      // Sem returnTo (login), quem leva a /home é o getUser, como no login por credenciais.
-      oauthRedirectRef.current = oauthState.returnTo;
-      const signIn = oauthState.provider === 'gitlab' ? signInWithGitlab : signInWithGithub;
-      const response = await signIn(code);
-
-      if (response.type === 'error') {
-        // A sessão foi limpa: volta ao login para tentar de novo, em vez de ficar na tela de espera.
-        oauthRedirectRef.current = '/auth';
-        await router.replace('/auth');
-      } else if (oauthState.returnTo) {
-        await router.replace(oauthState.returnTo);
-      }
-    },
-    [router, signInWithGithub, signInWithGitlab]
-  );
-
-  useEffect(() => {
-    if (hasExecuted.current) return;
-
-    const params = new URLSearchParams(globalThis.location.search);
-    const code = params.get('code');
-    const error = params.get('error');
-    if (!code && !error) return;
-
-    hasExecuted.current = true;
-    // Todo retorno do provedor consome o state, inclusive o cancelamento.
-    const oauthState = consumeOAuthState(params.get('state'));
-
-    if (error) {
-      void handleOAuthError(error, oauthState);
-    } else if (oauthState) {
-      void completeOAuthCallback(code as string, oauthState);
-    } else {
-      void rejectOAuthCallback();
-    }
-  }, [completeOAuthCallback, handleOAuthError, rejectOAuthCallback]);
-
-  useEffect(() => {
-    setLoading('loading');
-
-    if (token) void getUser();
-    else setLoading('loaded');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
-
-  const value = useMemo(
+  const value = useMemo<authContextType>(
     () => ({
-      session,
-      logout,
-      signInWithCredentials,
-      signInWithGithub,
-      signInWithGitlab,
-      provider: provider!,
-      isProviderReady,
-      setProvider,
-      loading
+      session: user,
+      logout: () => logout(),
+      provider,
+      loading: user ? 'loaded' : 'loading'
     }),
-    [logout, provider, isProviderReady, session, setProvider, signInWithCredentials, signInWithGithub, signInWithGitlab, loading]
+    [logout, provider, user]
   );
 
   return (
     <AuthContext.Provider value={value}>
       {children}
-      {/* NOVO: Modal que será exibido aos 1h50 de sessão */}
       <ConfirmModal
         isModalOpen={isWarningOpen}
         setIsModalOpen={setIsWarningOpen}
-        text="Sua sessão expirará em menos de 10 minutos. Salve seu trabalho para evitar perda de dados."
+        text={EXPIRING_MESSAGE}
         btnConfirmText="Entendi"
         btnDismissText="Sair Agora"
         handleConfirmBtnClick={() => setIsWarningOpen(false)}

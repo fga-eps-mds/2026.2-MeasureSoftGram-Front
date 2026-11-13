@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import {
   PreConfigEntitiesRelationship,
   MeasuresHistory,
@@ -32,12 +31,15 @@ export interface ProductFormData {
   key?: string;
 }
 
+/** O detalhe do produto no Service: a organização e os repositórios vêm como URLs da API. */
+export type ProductDetail = Product & { organization: string; repositories: string[] };
+
 class ProductQuery {
   async getAllProducts(organizationId: string) {
     return api.get(`/v1/organizations/${organizationId}/products/`);
   }
 
-  async getProductById(organizationId: string, productId: string): Promise<Result<ProductFormData>> {
+  async getProductById(organizationId: string, productId: string): Promise<Result<ProductDetail>> {
     try {
       const response = await api.get(`/v1/organizations/${organizationId}/products/${productId}/`);
       return { type: 'success', value: response?.data };
@@ -201,7 +203,7 @@ class ProductQuery {
   }
 
   async getReleaseAnalysisDataByReleaseId(organizationId: string, productId: string, releaseId: string) {
-    const url = `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data`;
+    const url = `/v1/organizations/${organizationId}/products/${productId}/release/${releaseId}/analysis_data/`;
     return api.get<any>(url);
   }
 
@@ -335,7 +337,7 @@ class ProductQuery {
     };
   }
 
-  getReleaseList(organizationId: string, productId: string, releaseId?: number): GetRequest {
+  getReleaseList(organizationId: string, productId: string, _releaseId?: number): GetRequest {
     if (!organizationId || !productId) return null;
     const url = `/v1/organizations/${organizationId}/products/${productId}/release/`;
     return {

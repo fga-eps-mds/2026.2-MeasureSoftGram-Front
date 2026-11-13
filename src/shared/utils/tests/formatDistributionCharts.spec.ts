@@ -463,7 +463,11 @@ describe('boxplot do nível', () => {
     const rows = getLevelBoxplotRows(tsqmi, [reliability, maintainability, functional]);
 
     it('desenha uma caixa por linha, com a entidade em cor escura e os filhos em cor clara (CA6)', () => {
-      const [boxplot] = formatLevelBoxplotOptions(rows, histogram).series;
+      // as séries do ECharts são uma união; aqui a primeira é a das caixas
+      const [boxplot] = formatLevelBoxplotOptions(rows, histogram).series as unknown as Array<{
+        type: string;
+        data?: Array<{ value: number[]; itemStyle: { borderColor: string } }>;
+      }>;
 
       expect(boxplot.type).toBe('boxplot');
       expect(boxplot.data?.map((item) => item.value)).toEqual([
@@ -523,7 +527,11 @@ describe('boxplot do nível', () => {
 
     it('junta no mesmo ponto os discrepantes que se sobrepõem, com todos no tooltip', () => {
       const repeated = boxEntity('repeated', 'characteristic', [0.1, 0.1, 0.7, 0.72, 0.75], [0.1]);
-      const [, outliers] = formatLevelBoxplotOptions(getLevelBoxplotRows(tsqmi, [repeated]), histogram).series;
+      const [, outliers] = formatLevelBoxplotOptions(getLevelBoxplotRows(tsqmi, [repeated]), histogram).series as unknown as Array<{
+        data: unknown;
+        symbolSize: (value: unknown, params: { dataIndex: number }) => number;
+        tooltip: { formatter: (params: { dataIndex: number }) => string };
+      }>;
 
       expect(outliers.data).toEqual([[0.1, 'repeated']]);
       expect(outliers.symbolSize(null, { dataIndex: 0 })).toBe(12);

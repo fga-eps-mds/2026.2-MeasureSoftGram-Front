@@ -6,6 +6,7 @@ import {
   COLOR_TOKENS,
   PulseRepositoryData,
 } from '../formatPulseChart';
+import * as echarts from 'echarts';
 import { QUALITY_BANDS, QualityBand } from '../qualityBands';
 import { PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from '../toPulseSeries';
 
@@ -112,6 +113,22 @@ describe('formatPulseChart Utility', () => {
       ]);
       // a cor da série teria prioridade sobre o visualMap
       expect(options.series[0].lineStyle.color).toBeUndefined();
+    });
+
+    it('desenha no ECharts um repositório que trocou de faixa uma única vez', () => {
+      const repos: PulseRepositoryData[] = [
+        {
+          id: 1,
+          name: 'repo',
+          measurements: [0.85, 0.9, 0.5, 0.55].map((value, i) => ({ created_at: `2026-01-0${i + 1}T12:00:00Z`, value })),
+          releases: [],
+        },
+      ];
+      const chart = echarts.init(null as any, null, { renderer: 'svg', ssr: true, width: 800, height: 300 });
+
+      expect(() => chart.setOption(formatPulseChartOptions(repos) as any)).not.toThrow();
+      expect(chart.renderToSVGString()).toContain('linearGradient');
+      chart.dispose();
     });
 
     it('agrupa as medições seguidas da mesma faixa num único trecho', () => {

@@ -1,39 +1,25 @@
 import axios from 'axios';
+import { setFlashMessage } from '../utils/flashMessage';
 
-// NEXT_PUBLIC_API_URL e exposta ao client pelo Next; SERVICE_URL existe so
-// no server. Sem fallback, baseURL fica undefined no browser e calls caem
-// no proprio dominio do front (404).
+// O /bff lê o token do cookie HttpOnly e o repassa ao Service: o navegador nunca vê o token.
+export const API_BASE_URL = '/bff';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || process.env.SERVICE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true
 });
-
-api.interceptors.request.use(
-  async (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-
-      if (token && config?.headers) {
-        config.headers.Authorization = token ? `Token ${JSON.parse(token)}` : '';
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        // Limpa todos os dados de autenticação armazenados
-        localStorage.removeItem('token');
-        localStorage.removeItem('session');
-        localStorage.removeItem('provider');
-        localStorage.removeItem('login_timestamp');
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const { pathname, search } = window.location;
 
-        window.location.href = '/auth';
+      if (!pathname.startsWith('/auth')) {
+        setFlashMessage({ type: 'warning', text: 'Sua sessão expirou. Entre novamente.' });
+        const returnTo = encodeURIComponent(pathname + search);
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- fora do React (interceptor do axios), sem o router; recarrega sem a sessão
+        window.location.href = `/auth?returnTo=${returnTo}`;
       }
     }
     return Promise.reject(error);

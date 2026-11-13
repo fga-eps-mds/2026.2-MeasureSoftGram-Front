@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import type { Organization } from '@customTypes/organization';
 import api from './api';
 import { DuplicateMessages, saveError } from './saveError';
 
@@ -10,6 +11,9 @@ export interface OrganizationFormData {
   members?: string[];
   url?: string;
   products?: string[];
+  github_org_name?: string;
+  gitlab_group_id?: number | null;
+  gitlab_user_id?: number | null;
 }
 
 export type ResultSuccess<T> = { type: 'success'; value: T };
@@ -46,7 +50,7 @@ class OrganizationQuery {
     }
   }
 
-  async getOrganizationById(id: string): Promise<Result<OrganizationFormData>> {
+  async getOrganizationById(id: string): Promise<Result<Organization>> {
     try {
       const response = await api.get(`/v1/organizations/${id}/`);
       return { type: 'success', value: response?.data };

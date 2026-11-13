@@ -48,6 +48,8 @@ export interface Repository {
   key: string;
   description: string;
   product: string;
+  /** Plataforma escolhida no cadastro (github, gitlab, ...); repositórios antigos podem não ter. */
+  platform?: string;
   latest_values: RepositoryResults;
   historical_values: RepositoryResults;
 }

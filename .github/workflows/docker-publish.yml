@@ -46,8 +46,7 @@ jobs:
           # mismatch" no endpoint /github/validate. Enquanto a variable nao
           # existir, cai no fallback e o build sai como antes (sem regressao).
           build-args: |
-            SERVICE_URL=${{ vars.SERVICE_URL || 'http://localhost:8080/api' }}
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api' }}
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_LOGIN_REDIRECT_URL=${{ vars.LOGIN_REDIRECT_URL }}
             NEXT_PUBLIC_GITHUB_CLIENT_ID=${{ vars.GH_CLIENT_ID }}
             GITLAB_CLIENT_ID=${{ vars.GITLAB_CLIENT_ID }}

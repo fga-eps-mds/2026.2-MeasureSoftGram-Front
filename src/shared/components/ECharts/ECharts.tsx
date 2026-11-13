@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, type Ref } from 'react';
 import dynamic from 'next/dynamic';
+import type { EChartsReactProps } from 'echarts-for-react/lib/types';
+import type ECharts from './EChartsCore';
 
 /**
  * Começa a baixar o ECharts quando a página com gráficos monta, junto com as chamadas à API, e não só quando o
@@ -15,6 +17,7 @@ export function usePreloadECharts() {
 }
 
 // o import precisa ficar escrito aqui dentro: é por ele que o Next sabe quando o chunk já chegou e desenha direto
-const ReactEcharts = dynamic(() => import('./EChartsCore'), { ssr: false });
+// no React 19 o ref é uma prop comum, e o dynamic o repassa ao componente do gráfico
+const ReactEcharts = dynamic<EChartsReactProps & { ref?: Ref<ECharts> }>(() => import('./EChartsCore'), { ssr: false });
 
 export default ReactEcharts;

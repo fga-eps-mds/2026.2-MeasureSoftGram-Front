@@ -26,7 +26,7 @@ describe('<DrawerMenu />', () => {
   describe('Snapshot', () => {
     it('Deve corresponder ao Snapshot', () => {
       const tree = render(
-        <DrawerMenu open>
+        <DrawerMenu open handleCloseModal={jest.fn()}>
           <div />
         </DrawerMenu>
       );
@@ -34,7 +34,7 @@ describe('<DrawerMenu />', () => {
     });
     it('Deve corresponder ao Snapshot com botões', () => {
       const tree = render(
-        <DrawerMenu open buttons={BUTTONS}>
+        <DrawerMenu open buttons={BUTTONS} handleCloseModal={jest.fn()}>
           <div />
         </DrawerMenu>
       );
@@ -42,7 +42,7 @@ describe('<DrawerMenu />', () => {
     });
     it('Deve corresponder ao Snapshot com componente fechado', () => {
       const tree = render(
-        <DrawerMenu open={false}>
+        <DrawerMenu open={false} handleCloseModal={jest.fn()}>
           <div />
         </DrawerMenu>
       );
@@ -52,7 +52,7 @@ describe('<DrawerMenu />', () => {
   describe('Comportamento', () => {
     it('Botão dentro do DrawerMenu deve ser clicavel', () => {
       const { getByText } = render(
-        <DrawerMenu open buttons={BUTTONS}>
+        <DrawerMenu open buttons={BUTTONS} handleCloseModal={jest.fn()}>
           <div />
         </DrawerMenu>
       );

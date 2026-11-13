@@ -46,7 +46,7 @@ function SideMenuWrapper({ menuItems, footer }: Props) {
       )}
       <Styles.Wrapper data-testid="side-menu" $overlay={isOverlay}>
         <Styles.CollapseButton data-testid="side-menu-collapse" onClick={toggleCollapse}>
-          {isCollapsed ? <NavigateNextRoundedIcon fontSize="large" color="#f5f5f5" /> : <NavigateBeforeRoundedIcon fontSize="large" color="#f5f5f5" />}
+          {isCollapsed ? <NavigateNextRoundedIcon fontSize="large" /> : <NavigateBeforeRoundedIcon fontSize="large" />}
         </Styles.CollapseButton>
         <Styles.Content data-testid="side-menu-content">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>

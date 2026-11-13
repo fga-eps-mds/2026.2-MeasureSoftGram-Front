@@ -24,7 +24,7 @@ describe('User Service', () => {
 
     const result = await userService.getUserRepos('codigo-123');
 
-    expect(api.get).toHaveBeenCalledWith('/v1/accounts/user-repos', { params: { code: 'codigo-123' } });
+    expect(api.get).toHaveBeenCalledWith('/v1/accounts/user-repos/', { params: { code: 'codigo-123' } });
     expect(result).toEqual({ type: 'success', value: mockData });
   });
 

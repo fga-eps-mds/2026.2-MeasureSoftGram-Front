@@ -1,6 +1,5 @@
 import { MeasuresHistoryResult } from '@customTypes/product';
 import capitalizer from '@utils/capitalizer';
-import getCharacteristicsWithBalanceMatrix from '@utils/getCharacteristicsWithBalanceMatrix';
 import formatEntitiesFilter, { FormatEntitiesFilterType } from '@utils/formatEntitiesFilter';
 import formatMeasuresHistoryChartData from '@utils/formatMeasuresHistory';
 import { getPathId } from '@utils/pathDestructer';
@@ -9,7 +8,7 @@ import undelineRemover from '@utils/undelineRemover';
 const LOWER_STRING_WITHOUT_UNDERLINE = 'test utils';
 const LOWER_STRING = 'test_utils';
 const CAPITAL_STRING = 'Test_utils';
-const FILTER_CONST: FormatEntitiesFilterType = [
+const FILTER_CONST: FormatEntitiesFilterType[] = [
   {
     key: 'Entity',
     subcharacteristics: [
@@ -24,46 +23,6 @@ const FILTER_CONST: FormatEntitiesFilterType = [
     ]
   }
 ];
-
-const CHARACTERISTICS_HISTORY = [
-  {
-    id: 1,
-    key: 'TSQMI',
-    name: 'Name',
-    history: [{ created_at: '2022-09-05T17:33:14', id: 1, value: 50 }]
-  },
-  {
-    id: 2,
-    key: 'Teste1',
-    name: 'Name',
-    history: [{ created_at: '2022-09-05T17:33:14', id: 1, value: 50 }]
-  },
-  {
-    id: 3,
-    key: 'Teste2',
-    name: 'Name',
-    history: [{ created_at: '2022-09-05T17:33:14', id: 1, value: 50 }]
-  }
-];
-
-const CHARACTERISTIC_EXPECTED = {
-  dataZoom: [
-    { end: 200, start: 0, type: 'inside' },
-    { end: 200, start: 0 }
-  ],
-  grid: { bottom: '17%', containLabel: true, left: '3%', right: '4%' },
-  legend: { data: ['Name', null, 'Name'] },
-  series: [
-    { data: [{ itemStyle: { color: null }, value: '50.000' }], lineStyle: { width: 5 }, name: 'Name', type: 'line' },
-    { data: false, lineStyle: { width: 2 }, name: 'Name', type: 'line' },
-    { data: [{ itemStyle: { color: null }, value: '50.000' }], lineStyle: { width: 2 }, name: 'Name', type: 'line' }
-  ],
-  title: { text: undefined },
-  toolbox: { feature: { saveAsImage: {} }, show: true },
-  tooltip: { trigger: 'axis' },
-  xAxis: { boundaryGap: false, data: ['05/09/2022'], type: 'category' },
-  yAxis: { minInterval: 0.1, scale: true, type: 'value' }
-};
 
 const MEASURE_MOCKED: MeasuresHistoryResult = {
   description: 'teste',
