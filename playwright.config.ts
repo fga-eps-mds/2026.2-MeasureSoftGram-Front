@@ -47,7 +47,8 @@ export default defineConfig({
       timeout: 5 * 60 * 1000,
       env: {
         SERVICE_URL: `${SERVICE_URL}/api`,
-        // sem o client id, o botão do GitLab vai direto a /auth/error; o redirect volta para este servidor
+        // sem o client id, o botão do provedor vai direto a /auth/error; o redirect volta para este servidor
+        GITHUB_CLIENT_ID: 'e2e-github',
         GITLAB_CLIENT_ID: 'e2e-gitlab',
         NEXT_PUBLIC_LOGIN_REDIRECT_URL: `${BASE_URL}/`
       }

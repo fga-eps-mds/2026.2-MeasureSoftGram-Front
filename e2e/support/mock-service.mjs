@@ -14,6 +14,11 @@ const user = JSON.parse(readFileSync(new URL('../../src/mocks/fixtures/user.json
 
 /** Token que o Service recusa (401): para os cenários de sessão inválida. */
 const INVALID_TOKEN = 'e2e-token-invalido';
+/**
+ * Token para o qual o Service está fora do ar (503 na validação): para o cenário de Service indisponível sem mexer nas
+ * respostas dos outros testes, que rodam em paralelo.
+ */
+const UNAVAILABLE_TOKEN = 'e2e-token-service-fora-do-ar';
 const LOGIN_PATH = /^\/v1\/accounts\/(gitlab|github)\/login\/$/;
 const VALIDATE_PATH = /^\/v1\/accounts\/(gitlab|github)\/validate\/$/;
 
@@ -37,6 +42,7 @@ function withFreshKey(path, answer) {
 function defaultAnswer(method, path, authorization) {
   if (method === 'GET' && path === '/v1/accounts/') {
     const token = authorization?.replace(/^Token /, '');
+    if (token === UNAVAILABLE_TOKEN) return reply(503, { detail: 'Service Unavailable' });
     return !token || token === INVALID_TOKEN ? reply(401, { detail: 'Token inválido.' }) : reply(200, user);
   }
   const login = path.match(LOGIN_PATH);
