@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releasesPage } from '../common';
 import arvoreR1 from './arvore-r1.json';
 import arvoreR2 from './arvore-r2.json';
 
@@ -19,13 +19,13 @@ const arvorePorRelease = (url: URL) => (url.searchParams.get('release_id') === '
  * referência e a métrica total_builds usada por duas medidas (CI Feedback Time e Build Stability).
  */
 export const comDados: ApiHandlers = {
-  [METAMODELO_API.releases]: releases,
+  [METAMODELO_API.releases]: releasesPage,
   [METAMODELO_API.tree]: arvorePorRelease
 };
 
 /** Produto sem release: a página só pede a lista de releases. */
 export const semRelease: ApiHandlers = {
-  [METAMODELO_API.releases]: []
+  [METAMODELO_API.releases]: EMPTY_PAGE
 };
 
 /** A árvore falha com 500; a lista de releases carrega. */

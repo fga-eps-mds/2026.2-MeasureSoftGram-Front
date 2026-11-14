@@ -48,6 +48,11 @@ jobs:
         # as baselines dos snapshots são geradas aqui (Linux), nunca no Mac: com update_snapshots, o run regrava
         run: pnpm e2e ${{ inputs.update_snapshots && '--update-snapshots' || '' }}
 
+      - name: Rotas sem contrato no Service
+        if: always()
+        continue-on-error: true
+        run: node scripts/e2e-contract-report.mjs e2e-results.json
+
       - name: Publicar relatório do Playwright
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

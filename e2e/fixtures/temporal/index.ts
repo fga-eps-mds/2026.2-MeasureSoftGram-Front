@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, page } from '../common';
 import tree from '../distribuicao/quality-model-tree.json';
 import repositories from './repositories.json';
 import characteristics from './historical-characteristics.json';
@@ -38,9 +38,7 @@ const service = { characteristics, subcharacteristics, measures, metrics };
 /** O Front só tem a última medição de cada característica, para a troca de repositório mudar o gráfico. */
 const front = {
   ...service,
-  characteristics: {
-    results: characteristics.results.map((item) => ({ ...item, history: item.history.slice(-1) }))
-  }
+  characteristics: page(characteristics.results.map((item) => ({ ...item, history: item.history.slice(-1) })))
 };
 
 /**
@@ -62,10 +60,10 @@ export const carregando = LEVELS.map((level) => TEMPORAL_API.history(7, level));
 export const semMedicoes: ApiHandlers = {
   ...comDados,
   ...historiesOf(7, {
-    characteristics: { results: [] },
-    subcharacteristics: { results: [] },
-    measures: { results: [] },
-    metrics: { results: [] }
+    characteristics: page([]),
+    subcharacteristics: page([]),
+    measures: page([]),
+    metrics: page([])
   })
 };
 

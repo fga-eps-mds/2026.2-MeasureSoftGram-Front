@@ -18,6 +18,11 @@ export const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
 /** Releases do produto usadas pelos dashboards: R1 (encerrada) e R2 (atual). */
 export const RELEASES_API = `${PRODUCT_API}/release/`;
 export const releases = releaseList;
+/** Uma lista como o Service devolve nas rotas paginadas. */
+export const page = <T>(results: T[]) => ({ count: results.length, next: null, previous: null, results });
+
+/** A lista de releases como o Service devolve: paginada. */
+export const releasesPage = page(releaseList);
 
 /** O que o layout, o AuthContext e os providers pedem em qualquer página do produto. */
 export const common: ApiHandlers = {

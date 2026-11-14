@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
 import { bandSwatch, card, choose, downloadCsv, select } from './support/helpers';
-import { PRODUCT_PATH, releases } from './fixtures/common';
+import { PRODUCT_PATH, releasesPage } from './fixtures/common';
 import * as overview from './fixtures/overview';
 import * as temporal from './fixtures/temporal';
 import * as repositorio from './fixtures/repositorio';
@@ -490,7 +490,7 @@ test.describe('@US07.01-CA4 Carregando, sem dados e erro com "Tentar novamente",
         await page.goto(overview.OVERVIEW_PATH);
         await expectError(card(page, 'Releases do produto'), 'Não foi possível carregar este gráfico');
 
-        api.set(overview.OVERVIEW_API.releases, releases);
+        api.set(overview.OVERVIEW_API.releases, releasesPage);
         await page.getByRole('button', { name: 'Tentar novamente' }).click();
         await expect(select(page, 'Release')).toHaveText('R2 (atual)');
         await expect(total(page, 'Características')).toHaveText('2Características');

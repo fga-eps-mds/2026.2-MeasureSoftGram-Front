@@ -4,7 +4,7 @@
   "previous": null,
   "results": [
     {
-      "id": "1",
+      "id": 1,
       "name": "MeasureSoftGram",
       "description": "Produto de exemplo do modo mock.",
       "github_url": "https://github.com/fga-eps-mds/2026.1-MeasureSoftGram-Front",

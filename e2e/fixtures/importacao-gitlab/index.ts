@@ -18,7 +18,7 @@ export const PARSER = projects[3];
 /** O subgrupo vira a organização 2 do MeasureSoftGram, com um produto sem projetos. */
 export const SQUAD_ORGANIZATION = {
   ...organizations.results[0],
-  id: '2',
+  id: 2,
   url: 'http://localhost:8080/api/v1/organizations/2/',
   name: 'squad-01',
   key: 'squad-01',
@@ -31,7 +31,7 @@ export const ORGANIZATION_OF: Record<number, typeof SQUAD_ORGANIZATION> = {
   [GROUP.id]: organizations.results[0],
   [SUBGROUP.id]: SQUAD_ORGANIZATION
 };
-const SQUAD_PRODUCT = { ...products.results[0], id: '2', name: 'Squad 01' };
+const SQUAD_PRODUCT = { ...products.results[0], id: 2, name: 'Squad 01' };
 
 export const IMPORT_API = {
   namespaces: '/v1/accounts/gitlab-namespaces/',
@@ -85,7 +85,8 @@ export const comProjetos: ApiHandlers = {
   // o grupo escolhido vira (ou já é) a organização 1
   [IMPORT_API.importGroup]: organizations.results[0],
   [IMPORT_API.projects]: pagesOf(projects),
-  [IMPORT_API.repositories]: EMPTY_PAGE
+  // o POST da importação devolve o repositório criado; o GET, a lista ainda vazia
+  [IMPORT_API.repositories]: (_url: URL, method: string) => (method === 'POST' ? PARSER_REPOSITORY : EMPTY_PAGE)
 };
 
 /** O subgrupo squad-01 tem a própria organização (2), com um produto e dois projetos (CA2). */
@@ -160,7 +161,7 @@ export const JOAO_GROUP_ORGANIZATION = {
 };
 export const JOAO_PERSONAL_ORGANIZATION = {
   ...organizations.results[0],
-  id: '3',
+  id: 3,
   url: 'http://localhost:8080/api/v1/organizations/3/',
   name: 'joao',
   key: 'joao-pessoal',
@@ -190,7 +191,7 @@ export const grupoComNomeDoUsuario: ApiHandlers = {
 /** O produto da organização pessoal de joao, para a tela mostrar de qual organização são os produtos (BUG12.02). */
 export const JOAO_PERSONAL_PRODUCT = {
   ...products.results[0],
-  id: '5',
+  id: 5,
   name: 'Produto do joao',
   key: 'produto-do-joao'
 };

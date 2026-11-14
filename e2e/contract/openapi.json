@@ -1,0 +1,4846 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "x",
+    "version": "v1"
+  },
+  "basePath": "/api/v1",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "Token": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Formato: Token <seu_token_aqui>"
+    }
+  },
+  "security": [
+    {
+      "Token": []
+    }
+  ],
+  "paths": {
+    "/accounts/": {
+      "get": {
+        "operationId": "accounts_read",
+        "description": "ViewSet para recuperar informações de conta",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AccountsRetrieve"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/access-token/": {
+      "get": {
+        "operationId": "accounts_access-token_read",
+        "description": "ViewSet para recuperar o token de acesso da conta do usuário, o token vai ser utilizado na github action",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/APIAcessTokenRetrieve"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/github-organizations/": {
+      "get": {
+        "operationId": "accounts_github-organizations_list",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/github/login/": {
+      "post": {
+        "operationId": "accounts_github_login_create",
+        "description": "ViewSet para login via OAuth2 do Github",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SocialLogin"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/SocialLogin"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/github/validate/": {
+      "post": {
+        "operationId": "accounts_github_validate_create",
+        "description": "Endpoint para validar as credenciais do GitHub (Client ID e Client Secret)",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/gitlab-namespaces/": {
+      "get": {
+        "operationId": "accounts_gitlab-namespaces_list",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/gitlab/login/": {
+      "post": {
+        "operationId": "accounts_gitlab_login_create",
+        "description": "ViewSet para login via OAuth2 do GitLab",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SocialLogin"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/SocialLogin"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/gitlab/validate/": {
+      "post": {
+        "operationId": "accounts_gitlab_validate_create",
+        "description": "Endpoint para validar as credenciais do GitLab (Client ID e Client Secret)",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/login/": {
+      "post": {
+        "operationId": "accounts_login_create",
+        "description": "ViewSet para login de conta",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AccountsLogin"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AccountsLogin"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/logout/": {
+      "delete": {
+        "operationId": "accounts_logout_delete",
+        "description": "ViewSet para logout de conta",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/signin/": {
+      "post": {
+        "operationId": "accounts_signin_create",
+        "description": "ViewSet para criação de conta",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AccountsCreate"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/AccountsCreate"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/user-repos/": {
+      "get": {
+        "operationId": "accounts_user-repos_read",
+        "description": "ViewSet para os repositórios do github do user a partir de seu code",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/GitHubAccessTokenRetrieve"
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/accounts/users/": {
+      "get": {
+        "operationId": "accounts_users_list",
+        "description": "ViewSet para listar todos os usuários",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/UserList"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ]
+      },
+      "parameters": []
+    },
+    "/balance-matrix/": {
+      "get": {
+        "operationId": "balance-matrix_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BalanceMatrix"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "balance-matrix"
+        ]
+      },
+      "parameters": []
+    },
+    "/entity-relationship-tree/": {
+      "get": {
+        "operationId": "entity-relationship-tree_list",
+        "description": "ViewSet as entidades suportadas e suas relações no formato de árvore",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CharacteristicEntityRelationshipTree"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "entity-relationship-tree"
+        ]
+      },
+      "parameters": []
+    },
+    "/organizations/": {
+      "get": {
+        "operationId": "organizations_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Organization"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "post": {
+        "operationId": "organizations_create",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": []
+    },
+    "/organizations/import-gitlab-user/": {
+      "post": {
+        "operationId": "organizations_import-gitlab-user_create",
+        "description": "Importa o namespace pessoal do GitLab como Organization própria (uma por `gitlab_user_id`).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": []
+    },
+    "/organizations/import-gitlab/": {
+      "post": {
+        "operationId": "organizations_import-gitlab_create",
+        "description": "Importa um grupo do GitLab como Organization compartilhada (uma por `gitlab_group_id`).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": []
+    },
+    "/organizations/import/": {
+      "post": {
+        "operationId": "organizations_import_create",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": []
+    },
+    "/organizations/{id}/": {
+      "get": {
+        "operationId": "organizations_read",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "put": {
+        "operationId": "organizations_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "organizations_partial_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Organization"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_delete",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this organization.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/github-repos/": {
+      "get": {
+        "operationId": "organizations_github-repos_list",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/gitlab-projects/": {
+      "get": {
+        "operationId": "organizations_gitlab-projects_list",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/": {
+      "get": {
+        "operationId": "organizations_products_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Product"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "post": {
+        "operationId": "organizations_products_create",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{id}/": {
+      "get": {
+        "operationId": "organizations_products_read",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "put": {
+        "operationId": "organizations_products_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "organizations_products_partial_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Product"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_products_delete",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this product.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/all/goal/": {
+      "get": {
+        "operationId": "organizations_products_all_goal_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AllGoals"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/analysis-distribution/": {
+      "get": {
+        "operationId": "organizations_products_analysis-distribution_list",
+        "description": "Distribuição estatística (US21.03): valores de uma entidade do modelo e dos\nfilhos dela entre as análises de um repositório, dentro da release.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/correlation/": {
+      "get": {
+        "operationId": "organizations_products_correlation_list",
+        "description": "Relações e correlações (US21.04): correlação entre as características (ou\nsubcaracterísticas) de um repositório ao longo das releases.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/create/goal/": {
+      "post": {
+        "operationId": "organizations_products_create_goal_create",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Goal"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Goal"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/create/release-config/": {
+      "post": {
+        "operationId": "organizations_products_create_release-config_create",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ReleaseConfiguration"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ReleaseConfiguration"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/current/goal/": {
+      "get": {
+        "operationId": "organizations_products_current_goal_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Goal"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/current/release-config/": {
+      "get": {
+        "operationId": "organizations_products_current_release-config_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ReleaseConfiguration"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/default/pre-config/": {
+      "get": {
+        "operationId": "organizations_products_default_pre-config_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ReleaseConfiguration"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/entity-analysis/": {
+      "get": {
+        "operationId": "organizations_products_entity-analysis_list",
+        "description": "Análise por entidade (US21.02): valor de uma entidade do modelo em cada\nrepositório do produto, numa release, com os filhos da entidade, e o mapa de\ncalor repositório × entidades de um nível (`matrix/`).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/entity-analysis/entities/": {
+      "get": {
+        "operationId": "organizations_products_entity-analysis_entities",
+        "description": "Análise por entidade (US21.02): valor de uma entidade do modelo em cada\nrepositório do produto, numa release, com os filhos da entidade, e o mapa de\ncalor repositório × entidades de um nível (`matrix/`).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/entity-analysis/matrix/": {
+      "get": {
+        "operationId": "organizations_products_entity-analysis_matrix",
+        "description": "Análise por entidade (US21.02): valor de uma entidade do modelo em cada\nrepositório do produto, numa release, com os filhos da entidade, e o mapa de\ncalor repositório × entidades de um nível (`matrix/`).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/entity-relationship-tree/": {
+      "get": {
+        "operationId": "organizations_products_entity-relationship-tree_list",
+        "description": "Viewset que retorna as entidades de uma pré-configução e\nsuas relações no formato de árvore",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CharacteristicEntityRelationshipTree"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/quality-bands/": {
+      "get": {
+        "operationId": "organizations_products_quality-bands_read",
+        "description": "Faixas de qualidade do produto (US30.01). Membros da organização leem; só o admin\nda organização altera (`PUT`) ou volta aos padrões (`DELETE`).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "put": {
+        "operationId": "organizations_products_quality-bands_update",
+        "description": "Faixas de qualidade do produto (US30.01). Membros da organização leem; só o admin\nda organização altera (`PUT`) ou volta aos padrões (`DELETE`).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_products_quality-bands_delete",
+        "description": "Faixas de qualidade do produto (US30.01). Membros da organização leem; só o admin\nda organização altera (`PUT`) ou volta aos padrões (`DELETE`).",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/quality-model-tree/": {
+      "get": {
+        "operationId": "organizations_products_quality-model-tree_list",
+        "description": "ViewSet que retorna a árvore do modelo de qualidade de uma release\n(ou da configuração atual, caso release_id não seja informado).",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release-dashboard/characteristics/": {
+      "get": {
+        "operationId": "organizations_products_release-dashboard_characteristics",
+        "description": "Visão Geral de Qualidade por release (US07.01): totais e Indicador Total da Qualidade\n(TSQMI) por repositório. O planejado × realizado e o radar usam o analysis_data da\nrelease. Qualquer membro da organização tem acesso.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release-dashboard/summary/": {
+      "get": {
+        "operationId": "organizations_products_release-dashboard_summary",
+        "description": "Visão Geral de Qualidade por release (US07.01): totais e Indicador Total da Qualidade\n(TSQMI) por repositório. O planejado × realizado e o radar usam o analysis_data da\nrelease. Qualquer membro da organização tem acesso.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release/": {
+      "get": {
+        "operationId": "organizations_products_release_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Release"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "post": {
+        "operationId": "organizations_products_release_create",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release/is-valid/": {
+      "get": {
+        "operationId": "organizations_products_release_check_release",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Release"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release/{id}/": {
+      "get": {
+        "operationId": "organizations_products_release_read",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "put": {
+        "operationId": "organizations_products_release_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "organizations_products_release_partial_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_products_release_delete",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this release.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release/{id}/analysis_data/": {
+      "get": {
+        "operationId": "organizations_products_release_analysis_data",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this release.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release/{id}/planeed-x-accomplished/": {
+      "get": {
+        "operationId": "organizations_products_release_planned_x_accomplished",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Release"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this release.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/release/{id}/update-end-at/": {
+      "put": {
+        "operationId": "organizations_products_release_update_end_at",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Release"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this release.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories-tsqmi-historical-values/": {
+      "get": {
+        "operationId": "organizations_products_repositories-tsqmi-historical-values_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/RepositoriesTSQMIHistory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories-tsqmi-latest-values/": {
+      "get": {
+        "operationId": "organizations_products_repositories-tsqmi-latest-values_list",
+        "description": "Lista o TSQMI mais recente dos repositórios de um produto",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/RepositoryTSQMILatestValue"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories-tsqmi-release-history/": {
+      "get": {
+        "operationId": "organizations_products_repositories-tsqmi-release-history_list",
+        "description": "Histórico do TSQMI dos repositórios do produto, com um ponto por release\n(US06.01). Sem `repository_id`, vêm todos os repositórios do produto.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/": {
+      "get": {
+        "operationId": "organizations_products_repositories_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Repository"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "post": {
+        "operationId": "organizations_products_repositories_create",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_read",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "put": {
+        "operationId": "organizations_products_repositories_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "organizations_products_repositories_partial_update",
+        "description": "",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "delete": {
+        "operationId": "organizations_products_repositories_delete",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this repository.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/calculate/math-model/": {
+      "post": {
+        "operationId": "organizations_products_repositories_calculate_math-model_create",
+        "description": "ViewSet para cálculo do modelo matemático do MeasureSoftGram.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/characteristics/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_characteristics_list",
+        "description": "ViewSet para recuperar o histórico de características calculadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CalculatedCharacteristicHistory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/characteristics/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_characteristics_read",
+        "description": "ViewSet para recuperar o histórico de características calculadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CalculatedCharacteristicHistory"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported characteristic.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/measures/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_measures_list",
+        "description": "ViewSet para ler o histórico de medidas coletadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CalculatedMeasureHistory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/measures/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_measures_read",
+        "description": "ViewSet para ler o histórico de medidas coletadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CalculatedMeasureHistory"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported measure.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/metrics/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_metrics_list",
+        "description": "ViewSet para ler o histórico de métricas coletadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/metrics/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_metrics_read",
+        "description": "ViewSet para ler o histórico de métricas coletadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported metric.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/subcharacteristics/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_subcharacteristics_list",
+        "description": "ViewSet para recuperar o histórico de subcaracterísticas calculadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/CalculatedSubCharacteristicHistory"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/subcharacteristics/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_subcharacteristics_read",
+        "description": "ViewSet para recuperar o histórico de subcaracterísticas calculadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CalculatedSubCharacteristicHistory"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported sub characteristic.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/tsqmi/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_tsqmi_list",
+        "description": "ViewSet para cadastrar as medidas coletadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TSQMI"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/historical-values/tsqmi/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_historical-values_tsqmi_read",
+        "description": "ViewSet para cadastrar as medidas coletadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/TSQMI"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/characteristics/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_characteristics_list",
+        "description": "ViewSet para recuperar o último valor calculado da característica",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/LatestCalculatedCharacteristic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/characteristics/{characteristic_key}/badge/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_characteristics_badge_list",
+        "description": "Endpoint público que retorna uma badge SVG com o grau (A–E)\nda última característica calculada para o repositório.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/LatestCalculatedCharacteristic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "characteristic_key",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/characteristics/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_characteristics_read",
+        "description": "ViewSet para recuperar o último valor calculado da característica",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/LatestCalculatedCharacteristic"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported characteristic.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/measures/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_measures_list",
+        "description": "ViewSet para cadastrar as medidas coletadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/LatestMeasuresCalculationsRequest"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/measures/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_measures_read",
+        "description": "ViewSet para cadastrar as medidas coletadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/LatestMeasuresCalculationsRequest"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported measure.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/metrics/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_metrics_list",
+        "description": "ViewSet para ler o valor mais recente das métricas coletadas",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/metrics/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_metrics_read",
+        "description": "ViewSet para ler o valor mais recente das métricas coletadas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported metric.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/subcharacteristics/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_subcharacteristics_list",
+        "description": "ViewSet para recuperar o último valor calculado da subcaracterística",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/LatestCalculatedSubCharacteristic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/subcharacteristics/{id}/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_subcharacteristics_read",
+        "description": "ViewSet para recuperar o último valor calculado da subcaracterística",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/LatestCalculatedSubCharacteristic"
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this supported sub characteristic.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/tsqmi/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_tsqmi_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TSQMI"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/tsqmi/badge/": {
+      "get": {
+        "operationId": "organizations_products_repositories_latest-values_tsqmi_badge_list",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TSQMI"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "organizations"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "organization_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "product_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "repository_pk",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/supported-characteristics/": {
+      "get": {
+        "operationId": "supported-characteristics_list",
+        "description": "Viewset que retorna todas as características suportadas pelo sistema",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SupportedCharacteristic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supported-characteristics"
+        ]
+      },
+      "parameters": []
+    },
+    "/supported-measures/": {
+      "get": {
+        "operationId": "supported-measures_list",
+        "description": "Viewset que retorna todas as medidas suportadas pelo sistema",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SupportedMeasure"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supported-measures"
+        ]
+      },
+      "parameters": []
+    },
+    "/supported-metrics/": {
+      "get": {
+        "operationId": "supported-metrics_list",
+        "description": "Viewset que retorna todas as métricas suportadas pelo sistema",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SupportedMetric"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supported-metrics"
+        ]
+      },
+      "parameters": []
+    },
+    "/supported-subcharacteristics/": {
+      "get": {
+        "operationId": "supported-subcharacteristics_list",
+        "description": "Viewset que retorna todas as subcaracterísticas suportadas pelo sistema",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "required": [
+                "count",
+                "results"
+              ],
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "next": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "previous": {
+                  "type": "string",
+                  "format": "uri",
+                  "x-nullable": true
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SupportedSubCharacteristic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supported-subcharacteristics"
+        ]
+      },
+      "parameters": []
+    }
+  },
+  "definitions": {
+    "AccountsRetrieve": {
+      "required": [
+        "username",
+        "email"
+      ],
+      "type": "object",
+      "properties": {
+        "username": {
+          "title": "Username",
+          "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+          "type": "string",
+          "pattern": "^[\\w.@+-]+$",
+          "maxLength": 150,
+          "minLength": 1
+        },
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 150,
+          "x-nullable": true
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 150,
+          "x-nullable": true
+        },
+        "email": {
+          "title": "Email address",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "avatar_url": {
+          "title": "Avatar url",
+          "type": "string",
+          "readOnly": true
+        },
+        "repos_url": {
+          "title": "Repos url",
+          "type": "string",
+          "readOnly": true
+        },
+        "organizations_url": {
+          "title": "Organizations url",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "APIAcessTokenRetrieve": {
+      "required": [
+        "key"
+      ],
+      "type": "object",
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 40,
+          "minLength": 1
+        }
+      }
+    },
+    "SocialLogin": {
+      "type": "object",
+      "properties": {
+        "access_token": {
+          "title": "Access token",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "id_token": {
+          "title": "Id token",
+          "type": "string"
+        }
+      }
+    },
+    "AccountsLogin": {
+      "required": [
+        "password"
+      ],
+      "type": "object",
+      "properties": {
+        "username": {
+          "title": "Username",
+          "type": "string",
+          "maxLength": 150,
+          "minLength": 1
+        },
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "minLength": 1
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AccountsCreate": {
+      "required": [
+        "username",
+        "email",
+        "password"
+      ],
+      "type": "object",
+      "properties": {
+        "username": {
+          "title": "Username",
+          "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+          "type": "string",
+          "pattern": "^[\\w.@+-]+$",
+          "maxLength": 150,
+          "minLength": 1
+        },
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 150,
+          "x-nullable": true
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 150,
+          "x-nullable": true
+        },
+        "email": {
+          "title": "Email address",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "GitHubAccessTokenRetrieve": {
+      "required": [
+        "key"
+      ],
+      "type": "object",
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 40,
+          "minLength": 1
+        }
+      }
+    },
+    "UserList": {
+      "required": [
+        "username"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "username": {
+          "title": "Username",
+          "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+          "type": "string",
+          "pattern": "^[\\w.@+-]+$",
+          "maxLength": 150,
+          "minLength": 1
+        },
+        "first_name": {
+          "title": "First name",
+          "type": "string",
+          "maxLength": 150,
+          "x-nullable": true
+        },
+        "last_name": {
+          "title": "Last name",
+          "type": "string",
+          "maxLength": 150,
+          "x-nullable": true
+        }
+      }
+    },
+    "SupportedCharacteristic": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        }
+      }
+    },
+    "BalanceMatrix": {
+      "required": [
+        "source_characteristic",
+        "target_characteristic",
+        "relation_type"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "source_characteristic": {
+          "$ref": "#/definitions/SupportedCharacteristic"
+        },
+        "target_characteristic": {
+          "$ref": "#/definitions/SupportedCharacteristic"
+        },
+        "relation_type": {
+          "title": "Relation type",
+          "type": "string",
+          "enum": [
+            "+",
+            "-"
+          ]
+        }
+      }
+    },
+    "CharacteristicEntityRelationshipTree": {
+      "required": [
+        "name",
+        "key"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "subcharacteristics": {
+          "title": "Subcharacteristics",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "Organization": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "url": {
+          "title": "Url",
+          "type": "string",
+          "format": "uri",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "maxLength": 128
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "products": {
+          "title": "Products",
+          "type": "string",
+          "readOnly": true
+        },
+        "actions": {
+          "title": "Actions",
+          "type": "string",
+          "readOnly": true
+        },
+        "github_org_name": {
+          "title": "Github org name",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        },
+        "gitlab_group_id": {
+          "title": "Gitlab group id",
+          "type": "integer",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "gitlab_user_id": {
+          "title": "Gitlab user id",
+          "type": "integer",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "avatar_url": {
+          "title": "Avatar url",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "x-nullable": true
+        }
+      }
+    },
+    "Product": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "url": {
+          "title": "Url",
+          "type": "string",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "repositories": {
+          "title": "Repositories",
+          "type": "string",
+          "readOnly": true
+        },
+        "actions": {
+          "title": "Actions",
+          "type": "string",
+          "readOnly": true
+        },
+        "organization": {
+          "title": "Organization",
+          "type": "string",
+          "format": "uri",
+          "readOnly": true
+        }
+      }
+    },
+    "AllGoals": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "created_by": {
+          "title": "Created by",
+          "type": "string",
+          "readOnly": true
+        },
+        "goal": {
+          "title": "Goal",
+          "type": "string",
+          "readOnly": true
+        },
+        "accomplished": {
+          "title": "Accomplished",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "CharacteristicDelta": {
+      "required": [
+        "characteristic_key",
+        "delta"
+      ],
+      "type": "object",
+      "properties": {
+        "characteristic_key": {
+          "title": "Characteristic key",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "delta": {
+          "title": "Delta",
+          "type": "integer"
+        }
+      }
+    },
+    "Goal": {
+      "required": [
+        "changes"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CharacteristicDelta"
+          }
+        },
+        "data": {
+          "title": "Data",
+          "type": "string",
+          "readOnly": true
+        },
+        "allow_dynamic": {
+          "title": "Allow dynamic",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "ReleaseConfiguration": {
+      "required": [
+        "data"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "x-nullable": true
+        },
+        "data": {
+          "title": "Data",
+          "type": "object"
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created_config": {
+          "title": "Created config",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "Release": {
+      "required": [
+        "release_name",
+        "start_at",
+        "end_at",
+        "goal",
+        "repositories_ids"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "release_name": {
+          "title": "Release name",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "start_at": {
+          "title": "Start at",
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "title": "End at",
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "title": "Created by",
+          "type": "integer",
+          "readOnly": true
+        },
+        "product": {
+          "title": "Product",
+          "type": "integer",
+          "readOnly": true
+        },
+        "goal": {
+          "title": "Goal",
+          "type": "integer"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "repositories_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "RepositoriesTSQMIHistory": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "url": {
+          "title": "Url",
+          "type": "string",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "history": {
+          "title": "History",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "RepositoryTSQMILatestValue": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "url": {
+          "title": "Url",
+          "type": "string",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "current_tsqmi": {
+          "title": "Current tsqmi",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "Repository": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "product": {
+          "title": "Product",
+          "type": "string",
+          "readOnly": true
+        },
+        "latest_values": {
+          "title": "Latest values",
+          "type": "string",
+          "readOnly": true
+        },
+        "historical_values": {
+          "title": "Historical values",
+          "type": "string",
+          "readOnly": true
+        },
+        "actions": {
+          "title": "Actions",
+          "type": "string",
+          "readOnly": true
+        },
+        "platform": {
+          "title": "Platform",
+          "type": "string",
+          "enum": [
+            "github",
+            "gitlab",
+            "bitbucket",
+            "subversion (SVN)",
+            "mercurial",
+            "aws code commit",
+            "azure repos",
+            "outros"
+          ],
+          "x-nullable": true
+        },
+        "imported": {
+          "title": "Imported",
+          "type": "boolean"
+        },
+        "gitlab_project_id": {
+          "title": "Gitlab project id",
+          "type": "integer",
+          "maximum": 9223372036854775807,
+          "minimum": -9223372036854775808,
+          "x-nullable": true
+        },
+        "gitlab_path_with_namespace": {
+          "title": "Gitlab path with namespace",
+          "type": "string",
+          "maxLength": 255,
+          "x-nullable": true
+        }
+      }
+    },
+    "CalculatedCharacteristicHistory": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "history": {
+          "title": "History",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "CalculatedMeasureHistory": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "history": {
+          "title": "History",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "CalculatedSubCharacteristicHistory": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "history": {
+          "title": "History",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "TSQMI": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "value": {
+          "title": "Value",
+          "type": "number",
+          "readOnly": true
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "LatestCalculatedCharacteristic": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "latest": {
+          "title": "Latest",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "LatestMeasuresCalculationsRequest": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "latest": {
+          "title": "Latest",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "LatestCalculatedSubCharacteristic": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        },
+        "latest": {
+          "title": "Latest",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "SupportedMeasure": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        }
+      }
+    },
+    "SupportedMetric": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        }
+      }
+    },
+    "SupportedSubCharacteristic": {
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "key": {
+          "title": "Key",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "maxLength": 512,
+          "x-nullable": true
+        }
+      }
+    }
+  }
+}

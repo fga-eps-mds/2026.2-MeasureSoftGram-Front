@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases, releasesPage } from '../common';
 import releaseRepositories from '../distribuicao/release-repositories.json';
 import summary from './summary.json';
 import analysisData from './analysis-data.json';
@@ -56,7 +56,7 @@ const byRelease = (bodyR1: unknown, bodyR2: unknown) => (url: URL) =>
  * Manutenibilidade.
  */
 export const comDados: ApiHandlers = {
-  [OVERVIEW_API.releases]: releases,
+  [OVERVIEW_API.releases]: releasesPage,
   [OVERVIEW_API.summary]: byRelease(summaryR1, summary),
   [OVERVIEW_API.characteristics]: byRelease(characteristicsR1, releaseRepositories),
   [OVERVIEW_API.analysis(1)]: analysisR1,
@@ -100,4 +100,4 @@ export const erro500: ApiHandlers = {
 export const erroReleases: ApiHandlers = { ...comDados, [OVERVIEW_API.releases]: serverError };
 
 /** Produto sem release: a página só pede a lista de releases (CA4). */
-export const semRelease: ApiHandlers = { [OVERVIEW_API.releases]: [] };
+export const semRelease: ApiHandlers = { [OVERVIEW_API.releases]: EMPTY_PAGE };

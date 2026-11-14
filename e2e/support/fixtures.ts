@@ -8,7 +8,7 @@ import { followOAuthRedirectsInPage } from './oauth';
 /**
  * Teste base das páginas: grava o idioma, semeia a sessão fake (sem ela com `test.use({ session: false })`) e simula a
  * API com os handlers comuns mais os do cenário (`test.use({ scenario })`). No fim, falha se alguma rota foi pedida sem
- * handler. No projeto `oauth-servidor` (um teste por vez), as rotas que o servidor do Next pede ao Service (OAuth, troca
+ * handler ou se alguma resposta simulada não bate com o schema do Service (e2e/support/contract.ts). No projeto `oauth-servidor` (um teste por vez), as rotas que o servidor do Next pede ao Service (OAuth, troca
  * do code, logout) vão para o Service fake.
  */
 export const test = base.extend<{ scenario: ApiHandlers; provider: SessionProvider; session: boolean; api: MockApi }>({
@@ -25,7 +25,9 @@ export const test = base.extend<{ scenario: ApiHandlers; provider: SessionProvid
       await followOAuthRedirectsInPage(page);
       const api = await mockApi(page, { ...common, ...scenario });
       await use(api);
+      for (const route of api.uncovered) testInfo.annotations.push({ type: 'sem-contrato', description: route });
       expect(api.unhandled, 'rotas da API pedidas sem handler').toEqual([]);
+      expect([...new Set(api.contract)], 'respostas simuladas fora do contrato do Service').toEqual([]);
     },
     { auto: true }
   ]

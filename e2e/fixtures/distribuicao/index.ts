@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases, releasesPage } from '../common';
 import releaseRepositories from './release-repositories.json';
 import tree from './quality-model-tree.json';
 import entities from './entity-analysis-entities.json';
@@ -71,7 +71,7 @@ function repositoriesOf(url: URL) {
  * A mesma distribuição vale para qualquer release ou repositório escolhido.
  */
 export const comDados: ApiHandlers = {
-  [DISTRIBUTION_API.releases]: releases,
+  [DISTRIBUTION_API.releases]: releasesPage,
   [DISTRIBUTION_API.repositories]: repositoriesOf,
   [DISTRIBUTION_API.tree]: tree,
   [DISTRIBUTION_API.entities]: entities,
@@ -102,7 +102,7 @@ export const semAnalise: ApiHandlers = {
 
 /** Produto sem release: a página só pede a lista de releases. */
 export const semRelease: ApiHandlers = {
-  [DISTRIBUTION_API.releases]: []
+  [DISTRIBUTION_API.releases]: EMPTY_PAGE
 };
 
 /** A distribuição falha com 500; os seletores carregam. */
