@@ -11,28 +11,68 @@
     "goal": 2
   },
   "planned": [
-    { "name": "reliability", "value": 0.7 },
-    { "name": "maintainability", "value": 0.6 },
-    { "name": "functional_suitability", "value": 0.5 },
-    { "name": "security", "value": 0.4 }
+    {
+      "name": "reliability",
+      "value": 0.7
+    },
+    {
+      "name": "maintainability",
+      "value": 0.6
+    },
+    {
+      "name": "functional_suitability",
+      "value": 0.5
+    },
+    {
+      "name": "security",
+      "value": 0.4
+    }
   ],
   "accomplished": [
     {
       "repository_name": "MeasureSoftGram-Service",
       "characteristics": [
-        { "name": "reliability", "value": 0.74 },
-        { "name": "maintainability", "value": 0.6 },
-        { "name": "functional_suitability", "value": 0.35 },
-        { "name": "security", "value": 0.25 }
+        {
+          "name": "reliability",
+          "value": 0.74,
+          "diff": 0
+        },
+        {
+          "name": "maintainability",
+          "value": 0.6,
+          "diff": 0
+        },
+        {
+          "name": "functional_suitability",
+          "value": 0.35,
+          "diff": 0.15
+        },
+        {
+          "name": "security",
+          "value": 0.25,
+          "diff": 0.15
+        }
       ],
       "norm_diff": 0.21
     },
     {
       "repository_name": "MeasureSoftGram-Front",
       "characteristics": [
-        { "name": "reliability", "value": 0.8 },
-        { "name": "functional_suitability", "value": 0.5 },
-        { "name": "security", "value": 0.1 }
+        {
+          "name": "reliability",
+          "value": 0.8,
+          "diff": 0
+        },
+        {
+          "name": "functional_suitability",
+          "value": 0.5,
+          "diff": 0
+        },
+        {
+          "name": "security",
+          "value": 0.1,
+          "diff": 0.3
+        }
       ],
       "norm_diff": 0.3
     }

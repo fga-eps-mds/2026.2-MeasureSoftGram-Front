@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releasesPage, page } from '../common';
 import repositories from '../temporal/repositories.json';
 import characteristics from '../temporal/historical-characteristics.json';
 
@@ -30,23 +30,21 @@ export const comDados: ApiHandlers = {
   [REPOSITORY_API.tsqmi]: { id: 1, value: 0.62, created_at: '2026-10-10T12:00:00-03:00' },
   [REPOSITORY_API.badge]: {},
   [REPOSITORY_API.characteristics]: characteristics,
-  [REPOSITORY_API.releases]: releases
+  [REPOSITORY_API.releases]: releasesPage
 };
 
 /** Reliability só passa de C (0,55) para B (0,62 e 0,66): uma única troca de faixa, que quebra o pulso (CA3, fixme). */
 export const umaTrocaDeFaixa: ApiHandlers = {
   ...comDados,
-  [REPOSITORY_API.characteristics]: {
-    results: [{ ...characteristics.results[0], history: characteristics.results[0].history.slice(1, 4) }]
-  }
+  [REPOSITORY_API.characteristics]: page([
+    { ...characteristics.results[0], history: characteristics.results[0].history.slice(1, 4) }
+  ])
 };
 
 /** O repositório ainda não foi analisado: nenhuma característica tem medição (CA4). */
 export const semMedicoes: ApiHandlers = {
   ...comDados,
-  [REPOSITORY_API.characteristics]: {
-    results: characteristics.results.map((item) => ({ ...item, history: [] }))
-  }
+  [REPOSITORY_API.characteristics]: page(characteristics.results.map((item) => ({ ...item, history: [] })))
 };
 
 /** O histórico das características falha com 500 (CA4). */

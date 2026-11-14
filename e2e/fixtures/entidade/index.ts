@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releasesPage } from '../common';
 import characteristicR2 from './matrix-characteristic-r2.json';
 import subcharacteristicR2 from './matrix-subcharacteristic-r2.json';
 import measureR2 from './matrix-measure-r2.json';
@@ -38,19 +38,19 @@ const analysisOf = (url: URL) =>
  * sete contribuições negativas entre as dez e a célula Front × CI Feedback Time sem valor. A R1 é a primeira release.
  */
 export const comDados: ApiHandlers = {
-  [ENTITY_API.releases]: releases,
+  [ENTITY_API.releases]: releasesPage,
   [ENTITY_API.matrix]: matrixOf,
   [ENTITY_API.analysis]: analysisOf
 };
 
 /** Produto sem release: a página só pede a lista de releases. */
 export const semRelease: ApiHandlers = {
-  [ENTITY_API.releases]: []
+  [ENTITY_API.releases]: EMPTY_PAGE
 };
 
 /** A R2 sem nenhuma análise: as colunas e os repositórios vêm, mas todos os valores são null. */
 export const semAnalise: ApiHandlers = {
-  [ENTITY_API.releases]: releases,
+  [ENTITY_API.releases]: releasesPage,
   [ENTITY_API.matrix]: {
     ...measureR2,
     repositories: measureR2.repositories.map((repository) => ({

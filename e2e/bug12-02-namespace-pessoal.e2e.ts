@@ -73,7 +73,7 @@ test.describe('@BUG12.02-CA2 Nome já usado por organização de outra pessoa: a
     // a organização joao da outra pessoa não está na lista do usuário; a tela não pode chegar até ela por nenhum id
     page.on('request', (r) => {
       const match = new URL(r.url()).pathname.match(/^\/bff\/v1\/organizations\/(\d+)\//);
-      if (match && !['1', JOAO_PERSONAL_ORGANIZATION.id].includes(match[1])) others.push(r.url());
+      if (match && !['1', String(JOAO_PERSONAL_ORGANIZATION.id)].includes(match[1])) others.push(r.url());
     });
 
     await page.goto(IMPORT_PATH);

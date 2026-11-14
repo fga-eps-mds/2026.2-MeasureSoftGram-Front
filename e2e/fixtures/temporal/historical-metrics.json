@@ -1,4 +1,7 @@
 {
+  "count": 4,
+  "next": null,
+  "previous": null,
   "results": [
     {
       "id": 9,
@@ -12,10 +15,14 @@
       "name": "sum_ci_feedback_times",
       "history": [
         {
+          "id": 1,
+          "metric_id": 10,
           "value": 5400,
           "created_at": "2026-08-20T12:00:00-03:00"
         },
         {
+          "id": 2,
+          "metric_id": 10,
           "value": 4200,
           "created_at": "2026-09-25T12:00:00-03:00"
         }
@@ -27,10 +34,14 @@
       "name": "total_builds",
       "history": [
         {
+          "id": 3,
+          "metric_id": 11,
           "value": 15,
           "created_at": "2026-08-20T12:00:00-03:00"
         },
         {
+          "id": 4,
+          "metric_id": 11,
           "value": 18,
           "created_at": "2026-09-25T12:00:00-03:00"
         }

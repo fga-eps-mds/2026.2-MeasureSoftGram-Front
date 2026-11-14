@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, page } from '../common';
 import tree from '../distribuicao/quality-model-tree.json';
 import repositories from './repositories.json';
 import characteristics from './historical-characteristics.json';
@@ -20,7 +20,8 @@ export const TEMPORAL_API = {
     `${PRODUCT_API}/repositories/${repositoryId}/historical-values/${level}/`
 };
 
-type History = typeof characteristics;
+// cada nível tem o seu id na medição (characteristic_id, measure_id...); aqui só importa ser a página do Service
+type History = ReturnType<typeof page>;
 
 /** Os quatro históricos de um repositório; o de métricas só responde ao pedido do repositório inteiro (?qualifier=TRK). */
 function historiesOf(repositoryId: number, bodies: Record<Level, History>): ApiHandlers {
@@ -38,9 +39,7 @@ const service = { characteristics, subcharacteristics, measures, metrics };
 /** O Front só tem a última medição de cada característica, para a troca de repositório mudar o gráfico. */
 const front = {
   ...service,
-  characteristics: {
-    results: characteristics.results.map((item) => ({ ...item, history: item.history.slice(-1) }))
-  }
+  characteristics: page(characteristics.results.map((item) => ({ ...item, history: item.history.slice(-1) })))
 };
 
 /**
@@ -62,10 +61,10 @@ export const carregando = LEVELS.map((level) => TEMPORAL_API.history(7, level));
 export const semMedicoes: ApiHandlers = {
   ...comDados,
   ...historiesOf(7, {
-    characteristics: { results: [] },
-    subcharacteristics: { results: [] },
-    measures: { results: [] },
-    metrics: { results: [] }
+    characteristics: page([]),
+    subcharacteristics: page([]),
+    measures: page([]),
+    metrics: page([])
   })
 };
 

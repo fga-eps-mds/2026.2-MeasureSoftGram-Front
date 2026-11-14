@@ -1,5 +1,5 @@
 import { ApiHandlers } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releasesPage, page } from '../common';
 import tree from './quality-model-tree.json';
 import repositories from './repositories.json';
 import matrixMeasure from './entity-matrix-measure.json';
@@ -39,7 +39,7 @@ const matrices: Record<string, unknown> = {
  * Modifiability no nível subcaracterística.
  */
 export const entidade: ApiHandlers = {
-  [DIVIDA_API.releases]: releases,
+  [DIVIDA_API.releases]: releasesPage,
   [DIVIDA_API.matrix]: (url: URL) => matrices[url.searchParams.get('level') ?? ''],
   [DIVIDA_API.analysis]: (url: URL) =>
     url.searchParams.get('level') === 'subcharacteristic' && url.searchParams.get('key') === 'modifiability'
@@ -57,13 +57,13 @@ export const temporal: ApiHandlers = {
   [DIVIDA_API.characteristics]: characteristics,
   [DIVIDA_API.subcharacteristics]: subcharacteristics,
   [DIVIDA_API.measures]: measures,
-  [DIVIDA_API.metrics]: { results: [] }
+  [DIVIDA_API.metrics]: page([])
 };
 
 /** A mesma Evolução Temporal, com a dívida técnica sem nenhuma medição no repositório (CA5). */
 export const temporalSemDivida: ApiHandlers = {
   ...temporal,
-  [DIVIDA_API.measures]: {
-    results: measures.results.map((item) => (item.key === 'technical_debt_ratio' ? { ...item, history: [] } : item))
-  }
+  [DIVIDA_API.measures]: page(
+    measures.results.map((item) => (item.key === 'technical_debt_ratio' ? { ...item, history: [] } : item))
+  )
 };

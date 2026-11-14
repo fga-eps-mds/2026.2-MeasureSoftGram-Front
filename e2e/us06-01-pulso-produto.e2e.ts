@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
 import { bandSwatch, downloadCsv } from './support/helpers';
-import { RELEASES_API, releases } from './fixtures/common';
+import { RELEASES_API, releasesPage } from './fixtures/common';
 import {
   comDados,
   PRODUTO_API,
@@ -243,7 +243,7 @@ test.describe('@US06.01-CA7 Produto passa a ter releases: o empty state dá luga
     await page.goto(PRODUTO_PATH);
     await expect(page.getByRole('heading', { level: 6, name: NO_RELEASES })).toBeVisible();
 
-    api.set(RELEASES_API, releases);
+    api.set(RELEASES_API, releasesPage);
     await page.getByRole('button', { name: 'Ir para Releases' }).click();
     await expect(page.getByRole('navigation').getByRole('heading', { level: 6, name: 'Releases' })).toBeVisible();
 

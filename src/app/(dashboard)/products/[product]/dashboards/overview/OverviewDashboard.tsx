@@ -21,6 +21,7 @@ import {
   formatTotal,
   formatTsqmiBarOptions,
   getDefaultAnalysisRepository,
+  withReleaseRepositories,
   getTotalItems,
   getTsqmiBars,
   hasAccomplishedValues,
@@ -225,7 +226,11 @@ const OverviewDashboard: React.FC = () => {
 
   // o mesmo seletor comanda o equalizador e o radar, como na tela da release
   const [selectedRepositoryName, setSelectedRepositoryName] = useState<string | undefined>();
-  const analysisRepositories = analysis?.accomplished ?? [];
+  const accomplished = analysis?.accomplished ?? [];
+  const analysisRepositories = useMemo(
+    () => withReleaseRepositories(analysis?.accomplished ?? [], characteristics?.repositories),
+    [analysis?.accomplished, characteristics?.repositories]
+  );
   const planned = analysis?.planned ?? [];
   const selectedRepository =
     analysisRepositories.find((repository) => repository.repository_name === selectedRepositoryName) ??
@@ -252,7 +257,7 @@ const OverviewDashboard: React.FC = () => {
   const analysisStatus = getStatus(
     analysisError,
     isLoadingReleases || (!!release && !analysis),
-    analysisRepositories.length === 0
+    accomplished.length === 0
   );
 
   // os CSVs levam o que os cards mostram: um card com erro ou sem dados não exporta nada

@@ -1,5 +1,5 @@
 import { ApiHandlers, serverError } from '../../support/api';
-import { PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases } from '../common';
+import { EMPTY_PAGE, PRODUCT_API, PRODUCT_PATH, RELEASES_API, releases, releasesPage } from '../common';
 import releaseRepositories from '../distribuicao/release-repositories.json';
 import summary from './summary.json';
 import analysisData from './analysis-data.json';
@@ -38,8 +38,9 @@ const analysisR1 = {
     {
       repository_name: 'MeasureSoftGram-Service',
       characteristics: [
-        { name: 'reliability', value: 0.5 },
-        { name: 'maintainability', value: 0.45 }
+        // diff = max(0, planejado - realizado), como o Service calcula
+        { name: 'reliability', value: 0.5, diff: 0.2 },
+        { name: 'maintainability', value: 0.45, diff: 0.15 }
       ],
       norm_diff: 0.12
     }
@@ -52,11 +53,11 @@ const byRelease = (bodyR1: unknown, bodyR2: unknown) => (url: URL) =>
 
 /**
  * R2 (atual) e R1. Na R2, o indicador do Service (0,62, B) e do Front (0,58, C), com o Action sem análise; no
- * planejado × realizado, o Action vem primeiro e sem realizado, o Service com as duas características e o Front sem
- * Manutenibilidade.
+ * planejado × realizado, o Service com as duas características e o Front sem Manutenibilidade; o Action, sem cálculo,
+ * não vem no realizado (o Service só manda os repositórios analisados) e entra no seletor pelos repositórios da release.
  */
 export const comDados: ApiHandlers = {
-  [OVERVIEW_API.releases]: releases,
+  [OVERVIEW_API.releases]: releasesPage,
   [OVERVIEW_API.summary]: byRelease(summaryR1, summary),
   [OVERVIEW_API.characteristics]: byRelease(characteristicsR1, releaseRepositories),
   [OVERVIEW_API.analysis(1)]: analysisR1,
@@ -100,4 +101,4 @@ export const erro500: ApiHandlers = {
 export const erroReleases: ApiHandlers = { ...comDados, [OVERVIEW_API.releases]: serverError };
 
 /** Produto sem release: a página só pede a lista de releases (CA4). */
-export const semRelease: ApiHandlers = { [OVERVIEW_API.releases]: [] };
+export const semRelease: ApiHandlers = { [OVERVIEW_API.releases]: EMPTY_PAGE };
