@@ -1,0 +1,15 @@
+name: E2E de sistema
+
+# Front, Service e Postgres reais (a suíte do Platform), com este commit do Front, a cada merge na develop. Pega quebra
+# de integração que o E2E com a API simulada não vê, como a da sessão em cookies do TASK08.01 (#100). Fica num
+# workflow próprio para não entrar na mediana do test.yml.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  e2e-system:
+    uses: fga-eps-mds/2026.2-MeasureSoftGram-Platform/.github/workflows/e2e-system.yml@main
+    with:
+      front_ref: ${{ github.sha }}
