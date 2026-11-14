@@ -75,7 +75,7 @@ export const PARSER_REPOSITORY = {
   imported: true,
   gitlab_project_id: PARSER.gitlab_project_id,
   gitlab_path_with_namespace: PARSER.gitlab_path_with_namespace,
-  latest_values: []
+  latest_values: {}
 };
 export const WITH_PARSER = { count: 1, next: null, previous: null, results: [PARSER_REPOSITORY] };
 

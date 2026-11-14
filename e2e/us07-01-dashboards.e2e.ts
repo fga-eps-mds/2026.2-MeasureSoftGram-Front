@@ -153,7 +153,7 @@ test.describe('@US07.01-CA1 Visão Geral da release: totais, indicador por repos
 
   test('o planejado × realizado é o equalizador da tela da release, no repositório escolhido', async ({ page }) => {
     await openOverview(page);
-    // o Action vem primeiro, mas sem realizado: o card abre no primeiro repositório com análise
+    // o Action não tem realizado: o card abre no primeiro repositório com análise
     await expect(select(page, 'Repositório')).toHaveText('MeasureSoftGram-Service');
     await expect(card(page, PLANNED).getByTestId(/^equalizer-track-/)).toHaveCount(2);
     await expect(vectors(page).getByRole('columnheader')).toHaveText(['', 'Confiabilidade', 'Manutenibilidade']);

@@ -160,6 +160,21 @@ export function getDefaultAnalysisRepository(accomplished: AccomplishedRepositor
   return (withValues ?? accomplished[0])?.repository_name;
 }
 
+/**
+ * Os repositórios da release para o seletor do planejado × realizado. O Service só põe no realizado os repositórios que
+ * já têm cálculo; os demais da release entram sem características, para a tela dizer que ainda não foram analisados.
+ */
+export function withReleaseRepositories(
+  accomplished: AccomplishedRepository[],
+  repositories: ReleaseDashboardCharacteristics['repositories'] = []
+): AccomplishedRepository[] {
+  const analyzed = new Set(accomplished.map((repository) => repository.repository_name));
+  const pending = repositories
+    .filter((repository) => !analyzed.has(repository.name))
+    .map((repository) => ({ repository_name: repository.name, characteristics: [] }));
+  return [...accomplished, ...pending];
+}
+
 export function hasAccomplishedValues(repository?: AccomplishedRepository): boolean {
   return !!repository?.characteristics?.some(
     (characteristic) => typeof characteristic?.value === 'number' && Number.isFinite(characteristic.value)

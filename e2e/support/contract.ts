@@ -2,9 +2,12 @@ import Ajv, { ValidateFunction } from 'ajv';
 import openapi from '../contract/openapi.json';
 
 /**
- * Contrato do Service: o schema que o drf_yasg gera (Swagger 2.0). Para atualizar, gere no Service com
- * `python manage.py generate_swagger -f json` e grave o resultado em e2e/contract/openapi.json.
- * shortcut: cópia manual do schema; troque por download do artifact da CI do Service quando ele existir.
+ * Contrato do Service: o schema que o drf_yasg gera (Swagger 2.0), publicado como artifact `openapi` pela CI do Service.
+ * Para atualizar com o da develop do Service:
+ *   gh run download -R fga-eps-mds/2026.2-MeasureSoftGram-Service -n openapi -D e2e/contract \
+ *     $(gh run list -R fga-eps-mds/2026.2-MeasureSoftGram-Service -b develop -w "Rodar Testes" -s success -L 1 \
+ *     --json databaseId -q '.[0].databaseId')
+ * shortcut: cópia versionada e atualizada à mão; baixe o artifact na CI do Front se a cópia ficar para trás com frequência.
  */
 
 type Json = any;
@@ -16,30 +19,6 @@ function toJsonSchema(node: Json): Json {
   const { 'x-nullable': nullable, ...rest } = node;
   const converted = Object.fromEntries(Object.entries(rest).map(([key, value]) => [key, toJsonSchema(value)]));
   return nullable ? { anyOf: [converted, { type: 'null' }] } : converted;
-}
-
-/**
- * Erros do schema do Service, não das fixtures: campos de SerializerMethodField que o drf_yasg diz serem string e views
- * que não devolvem o que o schema diz (list() com um objeto só, ação com outro corpo, DELETE com 200 e corpo). Os campos
- * aceitam qualquer valor e as rotas ficam como "sem contrato", com o status que a fixture der.
- * shortcut: lista à mão; apague cada item quando o openapi.json novo do Service descrever o campo ou a rota.
- */
-const WRONG_FIELDS: Record<string, string[]> = {
-  Organization: ['products'],
-  Repository: ['latest_values', 'historical_values'],
-  RepositoriesTSQMIHistory: ['history'],
-  CalculatedCharacteristicHistory: ['history'],
-  CalculatedSubCharacteristicHistory: ['history'],
-  CalculatedMeasureHistory: ['history']
-};
-const WRONG_ROUTES = new Set([
-  'GET /v1/organizations/{organization_pk}/products/{product_pk}/current/release-config',
-  'GET /v1/organizations/{organization_pk}/products/{product_pk}/release/{id}/analysis_data',
-  'GET /v1/organizations/{organization_pk}/products/{product_pk}/repositories/{repository_pk}/latest-values/tsqmi',
-  'DELETE /v1/organizations/{organization_pk}/products/{product_pk}/quality-bands'
-]);
-for (const [definition, fields] of Object.entries(WRONG_FIELDS)) {
-  for (const field of fields) (openapi.definitions as Json)[definition].properties[field] = {};
 }
 
 // as respostas apontam para #/definitions/X do documento inteiro, registrado no ajv como "openapi"
@@ -74,8 +53,7 @@ function find(path: string): Operation | undefined {
 /** O status 2xx que o Service documenta para a rota (201 na criação, 204 na remoção); 200 se ele não disser. */
 export function documentedStatus(method: string, path: string): number {
   const operation = find(path);
-  if (!operation || WRONG_ROUTES.has(`${method} ${operation.template}`)) return 200;
-  const responses = operation.methods[method.toLowerCase()]?.responses ?? {};
+  const responses = operation?.methods[method.toLowerCase()]?.responses ?? {};
   return Number(Object.keys(responses).find((status) => status.startsWith('2')) ?? 200);
 }
 
@@ -95,7 +73,6 @@ export function checkResponse(method: string, path: string, status: number, body
   if (!operation) return { error: `${method} ${path}: rota que o Service não tem` };
 
   const route = `${method} ${operation.template}`;
-  if (WRONG_ROUTES.has(route)) return { uncovered: `${route} ${status}` };
   const responses = operation.methods[method.toLowerCase()]?.responses;
   if (!responses) return { error: `${route}: método que o Service não tem nessa rota` };
   const response = responses[String(status)];

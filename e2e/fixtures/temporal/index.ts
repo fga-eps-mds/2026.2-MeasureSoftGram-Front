@@ -20,7 +20,8 @@ export const TEMPORAL_API = {
     `${PRODUCT_API}/repositories/${repositoryId}/historical-values/${level}/`
 };
 
-type History = typeof characteristics;
+// cada nível tem o seu id na medição (characteristic_id, measure_id...); aqui só importa ser a página do Service
+type History = ReturnType<typeof page>;
 
 /** Os quatro históricos de um repositório; o de métricas só responde ao pedido do repositório inteiro (?qualifier=TRK). */
 function historiesOf(repositoryId: number, bodies: Record<Level, History>): ApiHandlers {

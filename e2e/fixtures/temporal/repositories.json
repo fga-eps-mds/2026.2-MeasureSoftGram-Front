@@ -10,7 +10,7 @@
       "url": "https://github.com/fga-eps-mds/MeasureSoftGram-Service",
       "platform": "github",
       "imported": true,
-      "latest_values": []
+      "latest_values": {}
     },
     {
       "id": 9,
@@ -19,7 +19,7 @@
       "url": "https://github.com/fga-eps-mds/MeasureSoftGram-Front",
       "platform": "github",
       "imported": true,
-      "latest_values": []
+      "latest_values": {}
     }
   ]
 }

@@ -13,6 +13,7 @@ import {
   formatTsqmiTooltip,
   formatVariation,
   getDefaultAnalysisRepository,
+  withReleaseRepositories,
   getTsqmiBars,
   hasAccomplishedValues
 } from '../formatOverviewCharts';
@@ -135,6 +136,18 @@ describe('formatOverviewCharts', () => {
       { name: 'maintainability', value: 0.8, diff: 0 },
       { name: 'functional_suitability', value: 0.6, diff: 0 }
     ];
+
+    it('acrescenta ao seletor os repositórios da release que o Service ainda não pôs no realizado', () => {
+      const release = [
+        { id: 1, name: 'action', tsqmi: { value: null, created_at: null } },
+        { id: 2, name: 'core', tsqmi: { value: 0.6, created_at: '' } }
+      ];
+      expect(withReleaseRepositories([repositories[1]], release)).toEqual([
+        repositories[1],
+        { repository_name: 'action', characteristics: [] }
+      ]);
+      expect(withReleaseRepositories(repositories)).toEqual(repositories);
+    });
 
     it('começa pelo primeiro repositório com alguma característica realizada', () => {
       expect(getDefaultAnalysisRepository(repositories)).toBe('core');

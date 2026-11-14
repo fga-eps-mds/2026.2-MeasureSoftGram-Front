@@ -11,29 +11,41 @@
     "goal": 80
   },
   "planned": [
-    { "name": "reliability", "value": 0.7 },
-    { "name": "maintainability", "value": 0.6 }
+    {
+      "name": "reliability",
+      "value": 0.7
+    },
+    {
+      "name": "maintainability",
+      "value": 0.6
+    }
   ],
   "accomplished": [
     {
-      "repository_name": "MeasureSoftGram-Action",
-      "characteristics": [
-        { "name": "reliability", "value": null },
-        { "name": "maintainability", "value": null }
-      ],
-      "norm_diff": 0
-    },
-    {
       "repository_name": "MeasureSoftGram-Service",
       "characteristics": [
-        { "name": "reliability", "value": 0.74 },
-        { "name": "maintainability", "value": 0.55 }
+        {
+          "name": "reliability",
+          "value": 0.74,
+          "diff": 0
+        },
+        {
+          "name": "maintainability",
+          "value": 0.55,
+          "diff": 0.05
+        }
       ],
       "norm_diff": 0.07
     },
     {
       "repository_name": "MeasureSoftGram-Front",
-      "characteristics": [{ "name": "reliability", "value": 0.8 }],
+      "characteristics": [
+        {
+          "name": "reliability",
+          "value": 0.8,
+          "diff": 0
+        }
+      ],
       "norm_diff": 0.1
     }
   ]
