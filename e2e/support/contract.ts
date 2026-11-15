@@ -57,16 +57,6 @@ export function documentedStatus(method: string, path: string): number {
   return Number(Object.keys(responses).find((status) => status.startsWith('2')) ?? 200);
 }
 
-/**
- * Respostas que o Service dá com outro status 2xx do que o schema diz: o login social do dj-rest-auth responde 200, e o
- * drf_yasg documenta 201 em todo POST. O corpo é conferido com o do status documentado.
- * shortcut: lista à mão; apague cada item quando o openapi.json do Service documentar o 200.
- */
-const DOCUMENTED_AS: Record<string, string> = {
-  'POST /v1/accounts/gitlab/login 200': '201',
-  'POST /v1/accounts/github/login 200': '201'
-};
-
 const validators = new Map<string, ValidateFunction>();
 
 export interface ContractCheck {
@@ -85,7 +75,7 @@ export function checkResponse(method: string, path: string, status: number, body
   const route = `${method} ${operation.template}`;
   const responses = operation.methods[method.toLowerCase()]?.responses;
   if (!responses) return { error: `${route}: método que o Service não tem nessa rota` };
-  const response = responses[String(status)] ?? responses[DOCUMENTED_AS[`${route} ${status}`]];
+  const response = responses[String(status)];
   if (!response)
     return { error: `${route}: o Service não responde ${status} (responde ${Object.keys(responses).join(', ')})` };
   if (status === 204) return {};
