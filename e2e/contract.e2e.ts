@@ -21,8 +21,6 @@ test.describe('contrato com o schema do Service', () => {
   test('caminho fixo vence o com parâmetro e respostas de erro ficam de fora', () => {
     expect(checkResponse('GET', '/v1/organizations/1', 500, null)).toEqual({});
     // sem a ordem, /organizations/import-gitlab casaria com /organizations/{id}, que não tem POST
-    expect(checkResponse('POST', '/v1/organizations/import-gitlab', 201, {}).uncovered).toBe(
-      'POST /v1/organizations/import-gitlab 201'
-    );
+    expect(checkResponse('POST', '/v1/organizations/import-gitlab', 201, organizations.results[0])).toEqual({});
   });
 });
