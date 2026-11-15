@@ -14,7 +14,7 @@ export const GITLAB_TOKEN = 'e2e-token-gitlab';
 export const loginOk: ApiHandlers = {
   [LOGIN_API.validate]: { valid: true },
   [LOGIN_API.login]: { key: GITLAB_TOKEN },
-  [LOGIN_API.logout]: { detail: 'Successfully logged out.' }
+  [LOGIN_API.logout]: { status: 204 }
 };
 
 /** O Service não confirma o client id: o Front nem sai para o GitLab (CA5). */

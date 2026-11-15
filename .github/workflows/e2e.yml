@@ -43,6 +43,24 @@ jobs:
       - name: Instalar o Chromium do Playwright
         run: pnpm exec playwright install --with-deps chromium
 
+      # o contrato do E2E (e2e/support/contract.ts) com o schema da develop do Service, e não só com a cópia versionada:
+      # uma mudança do Service que quebre uma fixture aparece aqui. Sem o artifact, o E2E segue com a cópia.
+      - name: Schema da develop do Service
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SERVICE: fga-eps-mds/2026.2-MeasureSoftGram-Service
+        run: |
+          run_id=$(gh run list -R "$SERVICE" -b develop -w "Rodar Testes" -s success -L 1 --json databaseId -q '.[0].databaseId')
+          gh run download "$run_id" -R "$SERVICE" -n openapi -D "$RUNNER_TEMP/openapi"
+          mv "$RUNNER_TEMP/openapi/openapi.json" e2e/contract/openapi.json
+          if git diff --quiet -- e2e/contract/openapi.json; then
+            echo "A cópia versionada do schema está igual à da develop do Service (run $run_id)."
+          else
+            git diff --stat -- e2e/contract/openapi.json
+            echo "::warning::e2e/contract/openapi.json está atrás da develop do Service (run $run_id); o E2E roda com o schema novo. Atualize a cópia (comando no topo de e2e/support/contract.ts)."
+          fi
+
       # o build e o servidor sobem pelo webServer do playwright.config.ts
       - name: Rodar testes E2E
         # as baselines dos snapshots são geradas aqui (Linux), nunca no Mac: com update_snapshots, o run regrava

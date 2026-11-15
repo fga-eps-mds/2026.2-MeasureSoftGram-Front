@@ -48,7 +48,7 @@ function defaultAnswer(method, path, authorization) {
   const login = path.match(LOGIN_PATH);
   if (method === 'POST' && login) return reply(200, { key: `e2e-token-${login[1]}` });
   if (method === 'POST' && VALIDATE_PATH.test(path)) return reply(200, { valid: true });
-  if (method === 'DELETE' && path === '/v1/accounts/logout/') return reply(200, { detail: 'Successfully logged out.' });
+  if (method === 'DELETE' && path === '/v1/accounts/logout/') return reply(204);
   return reply(404, { detail: 'Rota sem resposta no Service fake do E2E.' });
 }
 
@@ -68,6 +68,8 @@ const readBody = (request) =>
   });
 
 const send = (response, { status, json }) => {
+  // 204 não tem corpo, como o logout do Service
+  if (status === 204) return response.writeHead(204).end();
   response.writeHead(status, { 'Content-Type': 'application/json' });
   response.end(JSON.stringify(json ?? null));
 };
@@ -90,7 +92,15 @@ createServer(async (request, response) => {
   const authorization = request.headers.authorization;
   const answer = withFreshKey(path, scenario[path] ?? defaultAnswer(request.method, path, authorization));
 
-  requests.push({ method: request.method, path, search: url.search, authorization, body, response: answer.json });
+  requests.push({
+    method: request.method,
+    path,
+    search: url.search,
+    authorization,
+    body,
+    status: answer.status,
+    response: answer.json
+  });
   return send(response, answer);
 }).listen(PORT, () => {
   console.log(`Service fake do E2E em http://localhost:${PORT}`);

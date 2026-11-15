@@ -19,6 +19,7 @@ export interface ServiceRequest {
   search: string;
   authorization?: string;
   body: unknown;
+  status: number;
   response: any;
 }
 

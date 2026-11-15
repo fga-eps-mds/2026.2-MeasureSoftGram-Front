@@ -21,7 +21,7 @@ export const loginOk: ApiHandlers = PROVIDERS.reduce<ApiHandlers>(
     [loginApi(provider).validate]: { valid: true },
     [loginApi(provider).login]: { key: `e2e-token-${provider}` }
   }),
-  { '/v1/accounts/logout/': { detail: 'Successfully logged out.' }, ...githubSession }
+  { '/v1/accounts/logout/': { status: 204 }, ...githubSession }
 );
 
 /**
