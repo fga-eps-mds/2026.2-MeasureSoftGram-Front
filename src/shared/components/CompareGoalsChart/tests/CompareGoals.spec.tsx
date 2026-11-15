@@ -19,7 +19,7 @@ describe('CompareGoalsChart', () => {
     release_name: 'Release 1',
     start_at: '2024-09-01',
     end_at: '2024-09-30',
-    created_by: 'User1',
+    created_by: 1,
     product: 101,
     goal: 100,
     description: 'Test release',

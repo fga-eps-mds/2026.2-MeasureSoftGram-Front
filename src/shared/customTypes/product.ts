@@ -196,7 +196,7 @@ export interface IReleases {
   release_name: string;
   start_at: Date | string;
   end_at: Date | string;
-  created_by: string;
+  created_by: number;
   product: number;
   goal?: number;
   description?: string;

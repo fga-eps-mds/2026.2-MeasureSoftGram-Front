@@ -12,7 +12,7 @@ export const releases = [
     release_name: '2026.2 R1',
     start_at: '2026-01-01T00:00:00-03:00',
     end_at: '2026-01-31T00:00:00-03:00',
-    created_by: 'user',
+    created_by: 1,
     product: 2
   },
   {
@@ -20,7 +20,7 @@ export const releases = [
     release_name: '2026.2 R2',
     start_at: '2026-02-01T00:00:00-03:00',
     end_at: '2099-12-31T00:00:00-03:00',
-    created_by: 'user',
+    created_by: 1,
     product: 2
   }
 ];

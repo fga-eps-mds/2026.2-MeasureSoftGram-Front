@@ -13,7 +13,7 @@ function release(id: number, start: string, end: string): IReleases {
     release_name: `R${id}`,
     start_at: `${start}T00:00:00-03:00`,
     end_at: `${end}T00:00:00-03:00`,
-    created_by: 'user',
+    created_by: 1,
     product: 1
   };
 }
