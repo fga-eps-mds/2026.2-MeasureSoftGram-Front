@@ -16,7 +16,7 @@ export const releases: IReleases[] = [
     release_name: 'R1',
     start_at: '2026-06-01T00:00:00-03:00',
     end_at: '2026-08-16T00:00:00-03:00',
-    created_by: 'user',
+    created_by: 1,
     product: 2
   },
   {
@@ -24,7 +24,7 @@ export const releases: IReleases[] = [
     release_name: 'R2',
     start_at: '2026-08-17T00:00:00-03:00',
     end_at: '2026-10-16T00:00:00-03:00',
-    created_by: 'user',
+    created_by: 1,
     product: 2
   }
 ];

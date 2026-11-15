@@ -4,8 +4,8 @@ import '@testing-library/jest-dom';
 import ReleaseSelect from '../ReleaseSelect';
 
 const releases = [
-  { id: 1, release_name: 'R1', start_at: '2026-01-01', end_at: '2026-01-31', created_by: 'user', product: 1 },
-  { id: 2, release_name: 'R2', start_at: '2026-02-01', end_at: '2026-02-28', created_by: 'user', product: 1 }
+  { id: 1, release_name: 'R1', start_at: '2026-01-01', end_at: '2026-01-31', created_by: 1, product: 1 },
+  { id: 2, release_name: 'R2', start_at: '2026-02-01', end_at: '2026-02-28', created_by: 1, product: 1 }
 ];
 
 describe('<ReleaseSelect />', () => {
