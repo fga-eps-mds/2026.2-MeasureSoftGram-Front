@@ -101,10 +101,10 @@
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/SocialLogin"
+                            "$ref": "#/definitions/Token"
                         }
                     }
                 },
@@ -170,10 +170,10 @@
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "schema": {
-                            "$ref": "#/definitions/SocialLogin"
+                            "$ref": "#/definitions/Token"
                         }
                     }
                 },
@@ -511,7 +511,10 @@
                 "parameters": [],
                 "responses": {
                     "201": {
-                        "description": ""
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Organization"
+                        }
                     }
                 },
                 "tags": [
@@ -527,7 +530,10 @@
                 "parameters": [],
                 "responses": {
                     "201": {
-                        "description": ""
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Organization"
+                        }
                     }
                 },
                 "tags": [
@@ -543,7 +549,10 @@
                 "parameters": [],
                 "responses": {
                     "201": {
-                        "description": ""
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Organization"
+                        }
                     }
                 },
                 "tags": [
@@ -3827,6 +3836,20 @@
                 "id_token": {
                     "title": "Id token",
                     "type": "string"
+                }
+            }
+        },
+        "Token": {
+            "required": [
+                "key"
+            ],
+            "type": "object",
+            "properties": {
+                "key": {
+                    "title": "Key",
+                    "type": "string",
+                    "maxLength": 40,
+                    "minLength": 1
                 }
             }
         },
