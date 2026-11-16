@@ -6,6 +6,7 @@ import { GitHub } from '@mui/icons-material';
 import { FaGitlab } from 'react-icons/fa';
 import { getLoginOrigin } from '@services/Auth';
 import { AuthLayout } from '@layouts/auth';
+import AcademicNotice from '@components/AcademicNotice';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
 
@@ -51,6 +52,8 @@ const Auth: React.FC = () => {
             Venha conferir a saúde do seu produto de software
           </Typography>
         </Box>
+
+        <AcademicNotice variant="card" />
 
         <Button
           fullWidth

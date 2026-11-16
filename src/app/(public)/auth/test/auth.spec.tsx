@@ -41,6 +41,17 @@ describe('Auth', () => {
     });
   });
 
+  describe('Aviso de ambiente acadêmico', () => {
+    it('Deve exibir o aviso antes dos botões de login', () => {
+      render(<Auth />);
+
+      const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
+      const githubButton = screen.getByRole('button', { name: /LOGIN COM GITHUB/i });
+      expect(notice.compareDocumentPosition(githubButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(notice.querySelectorAll('li')).toHaveLength(3);
+    });
+  });
+
   describe('Início do login', () => {
     it('Deve levar o login do GitHub ao servidor, que valida o client id e guarda o state', () => {
       render(<Auth />);
