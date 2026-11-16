@@ -32,7 +32,6 @@ export function renderWithStrong(text: string): React.ReactNode[] {
     .filter(Boolean)
     .map((part, index) => {
       const match = /^<strong>(.*)<\/strong>$/.exec(part);
-      // eslint-disable-next-line react/no-array-index-key
       return match ? <strong key={index}>{match[1]}</strong> : <React.Fragment key={index}>{part}</React.Fragment>;
     });
 }

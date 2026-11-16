@@ -42,7 +42,6 @@ describe('Landing', () => {
 
     const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
     const header = screen.getByRole('banner');
-    // eslint-disable-next-line no-bitwise
     expect(notice.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(notice).getByRole('link', { name: 'academicNotice.learnMore' })).toHaveAttribute(
       'href',

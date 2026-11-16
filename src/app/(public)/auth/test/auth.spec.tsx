@@ -47,7 +47,6 @@ describe('Auth', () => {
 
       const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
       const githubButton = screen.getByRole('button', { name: /LOGIN COM GITHUB/i });
-      // eslint-disable-next-line no-bitwise
       expect(notice.compareDocumentPosition(githubButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(notice.querySelectorAll('li')).toHaveLength(3);
     });
