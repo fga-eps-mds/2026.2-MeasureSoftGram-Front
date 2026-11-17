@@ -52,7 +52,7 @@ test.describe('@LEG04.01-CA1 Badge TSQMI do repositório analisado, com o Markdo
 test.describe('@LEG04.01-CA2 Uma badge por característica, cada uma com o botão de copiar', () => {
   test.use({ scenario: tsqmiRecente });
 
-  // defeito: o componente CharacteristicsBadges existe, mas nenhuma página o renderiza e nada preenche as URLs
+  // defeito BUG00.03 (DOC#322): o CharacteristicsBadges existe, mas nenhuma página o renderiza nem preenche as URLs
   test.fixme('a página mostra a badge de cada característica com o botão de copiar', async ({ page }) => {
     await openRepository(page);
     await expect(page.getByText('Badges de Características')).toBeVisible();
