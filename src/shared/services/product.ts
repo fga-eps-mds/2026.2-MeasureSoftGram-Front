@@ -24,6 +24,9 @@ const PRODUCT_DUPLICATES: DuplicateMessages = {
   name: { server: 'Product with this name already exists.', message: 'Já existe um produto com este nome.' }
 };
 
+/** A mensagem do erro de nome repetido: a tela a reconhece por aqui e mostra o texto traduzido (BUG00.04). */
+export const PRODUCT_NAME_EXISTS = PRODUCT_DUPLICATES.name.message;
+
 export interface ProductFormData {
   name: string;
   organizationId?: number;
