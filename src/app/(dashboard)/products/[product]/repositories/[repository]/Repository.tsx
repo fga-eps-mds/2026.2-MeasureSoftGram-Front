@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from '@hooks/useRouter';
 import { Alert, Box, Container } from '@mui/material';
 
@@ -12,7 +12,9 @@ import { getPathId } from '@utils/pathDestructer';
 import { PULSE_CSV, formatRepositoryPulseCsv } from '@utils/formatPulseCsv';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { useProductQualityBands } from '@hooks/useProductQualityBands';
+import { repository } from '@services/repository';
 
+import CharacteristicsBadges from './components/CharacteristicsBadges';
 import Headers from './components/Header';
 import RepositoryPulseChart from './components/RepositoryPulseChart';
 import TsqmiBadge from './components/TsqmiBadge';
@@ -21,7 +23,7 @@ import { useRepositoryPulse } from './hooks/useRepositoryPulse';
 
 const Repository: React.FC = () => {
   const { terms } = useProviderTerms();
-  const { currentRepository, latestTSQMI, latestTSQMIBadgeUrl } = useRepositoryContext();
+  const { currentRepository, latestTSQMI, latestTSQMIBadgeUrl, setCharacteristicBadgeUrls } = useRepositoryContext();
   usePreloadECharts();
   const { repositoryNotFound } = useQuery();
 
@@ -30,6 +32,17 @@ const Repository: React.FC = () => {
   const [repositoryId] = getPathId((query?.repository as string) ?? '');
 
   const pulse = useRepositoryPulse(organizationId, productId, repositoryId ? Number(repositoryId) : undefined);
+  // uma badge por característica, das que o histórico do pulso já trouxe (BUG00.03); vazia ao trocar de repositório
+  const { characteristicKeys } = pulse;
+  useEffect(() => {
+    const urls: Record<string, string> = {};
+    if (repositoryId) {
+      characteristicKeys.forEach((key) => {
+        urls[key] = repository.getCharacteristicBadgeUrl(organizationId, productId, repositoryId, key);
+      });
+    }
+    setCharacteristicBadgeUrls(urls);
+  }, [characteristicKeys, organizationId, productId, repositoryId, setCharacteristicBadgeUrls]);
   // a régua do produto pinta o pulso, a legenda e o grau do CSV (US30.02); sem ela, a régua padrão
   const {
     bands,
@@ -70,6 +83,7 @@ const Repository: React.FC = () => {
             </Box>
 
             <TsqmiBadge latestTSQMI={latestTSQMI} latestTSQMIBadgeUrl={latestTSQMIBadgeUrl} />
+            <CharacteristicsBadges />
 
             {/* a régua do produto não veio: o velocímetro e o pulso seguem na tela com a régua padrão (CA4) */}
             {isQualityBandsError && <QualityBandsUnavailableAlert onRetry={retryQualityBands} />}

@@ -74,6 +74,10 @@ function PulseWithData({ bands = QUALITY_BANDS }: Readonly<{ bands?: QualityBand
 
 const renderChart = (bands?: QualityBand[]) => render(<PulseWithData bands={bands} />);
 
+function PulseKeys() {
+  return <span data-testid="keys">{useRepositoryPulse('1', '2', 7).characteristicKeys.join(',')}</span>;
+}
+
 describe('<RepositoryPulseChart />', () => {
   beforeEach(() => {
     responses = defaultResponse;
@@ -92,6 +96,12 @@ describe('<RepositoryPulseChart />', () => {
     expect(useRequest).toHaveBeenCalledWith(
       expect.objectContaining({ url: '/v1/organizations/1/products/2/repositories/7/historical-values/characteristics/' })
     );
+  });
+
+  it('devolve as chaves de todas as características do histórico, também as sem medição (badges da página)', () => {
+    render(<PulseKeys />);
+
+    expect(screen.getByTestId('keys').textContent).toBe(characteristics.results.map((item) => item.key).join(','));
   });
 
   it('mostra o último valor e a faixa de cada característica ao lado do pulso', () => {
