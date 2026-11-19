@@ -14,7 +14,7 @@
   "create": "CRIAR",
   "not-found": "Nenhum produto encontrado.",
   "toast": {
-    "name-exists": "Já existe um Produto com este nome.",
+    "name-exists": "Já existe um produto com este nome.",
     "success-edit": "Produto atualizado com sucesso!",
     "error-edit": "Erro ao atualizar o Produto!",
     "sucess": "Produto criado com sucesso!",

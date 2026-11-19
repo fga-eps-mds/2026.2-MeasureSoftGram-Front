@@ -1,4 +1,5 @@
 import React from 'react';
+import { PRODUCT_NAME_EXISTS } from '@services/product';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { toast } from 'react-toastify';
 import ProductsCreation from '../ProductsCreation';
@@ -123,7 +124,7 @@ describe('ProductsCreation Component', () => {
   it('deve exibir toast.error se a criação de produto falhar com erro com mensagem ja existente', async () => {
     mockCreateProduct.mockResolvedValue({
       type: 'error',
-      error: { message: toastNameExists },
+      error: { message: PRODUCT_NAME_EXISTS },
     });
     render(<ProductsCreation />);
 
@@ -259,7 +260,7 @@ describe('ProductsCreation Component', () => {
     });
     mockUpdateProduct.mockResolvedValue({
       type: 'error',
-      error: { message: toastNameExists },
+      error: { message: PRODUCT_NAME_EXISTS },
     });
 
     render(<ProductsCreation />);

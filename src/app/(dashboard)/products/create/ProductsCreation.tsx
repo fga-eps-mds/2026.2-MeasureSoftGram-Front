@@ -10,6 +10,7 @@ import { Botoes, Container, Description, Form, Header, Wrapper } from '@app/(das
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import MSGButton from '../../../../components/idv/buttons/MSGButton';
 import { useProductQuery } from '../hooks/useProductQuery';
+import { PRODUCT_NAME_EXISTS } from '@services/product';
 
 const ProductsCreation: React.FC = () => {
   const router = useRouter();
@@ -62,6 +63,7 @@ const ProductsCreation: React.FC = () => {
       novoProduto.organizationId = parseInt(orgIdStr, 10);
     }
 
+    // o erro traz a mensagem do service, em português; a tela mostra a do idioma escolhido
     const nameExist = t('toast.name-exists')
 
     if (isEditMode) {
@@ -69,7 +71,7 @@ const ProductsCreation: React.FC = () => {
       if (result.type === 'success') {
         toast.success(t('toast.success-edit'));
         void router.push('/products');
-      } else if (result.error.message === nameExist) {
+      } else if (result.error.message === PRODUCT_NAME_EXISTS) {
         toast.error(nameExist);
       } else {
         toast.error(t('toast.error-edit'));
@@ -97,7 +99,7 @@ const ProductsCreation: React.FC = () => {
           }
           await loadAllProducts();
           void router.push('/products');
-        } else if (result.error.message === nameExist) {
+        } else if (result.error.message === PRODUCT_NAME_EXISTS) {
           toast.error(nameExist);
         } else {
           toast.error(t('toast.error-create'));
