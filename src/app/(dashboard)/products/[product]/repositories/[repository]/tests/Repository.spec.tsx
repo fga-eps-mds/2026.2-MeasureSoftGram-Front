@@ -12,11 +12,13 @@ jest.mock('@hooks/useRouter', () => ({ useRouter: () => ({ query: { product: '1-
 jest.mock('@hooks/useProviderTerms', () => ({
   useProviderTerms: () => ({ terms: { Repository: 'Repositório', repository: 'repositório', providerName: 'GitHub' } }),
 }));
+const mockSetCharacteristicBadgeUrls = jest.fn();
 jest.mock('@contexts/RepositoryProvider', () => ({
   useRepositoryContext: () => ({
     currentRepository: { id: 7, name: 'api' },
     latestTSQMI: { id: 1, value: 0.75 },
     latestTSQMIBadgeUrl: 'badge-url',
+    setCharacteristicBadgeUrls: mockSetCharacteristicBadgeUrls,
   }),
 }));
 jest.mock('@utils/exportCsv', () => ({ downloadCsv: jest.fn(), downloadCsvZip: jest.fn() }));
@@ -36,6 +38,7 @@ const measurement = (value: number) => ({ created_at: '2026-03-01T10:00:00Z', va
 const pulseState = (overrides = {}) => ({
   rows: [{ id: 'reliability', name: 'Reliability', measurements: [measurement(0.5)], releases: [] }],
   hasMeasurements: true,
+  characteristicKeys: ['reliability', 'maintainability'],
   isLoading: false,
   hasError: false,
   ...overrides,
@@ -95,6 +98,15 @@ describe('<Repository />', () => {
     expect(screen.getByTestId('tsqmi-badge').textContent).toBe('badge-url');
     expect(screen.getByTestId('repository-measures-section')).toBeTruthy();
     expect(document.querySelector('iframe')).toBeNull();
+  });
+
+  it('monta a URL da badge de cada característica do histórico do pulso (BUG00.03)', () => {
+    render(<Repository />);
+
+    expect(mockSetCharacteristicBadgeUrls).toHaveBeenLastCalledWith({
+      reliability: expect.stringMatching(/\/organizations\/1\/products\/2\/repositories\/7\/latest-values\/characteristics\/reliability\/badge\/$/),
+      maintainability: expect.stringMatching(/\/repositories\/7\/latest-values\/characteristics\/maintainability\/badge\/$/),
+    });
   });
 
   it('desenha o pulso do repositório da rota', () => {

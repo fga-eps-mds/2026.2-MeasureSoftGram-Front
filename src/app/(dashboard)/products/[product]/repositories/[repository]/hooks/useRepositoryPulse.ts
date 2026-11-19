@@ -44,6 +44,12 @@ export function useRepositoryPulse(organizationId: string, productId: string, re
       }));
   }, [historyRequest.data, releasesRequest.data, repositoryId]);
 
+  // todas as características configuradas, com ou sem medição: a página monta uma badge para cada (US04 de 2026.1)
+  const characteristicKeys = useMemo(
+    () => (historyRequest.data?.results ?? []).map((characteristic) => characteristic.key),
+    [historyRequest.data]
+  );
+
   const filteredRows = useMemo(() => {
     if (!startDate && !endDate) return rows;
     const startMs = startDate ? new Date(`${startDate}T00:00:00`).getTime() : -Infinity;
@@ -62,6 +68,7 @@ export function useRepositoryPulse(organizationId: string, productId: string, re
   return {
     rows: filteredRows,
     hasMeasurements: rows.length > 0,
+    characteristicKeys,
     startDate,
     setStartDate,
     endDate,

@@ -16,6 +16,8 @@ export const REPOSITORY_API = {
   // o <img> do badge também passa pelo page.route
   badge: `${REPOSITORY_API_BASE}/latest-values/tsqmi/badge/`,
   characteristics: `${REPOSITORY_API_BASE}/historical-values/characteristics/`,
+  // uma badge por característica do histórico (BUG00.03)
+  characteristicBadge: (key: string) => `${REPOSITORY_API_BASE}/latest-values/characteristics/${key}/badge/`,
   releases: RELEASES_API
 };
 
@@ -30,6 +32,7 @@ export const comDados: ApiHandlers = {
   [REPOSITORY_API.tsqmi]: { id: 1, value: 0.62, created_at: '2026-10-10T12:00:00-03:00' },
   [REPOSITORY_API.badge]: {},
   [REPOSITORY_API.characteristics]: characteristics,
+  ...Object.fromEntries(characteristics.results.map(({ key }) => [REPOSITORY_API.characteristicBadge(key), {}])),
   [REPOSITORY_API.releases]: releasesPage
 };
 

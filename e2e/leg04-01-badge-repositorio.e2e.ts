@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures';
 import { comDados, REPOSITORY_API, REPOSITORY_PATH } from './fixtures/repositorio';
+import characteristics from './fixtures/temporal/historical-characteristics.json';
 
 /**
  * US04 de 2026.1 (Action#5, "Gerar badge de status do repositório"): a badge TSQMI na página do repositório, o modal
@@ -9,6 +10,8 @@ import { comDados, REPOSITORY_API, REPOSITORY_PATH } from './fixtures/repositori
  */
 const COPY = 'Copiar Badge';
 const STALE = 'Badge desatualizada';
+/** As características do histórico do repositório: Functional Suitability ainda não tem medição. */
+const CHARACTERISTICS = characteristics.results.map(({ key }) => key);
 
 /** O último TSQMI de hoje: a badge está em dia. */
 const tsqmiRecente = {
@@ -27,8 +30,10 @@ async function openRepository(page: Page) {
   await expect(page.getByAltText('TSQMI Badge')).toBeVisible();
 }
 
-/** O botão de cópia ao lado da badge (o cabeçalho tem outro igual). */
-const copyButton = (page: Page) => page.getByRole('button', { name: COPY }).last();
+/** O botão de cópia ao lado da badge (o Tooltip não cria elemento: o pai da imagem é a linha da badge). */
+const copyButtonOf = (page: Page, alt: string) =>
+  page.getByAltText(alt).locator('xpath=..').getByRole('button', { name: COPY });
+const copyButton = (page: Page) => copyButtonOf(page, 'TSQMI Badge');
 
 test.describe('@LEG04.01-CA1 Badge TSQMI do repositório analisado, com o Markdown para copiar', () => {
   test.use({ scenario: tsqmiRecente });
@@ -52,11 +57,27 @@ test.describe('@LEG04.01-CA1 Badge TSQMI do repositório analisado, com o Markdo
 test.describe('@LEG04.01-CA2 Uma badge por característica, cada uma com o botão de copiar', () => {
   test.use({ scenario: tsqmiRecente });
 
-  // defeito BUG00.03 (DOC#322): o CharacteristicsBadges existe, mas nenhuma página o renderiza nem preenche as URLs
-  test.fixme('a página mostra a badge de cada característica com o botão de copiar', async ({ page }) => {
+  test('a página mostra a badge de cada característica configurada, também a sem medição', async ({ page }) => {
     await openRepository(page);
     await expect(page.getByText('Badges de Características')).toBeVisible();
-    await expect(page.getByAltText(/^(?!TSQMI )\w+ Badge$/)).not.toHaveCount(0);
+    for (const key of CHARACTERISTICS) {
+      await expect(page.getByAltText(`${key} Badge`)).toHaveAttribute(
+        'src',
+        new RegExp(`${REPOSITORY_API.characteristicBadge(key).replace(/\//g, '\\/')}$`)
+      );
+    }
+  });
+
+  test('o botão ao lado da badge copia o Markdown daquela característica', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await openRepository(page);
+    const [key] = CHARACTERISTICS;
+    await copyButtonOf(page, `${key} Badge`).click();
+    await expect(page.getByText(`![${key}](`)).toBeVisible();
+    await page.getByRole('button', { name: 'Copiar', exact: true }).click();
+    await expect(page.getByText('Badge copiada com sucesso!')).toBeVisible();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toMatch(new RegExp(`^!\\[${key}\\]\\(.+/latest-values/characteristics/${key}/badge/\\)$`));
   });
 });
 
@@ -75,7 +96,7 @@ test.describe('@LEG04.01-CA3 Badge sem análise há mais de 30 dias', () => {
 
     test('sem o aviso', async ({ page }) => {
       await openRepository(page);
-      await expect(page.getByRole('button', { name: COPY }).last()).toBeVisible();
+      await expect(copyButton(page)).toBeVisible();
       await expect(page.getByRole('button', { name: STALE })).toHaveCount(0);
     });
   });
