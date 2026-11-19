@@ -68,7 +68,7 @@ test.describe('@LEG00.02-CA3 Falha ao criar: mensagem e o usuário continua no f
   test.describe('nome repetido', () => {
     test.use({ scenario: produtoNomeRepetido });
 
-    // defeito BUG00.04: o service traduz para "produto" e a tela compara com "Produto"; aparece o erro genérico
+    // defeito BUG00.04 (DOC#332): o service traduz para "produto" e a tela compara com "Produto"; aparece o erro genérico
     test.fixme('avisa que já existe um produto com o nome', async ({ page }) => {
       await openForm(page);
       await fillForm(page);
