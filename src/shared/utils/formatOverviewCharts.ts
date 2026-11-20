@@ -3,6 +3,7 @@ import { CharacteristicComparison } from '@utils/comparePlannedAccomplished';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { escapeHtml, formatDecimal, formatVariation } from '@utils/formatNumber';
 import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import i18n from '../i18n/i18n';
 
 // Continuam exportados daqui para os imports existentes; a definição fica em formatNumber.
 export { escapeHtml, formatDecimal, formatVariation };
@@ -42,12 +43,12 @@ export function getTotalItems(
   const model = (value?: number) => (totals === undefined ? undefined : applies ? value : null);
 
   return [
-    { label: 'Características', value: model(totals?.characteristics) },
-    { label: 'Subcaracterísticas', value: model(totals?.subcharacteristics) },
-    { label: 'Medidas', value: model(totals?.measures) },
-    { label: 'Métricas', value: model(totals?.metrics) },
+    { label: i18n.t('dashboards:overview.totals.characteristics'), value: model(totals?.characteristics) },
+    { label: i18n.t('dashboards:overview.totals.subcharacteristics'), value: model(totals?.subcharacteristics) },
+    { label: i18n.t('dashboards:overview.totals.measures'), value: model(totals?.measures) },
+    { label: i18n.t('dashboards:overview.totals.metrics'), value: model(totals?.metrics) },
     { label: repositoriesLabel, value: totals?.repositories },
-    { label: 'Arquivos analisados', value: totals?.files }
+    { label: i18n.t('dashboards:overview.totals.files'), value: totals?.files }
   ];
 }
 
@@ -91,11 +92,17 @@ export function formatTsqmiTooltip(
 ): string {
   const lines = [
     `<strong>${escapeHtml(bar.name)} · ${escapeHtml(releaseName)}</strong>`,
-    `Indicador Total da Qualidade: ${formatDecimal(bar.value)} (${formatQualityGrade(bar.value, bands)})`
+    i18n.t('dashboards:overview.tooltip.indicator', {
+      value: formatDecimal(bar.value),
+      grade: formatQualityGrade(bar.value, bands)
+    })
   ];
   if (bar.previous !== null && previousReleaseName) {
     lines.push(
-      `Variação: ${formatVariation(bar.value - bar.previous)} em relação à ${escapeHtml(previousReleaseName)}`
+      i18n.t('dashboards:overview.tooltip.variation', {
+        value: formatVariation(bar.value - bar.previous),
+        release: escapeHtml(previousReleaseName)
+      })
     );
   }
   return lines.join('<br/>');

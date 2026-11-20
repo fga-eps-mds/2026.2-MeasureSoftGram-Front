@@ -31,13 +31,13 @@ Object {
                 class="MuiTypography-root MuiTypography-body1 css-ahj2mt-MuiTypography-root"
                 style="color: rgb(94, 94, 94); font-weight: bold; font-size: 90px; letter-spacing: 2px;"
               >
-                home-title
+                easureSoftGram
               </p>
               <p
                 class="MuiTypography-root MuiTypography-body1 css-ahj2mt-MuiTypography-root"
                 style="color: rgb(94, 94, 94); font-size: 18px; font-weight: bold; margin-top: -15px;"
               >
-                description
+                Análise multidimensional da qualidade de software
               </p>
             </div>
           </div>
@@ -50,7 +50,7 @@ Object {
               tabindex="0"
               type="button"
             >
-              button.about
+              Conheça o produto
               <span
                 class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
               />
@@ -61,7 +61,7 @@ Object {
               tabindex="0"
               type="button"
             >
-              button.start
+              Começar
               <span
                 class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
               />
@@ -98,13 +98,13 @@ Object {
               class="MuiTypography-root MuiTypography-body1 css-ahj2mt-MuiTypography-root"
               style="color: rgb(94, 94, 94); font-weight: bold; font-size: 90px; letter-spacing: 2px;"
             >
-              home-title
+              easureSoftGram
             </p>
             <p
               class="MuiTypography-root MuiTypography-body1 css-ahj2mt-MuiTypography-root"
               style="color: rgb(94, 94, 94); font-size: 18px; font-weight: bold; margin-top: -15px;"
             >
-              description
+              Análise multidimensional da qualidade de software
             </p>
           </div>
         </div>
@@ -117,7 +117,7 @@ Object {
             tabindex="0"
             type="button"
           >
-            button.about
+            Conheça o produto
             <span
               class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
             />
@@ -128,7 +128,7 @@ Object {
             tabindex="0"
             type="button"
           >
-            button.start
+            Começar
             <span
               class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
             />

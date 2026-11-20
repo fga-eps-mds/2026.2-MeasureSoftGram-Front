@@ -138,7 +138,7 @@ describe('<Layout />', () => {
       const userButton = screen.getByRole('button', { name: /testuser/i });
       fireEvent.click(userButton);
 
-      const configMenuItem = screen.getByText('select.config');
+      const configMenuItem = screen.getByText('Configurações');
       fireEvent.click(configMenuItem);
 
       expect(mockPush).toHaveBeenCalledWith('/config');
@@ -154,7 +154,7 @@ describe('<Layout />', () => {
       const userButton = screen.getByRole('button', { name: /testuser/i });
       fireEvent.click(userButton);
 
-      const logoutMenuItem = screen.getByText('select.end-session');
+      const logoutMenuItem = screen.getByText('Finalizar Sessão');
       fireEvent.click(logoutMenuItem);
 
       expect(mockLogout).toHaveBeenCalled();

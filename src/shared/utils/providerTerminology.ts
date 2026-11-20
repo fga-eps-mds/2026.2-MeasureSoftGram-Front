@@ -1,3 +1,5 @@
+import i18n from '../i18n/i18n';
+
 export type TerminologyProvider = 'github' | 'gitlab' | 'credentials';
 
 export interface ProviderTerms {
@@ -18,43 +20,44 @@ export interface ProviderTerms {
   pullRequestShort: string;
 }
 
-const GITHUB_TERMS: ProviderTerms = {
+const TRANSLATED_TERMS = [
+  'repository',
+  'repositories',
+  'Repository',
+  'Repositories',
+  'organization',
+  'organizations',
+  'Organization',
+  'Organizations',
+  'theOrganization',
+  'yourOrganization',
+  'thisOrganization',
+  'anOrganization'
+] as const;
+
+function buildTerms(
+  context: 'gitlab' | undefined,
+  fixed: Pick<ProviderTerms, 'providerName' | 'pullRequest' | 'pullRequestShort'>
+): ProviderTerms {
+  const terms = { ...fixed } as ProviderTerms;
+  TRANSLATED_TERMS.forEach((term) => {
+    Object.defineProperty(terms, term, { enumerable: true, get: () => i18n.t(`terms.${term}`, { context }) });
+  });
+  return terms;
+}
+
+const GITHUB_TERMS = buildTerms(undefined, {
   providerName: 'GitHub',
-  repository: 'repositório',
-  repositories: 'repositórios',
-  Repository: 'Repositório',
-  Repositories: 'Repositórios',
-  organization: 'organização',
-  organizations: 'organizações',
-  Organization: 'Organização',
-  Organizations: 'Organizações',
-  theOrganization: 'a organização',
-  yourOrganization: 'sua organização',
-  thisOrganization: 'esta organização',
-  anOrganization: 'uma organização',
   pullRequest: 'Pull Request',
   pullRequestShort: 'PR'
-};
+});
 
-const GITLAB_TERMS: ProviderTerms = {
+const GITLAB_TERMS = buildTerms('gitlab', {
   providerName: 'GitLab',
-  repository: 'projeto',
-  repositories: 'projetos',
-  Repository: 'Projeto',
-  Repositories: 'Projetos',
-  organization: 'grupo',
-  organizations: 'grupos',
-  Organization: 'Grupo',
-  Organizations: 'Grupos',
-  theOrganization: 'o grupo',
-  yourOrganization: 'seu grupo',
-  thisOrganization: 'este grupo',
-  anOrganization: 'um grupo',
   pullRequest: 'Merge Request',
   pullRequestShort: 'MR'
-};
+});
 
-// Sem provedor de código (login por credenciais) mantém-se o vocabulário padrão (GitHub) da plataforma.
 const NEUTRAL_TERMS: ProviderTerms = GITHUB_TERMS;
 
 export function getProviderTerms(provider?: string | null): ProviderTerms {

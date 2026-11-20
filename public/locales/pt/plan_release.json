@@ -81,5 +81,12 @@
     "duplication_absense": "",
     "technical_debt_ratio": "Percentual de dívida técnica por arquivo (sqale_debt_ratio do SonarQube). Valores de referência: 0% a 20%",
     "team_throughput": ""
+  },
+  "repositories": {
+    "select-one": "Selecione pelo menos um {{repository}} para a release.",
+    "title": "Selecionar {{Repositories}} da Release",
+    "description": "Selecione quais {{repositories}} deste produto farão parte desta release. O modelo matemático e os cálculos de qualidade serão restritos aos {{repositories}} selecionados.",
+    "available": "{{Repositories}} Disponíveis",
+    "no-description": "Nenhuma descrição"
   }
 }

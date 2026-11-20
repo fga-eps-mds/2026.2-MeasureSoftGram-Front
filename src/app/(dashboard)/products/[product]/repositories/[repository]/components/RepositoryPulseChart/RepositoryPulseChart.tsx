@@ -13,8 +13,8 @@ import { PULSE_CANVAS_FONT, PULSE_GRID, formatPulseChartOptions } from '@utils/f
 import { PULSE_CSV, RepositoryPulseCsvRow } from '@utils/formatPulseCsv';
 import { QualityBand } from '@utils/qualityBands';
 import { useRepositoryPulse } from '../../hooks/useRepositoryPulse';
+import { useTranslation } from 'react-i18next';
 
-const TITLE = 'Indicador das Características';
 // as recomendações do PO para o pulso (US06.01): sem linhas horizontais e com o nome de cada release uma vez só.
 // `releaseStartLabels: false` como no pulso do produto: o início de uma release cai no fim da anterior e as duas
 // etiquetas se sobrepunham, o que o PO leu como "sombra" do nome da release (homologação da US07.01 em 03/11/2026).
@@ -32,6 +32,7 @@ interface Props {
 /** Gráfico de pulso (metáfora do eletrocardiograma) de cada característica do repositório, como o pulso do produto. */
 export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Props>) {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
   const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS, bands), [pulse.rows, bands]);
   const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
@@ -42,7 +43,7 @@ export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Pro
 
   return (
     <DashboardCard
-      title={TITLE}
+      title={t('repository-pulse.title')}
       status={status}
       headerAction={
         <Box display="flex" alignItems="center" flexWrap="wrap" gap="12px">
@@ -50,11 +51,13 @@ export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Pro
           <ExportCsvButton dashboard={PULSE_CSV.repository} chart={csv} />
         </Box>
       }
-      loadingContent={<SkeletonBlock width="100%" height={PULSE_GRID.topOffset + 3 * (PULSE_GRID.height + PULSE_GRID.gap)} />}
-      loadingMessage="Carregando as medições das características…"
-      emptyTitle={`Ainda não há medições das características deste ${terms.repository}`}
-      emptyDescription={`Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`}
-      errorTitle="Não foi possível carregar o indicador das características"
+      loadingContent={
+        <SkeletonBlock width="100%" height={PULSE_GRID.topOffset + 3 * (PULSE_GRID.height + PULSE_GRID.gap)} />
+      }
+      loadingMessage={t('repository-pulse.loading')}
+      emptyTitle={t('repository-pulse.empty-title', { repository: terms.repository })}
+      emptyDescription={t('repository-pulse.empty-description', { repository: terms.repository })}
+      errorTitle={t('repository-pulse.error')}
       onRetry={pulse.retry}
     >
       <PulseChartFilters
@@ -65,8 +68,7 @@ export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Pro
       />
 
       <Typography variant="body2" color="text.secondary" fontSize="12px">
-        Gráfico de pulso por característica • pico = variação entre medições • marcadores = releases • cor = faixa de
-        qualidade
+        {t('repository-pulse.subtitle')}
       </Typography>
 
       {pulse.rows.length === 0 ? (
@@ -78,7 +80,7 @@ export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Pro
           sx={{ border: '1px dashed #D0D7DE', borderRadius: '8px' }}
         >
           <Typography color="text.secondary" variant="body2">
-            Nenhuma medição no período selecionado. Ajuste as datas De/Até.
+            {t('repository-pulse.no-period')}
           </Typography>
         </Box>
       ) : (
@@ -89,7 +91,7 @@ export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Pro
               name={row.name}
               measurements={row.measurements}
               topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
-              valueLabel="último valor"
+              valueLabel={t('repository-pulse.last-value')}
               showIcon={false}
               bands={bands}
             />

@@ -59,8 +59,8 @@ describe('Product', () => {
       </OrganizationProvider>
     );
 
-    fireEvent.click(screen.getByText('repo-button'));
-    fireEvent.click(screen.getByText('release-button'));
+    fireEvent.click(screen.getByText('Ver Repositórios'));
+    fireEvent.click(screen.getByText('Ver Releases'));
 
     expect(mockPush).toHaveBeenNthCalledWith(1, '/products/1-5-MeasureSoftGram/repositories');
     expect(mockPush).toHaveBeenNthCalledWith(2, '/products/1-5-MeasureSoftGram/releases');

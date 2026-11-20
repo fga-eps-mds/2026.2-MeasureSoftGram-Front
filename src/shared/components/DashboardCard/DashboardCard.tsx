@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import MSGAlert from '../../../components/idv/feedback';
+import { useTranslation } from 'react-i18next';
 
 export type DashboardCardStatus = 'loading' | 'empty' | 'error' | 'ready';
 
@@ -27,9 +28,13 @@ export interface DashboardCardProps {
 }
 
 const STATUS_BADGES: Partial<Record<DashboardCardStatus, { label: string; color: string; background: string }>> = {
-  loading: { label: 'Carregando', color: DASHBOARD_COLORS.primary, background: DASHBOARD_COLORS.infoBackground },
-  empty: { label: 'Sem dados', color: DASHBOARD_COLORS.mutedText, background: DASHBOARD_COLORS.skeleton },
-  error: { label: 'Erro', color: DASHBOARD_COLORS.error, background: DASHBOARD_COLORS.errorBackground }
+  loading: {
+    label: 'card.badge.loading',
+    color: DASHBOARD_COLORS.primary,
+    background: DASHBOARD_COLORS.infoBackground
+  },
+  empty: { label: 'card.badge.empty', color: DASHBOARD_COLORS.mutedText, background: DASHBOARD_COLORS.skeleton },
+  error: { label: 'card.badge.error', color: DASHBOARD_COLORS.error, background: DASHBOARD_COLORS.errorBackground }
 };
 
 export const dashboardCardSx = {
@@ -54,15 +59,16 @@ export default function DashboardCard({
   headerAction,
   emptyHeaderAction,
   loadingContent,
-  loadingMessage = 'Carregando os dados da release…',
-  emptyTitle = 'Ainda não há análises nesta release',
+  loadingMessage,
+  emptyTitle,
   emptyDescription,
   emptyAction,
-  errorTitle = 'Não foi possível carregar este gráfico',
+  errorTitle,
   badgeLabel,
   onRetry,
   children
 }: DashboardCardProps) {
+  const { t } = useTranslation('dashboards');
   const badge = STATUS_BADGES[status];
 
   const renderContent = () => {
@@ -71,7 +77,7 @@ export default function DashboardCard({
         <>
           {loadingContent}
           <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-            {loadingMessage}
+            {loadingMessage ?? t('card.loading')}
           </Typography>
         </>
       );
@@ -81,17 +87,17 @@ export default function DashboardCard({
       return (
         <MSGAlert
           severity="error"
-          title={errorTitle}
-          actionLabel={onRetry ? 'Tentar novamente' : undefined}
+          title={errorTitle ?? t('card.error')}
+          actionLabel={onRetry ? t('card.retry') : undefined}
           onAction={onRetry}
         >
-          Tente de novo em alguns instantes. Se o problema continuar, avise o administrador do produto.
+          {t('card.error-description')}
         </MSGAlert>
       );
     }
     if (status === 'empty') {
       return (
-        <MSGAlert severity="warning" title={emptyTitle} action={emptyAction}>
+        <MSGAlert severity="warning" title={emptyTitle ?? t('card.empty')} action={emptyAction}>
           {emptyDescription}
         </MSGAlert>
       );
@@ -128,7 +134,7 @@ export default function DashboardCard({
         {badge && (
           <Box sx={{ backgroundColor: badge.background, borderRadius: '12px', padding: '4px 10px' }}>
             <Typography fontWeight="bold" fontSize="12px" color={badge.color}>
-              {badgeLabel ?? badge.label}
+              {badgeLabel ?? t(badge.label)}
             </Typography>
           </Box>
         )}

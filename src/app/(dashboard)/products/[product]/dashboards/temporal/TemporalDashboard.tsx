@@ -14,12 +14,12 @@ import { formatTimeEvolutionOptions } from '@utils/formatTimeEvolutionChart';
 import { CsvChart } from '@utils/exportCsv';
 import { TimeGranularity } from '@utils/historicalValues';
 import { getPathId } from '@utils/pathDestructer';
+import { useTranslation } from 'react-i18next';
 import MSGAlert from '../../../../../../components/idv/feedback';
 
 import { MultiSelectFilter, SingleSelectFilter } from './TemporalFilters';
 import { EvolutionChartData, EvolutionLevel, useTemporalEvolution } from './useTemporalEvolution';
 
-const TITLE = '2. Evolução Temporal';
 const CHART_HEIGHT = 300;
 const TOGGLE_SX: SxProps<Theme> = {
   textTransform: 'none',
@@ -29,11 +29,11 @@ const TOGGLE_SX: SxProps<Theme> = {
   '&.Mui-selected, &.Mui-selected:hover': { backgroundColor: DASHBOARD_COLORS.primary, color: '#FFFFFF' }
 };
 
-const CHARTS: { level: EvolutionLevel; title: string; label: string; normalized: boolean }[] = [
-  { level: 'characteristics', title: 'Característica', label: 'característica', normalized: true },
-  { level: 'subcharacteristics', title: 'Subcaracterísticas', label: 'subcaracterísticas', normalized: true },
-  { level: 'measures', title: 'Medidas', label: 'medidas', normalized: true },
-  { level: 'metrics', title: 'Métricas', label: 'métricas', normalized: false }
+const CHARTS: { level: EvolutionLevel; normalized: boolean }[] = [
+  { level: 'characteristics', normalized: true },
+  { level: 'subcharacteristics', normalized: true },
+  { level: 'measures', normalized: true },
+  { level: 'metrics', normalized: false }
 ];
 
 function getStatus(data: EvolutionChartData): 'loading' | 'error' | 'empty' | 'ready' {
@@ -61,6 +61,8 @@ function EvolutionChartCard({
   emptyDescription,
   repositoryTerm
 }: EvolutionChartCardProps) {
+  const { t } = useTranslation('dashboards');
+  const title = t(`temporal.chart.${chart.level}`);
   const options = useMemo(
     () => formatTimeEvolutionOptions(data.series, granularity, chart.normalized),
     [data.series, granularity, chart.normalized]
@@ -69,24 +71,28 @@ function EvolutionChartCard({
 
   return (
     <DashboardCard
-      title={chart.title}
+      title={title}
       status={getStatus(data)}
       headerAction={exportButton}
       emptyHeaderAction={exportButton}
       loadingContent={<SkeletonBlock width="100%" height={CHART_HEIGHT} />}
-      loadingMessage={`Carregando a evolução das ${chart.label}…`}
+      loadingMessage={t(`temporal.loading.${chart.level}`)}
       emptyTitle={emptyTitle}
       emptyDescription={emptyDescription}
-      errorTitle={`Não foi possível carregar a evolução das ${chart.label}`}
+      errorTitle={t(`temporal.error.${chart.level}`)}
       onRetry={data.retry}
     >
       {/* a entidade sem medição não vira linha: sem o aviso, ela some do gráfico sem explicação (CA5 da US01.02) */}
       {data.missing.length > 0 && (
         <MSGAlert
           severity="warning"
-          title={`${chart.title} sem valores neste ${repositoryTerm}: ${data.missing.join(', ')}`}
+          title={t('temporal.missing.title', {
+            chart: title,
+            repository: repositoryTerm,
+            names: data.missing.join(', ')
+          })}
         >
-          As demais seguem no gráfico. {emptyDescription}
+          {t('temporal.missing.description', { description: emptyDescription })}
         </MSGAlert>
       )}
       <ReactEcharts option={options} notMerge style={{ height: CHART_HEIGHT, width: '100%' }} />
@@ -96,6 +102,7 @@ function EvolutionChartCard({
 
 const TemporalDashboard: React.FC = () => {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
   usePreloadECharts();
 
   const { query } = useRouter();
@@ -115,29 +122,25 @@ const TemporalDashboard: React.FC = () => {
 
   const emptyMessages: Record<EvolutionLevel, { title: string; description: string }> = {
     characteristics: {
-      title: `Ainda não há valores desta característica neste ${terms.repository}`,
-      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+      title: t('temporal.empty.characteristics', { repository: terms.repository }),
+      description: t('temporal.empty.after-action', { repository: terms.repository })
     },
     subcharacteristics: {
-      title: `Ainda não há valores das subcaracterísticas escolhidas neste ${terms.repository}`,
-      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+      title: t('temporal.empty.subcharacteristics', { repository: terms.repository }),
+      description: t('temporal.empty.after-action', { repository: terms.repository })
     },
     measures: {
-      title: `Ainda não há valores das medidas escolhidas neste ${terms.repository}`,
-      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa o ${terms.repository}.`
+      title: t('temporal.empty.measures', { repository: terms.repository }),
+      description: t('temporal.empty.after-action', { repository: terms.repository })
     },
     // o gráfico busca só as métricas com qualifier TRK, então medida cujas métricas são medidas por arquivo fica
     // vazia aqui mesmo com a coleta em dia: o texto explica isso em vez de acusar falta de dado (ressalva do PO
     // em 03/11/2026, que citava a Distribuição Estatística, onde esses valores também não aparecem)
     metrics: {
-      title: `Sem valores de métricas ${measures === 'all' ? 'das medidas' : 'das medidas escolhidas'} neste ${
-        terms.repository
-      }`,
-      description:
-        `Este gráfico mostra só as métricas medidas no ${terms.repository} inteiro. As que são coletadas por ` +
-        'arquivo, como as do SonarQube, não aparecem aqui mesmo com a coleta em dia — as medidas acima já ' +
-        'resumem esses valores. Se os gráficos acima também estão vazios, rode a coleta do MeasureSoftGram ' +
-        `neste ${terms.repository}.`
+      title: t(measures === 'all' ? 'temporal.empty.metrics-all' : 'temporal.empty.metrics-chosen', {
+        repository: terms.repository
+      }),
+      description: t('temporal.empty.metrics-description', { repository: terms.repository })
     }
   };
 
@@ -147,9 +150,9 @@ const TemporalDashboard: React.FC = () => {
     if (hasRepositoriesError) {
       return (
         <DashboardCard
-          title="Evolução Temporal"
+          title={t('temporal.card-title')}
           status="error"
-          errorTitle={`Não foi possível carregar os ${terms.repositories} do produto`}
+          errorTitle={t('temporal.repositories-error', { repositories: terms.repositories })}
           onRetry={evolution.retryRepositories}
         />
       );
@@ -157,10 +160,10 @@ const TemporalDashboard: React.FC = () => {
     if (!isLoadingRepositories && repositories.length === 0) {
       return (
         <DashboardCard
-          title="Evolução Temporal"
+          title={t('temporal.card-title')}
           status="empty"
-          emptyTitle={`Este produto ainda não tem ${terms.repositories}`}
-          emptyDescription={`Adicione um ${terms.repository} para acompanhar a evolução da qualidade.`}
+          emptyTitle={t('temporal.no-repositories.title', { repositories: terms.repositories })}
+          emptyDescription={t('temporal.no-repositories.description', { repository: terms.repository })}
         />
       );
     }
@@ -180,7 +183,7 @@ const TemporalDashboard: React.FC = () => {
 
   return (
     <>
-      <title>{TITLE}</title>
+      <title>{t('temporal.title')}</title>
 
       <Container maxWidth="xl">
         <Box display="flex" flexDirection="column" gap="28px" marginTop="40px" marginBottom="40px">
@@ -188,11 +191,10 @@ const TemporalDashboard: React.FC = () => {
           <Box display="flex" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" gap="16px">
             <Box>
               <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
-                {TITLE}
+                {t('temporal.title')}
               </Typography>
               <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-                Cada nível mostra as filhas do que foi escolhido no nível anterior. Com mais de uma análise no mesmo
-                dia ou mês, vale a última.
+                {t('temporal.subtitle')}
               </Typography>
             </Box>
             <ExportAllCsvButton dashboard={TEMPORAL_CSV.dashboard} charts={Object.values(csvs)} />
@@ -206,25 +208,25 @@ const TemporalDashboard: React.FC = () => {
               onChange={(value) => evolution.setRepositoryId(Number(value))}
             />
             <SingleSelectFilter
-              label="Característica"
+              label={t('temporal.filter.characteristic')}
               value={evolution.characteristic}
               options={evolution.characteristicOptions}
               onChange={evolution.setCharacteristic}
             />
             <MultiSelectFilter
-              label="Subcaracterística"
+              label={t('temporal.filter.subcharacteristic')}
               value={evolution.subcharacteristics}
               options={evolution.subcharacteristicOptions}
               onChange={evolution.setSubcharacteristics}
             />
             <MultiSelectFilter
-              label="Medida"
+              label={t('temporal.filter.measure')}
               value={evolution.measures}
               options={evolution.measureOptions}
               onChange={evolution.setMeasures}
             />
             <MultiSelectFilter
-              label="Métrica"
+              label={t('temporal.filter.metric')}
               value={evolution.metrics}
               options={evolution.metricOptions}
               onChange={evolution.setMetrics}
@@ -237,14 +239,14 @@ const TemporalDashboard: React.FC = () => {
               onChange={(_event, value: TimeGranularity | null) => {
                 if (value) evolution.setGranularity(value);
               }}
-              aria-label="Eixo do tempo"
+              aria-label={t('temporal.time-axis')}
               sx={{ marginLeft: { md: 'auto' }, backgroundColor: '#FFFFFF' }}
             >
               <ToggleButton value="day" sx={TOGGLE_SX}>
-                Dias
+                {t('temporal.days')}
               </ToggleButton>
               <ToggleButton value="month" sx={TOGGLE_SX}>
-                Meses
+                {t('temporal.months')}
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>

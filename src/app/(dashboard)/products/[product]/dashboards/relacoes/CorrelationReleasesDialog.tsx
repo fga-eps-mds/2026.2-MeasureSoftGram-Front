@@ -22,6 +22,7 @@ import {
   formatCorrelationReleasesCsv,
   formatReleaseStatus
 } from '@utils/formatCorrelationCharts';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   correlation: RepositoryCorrelation;
@@ -31,30 +32,31 @@ interface Props {
 
 /** Releases da análise (CA3): todas as releases do repositório, com o valor de cada entidade e se entraram em RD. */
 export default function CorrelationReleasesDialog({ correlation, open, onClose }: Readonly<Props>) {
+  const { t } = useTranslation('dashboards');
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
+  const title = t('correlation.releases.title', { repository: correlation.repository.name });
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
       <DialogTitle>
-        Releases da análise de {correlation.repository.name}
+        {title}
         <Typography variant="body2" color="text.secondary">
-          Entram na correlação as releases em que o repositório tem valor para todas as {noun}. O valor é o da última
-          análise dentro do período da release.
+          {t('correlation.releases.description', { noun })}
         </Typography>
       </DialogTitle>
       <DialogContent dividers>
         <Box overflow="auto">
-          <Table size="small" aria-label={`Releases da análise de ${correlation.repository.name}`}>
+          <Table size="small" aria-label={title}>
             <TableHead>
               <TableRow>
-                <TableCell>Release</TableCell>
-                <TableCell>Período</TableCell>
+                <TableCell>{t('correlation.releases.release')}</TableCell>
+                <TableCell>{t('correlation.releases.period')}</TableCell>
                 {correlation.entities.map((entity) => (
                   <TableCell key={entity.key} align="right">
                     {entity.name}
                   </TableCell>
                 ))}
-                <TableCell>Situação</TableCell>
+                <TableCell>{t('correlation.releases.status')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -84,7 +86,7 @@ export default function CorrelationReleasesDialog({ correlation, open, onClose }
       </DialogContent>
       <DialogActions>
         <ExportCsvButton dashboard={CORRELATION_CSV.dashboard} chart={formatCorrelationReleasesCsv(correlation)} />
-        <Button onClick={onClose}>Fechar</Button>
+        <Button onClick={onClose}>{t('correlation.releases.close')}</Button>
       </DialogActions>
     </Dialog>
   );

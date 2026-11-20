@@ -18,8 +18,8 @@
     "titleRest": "digitando o nome dele abaixo.",
     "alert": "Isso irá deletar permanentemente o item ",
     "button": "CONFIRMAR EXCLUSÃO",
-    "toast-sucess": "Repositório excluído com sucesso!",
-    "toast-sucess_gitlab": "Projeto excluído com sucesso!",
+    "toast-success": "Repositório excluído com sucesso!",
+    "toast-success_gitlab": "Projeto excluído com sucesso!",
     "toast-error": "Erro ao excluir o repositório.",
     "toast-error_gitlab": "Erro ao excluir o projeto."
   },
@@ -33,8 +33,8 @@
     "url_gitlab": "URL do Projeto",
     "platform": "Plataforma",
     "save": "Salvar Alterações",
-    "sucess": "Repositório atualizado com sucesso!",
-    "sucess_gitlab": "Projeto atualizado com sucesso!",
+    "success": "Repositório atualizado com sucesso!",
+    "success_gitlab": "Projeto atualizado com sucesso!",
     "product": "Produto"
   },
   "register": {
@@ -42,8 +42,8 @@
     "title_gitlab": "Cadastro de Projeto",
     "create": "Criar Repositório",
     "create_gitlab": "Criar Projeto",
-    "sucess": "Repositório criado com sucesso",
-    "sucess_gitlab": "Projeto criado com sucesso"
+    "success": "Repositório criado com sucesso",
+    "success_gitlab": "Projeto criado com sucesso"
   },
   "error": {
     "data": "Erro ao carregar dados do repositório.",
@@ -76,5 +76,18 @@
     "badge-stale-tooltip_gitlab": "Badge desatualizada a mais de 30 dias. Reexecute o workflow do projeto para gerar a versão mais recente.",
     "badge-error": "Ocorreu um erro ao tentar carregar as informações da badge.",
     "characteristic-badges": "Badges de Características"
+  },
+  "form-errors": {
+    "save": "Erro ao criar/atualizar {{repository}}.",
+    "duplicate": "Já existe um {{repository}} com este nome.",
+    "url-scheme": "A URL deve começar com http ou https.",
+    "url-inaccessible": "A URL do {{repository}} não é acessível.",
+    "url-unverified": "Não foi possível verificar a URL do {{repository}}.",
+    "unknown": "Erro desconhecido ao criar {{repository}}.",
+    "create": "Erro ao criar {{repository}}."
+  },
+  "no-access": "Você não tem acesso a este repositório no {{provider}}.",
+  "confirmation": {
+    "wrong-name": "O nome '{{name}}' está incorreto."
   }
 }

@@ -11,21 +11,27 @@ import {
   formatCorrelationBubbleOptions,
   formatCorrelationCsv
 } from '@utils/formatCorrelationCharts';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 import CorrelationChart from './CorrelationChart';
 
-export const BUBBLES_TITLE = 'Matriz de bolhas das correlações';
+export const bubblesTitle = () => i18n.t('dashboards:correlation.bubbles-title');
 
 const LEGEND_SIZES = [0.25, 0.5, 0.75, 1];
 /** Diâmetro, em px, do maior círculo da legenda de tamanhos. */
 const LEGEND_MAX_SIZE = 40;
 
 const COLOR_ITEMS = [
-  { label: 'Positiva', swatch: { backgroundColor: CORRELATION_COLORS.bubble } },
-  { label: 'Negativa', swatch: { backgroundColor: CORRELATION_COLORS.negative } },
-  { label: 'Não tem relação', swatch: { backgroundColor: '#FFFFFF', border: `2px solid ${CORRELATION_COLORS.bubble}` } }
+  { label: 'correlation.legend.positive', swatch: { backgroundColor: CORRELATION_COLORS.bubble } },
+  { label: 'correlation.legend.negative', swatch: { backgroundColor: CORRELATION_COLORS.negative } },
+  {
+    label: 'correlation.legend.none',
+    swatch: { backgroundColor: '#FFFFFF', border: `2px solid ${CORRELATION_COLORS.bubble}` }
+  }
 ];
 
 function BubbleLegend() {
+  const { t } = useTranslation('dashboards');
   return (
     <Box display="flex" flexDirection="column" gap="10px">
       <Box
@@ -41,14 +47,14 @@ function BubbleLegend() {
           <Box component="li" key={item.label} display="flex" alignItems="center" gap="6px">
             <Box aria-hidden width={12} height={12} borderRadius="50%" boxSizing="border-box" sx={item.swatch} />
             <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
-              {item.label}
+              {t(item.label)}
             </Typography>
           </Box>
         ))}
       </Box>
       <Box display="flex" alignItems="center" flexWrap="wrap" gap="12px">
         <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
-          Tamanho = |r|:
+          {t('correlation.legend.size')}
         </Typography>
         {LEGEND_SIZES.map((size) => (
           <Box key={size} display="flex" alignItems="center" gap="6px">
@@ -74,11 +80,12 @@ function BubbleLegend() {
  * coeficiente não significativo fica em círculo vazado.
  */
 export default function CorrelationBubbles({ correlation }: { correlation: RepositoryCorrelation }) {
+  const { t } = useTranslation('dashboards');
   const option = useMemo(() => formatCorrelationBubbleOptions(correlation), [correlation]);
 
   return (
     <DashboardCard
-      title={BUBBLES_TITLE}
+      title={bubblesTitle()}
       status="ready"
       headerAction={
         <ExportCsvButton
@@ -88,8 +95,7 @@ export default function CorrelationBubbles({ correlation }: { correlation: Repos
       }
     >
       <Typography fontSize="13px" color={DASHBOARD_COLORS.text}>
-        A mesma matriz RD_Corr de {correlation.repository.name}: o tamanho do círculo é |r| e a cor é o sinal da
-        correlação. Os nomes ficam na diagonal, como na matriz ao lado.
+        {t('correlation.bubbles-description', { repository: correlation.repository.name })}
       </Typography>
       <CorrelationChart option={option} entities={correlation.entities.length} />
       <BubbleLegend />

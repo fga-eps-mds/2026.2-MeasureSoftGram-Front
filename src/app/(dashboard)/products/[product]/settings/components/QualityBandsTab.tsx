@@ -19,10 +19,9 @@ import {
 import { useQualityBands } from '../hooks/useQualityBands';
 import QualityBandsRuler from './QualityBandsRuler';
 import RestoreDefaultsDialog from './RestoreDefaultsDialog';
+import { useTranslation } from 'react-i18next';
 
 type Feedback = 'saved' | 'error' | null;
-
-const SAVE_ERROR = 'Não foi possível salvar as faixas. Tente novamente.';
 
 const buttonSx = { textTransform: 'none', fontWeight: 'bold', minWidth: '140px' } as const;
 
@@ -40,6 +39,7 @@ function startOf(drafts: string[], index: number): string {
 
 /** Aba "Faixas de qualidade" das configurações do produto (US30.01). */
 export default function QualityBandsTab({ organizationId, productId }: { organizationId: string; productId: string }) {
+  const { t } = useTranslation('settings');
   const { qualityBands, status, save, restore, retry } = useQualityBands(organizationId, productId);
 
   const savedLimits = useMemo(
@@ -93,17 +93,16 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
 
   return (
     <DashboardCard
-      title="Faixas de qualidade"
+      title={t('quality-bands.tab')}
       status={status}
-      loadingMessage="Carregando as faixas de qualidade…"
+      loadingMessage={t('quality-bands.loading')}
       loadingContent={<SkeletonBlock width="100%" height={220} />}
-      errorTitle="Não foi possível carregar as faixas de qualidade"
+      errorTitle={t('quality-bands.load-error')}
       onRetry={retry}
     >
       <Typography fontSize="14px" color={DASHBOARD_COLORS.mutedText}>
-        A régua de 0 a 1 que classifica os indicadores do produto, da pior faixa (E) para a melhor (A). O fim de uma
-        faixa é sempre o início da seguinte.
-        {!canEdit && ' Só o administrador da organização altera os limites.'}
+        {t('quality-bands.description')}
+        {!canEdit && t('quality-bands.admin-only')}
       </Typography>
 
       <QualityBandsRuler segments={segments} />
@@ -141,7 +140,7 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
 
               <Box display="flex" alignItems="center" minHeight="40px" gap="6px">
                 <Typography fontSize="14px" color={DASHBOARD_COLORS.mutedText}>
-                  De
+                  {t('quality-bands.from')}
                 </Typography>
                 <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid={`band-start-${band.grade}`}>
                   {startOf(drafts, index)}
@@ -151,18 +150,18 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
               {canEdit && !isLast ? (
                 <TextField
                   size="small"
-                  label="Até"
+                  label={t('quality-bands.to')}
                   value={drafts[index]}
                   onChange={(event) => changeLimit(index, event.target.value)}
                   error={!!error}
                   helperText={error ?? ' '}
                   disabled={isSaving}
-                  inputProps={{ inputMode: 'decimal', 'aria-label': `Até da faixa ${label}` }}
+                  inputProps={{ inputMode: 'decimal', 'aria-label': t('quality-bands.to-aria', { band: label }) }}
                 />
               ) : (
                 <Box display="flex" alignItems="center" minHeight="40px" gap="6px">
                   <Typography fontSize="14px" color={DASHBOARD_COLORS.mutedText}>
-                    Até
+                    {t('quality-bands.to')}
                   </Typography>
                   <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid={`band-end-${band.grade}`}>
                     {isLast ? formatLimit(1) : drafts[index]}
@@ -174,8 +173,8 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
         })}
       </Box>
 
-      {feedback === 'saved' && <MSGAlert severity="success" title="Faixas salvas" />}
-      {feedback === 'error' && <MSGAlert severity="error" title={SAVE_ERROR} />}
+      {feedback === 'saved' && <MSGAlert severity="success" title={t('quality-bands.saved')} />}
+      {feedback === 'error' && <MSGAlert severity="error" title={t('quality-bands.save-error')} />}
 
       {canEdit && (
         <Box display="flex" justifyContent="flex-end" flexWrap="wrap" gap="12px">
@@ -185,7 +184,7 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
             disabled={isSaving || isDefault}
             sx={{ ...buttonSx, color: DASHBOARD_COLORS.primary, borderColor: DASHBOARD_COLORS.primary, ...disabledSx }}
           >
-            Restaurar padrão
+            {t('quality-bands.restore')}
           </Button>
           <Button
             variant="contained"
@@ -198,7 +197,7 @@ export default function QualityBandsTab({ organizationId, productId }: { organiz
               '&.Mui-disabled': { ...disabledSx['&.Mui-disabled'], backgroundColor: DASHBOARD_COLORS.skeleton }
             }}
           >
-            {isSaving ? 'Salvando…' : 'Salvar'}
+            {isSaving ? t('quality-bands.saving') : t('quality-bands.save')}
           </Button>
         </Box>
       )}

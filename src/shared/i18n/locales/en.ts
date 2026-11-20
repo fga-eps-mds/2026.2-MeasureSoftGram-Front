@@ -1,6 +1,8 @@
 // Gerado a partir de public/locales: todas as traduções do idioma num chunk só (ver bundledBackend.ts).
 import about from '../../../../public/locales/en/about.json';
+import auth from '../../../../public/locales/en/auth.json';
 import breadcrumb from '../../../../public/locales/en/breadcrumb.json';
+import dashboards from '../../../../public/locales/en/dashboards.json';
 import graphicChart from '../../../../public/locales/en/graphic_chart.json';
 import header from '../../../../public/locales/en/header.json';
 import home from '../../../../public/locales/en/home.json';
@@ -19,7 +21,9 @@ import translation from '../../../../public/locales/en/translation.json';
 
 const resources: Record<string, object> = {
   about,
+  auth,
   breadcrumb,
+  dashboards,
   graphic_chart: graphicChart,
   header,
   home,

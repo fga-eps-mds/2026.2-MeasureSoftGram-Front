@@ -58,7 +58,9 @@ function HeaderUserMenu() {
         }}
       >
         <Avatar src={session?.avatar_url} sx={{ width: 32, height: 32, backgroundColor: '#000' }} />
-        <Box sx={{ fontWeight: 500, fontSize: '15px' }}>{session?.username || session?.email || 'Usuário'}</Box>
+        <Box sx={{ fontWeight: 500, fontSize: '15px' }}>
+          {session?.username || session?.email || t('user-fallback')}
+        </Box>
         <FiChevronDown fontSize={20} />
       </Button>
       <Menu

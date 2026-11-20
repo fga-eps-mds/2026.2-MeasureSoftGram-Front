@@ -11,7 +11,7 @@ Object {
         <div
           class="sc-b5d02efd-1 bxROCf"
         >
-          title-create
+          ADICIONAR PRODUTO
         </div>
         <div
           class="sc-b5d02efd-3 eDodXa"
@@ -19,7 +19,7 @@ Object {
           <div
             class="sc-b5d02efd-4 kBoyYm"
           >
-            description
+            Os produtos são softwares que pertencem à alguma organização e que possuem algum cliente. Por conta de sua natureza, um mesmo produto pode possuir vários repositórios associados à ele, o que permite uma implementação continua em mais de uma frente de trabalho.
           </div>
           <form>
             <div
@@ -35,7 +35,7 @@ Object {
                   for="_r_c_"
                   id="_r_c_-label"
                 >
-                  label-input
+                  Organizações
                   <span
                     aria-hidden="true"
                     class="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
@@ -87,7 +87,7 @@ Object {
                       class="css-sl37lx-MuiNotchedOutlined-root"
                     >
                       <span>
-                        label-input
+                        Organizações
                          
                         *
                       </span>
@@ -105,7 +105,7 @@ Object {
                   for="_r_e_"
                   id="_r_e_-label"
                 >
-                  name-input
+                  Nome
                   <span
                     aria-hidden="true"
                     class="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
@@ -133,7 +133,7 @@ Object {
                       class="css-njhac4-MuiNotchedOutlined-root"
                     >
                       <span>
-                        name-input
+                        Nome
                          
                         *
                       </span>
@@ -151,7 +151,7 @@ Object {
                   for="_r_f_"
                   id="_r_f_-label"
                 >
-                  description-input
+                  Descrição
                 </label>
                 <div
                   class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-multiline css-8ewcdo-MuiInputBase-root-MuiOutlinedInput-root"
@@ -178,7 +178,7 @@ Object {
                       class="css-njhac4-MuiNotchedOutlined-root"
                     >
                       <span>
-                        description-input
+                        Descrição
                       </span>
                     </legend>
                   </fieldset>
@@ -193,7 +193,7 @@ Object {
                   tabindex="0"
                   type="button"
                 >
-                  back
+                  VOLTAR
                   <span
                     class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
                   />
@@ -204,7 +204,7 @@ Object {
                   tabindex="0"
                   type="submit"
                 >
-                  create
+                  CRIAR
                   <span
                     class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
                   />
@@ -223,7 +223,7 @@ Object {
       <div
         class="sc-b5d02efd-1 bxROCf"
       >
-        title-create
+        ADICIONAR PRODUTO
       </div>
       <div
         class="sc-b5d02efd-3 eDodXa"
@@ -231,7 +231,7 @@ Object {
         <div
           class="sc-b5d02efd-4 kBoyYm"
         >
-          description
+          Os produtos são softwares que pertencem à alguma organização e que possuem algum cliente. Por conta de sua natureza, um mesmo produto pode possuir vários repositórios associados à ele, o que permite uma implementação continua em mais de uma frente de trabalho.
         </div>
         <form>
           <div
@@ -247,7 +247,7 @@ Object {
                 for="_r_c_"
                 id="_r_c_-label"
               >
-                label-input
+                Organizações
                 <span
                   aria-hidden="true"
                   class="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
@@ -299,7 +299,7 @@ Object {
                     class="css-sl37lx-MuiNotchedOutlined-root"
                   >
                     <span>
-                      label-input
+                      Organizações
                        
                       *
                     </span>
@@ -317,7 +317,7 @@ Object {
                 for="_r_e_"
                 id="_r_e_-label"
               >
-                name-input
+                Nome
                 <span
                   aria-hidden="true"
                   class="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
@@ -345,7 +345,7 @@ Object {
                     class="css-njhac4-MuiNotchedOutlined-root"
                   >
                     <span>
-                      name-input
+                      Nome
                        
                       *
                     </span>
@@ -363,7 +363,7 @@ Object {
                 for="_r_f_"
                 id="_r_f_-label"
               >
-                description-input
+                Descrição
               </label>
               <div
                 class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-multiline css-8ewcdo-MuiInputBase-root-MuiOutlinedInput-root"
@@ -390,7 +390,7 @@ Object {
                     class="css-njhac4-MuiNotchedOutlined-root"
                   >
                     <span>
-                      description-input
+                      Descrição
                     </span>
                   </legend>
                 </fieldset>
@@ -405,7 +405,7 @@ Object {
                 tabindex="0"
                 type="button"
               >
-                back
+                VOLTAR
                 <span
                   class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
                 />
@@ -416,7 +416,7 @@ Object {
                 tabindex="0"
                 type="submit"
               >
-                create
+                CRIAR
                 <span
                   class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
                 />

@@ -9,9 +9,11 @@ import { CsvChart } from '@utils/exportCsv';
 import { formatHistogramOptions, HISTOGRAM_CHART_HEIGHT, HISTOGRAM_GRID_SIDES } from '@utils/formatDistributionCharts';
 import { DISTRIBUTION_CSV, HistogramCsvRow } from '@utils/formatDistributionCsv';
 import { QualityBand } from '@utils/qualityBands';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 import DistributionChart from './DistributionChart';
 
-export const HISTOGRAM_TITLE = 'Histograma';
+export const histogramTitle = () => i18n.t('dashboards:distribution.card.histogram');
 
 // some da tela, mas continua para os leitores de tela
 export const VISUALLY_HIDDEN = {
@@ -87,10 +89,11 @@ export function bandColumns(bands: QualityBand[]): string {
  * letra (ver bandLabelRules): no desktop o rótulo aparece; em telas estreitas, como 360 px, só a letra.
  */
 export function QualityBandRuler({ bands }: Readonly<{ bands: QualityBand[] }>) {
+  const { t } = useTranslation('dashboards');
   return (
     <Box
       component="ul"
-      aria-label="Faixas de qualidade de A a E"
+      aria-label={t('distribution.histogram.ruler-aria')}
       display="grid"
       gridTemplateColumns={bandColumns(bands)}
       gap="2px"
@@ -152,14 +155,15 @@ export default function DistributionHistogram({
   );
   const option = useMemo(() => formatHistogramOptions(histogram, entity), [histogram, entity]);
   const caption = histogram.unit
-    ? 'Quantas análises caem em cada faixa de 0,10. A régua mostra as faixas A a E do Indicador Total da Qualidade.'
-    : `Quantas análises caem em cada faixa de ${formatAxisValue(histogram.width)} de ${
-        entity.name
-      }, na escala da métrica.`;
+    ? i18n.t('dashboards:distribution.histogram.caption-unit')
+    : i18n.t('dashboards:distribution.histogram.caption-metric', {
+        width: formatAxisValue(histogram.width),
+        name: entity.name
+      });
 
   return (
     <DashboardCard
-      title={HISTOGRAM_TITLE}
+      title={histogramTitle()}
       status="ready"
       headerAction={csv && <ExportCsvButton dashboard={DISTRIBUTION_CSV.dashboard} chart={csv} />}
     >

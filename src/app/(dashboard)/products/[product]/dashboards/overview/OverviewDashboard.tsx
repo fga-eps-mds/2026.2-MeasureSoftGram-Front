@@ -41,7 +41,6 @@ import MSGAlert from '../../../../../../components/idv/feedback';
 
 import { useOverviewDashboard } from './useOverviewDashboard';
 
-const TITLE = '1. Visão Geral de Qualidade';
 const COLLECTION_GUIDE_URL = 'https://github.com/fga-eps-mds/MeasureSoftGram-Action';
 const SKELETON_BAR_WIDTHS = [300, 260, 230, 200, 170, 140];
 /** Total que não se aplica à release, como o resumo estatístico e a matriz de correlação já fazem. */
@@ -60,6 +59,7 @@ function getStatus(error: unknown, isLoading: boolean, isEmpty: boolean): CardSt
 }
 
 function CollectionGuideLink() {
+  const { t } = useTranslation('dashboards');
   return (
     <Link
       href={COLLECTION_GUIDE_URL}
@@ -70,7 +70,7 @@ function CollectionGuideLink() {
       fontSize="13px"
       color={DASHBOARD_COLORS.primary}
     >
-      Ver como configurar a coleta
+      {t('common.collection-guide')}
     </Link>
   );
 }
@@ -97,6 +97,7 @@ interface TotalsProps {
 
 /** A grade dos seis totais: cada quadro vira esqueleto enquanto o seu valor não chegou. */
 function TotalsGrid({ items }: { items: TotalItem[] }) {
+  const { t } = useTranslation('dashboards');
   return (
     <Box
       display="grid"
@@ -123,7 +124,7 @@ function TotalsGrid({ items }: { items: TotalItem[] }) {
                 fontSize="26px"
                 lineHeight={1.2}
                 color={DASHBOARD_COLORS.primary}
-                aria-label={item.value === null ? 'Não se aplica' : undefined}
+                aria-label={item.value === null ? t('common.not-applicable') : undefined}
               >
                 {item.value === null ? TOTAL_NOT_APPLICABLE : formatTotal(item.value)}
               </Typography>
@@ -140,6 +141,7 @@ function TotalsGrid({ items }: { items: TotalItem[] }) {
 
 function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
   const items = getTotalItems(summary?.totals, terms.Repositories);
   // sem o resumo não há número nenhum para mostrar: segue como carregando, com título, selo e mensagem, em vez da
   // grade de esqueletos solta, que era o único bloco da tela sem os estados do CA4 da US07.01
@@ -148,16 +150,15 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
 
   return (
     <DashboardCard
-      title="Totais da release"
+      title={t('overview.totals.title')}
       status={status}
       loadingContent={<TotalsGrid items={getTotalItems(undefined, terms.Repositories)} />}
       onRetry={onRetry}
     >
       {/* o travessão sozinho não explica por que não há o que contar; o aviso evita ler ausência como perda de dado */}
       {withoutQualityModel && (
-        <MSGAlert severity="warning" title="Esta release não tem modelo de qualidade configurado">
-          {'Sem o modelo não há características, subcaracterísticas, medidas nem métricas para contar — por isso o ' +
-            `travessão. A contagem de ${terms.repositories} e de arquivos analisados não depende dele e segue valendo.`}
+        <MSGAlert severity="warning" title={t('overview.totals.no-model-title')}>
+          {t('overview.totals.no-model-description', { repositories: terms.repositories })}
         </MSGAlert>
       )}
       <TotalsGrid items={items} />
@@ -167,10 +168,11 @@ function Totals({ summary, isLoading, error, onRetry }: TotalsProps) {
 
 /** Legenda das 5 faixas do Indicador Total da Qualidade (US06.01), da melhor para a pior. */
 function QualityBandsLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
+  const { t } = useTranslation('dashboards');
   return (
     <Box display="flex" flexDirection="column" gap="8px" data-testid="quality-bands-legend">
       <Typography fontWeight="bold" fontSize="13px" color={DASHBOARD_COLORS.text}>
-        Faixas
+        {t('common.bands')}
       </Typography>
       {[...bands].reverse().map((band) => (
         <Box key={band.grade} display="flex" alignItems="center" gap="8px">
@@ -219,6 +221,7 @@ const OverviewDashboard: React.FC = () => {
   } = useOverviewDashboard(organizationId, productId);
 
   const { t } = useTranslation('release');
+  const { t: td } = useTranslation('dashboards');
   const characteristicName = (key: string) => {
     const translated = t(`characteristics.${key}`);
     return translated && translated !== `characteristics.${key}` ? translated : key;
@@ -278,16 +281,16 @@ const OverviewDashboard: React.FC = () => {
 
   const renderContent = () => {
     if (releasesError) {
-      return <DashboardCard title="Releases do produto" status="error" onRetry={retryReleases} />;
+      return <DashboardCard title={td('common.product-releases')} status="error" onRetry={retryReleases} />;
     }
 
     if (!isLoadingReleases && !hasReleases) {
       return (
         <DashboardCard
-          title="Visão Geral da release"
+          title={td('overview.no-release.title')}
           status="empty"
-          emptyTitle="Este produto ainda não tem releases"
-          emptyDescription="A Visão Geral mostra os dados de uma release. Crie uma release para acompanhar a qualidade do produto."
+          emptyTitle={td('overview.no-release.empty-title')}
+          emptyDescription={td('overview.no-release.empty-description')}
           emptyAction={
             <Button
               variant="contained"
@@ -295,7 +298,7 @@ const OverviewDashboard: React.FC = () => {
               onClick={() => void router.push(`/products/${router.query.product}/releases/create`)}
               sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
             >
-              Criar release
+              {td('common.create-release')}
             </Button>
           }
         />
@@ -312,10 +315,10 @@ const OverviewDashboard: React.FC = () => {
         />
 
         <DashboardCard
-          title="Indicador Total da Qualidade"
+          title={td('overview.indicator.title')}
           status={tsqmiStatus}
           loadingContent={<BarsSkeleton />}
-          emptyDescription={`Rode a coleta do MeasureSoftGram (GitHub Action ou CLI) em pelo menos um ${terms.repository} do produto para ver o indicador.`}
+          emptyDescription={td('overview.indicator.empty', { repository: terms.repository })}
           emptyAction={<CollectionGuideLink />}
           onRetry={retryCharacteristics}
           headerAction={<ExportCsvButton dashboard={OVERVIEW_CSV.dashboard} chart={csv.indicator} />}
@@ -334,10 +337,10 @@ const OverviewDashboard: React.FC = () => {
         </DashboardCard>
 
         <DashboardCard
-          title={`Planejado × Realizado do ${terms.repository}`}
+          title={td('overview.planned.title', { repository: terms.repository })}
           status={analysisStatus}
           loadingContent={<BarsSkeleton />}
-          emptyDescription={`Rode a coleta do MeasureSoftGram (GitHub Action ou CLI) em pelo menos um ${terms.repository} do produto para comparar com o planejado.`}
+          emptyDescription={td('overview.planned.empty', { repository: terms.repository })}
           emptyAction={<CollectionGuideLink />}
           onRetry={retryAnalysis}
           headerAction={
@@ -376,13 +379,13 @@ const OverviewDashboard: React.FC = () => {
             marginTop="8px"
           >
             <Typography fontWeight="bold" fontSize="15px" color={DASHBOARD_COLORS.cardTitle}>
-              Radar das características
+              {td('overview.radar.title')}
             </Typography>
             {hasRadar && (
               <ExportCsvButton
                 dashboard={OVERVIEW_CSV.dashboard}
                 chart={csv.radar}
-                ariaLabel="Exportar .csv do radar"
+                ariaLabel={td('overview.radar.export')}
               />
             )}
           </Box>
@@ -396,14 +399,24 @@ const OverviewDashboard: React.FC = () => {
                 />
               </Box>
               <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-                Mesmos valores do realizado (Rd) do {terms.repository} {selectedRepository?.repository_name} na release{' '}
-                {releaseName}.
+                {td('overview.radar.caption', {
+                  repository: terms.repository,
+                  name: selectedRepository?.repository_name,
+                  release: releaseName
+                })}
               </Typography>
             </>
           ) : (
-            <MSGAlert severity="warning" title="Ainda não há análises nesta release" action={<CollectionGuideLink />}>
-              O {terms.repository} {selectedRepository?.repository_name} ainda não tem características calculadas na
-              release {releaseName}. Rode a coleta do MeasureSoftGram (GitHub Action ou CLI) para ver o radar.
+            <MSGAlert
+              severity="warning"
+              title={td('overview.radar.no-analysis-title')}
+              action={<CollectionGuideLink />}
+            >
+              {td('overview.radar.no-analysis', {
+                repository: terms.repository,
+                name: selectedRepository?.repository_name,
+                release: releaseName
+              })}
             </MSGAlert>
           )}
         </DashboardCard>
@@ -413,17 +426,17 @@ const OverviewDashboard: React.FC = () => {
 
   return (
     <>
-      <title>Visão Geral de Qualidade</title>
+      <title>{td('overview.page-title')}</title>
 
       <Container maxWidth="xl">
         <Box display="flex" flexDirection="column" gap="28px" marginTop="40px" marginBottom="40px">
           <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap="16px">
             <Box>
               <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
-                {TITLE}
+                {td('overview.title')}
               </Typography>
               <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-                Valores da última análise de cada {terms.repository} feita dentro do período da release.
+                {td('overview.subtitle', { repository: terms.repository })}
               </Typography>
             </Box>
 

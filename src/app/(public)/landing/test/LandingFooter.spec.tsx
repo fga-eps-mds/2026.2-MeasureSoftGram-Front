@@ -22,11 +22,11 @@ describe('LandingFooter', () => {
   it('expoe os links externos publicos de docs e repositorios', () => {
     render(<LandingFooter />);
 
-    const docsLink = screen.getByRole('link', { name: 'footer.docs' });
+    const docsLink = screen.getByRole('link', { name: 'Documentação' });
     expect(docsLink).toHaveAttribute('href', EXTERNAL_LINKS.docs);
     expect(docsLink).toHaveAttribute('target', '_blank');
 
-    const reposLink = screen.getByRole('link', { name: 'footer.repos' });
+    const reposLink = screen.getByRole('link', { name: 'Repositórios' });
     expect(reposLink).toHaveAttribute('href', EXTERNAL_LINKS.repositories);
     expect(reposLink).toHaveAttribute('target', '_blank');
   });
@@ -34,7 +34,7 @@ describe('LandingFooter', () => {
   it('o botao de entrada do rodape navega para a rota interna de acesso', () => {
     render(<LandingFooter />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'footer.enter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar no sistema' }));
 
     expect(mockPush).toHaveBeenCalledWith(APP_ENTRY_ROUTE);
   });

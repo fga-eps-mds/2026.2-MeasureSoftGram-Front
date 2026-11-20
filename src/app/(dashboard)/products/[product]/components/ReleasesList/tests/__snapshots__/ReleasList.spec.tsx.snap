@@ -32,25 +32,25 @@ exports[`<ReleasesList /> renders without crashing 1`] = `
                   class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                   scope="col"
                 >
-                  table.name
+                  Nome
                 </th>
                 <th
                   class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                   scope="col"
                 >
-                  table.startDate
+                  Início da Release
                 </th>
                 <th
                   class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                   scope="col"
                 >
-                  table.endDate
+                  Fim da Release
                 </th>
                 <th
                   class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                   scope="col"
                 >
-                  table.details
+                  Ver Detalhes
                 </th>
               </tr>
             </thead>
@@ -68,7 +68,7 @@ exports[`<ReleasesList /> renders without crashing 1`] = `
             tabindex="0"
             type="button"
           >
-            release.more
+            VER MAIS...
             <span
               class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
             />

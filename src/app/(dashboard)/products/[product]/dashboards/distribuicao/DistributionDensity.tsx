@@ -13,24 +13,24 @@ import { DensityCsvRow, DISTRIBUTION_CSV } from '@utils/formatDistributionCsv';
 import { QualityBand } from '@utils/qualityBands';
 import DistributionChart from './DistributionChart';
 import { QualityBandRuler } from './DistributionHistogram';
+import i18n from '../../../../../../shared/i18n/i18n';
 
-export const DENSITY_TITLE = 'Curva de densidade';
+export const densityTitle = () => i18n.t('dashboards:distribution.card.density');
 
 /** Por que não há curva (CA9): poucas análises ou todas com o mesmo valor. */
 function getMissingDensity(count: number) {
   if (count < MIN_ANALYSES_FOR_DENSITY) {
     return {
-      title: 'Faltam análises para a curva de densidade',
-      description: `A curva precisa de pelo menos ${MIN_ANALYSES_FOR_DENSITY} análises, e o período tem ${formatAnalysisCount(
-        count
-      )}. O histograma e o resumo continuam valendo.`
+      title: i18n.t('dashboards:distribution.density.few-title'),
+      description: i18n.t('dashboards:distribution.density.few-description', {
+        min: MIN_ANALYSES_FOR_DENSITY,
+        amount: formatAnalysisCount(count)
+      })
     };
   }
   return {
-    title: 'Faltam análises com valores diferentes para a curva',
-    description: `As ${formatAnalysisCount(
-      count
-    )} do período têm o mesmo valor, e a curva precisa de valores diferentes para mostrar a forma da distribuição.`
+    title: i18n.t('dashboards:distribution.density.same-title'),
+    description: i18n.t('dashboards:distribution.density.same-description', { amount: formatAnalysisCount(count) })
   };
 }
 
@@ -65,9 +65,9 @@ export default function DistributionDensity({
     const missing = getMissingDensity(entity.analyses.length);
     return (
       <DashboardCard
-        title={DENSITY_TITLE}
+        title={densityTitle()}
         status="empty"
-        badgeLabel="Poucas análises"
+        badgeLabel={i18n.t('dashboards:distribution.density.few-badge')}
         emptyTitle={missing.title}
         emptyDescription={missing.description}
         emptyHeaderAction={exportButton}
@@ -76,14 +76,13 @@ export default function DistributionDensity({
   }
 
   return (
-    <DashboardCard title={DENSITY_TITLE} status="ready" headerAction={exportButton}>
+    <DashboardCard title={densityTitle()} status="ready" headerAction={exportButton}>
       <Box>
         <DistributionChart option={option} height={HISTOGRAM_CHART_HEIGHT} />
         {histogram.unit && <QualityBandRuler bands={bands} />}
       </Box>
       <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-        A área sob a curva soma 1: quanto mais alta a curva num trecho, mais análises se concentram nele. A linha
-        tracejada marca a mediana.
+        {i18n.t('dashboards:distribution.density.caption')}
       </Typography>
     </DashboardCard>
   );

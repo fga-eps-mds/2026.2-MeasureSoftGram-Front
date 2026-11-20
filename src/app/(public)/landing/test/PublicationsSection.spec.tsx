@@ -12,8 +12,8 @@ describe('PublicationsSection', () => {
   it('renderiza o cabecalho da secao', () => {
     render(<PublicationsSection />);
 
-    expect(screen.getByText('publications.title')).toBeInTheDocument();
-    expect(screen.getByText('publications.subtitle')).toBeInTheDocument();
+    expect(screen.getByText('Base científica do projeto')).toBeInTheDocument();
+    expect(screen.getByText('O MeasureSoftGram nasce de pesquisa acadêmica revisada por pares. Leia os artigos que fundamentam o modelo de qualidade.')).toBeInTheDocument();
   });
 
   it('lista o titulo e os autores de cada publicacao', () => {
@@ -37,7 +37,7 @@ describe('PublicationsSection', () => {
   it('cada CTA aponta para o DOI no ACM, em nova aba e com rel seguro', () => {
     render(<PublicationsSection />);
 
-    const links = screen.getAllByRole('link', { name: 'publications.cta' });
+    const links = screen.getAllByRole('link', { name: 'Ler no ACM' });
     expect(links).toHaveLength(PUBLICATIONS.length);
 
     PUBLICATIONS.forEach((pub, index) => {

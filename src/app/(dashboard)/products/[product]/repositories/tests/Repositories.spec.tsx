@@ -49,7 +49,7 @@ describe('Repository', () => {
       </OrganizationProvider>
     );
 
-    fireEvent.click(screen.getByLabelText('add'));
+    fireEvent.click(screen.getByLabelText('Adicionar repositório'));
 
     expect(mockPush).toHaveBeenCalledWith('/products');
   });

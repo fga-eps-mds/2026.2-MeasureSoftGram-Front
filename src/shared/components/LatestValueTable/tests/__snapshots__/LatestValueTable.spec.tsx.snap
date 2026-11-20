@@ -29,13 +29,13 @@ exports[`<LatestValueTable /> should render correctly 1`] = `
               class="MuiTableCell-root MuiTableCell-head MuiTableCell-stickyHeader MuiTableCell-alignRight MuiTableCell-sizeMedium css-i02g0k-MuiTableCell-root"
               scope="col"
             >
-              lastValue
+              Último valor
             </th>
             <th
               class="MuiTableCell-root MuiTableCell-head MuiTableCell-stickyHeader MuiTableCell-alignRight MuiTableCell-sizeMedium css-i02g0k-MuiTableCell-root"
               scope="col"
             >
-              lastMeasurement
+              Última medição
             </th>
           </tr>
         </thead>
@@ -118,13 +118,13 @@ exports[`<LatestValueTable /> should render correctly with empty data 1`] = `
               class="MuiTableCell-root MuiTableCell-head MuiTableCell-stickyHeader MuiTableCell-alignRight MuiTableCell-sizeMedium css-i02g0k-MuiTableCell-root"
               scope="col"
             >
-              lastValue
+              Último valor
             </th>
             <th
               class="MuiTableCell-root MuiTableCell-head MuiTableCell-stickyHeader MuiTableCell-alignRight MuiTableCell-sizeMedium css-i02g0k-MuiTableCell-root"
               scope="col"
             >
-              lastMeasurement
+              Última medição
             </th>
           </tr>
         </thead>
@@ -156,7 +156,7 @@ exports[`<LatestValueTable /> should render correctly with empty data 1`] = `
       <div
         class="MuiAlert-message css-1pxa9xg-MuiAlert-message"
       >
-        noData
+        Não há dados para serem exibidos
       </div>
     </div>
   </div>
@@ -192,13 +192,13 @@ exports[`<LatestValueTable /> should render correctly with error 1`] = `
               class="MuiTableCell-root MuiTableCell-head MuiTableCell-stickyHeader MuiTableCell-alignRight MuiTableCell-sizeMedium css-i02g0k-MuiTableCell-root"
               scope="col"
             >
-              lastValue
+              Último valor
             </th>
             <th
               class="MuiTableCell-root MuiTableCell-head MuiTableCell-stickyHeader MuiTableCell-alignRight MuiTableCell-sizeMedium css-i02g0k-MuiTableCell-root"
               scope="col"
             >
-              lastMeasurement
+              Última medição
             </th>
           </tr>
         </thead>
@@ -230,7 +230,7 @@ exports[`<LatestValueTable /> should render correctly with error 1`] = `
       <div
         class="MuiAlert-message css-1pxa9xg-MuiAlert-message"
       >
-        error
+        Ocorreu um erro ao tentar carregar as informações
       </div>
     </div>
   </div>

@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import { EntityMatrix, EntityMatrixColumn, EntityMatrixRepository } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
-import { NO_DATA_LABEL } from '@utils/entityLevels';
+import { noDataLabel } from '@utils/entityLevels';
+import { useTranslation } from 'react-i18next';
 import { cellId, formatDelta, formatScore, getColumnGroups, sortRepositoriesByTsqmi } from '@utils/entityMatrix';
 import { getQualityBand, QualityBand } from '@utils/qualityBands';
 
@@ -75,7 +76,7 @@ function Score({ value, detail, bands }: Readonly<{ value: number | null; detail
   if (value === null || !band) {
     return (
       <Typography fontSize="12px" fontStyle="italic" color={DASHBOARD_COLORS.mutedText}>
-        {NO_DATA_LABEL}
+        {noDataLabel()}
       </Typography>
     );
   }
@@ -120,10 +121,11 @@ function TsqmiCell({ repository, bands }: Readonly<{ repository: EntityMatrixRep
 
 /** Legenda das 5 faixas e do destaque (CA3, CA4), nos limites da régua do produto (US30.02). */
 export function QualityGradeLegend({ bands }: Readonly<{ bands: QualityBand[] }>) {
+  const { t } = useTranslation('dashboards');
   return (
     <Box display="flex" flexWrap="wrap" alignItems="center" gap="8px 16px" data-testid="quality-grade-legend">
       <Typography fontSize="12px" fontWeight="bold" color={DASHBOARD_COLORS.text}>
-        Escala
+        {t('entity.heatmap.scale')}
       </Typography>
       {[...bands].reverse().map((band) => (
         <Box key={band.grade} display="flex" alignItems="center" gap="6px">
@@ -153,7 +155,7 @@ export function QualityGradeLegend({ bands }: Readonly<{ bands: QualityBand[] }>
       <Box display="flex" alignItems="center" gap="6px">
         <Box sx={{ width: 18, height: 18, borderRadius: '4px', border: `2px solid ${HIGHLIGHT_BORDER}` }} />
         <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-          entre as 3 maiores contribuições para a queda
+          {t('entity.heatmap.highlight-legend')}
         </Typography>
       </Box>
     </Box>
@@ -166,6 +168,7 @@ export function QualityGradeLegend({ bands }: Readonly<{ bands: QualityBand[] }>
  * (diretriz do épico: menos de 1 s) e o expõe em `data-render-ms`.
  */
 export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands }: Readonly<Props>) {
+  const { t } = useTranslation('dashboards');
   const rows = useMemo(() => sortRepositoriesByTsqmi(matrix.repositories), [matrix]);
   const groups = useMemo(() => getColumnGroups(matrix.columns), [matrix]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -194,7 +197,7 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands
     <Box ref={containerRef} data-testid="entity-heatmap" sx={{ overflowX: 'auto', width: '100%' }}>
       <Box
         component="table"
-        aria-label="Mapa de calor"
+        aria-label={t('entity.heatmap.aria')}
         sx={{ borderCollapse: 'separate', borderSpacing: '4px', minWidth: '100%' }}
       >
         <thead>
@@ -218,7 +221,7 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands
           ))}
           <tr>
             <Box component="th" scope="col" sx={{ textAlign: 'left', verticalAlign: 'bottom', fontSize: '12px' }}>
-              Repositório
+              {t('entity.heatmap.repository')}
             </Box>
             {matrix.columns.map((column) => (
               <Box
@@ -279,8 +282,8 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands
                         component="button"
                         type="button"
                         aria-label={`${repository.name} · ${column.name}: ${
-                          value === null ? NO_DATA_LABEL : `${formatScore(value)} (${band?.grade}, ${band?.label})`
-                        }${isHighlighted ? ', entre as maiores contribuições para a queda' : ''}`}
+                          value === null ? noDataLabel() : `${formatScore(value)} (${band?.grade}, ${band?.label})`
+                        }${isHighlighted ? t('entity.heatmap.highlighted-cell') : ''}`}
                         data-highlighted={isHighlighted || undefined}
                         onClick={() =>
                           onSelectCell({ repository: { id: repository.id, name: repository.name }, column, value })

@@ -30,5 +30,13 @@
     "key-exists": "An organization with this key already exists.",
     "key-exists_gitlab": "An group with this key already exists.",
     "load-users": "Error loading users."
+  },
+  "errors": {
+    "duplicate-name": "An organization with this name already exists.",
+    "duplicate-key": "An organization with this key already exists.",
+    "create": "An error occurred while creating the organization.",
+    "update": "An error occurred while updating the organization.",
+    "load": "Error loading {{organizations}}.",
+    "load-retry": "Error loading {{organizations}}. Please try again."
   }
 }

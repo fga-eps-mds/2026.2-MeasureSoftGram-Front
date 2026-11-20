@@ -7,11 +7,6 @@ const mockBadgeUrls = {
   maintainability: 'http://localhost:8000/organizations/1/products/1/repositories/1/latest-values/characteristics/maintainability/badge/'
 };
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback: string) => fallback
-  })
-}));
 
 jest.mock('react-toastify', () => ({
   toast: {

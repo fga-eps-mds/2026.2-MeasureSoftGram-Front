@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Card, CardContent, Divider, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from 'react-i18next';
 import { EnrichedQualityModelNode, METAMODEL_COLORS } from './formatMetamodelTree';
 
 interface Props {
@@ -10,14 +11,15 @@ interface Props {
 }
 
 export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position }) => {
+  const { t } = useTranslation('dashboards');
   if (!node) return null;
 
   const typeLabels: Record<string, string> = {
-    tsqmi: 'Índice de Qualidade',
-    characteristic: 'Característica',
-    subcharacteristic: 'Subcaracterística',
-    measure: 'Medida',
-    metric: 'Métrica',
+    tsqmi: t('metamodel.tree.type.tsqmi'),
+    characteristic: t('metamodel.tree.type.characteristic'),
+    subcharacteristic: t('metamodel.tree.type.subcharacteristic'),
+    measure: t('metamodel.tree.type.measure'),
+    metric: t('metamodel.tree.type.metric')
   };
 
   const typeColors: Record<string, string> = {
@@ -82,7 +84,7 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
           {node.type !== 'tsqmi' && node.weight !== null && node.weight !== undefined && (
             <Box display="flex" justifyContent="space-between" fontSize="12px">
               <Typography variant="caption" color="#64748B">
-                {node.parentWeightLabel || 'Peso'}:
+                {node.parentWeightLabel || t('metamodel.tree.weight')}:
               </Typography>
               <Typography variant="caption" fontWeight={700} color="#1E293B">
                 {node.weight}%
@@ -93,7 +95,7 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
           {node.type === 'measure' && node.min_threshold !== null && node.min_threshold !== undefined && (
             <Box display="flex" justifyContent="space-between" fontSize="12px">
               <Typography variant="caption" color="#64748B">
-                Valor de referência mínimo:
+                {t('metamodel.tree.min-reference')}
               </Typography>
               <Typography variant="caption" fontWeight={700} color="#1E293B">
                 {node.min_threshold}
@@ -104,7 +106,7 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
           {node.type === 'measure' && node.max_threshold !== null && node.max_threshold !== undefined && (
             <Box display="flex" justifyContent="space-between" fontSize="12px">
               <Typography variant="caption" color="#64748B">
-                Valor de referência máximo:
+                {t('metamodel.tree.max-reference')}
               </Typography>
               <Typography variant="caption" fontWeight={700} color="#1E293B">
                 {node.max_threshold}
@@ -115,7 +117,7 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
           {node.type === 'measure' && node.children && node.children.length > 0 && (
             <Box display="flex" flexDirection="column" fontSize="12px" mt={0.5}>
               <Typography variant="caption" color="#64748B">
-                Métricas usadas:
+                {t('metamodel.tree.metrics-used')}
               </Typography>
               <Typography variant="caption" fontWeight={700} color="#1E293B" mt={0.25}>
                 {node.children.map((c) => c.name || c.key).join(', ')}
@@ -125,7 +127,7 @@ export const MetamodelNodeModal: React.FC<Props> = ({ node, onClose, position })
 
           {node.isSharedMetric && (
             <Typography variant="caption" color={METAMODEL_COLORS.metric} fontWeight={600} mt={0.5}>
-              ▲ Métrica também utilizada em outras medidas
+              {t('metamodel.tree.shared-metric')}
             </Typography>
           )}
         </Box>

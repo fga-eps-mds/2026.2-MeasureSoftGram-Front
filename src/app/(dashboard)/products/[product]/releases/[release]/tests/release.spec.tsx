@@ -75,7 +75,7 @@ describe('Release', () => {
 
     render(<Release />);
 
-    expect(await screen.findByTestId('equalizer-load-error')).toHaveTextContent('loadError');
+    expect(await screen.findByTestId('equalizer-load-error')).toHaveTextContent('Não foi possível carregar a comparação Planejado × Realizado desta release.');
   });
 });
 

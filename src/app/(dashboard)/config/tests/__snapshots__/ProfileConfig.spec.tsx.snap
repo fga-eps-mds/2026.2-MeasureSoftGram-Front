@@ -6,12 +6,12 @@ exports[`ProfileConfig should render successfully 1`] = `
     class="MuiContainer-root MuiContainer-maxWidthLg css-1oqqzyl-MuiContainer-root"
   >
     <h1>
-      pageTitle
+      Configurações
     </h1>
     <h3
       style="text-align: left;"
     >
-      apiKeyHeader
+      Chave secreta para acesso à API
     </h3>
     <div
       class="MuiFormControl-root MuiTextField-root css-1u3bzj6-MuiFormControl-root-MuiTextField-root"
@@ -23,7 +23,7 @@ exports[`ProfileConfig should render successfully 1`] = `
         for="_r_0_"
         id="_r_0_-label"
       >
-        apiKeyLabel
+        Chave secreta
       </label>
       <div
         class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl MuiInputBase-adornedEnd css-o9k5xi-MuiInputBase-root-MuiOutlinedInput-root"
@@ -89,7 +89,7 @@ exports[`ProfileConfig should render successfully 1`] = `
             class="css-njhac4-MuiNotchedOutlined-root"
           >
             <span>
-              apiKeyLabel
+              Chave secreta
             </span>
           </legend>
         </fieldset>

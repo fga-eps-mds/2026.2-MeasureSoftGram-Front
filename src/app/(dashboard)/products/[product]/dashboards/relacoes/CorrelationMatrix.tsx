@@ -13,10 +13,12 @@ import {
   formatSignificanceNote,
   METHOD_LABELS
 } from '@utils/formatCorrelationCharts';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 import CorrelationChart from './CorrelationChart';
 
 export function matrixTitle(correlation: Pick<RepositoryCorrelation, 'level'>): string {
-  return `Matriz de correlação das ${CORRELATION_LEVEL_PLURALS[correlation.level]}`;
+  return i18n.t('dashboards:correlation.matrix-title', { noun: CORRELATION_LEVEL_PLURALS[correlation.level] });
 }
 
 /** Escala de −1 a +1, do laranja ao azul. */
@@ -46,6 +48,7 @@ function ScaleLegend() {
  * com duas casas na cor da escala de −1 a +1 e os não significativos em itálico e opacos.
  */
 export default function CorrelationMatrix({ correlation }: { correlation: RepositoryCorrelation }) {
+  const { t } = useTranslation('dashboards');
   const option = useMemo(() => formatCorrelationMatrixOptions(correlation), [correlation]);
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
   const method = correlation.method ? METHOD_LABELS[correlation.method] : '';
@@ -62,22 +65,24 @@ export default function CorrelationMatrix({ correlation }: { correlation: Reposi
       }
     >
       <Typography fontSize="13px" color={DASHBOARD_COLORS.text}>
-        RD_Corr = f<sub>σ</sub>(RD): correlação entre os valores das {noun} nas {correlation.releases.length} releases
-        de {correlation.repository.name}. Cada nome fica na diagonal: leia a linha à esquerda dele e a coluna abaixo
-        dele.
+        RD_Corr = f<sub>σ</sub>(RD):{' '}
+        {t('correlation.matrix-description', {
+          noun,
+          amount: correlation.releases.length,
+          repository: correlation.repository.name
+        })}
       </Typography>
       <CorrelationChart option={option} entities={correlation.entities.length} />
       <Box display="flex" flexDirection="column" gap="6px">
         <ScaleLegend />
         <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
-          Azul: movem-se juntas · Laranja: movem-se em sentidos opostos
+          {t('correlation.legend.colors')}
         </Typography>
         <Typography fontSize="12px" fontStyle="italic" color={DASHBOARD_COLORS.mutedText}>
           {formatSignificanceNote(correlation)}
         </Typography>
         <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
-          Coeficiente aplicado: {method}. Regra do modelo: Pearson se a distribuição de RD for normal, Spearman caso
-          contrário.
+          {t('correlation.method-rule', { method })}
         </Typography>
       </Box>
     </DashboardCard>

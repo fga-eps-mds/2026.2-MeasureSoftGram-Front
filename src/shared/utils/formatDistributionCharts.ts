@@ -1,6 +1,5 @@
 import type { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { DistributionAnalysis, DistributionEntity } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { DensityPoint } from '@utils/distributionDensity';
@@ -9,6 +8,8 @@ import { formatAnalysisCount, formatCount, formatPeriod, formatStatistic } from 
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
 import { BoxplotStats, getBoxplotStats, groupOutliers, OutlierGroup } from '@utils/metricDistribution';
+import i18n from '../i18n/i18n';
+import { dateLocale } from '../i18n/dateLocale';
 
 /** Cores dos gráficos da distribuição: barras em azul claro, caixa na cor primária e discrepantes em laranja. */
 export const DISTRIBUTION_COLORS = {
@@ -66,14 +67,14 @@ export function outlierSymbolSize(groups: OutlierGroup[]) {
 }
 
 /** Caixa e hastes no tooltip do boxplot, com duas casas; o params.value do boxplot traz o índice da categoria na frente. */
-export function formatBoxTooltip(stats: BoxplotStats, title = 'Boxplot'): string {
+export function formatBoxTooltip(stats: BoxplotStats, title = i18n.t('dashboards:distribution.chart.boxplot')): string {
   return [
     `<strong>${escapeHtml(title)}</strong>`,
-    `Haste superior: ${formatStatistic(stats.high)}`,
-    `Q3: ${formatStatistic(stats.q3)}`,
-    `Mediana: ${formatStatistic(stats.median)}`,
-    `Q1: ${formatStatistic(stats.q1)}`,
-    `Haste inferior: ${formatStatistic(stats.low)}`
+    i18n.t('dashboards:distribution.chart.upper-whisker', { value: formatStatistic(stats.high) }),
+    i18n.t('dashboards:distribution.chart.q3', { value: formatStatistic(stats.q3) }),
+    i18n.t('dashboards:distribution.chart.median-value', { value: formatStatistic(stats.median) }),
+    i18n.t('dashboards:distribution.chart.q1', { value: formatStatistic(stats.q1) }),
+    i18n.t('dashboards:distribution.chart.lower-whisker', { value: formatStatistic(stats.low) })
   ].join('<br/>');
 }
 
@@ -95,11 +96,9 @@ const AXIS_NAME = { nameLocation: 'middle', nameTextStyle: AXIS_LABEL };
 /** Afastamento do nome do eixo y: à esquerda dos rótulos do histograma, dentro da margem do grid. */
 const Y_AXIS_NAME_GAP = 36;
 
-const INDICATOR_AXIS_NAME = 'Indicador Total da Qualidade (0–1)';
-
 /** Nome do eixo de valores: o TSQMI pelo nome na tela, os outros níveis de 0 a 1 com a escala, a métrica só pelo nome. */
 export function getValueAxisName({ level, name }: Pick<DistributionEntity, 'level' | 'name'>): string {
-  if (level === 'tsqmi') return INDICATOR_AXIS_NAME;
+  if (level === 'tsqmi') return i18n.t('dashboards:distribution.chart.indicator-axis');
   return isUnitScale(level) ? `${name} (0–1)` : name;
 }
 
@@ -134,9 +133,12 @@ export function formatHistogramOptions(histogram: Histogram, entity: Pick<Distri
     aria: {
       enabled: true,
       label: {
-        description: `Histograma de ${entity.name}: ${formatAnalysisCount(total)} em faixas de ${formatAxisValue(
-          histogram.width
-        )}. ${filled}.`
+        description: i18n.t('dashboards:distribution.chart.histogram-aria', {
+          name: entity.name,
+          amount: formatAnalysisCount(total),
+          width: formatAxisValue(histogram.width),
+          filled
+        })
       }
     },
     tooltip: { trigger: 'item', confine: true },
@@ -145,7 +147,7 @@ export function formatHistogramOptions(histogram: Histogram, entity: Pick<Distri
     yAxis: {
       type: 'value',
       ...AXIS_NAME,
-      name: 'Nº de análises (frequência)',
+      name: i18n.t('dashboards:distribution.chart.frequency-axis'),
       nameGap: Y_AXIS_NAME_GAP,
       minInterval: 1,
       axisLabel: { ...AXIS_LABEL, formatter: formatCount },
@@ -172,7 +174,7 @@ export function formatHistogramOptions(histogram: Histogram, entity: Pick<Distri
 
 /** Rótulo da mediana na legenda: "Mediana (0,55)". */
 export function formatMedianLabel(median: number | null): string {
-  return `Mediana (${formatStatistic(median)})`;
+  return i18n.t('dashboards:distribution.chart.median-label', { value: formatStatistic(median) });
 }
 
 /**
@@ -198,9 +200,12 @@ export function formatDensityOptions(
     aria: {
       enabled: true,
       label: {
-        description: `Curva de densidade de ${entity.name}, de ${formatAxisValue(histogram.min)} a ${formatAxisValue(
-          histogram.max
-        )}, com o pico em ${formatStatistic(peak.x)}.${medianSentence}`
+        description: `${i18n.t('dashboards:distribution.chart.density-aria', {
+          name: entity.name,
+          min: formatAxisValue(histogram.min),
+          max: formatAxisValue(histogram.max),
+          peak: formatStatistic(peak.x)
+        })}${medianSentence}`
       }
     },
     tooltip: {
@@ -208,21 +213,25 @@ export function formatDensityOptions(
       confine: true,
       formatter: (params: { value: number[] }[]) => {
         const [x, y] = params[0].value;
-        return `${formatStatistic(x)}<br/>Densidade: <strong>${formatStatistic(y)}</strong>`;
+        return `${formatStatistic(x)}<br/>${i18n.t('dashboards:distribution.chart.density-tooltip', {
+          value: formatStatistic(y)
+        })}`;
       }
     },
     legend: {
       ...LEGEND,
       top: 0,
       right: HISTOGRAM_GRID_SIDES.right,
-      data: hasMedian ? ['Densidade', medianLabel] : ['Densidade']
+      data: hasMedian
+        ? [i18n.t('dashboards:distribution.chart.density'), medianLabel]
+        : [i18n.t('dashboards:distribution.chart.density')]
     },
     grid: { ...HISTOGRAM_GRID_SIDES, top: 40, bottom: HISTOGRAM_GRID_BOTTOM },
     xAxis: histogramValueAxis(histogram, getValueAxisName(entity)),
     yAxis: {
       type: 'value',
       ...AXIS_NAME,
-      name: 'Densidade estimada',
+      name: i18n.t('dashboards:distribution.chart.estimated-density'),
       nameGap: Y_AXIS_NAME_GAP,
       axisLabel: { show: false },
       axisTick: { show: false },
@@ -231,7 +240,7 @@ export function formatDensityOptions(
     series: [
       {
         id: 'density',
-        name: 'Densidade',
+        name: i18n.t('dashboards:distribution.chart.density'),
         type: 'line',
         data: points.map((point) => [point.x, point.y]),
         showSymbol: false,
@@ -270,7 +279,7 @@ const MAX_DESCRIBED_OUTLIERS = 10;
 
 /** Data e hora de uma análise no tooltip: "17/08/2026 às 10:00". */
 export function formatAnalysisDateTime(date: string | number): string {
-  return format(new Date(date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  return format(new Date(date), i18n.t('dashboards:distribution.chart.analysis-datetime'), { locale: dateLocale() });
 }
 
 function toScatterPoint(analysis: DistributionAnalysis): [number, number] {
@@ -295,7 +304,7 @@ export function scatterTimeAxis(analyses: DistributionAnalysis[]) {
   const times = analyses.map((analysis) => new Date(analysis.date).getTime());
   const days = new Set(times.map((time) => format(new Date(time), 'yyyy-MM-dd')));
   const sameDay = days.size === 1;
-  const pattern = sameDay ? 'dd/MM/yyyy' : 'd MMM';
+  const pattern = sameDay ? i18n.t('dashboards:distribution.chart.day-format') : 'd MMM';
   return {
     type: 'time',
     ...(sameDay ? { min: Math.min(...times) - DAY_MS, max: Math.max(...times) + DAY_MS, minInterval: DAY_MS } : {}),
@@ -306,20 +315,26 @@ export function scatterTimeAxis(analyses: DistributionAnalysis[]) {
       ...AXIS_LABEL,
       hideOverlap: true,
       ...TIME_LABEL_SPACING,
-      formatter: (value: number) => format(new Date(value), pattern, { locale: ptBR })
+      formatter: (value: number) => format(new Date(value), pattern, { locale: dateLocale() })
     }
   };
 }
 
 function describeOutliers(outliers: DistributionAnalysis[]): string {
-  if (!outliers.length) return 'Nenhum valor discrepante.';
-  const listed = outliers
-    .slice(0, MAX_DESCRIBED_OUTLIERS)
-    .map((analysis) => `${formatStatistic(analysis.value)} em ${format(new Date(analysis.date), 'dd/MM/yyyy')}`);
+  if (!outliers.length) return i18n.t('dashboards:distribution.chart.no-outliers');
+  const listed = outliers.slice(0, MAX_DESCRIBED_OUTLIERS).map((analysis) =>
+    i18n.t('dashboards:distribution.chart.outlier-at', {
+      value: formatStatistic(analysis.value),
+      date: format(new Date(analysis.date), i18n.t('dashboards:distribution.chart.day-format'))
+    })
+  );
   const rest = outliers.length - listed.length;
-  const more = rest > 0 ? ` e mais ${formatCount(rest)}` : '';
-  const label = outliers.length === 1 ? '1 valor discrepante' : `${formatCount(outliers.length)} valores discrepantes`;
-  return `${label}: ${listed.join(', ')}${more}.`;
+  const more = rest > 0 ? i18n.t('dashboards:distribution.chart.and-more', { amount: formatCount(rest) }) : '';
+  const label = i18n.t('dashboards:distribution.chart.outliers-count', {
+    count: outliers.length,
+    formatted: formatCount(outliers.length)
+  });
+  return i18n.t('dashboards:distribution.chart.outliers-list', { label, list: listed.join(', '), more });
 }
 
 /**
@@ -335,16 +350,24 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
   const { q1, median, q3 } = summary;
   const hasQuartiles = q1 !== null && q3 !== null;
   const period = analyses.length ? formatPeriod(analyses[0].date, analyses[analyses.length - 1].date) : '';
-  const quartiles = `Q1 ${formatStatistic(q1)}, mediana ${formatStatistic(median)} e Q3 ${formatStatistic(q3)}`;
+  const quartiles = i18n.t('dashboards:distribution.chart.quartiles', {
+    q1: formatStatistic(q1),
+    median: formatStatistic(median),
+    q3: formatStatistic(q3)
+  });
 
   return {
     animation: false,
     aria: {
       enabled: true,
       label: {
-        description: `Dispersão de ${entity.name} no tempo: ${formatAnalysisCount(
-          analyses.length
-        )} de ${period}. ${quartiles}. ${describeOutliers(outliers)}`
+        description: i18n.t('dashboards:distribution.chart.scatter-aria', {
+          name: entity.name,
+          amount: formatAnalysisCount(analyses.length),
+          period,
+          quartiles,
+          outliers: describeOutliers(outliers)
+        })
       }
     },
     tooltip: {
@@ -357,10 +380,10 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
       ...LEGEND,
       top: 0,
       data: [
-        { name: 'Análise', icon: 'circle' },
-        { name: 'Valor discrepante', icon: 'circle' },
+        { name: i18n.t('dashboards:distribution.chart.analysis'), icon: 'circle' },
+        { name: i18n.t('dashboards:distribution.chart.outlier'), icon: 'circle' },
         {
-          name: 'Q1 a Q3',
+          name: i18n.t('dashboards:distribution.chart.q1-q3'),
           icon: 'rect',
           itemStyle: { color: DISTRIBUTION_COLORS.boxFill, borderColor: DISTRIBUTION_COLORS.density, borderWidth: 1 }
         }
@@ -379,7 +402,7 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
     series: [
       {
         id: 'analyses',
-        name: 'Análise',
+        name: i18n.t('dashboards:distribution.chart.analysis'),
         type: 'scatter',
         symbolSize: 7,
         itemStyle: { color: DISTRIBUTION_COLORS.density },
@@ -387,7 +410,7 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
       },
       {
         id: 'outliers',
-        name: 'Valor discrepante',
+        name: i18n.t('dashboards:distribution.chart.outlier'),
         type: 'scatter',
         symbolSize: 9,
         ...OUTLIER_STYLE,
@@ -395,7 +418,7 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
       },
       {
         id: 'iqr',
-        name: 'Q1 a Q3',
+        name: i18n.t('dashboards:distribution.chart.q1-q3'),
         type: 'line',
         data: [],
         itemStyle: { color: DISTRIBUTION_COLORS.boxFill },
@@ -405,7 +428,7 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
       },
       {
         id: 'median',
-        name: 'Mediana',
+        name: i18n.t('dashboards:distribution.chart.median'),
         type: 'line',
         data: [],
         markLine:
@@ -422,7 +445,7 @@ export function formatScatterOptions(entity: DistributionEntity, histogram: Hist
                   // fundo claro para o rótulo não se misturar com os pontos que passam por trás dele
                   backgroundColor: 'rgba(255, 255, 255, 0.85)',
                   padding: [1, 4],
-                  formatter: `Mediana ${formatStatistic(median)}`
+                  formatter: i18n.t('dashboards:distribution.chart.median-line', { value: formatStatistic(median) })
                 },
                 data: [{ yAxis: median }]
               }
@@ -479,24 +502,35 @@ interface LevelOutlierPoint extends OutlierGroup {
 
 /** Entidade e valor e data de cada análise do ponto, escapados porque o tooltip do ECharts é HTML. */
 export function formatLevelOutlierTooltip({ row, analyses }: LevelOutlierPoint): string {
-  const title = analyses.length === 1 ? 'Valor discrepante' : `${formatCount(analyses.length)} valores discrepantes`;
+  const title =
+    analyses.length === 1
+      ? i18n.t('dashboards:distribution.chart.outlier')
+      : i18n.t('dashboards:distribution.chart.outliers-count', {
+          count: analyses.length,
+          formatted: formatCount(analyses.length)
+        });
   return [
     `<span style="color:${DISTRIBUTION_COLORS.outlier};font-weight:bold">${title}</span>`,
     escapeHtml(row.entity.name),
-    ...analyses.map(
-      (analysis) => `<strong>${formatStatistic(analysis.value)}</strong> em ${formatAnalysisDateTime(analysis.date)}`
+    ...analyses.map((analysis) =>
+      i18n.t('dashboards:distribution.chart.outlier-tooltip-at', {
+        value: formatStatistic(analysis.value),
+        date: formatAnalysisDateTime(analysis.date)
+      })
     )
   ].join('<br/>');
 }
 
 function describeBoxplotRow({ entity, stats }: LevelBoxplotRow): string {
   const count = stats.outliers.length;
-  let outliers = `${formatCount(count)} valores discrepantes`;
-  if (count === 0) outliers = 'nenhum valor discrepante';
-  else if (count === 1) outliers = '1 valor discrepante';
-  return `${entity.name}: mediana ${formatStatistic(stats.median)}, Q1 ${formatStatistic(
-    stats.q1
-  )} e Q3 ${formatStatistic(stats.q3)}, ${outliers}`;
+  const outliers = i18n.t('dashboards:distribution.chart.outliers-count', { count, formatted: formatCount(count) });
+  return i18n.t('dashboards:distribution.chart.boxplot-row', {
+    name: entity.name,
+    median: formatStatistic(stats.median),
+    q1: formatStatistic(stats.q1),
+    q3: formatStatistic(stats.q3),
+    outliers
+  });
 }
 
 /**
@@ -512,18 +546,25 @@ export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Hi
   const outliers: LevelOutlierPoint[] = rows.flatMap((row) =>
     groupOutliers(row.stats.outliers, tolerance).map((group) => ({ ...group, row }))
   );
-  let childrenSentence = '';
-  if (children.length === 1) childrenSentence = ' e do filho no modelo';
-  else if (children.length > 1) childrenSentence = ` e dos ${formatCount(children.length)} filhos no modelo`;
+  const childrenSentence = children.length
+    ? i18n.t('dashboards:distribution.chart.children', {
+        count: children.length,
+        formatted: formatCount(children.length)
+      })
+    : '';
 
   return {
     animation: false,
     aria: {
       enabled: true,
       label: {
-        description: `Boxplot de ${chosen.entity.name}${childrenSentence}, de ${formatAxisValue(
-          histogram.min
-        )} a ${formatAxisValue(histogram.max)}. ${rows.map(describeBoxplotRow).join('; ')}.`
+        description: i18n.t('dashboards:distribution.chart.boxplot-aria', {
+          name: chosen.entity.name,
+          children: childrenSentence,
+          min: formatAxisValue(histogram.min),
+          max: formatAxisValue(histogram.max),
+          rows: rows.map(describeBoxplotRow).join('; ')
+        })
       }
     },
     tooltip: { trigger: 'item', confine: true },
@@ -557,7 +598,7 @@ export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Hi
     series: [
       {
         id: 'boxplot',
-        name: 'Boxplot',
+        name: i18n.t('dashboards:distribution.chart.boxplot'),
         type: 'boxplot',
         boxWidth: [10, 20],
         data: rows.map(({ stats }, index) => ({
@@ -574,7 +615,7 @@ export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Hi
       },
       {
         id: 'outliers',
-        name: 'Valor discrepante',
+        name: i18n.t('dashboards:distribution.chart.outlier'),
         type: 'scatter',
         z: 3,
         symbolSize: outlierSymbolSize(outliers),

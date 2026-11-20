@@ -9,12 +9,14 @@ import { AuthLayout } from '@layouts/auth';
 import AcademicNotice from '@components/AcademicNotice';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
+import { useTranslation } from 'react-i18next';
 
 const PRIMARY_MAIN = 'primary.main';
 
 type OAuthProvider = 'github' | 'gitlab';
 
 const Auth: React.FC = () => {
+  const { t } = useTranslation('auth');
   const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null);
 
   // O botão Voltar do navegador restaura esta página do cache (bfcache) com os botões ainda desabilitados.
@@ -49,7 +51,7 @@ const Auth: React.FC = () => {
             MeasureSoftGram
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Venha conferir a saúde do seu produto de software
+            {t('login.tagline')}
           </Typography>
         </Box>
 
@@ -84,7 +86,7 @@ const Auth: React.FC = () => {
             }
           }}
         >
-          {loadingProvider === 'github' ? 'Validando...' : 'LOGIN COM GITHUB'}
+          {loadingProvider === 'github' ? t('login.validating') : t('login.github')}
         </Button>
 
         <Button
@@ -116,7 +118,7 @@ const Auth: React.FC = () => {
             },
           }}
         >
-          {loadingProvider === 'gitlab' ? 'Validando...' : 'LOGIN COM GITLAB'}
+          {loadingProvider === 'gitlab' ? t('login.validating') : t('login.gitlab')}
         </Button>
       </Box>
     </AuthLayout>

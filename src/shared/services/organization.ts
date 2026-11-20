@@ -2,6 +2,7 @@ import { AxiosError } from 'axios';
 import type { Organization } from '@customTypes/organization';
 import api from './api';
 import { DuplicateMessages, saveError } from './saveError';
+import i18n from '../i18n/i18n';
 
 export interface OrganizationFormData {
   id?: string;
@@ -21,8 +22,18 @@ export type ResultError = { type: 'error'; error: Error | AxiosError };
 export type Result<T> = ResultSuccess<T> | ResultError;
 
 const ORGANIZATION_DUPLICATES: DuplicateMessages = {
-  name: { server: 'Organization with this name already exists.', message: 'Já existe uma organização com este nome.' },
-  key: { server: 'Organization with this key already exists.', message: 'Já existe uma organização com esta chave.' }
+  name: {
+    server: 'Organization with this name already exists.',
+    get message() {
+      return i18n.t('organization:errors.duplicate-name');
+    }
+  },
+  key: {
+    server: 'Organization with this key already exists.',
+    get message() {
+      return i18n.t('organization:errors.duplicate-key');
+    }
+  }
 };
 
 // O GitLab manda X-Next-Page vazio na última página e omite X-Total-Pages acima de 10 mil itens.
@@ -46,7 +57,7 @@ class OrganizationQuery {
       const response = await api.post('/v1/organizations/', data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      return { type: 'error', error: saveError(err, ORGANIZATION_DUPLICATES, 'Ocorreu um erro ao criar organização.') };
+      return { type: 'error', error: saveError(err, ORGANIZATION_DUPLICATES, i18n.t('organization:errors.create')) };
     }
   }
 
@@ -67,7 +78,7 @@ class OrganizationQuery {
     } catch (err) {
       return {
         type: 'error',
-        error: saveError(err, ORGANIZATION_DUPLICATES, 'Ocorreu um erro ao atualizar organização.')
+        error: saveError(err, ORGANIZATION_DUPLICATES, i18n.t('organization:errors.update'))
       };
     }
   }

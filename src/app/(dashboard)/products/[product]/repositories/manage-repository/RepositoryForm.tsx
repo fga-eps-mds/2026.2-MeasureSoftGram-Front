@@ -145,7 +145,7 @@ const RepositoryForm: React.FC = () => {
       }
 
       if (result.type === 'success') {
-        toast.success(isEditMode ? t('edit.sucess') : t('register.sucess'));
+        toast.success(isEditMode ? t('edit.success') : t('register.success'));
         void router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}/repositories`);
       } else if (result.type === 'error') {
         handleResultError(result.error as AxiosError<ApiErrorResponse>);
@@ -156,23 +156,27 @@ const RepositoryForm: React.FC = () => {
   };
 
   function handleResultError(error: AxiosError<ApiErrorResponse>) {
-    let errorMsg = `Erro ao criar/atualizar ${terms.repository}.`;
+    let errorMsg = t('form-errors.save', { repository: terms.repository });
     if (error.response) {
       const errorCode = error.response.status;
       const errorData = error.response.data;
 
-      if (errorCode === 400 && errorData.non_field_errors && errorData.non_field_errors.includes("Repository with this name already exists.")) {
-        errorMsg = `Já existe um ${terms.repository} com este nome.`;
+      if (
+        errorCode === 400 &&
+        errorData.non_field_errors &&
+        errorData.non_field_errors.includes('Repository with this name already exists.')
+      ) {
+        errorMsg = t('form-errors.duplicate', { repository: terms.repository });
       }
 
       if (errorCode === 400 && errorData.url) {
         const urlError = errorData.url[0];
-        if (urlError === "The URL must start with http or https.") {
-          errorMsg = 'A URL deve começar com http ou https.';
+        if (urlError === 'The URL must start with http or https.') {
+          errorMsg = t('form-errors.url-scheme');
         } else if (urlError === "The repository's URL is not accessible.") {
-          errorMsg = `A URL do ${terms.repository} não é acessível.`;
+          errorMsg = t('form-errors.url-inaccessible', { repository: terms.repository });
         } else if (urlError === "Unable to verify the repository's URL.") {
-          errorMsg = `Não foi possível verificar a URL do ${terms.repository}.`;
+          errorMsg = t('form-errors.url-unverified', { repository: terms.repository });
         }
       }
     }
@@ -183,10 +187,10 @@ const RepositoryForm: React.FC = () => {
   }
 
   function handleCatchError(error: any) {
-    let errorMsg = `Erro desconhecido ao criar ${terms.repository}.`;
+    let errorMsg = t('form-errors.unknown', { repository: terms.repository });
     if (axios.isAxiosError(error) && error.response) {
       const apiError = error.response.data as ApiErrorResponse;
-      errorMsg = apiError.non_field_errors?.[0] || `Erro ao criar ${terms.repository}.`;
+      errorMsg = apiError.non_field_errors?.[0] || t('form-errors.create', { repository: terms.repository });
     }
 
     toast.error(errorMsg);
