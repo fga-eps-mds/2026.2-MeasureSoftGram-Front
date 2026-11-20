@@ -145,7 +145,7 @@ const RepositoryForm: React.FC = () => {
       }
 
       if (result.type === 'success') {
-        toast.success(isEditMode ? t('edit.sucess') : t('register.sucess'));
+        toast.success(isEditMode ? t('edit.success') : t('register.success'));
         void router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}/repositories`);
       } else if (result.type === 'error') {
         handleResultError(result.error as AxiosError<ApiErrorResponse>);

@@ -18,8 +18,8 @@
     "titleRest": "digitando o nome dele abaixo.",
     "alert": "Isso irá deletar permanentemente o item ",
     "button": "CONFIRMAR EXCLUSÃO",
-    "toast-sucess": "Repositório excluído com sucesso!",
-    "toast-sucess_gitlab": "Projeto excluído com sucesso!",
+    "toast-success": "Repositório excluído com sucesso!",
+    "toast-success_gitlab": "Projeto excluído com sucesso!",
     "toast-error": "Erro ao excluir o repositório.",
     "toast-error_gitlab": "Erro ao excluir o projeto."
   },
@@ -33,8 +33,8 @@
     "url_gitlab": "URL do Projeto",
     "platform": "Plataforma",
     "save": "Salvar Alterações",
-    "sucess": "Repositório atualizado com sucesso!",
-    "sucess_gitlab": "Projeto atualizado com sucesso!",
+    "success": "Repositório atualizado com sucesso!",
+    "success_gitlab": "Projeto atualizado com sucesso!",
     "product": "Produto"
   },
   "register": {
@@ -42,8 +42,8 @@
     "title_gitlab": "Cadastro de Projeto",
     "create": "Criar Repositório",
     "create_gitlab": "Criar Projeto",
-    "sucess": "Repositório criado com sucesso",
-    "sucess_gitlab": "Projeto criado com sucesso"
+    "success": "Repositório criado com sucesso",
+    "success_gitlab": "Projeto criado com sucesso"
   },
   "error": {
     "data": "Erro ao carregar dados do repositório.",
