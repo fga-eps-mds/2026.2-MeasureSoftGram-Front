@@ -6,6 +6,8 @@ import { DistributionLevel } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { DISTRIBUTION_LEVEL_LABELS, DISTRIBUTION_LEVELS } from '@utils/distributionCascade';
 import { useDistributionDashboard } from './useDistributionDashboard';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 
 const SELECT_PROPS = { MenuProps: { disableScrollLock: true } };
 // em tela estreita a lista ocupa a linha toda, e a página não rola na horizontal
@@ -23,7 +25,9 @@ const REPOSITORY_SX: SxProps<Theme> = {
 
 /** Nome do repositório na lista; sem análise na release, o aviso vai junto. */
 function repositoryLabel(item: { name: string; tsqmi: { value: number | null } }): string {
-  return item.tsqmi.value === null ? `${item.name} (sem análise na release)` : item.name;
+  return item.tsqmi.value === null
+    ? i18n.t('dashboards:distribution.filters.no-analysis', { name: item.name })
+    : item.name;
 }
 const TOGGLE_SX: SxProps<Theme> = {
   textTransform: 'none',
@@ -69,6 +73,7 @@ export default function DistributionFilters({
   setEntity
 }: DistributionFiltersProps) {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
 
   return (
     <Box display="flex" flexDirection="column" gap="16px">
@@ -108,7 +113,7 @@ export default function DistributionFilters({
           onChange={(_event, value: DistributionLevel | null) => {
             if (value) setLevel(value);
           }}
-          aria-label="Nível do modelo"
+          aria-label={t('distribution.filters.level-aria')}
           sx={{ backgroundColor: '#FFFFFF', flexWrap: 'wrap' }}
         >
           {DISTRIBUTION_LEVELS.map((item) => (

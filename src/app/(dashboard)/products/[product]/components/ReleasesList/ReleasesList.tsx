@@ -39,7 +39,7 @@ function ReleasesList() {
       <Styles.Wrapper>
         <Container>
           <Typography variant="h5" marginRight="10px" mb="32px" color="#538BA3" fontWeight="500">
-            Última Release criada
+            {t('release.last-created')}
           </Typography>
 
           <ReleasesTable releaseList={releaseList?.slice(0, 1) ?? []} />

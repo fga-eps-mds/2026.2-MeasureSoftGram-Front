@@ -5,6 +5,7 @@ import { formatDelta, formatScore, MatrixPair } from '@utils/entityMatrix';
 import { getQualityBand, QualityBand } from '@utils/qualityBands';
 import { IMPROVEMENT_COLOR, WORSENING_COLOR } from './ContributionChart';
 import { EntityKey } from './EntityHeatmap';
+import { useTranslation } from 'react-i18next';
 
 const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
@@ -20,15 +21,16 @@ export default function WorstPairsRanking({
   /** Régua do produto, que dá o grau de cada par (US30.02). */
   bands: QualityBand[];
 }) {
+  const { t } = useTranslation('dashboards');
   return (
     <Box sx={{ overflowX: 'auto' }}>
-      <Table size="small" aria-label="Ranking dos piores pares">
+      <Table size="small" aria-label={t('entity.ranking.aria')}>
         <TableHead>
           <TableRow>
             <TableCell sx={{ color: DASHBOARD_COLORS.mutedText }}>#</TableCell>
-            <TableCell sx={{ color: DASHBOARD_COLORS.mutedText }}>Repositório · entidade</TableCell>
+            <TableCell sx={{ color: DASHBOARD_COLORS.mutedText }}>{t('entity.ranking.pair')}</TableCell>
             <TableCell align="right" sx={{ color: DASHBOARD_COLORS.mutedText }}>
-              Valor
+              {t('entity.ranking.value')}
             </TableCell>
             <TableCell align="right" sx={{ color: DASHBOARD_COLORS.mutedText }}>
               Δ

@@ -1,4 +1,5 @@
 import { DistributionLevel } from '@customTypes/product';
+import i18n from '../i18n/i18n';
 
 export interface HistogramBin {
   /** Início da faixa, inclusive. */
@@ -107,11 +108,13 @@ export function formatAxisValue(value: number): string {
 export function formatBinLabel({ start, end }: HistogramBin, histogram: Pick<Histogram, 'unit' | 'integer'>): string {
   if (histogram.unit) {
     const format = (value: number) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-    return `${format(start)} a ${format(end)}`;
+    return i18n.t('range', { start: format(start), end: format(end) });
   }
   if (histogram.integer) {
     const last = clean(end - 1);
-    return last === start ? formatAxisValue(start) : `${formatAxisValue(start)} a ${formatAxisValue(last)}`;
+    return last === start
+      ? formatAxisValue(start)
+      : i18n.t('range', { start: formatAxisValue(start), end: formatAxisValue(last) });
   }
-  return `${formatAxisValue(start)} a ${formatAxisValue(end)}`;
+  return i18n.t('range', { start: formatAxisValue(start), end: formatAxisValue(end) });
 }

@@ -4,6 +4,7 @@ import { UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import { ReleaseInfoForm } from '@customTypes/preConfig';
 import { productQuery } from '@services/product';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   organizationId: string;
@@ -14,6 +15,7 @@ interface Props {
 
 export default function RepositorySelectionForm({ organizationId, productId, watch, setValue }: Props) {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('plan_release');
   const [repositories, setRepositories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,15 +64,15 @@ export default function RepositorySelectionForm({ organizationId, productId, wat
   return (
     <Box mt={2}>
       <Typography variant="h5" color="text.primary" gutterBottom>
-        {`Selecionar ${terms.Repositories} da Release`}
+        {t('repositories.title', { Repositories: terms.Repositories })}
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        {`Selecione quais ${terms.repositories} deste produto farão parte desta release. O modelo matemático e os cálculos de qualidade serão restritos aos ${terms.repositories} selecionados.`}
+        {t('repositories.description', { repositories: terms.repositories })}
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Typography variant="subtitle2" color="text.secondary" mb={2}>
-          {`${terms.Repositories} Disponíveis`}
+          {t('repositories.available', { Repositories: terms.Repositories })}
         </Typography>
         <Box display="flex" flexDirection="column" gap={2}>
           {repositories.map(repo => {
@@ -100,7 +102,7 @@ export default function RepositorySelectionForm({ organizationId, productId, wat
                     {repo.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {repo.description || "Nenhuma descrição"}
+                    {repo.description || t('repositories.no-description')}
                   </Typography>
                 </Box>
               </Paper>

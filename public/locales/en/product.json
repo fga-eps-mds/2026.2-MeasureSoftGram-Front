@@ -19,5 +19,45 @@
     "error-edit": "Error updating the Product!",
     "sucess": "Product created successfully!",
     "error-create": "Error creating the Product!"
+  },
+  "errors": {
+    "duplicate-name": "A product with this name already exists.",
+    "update": "Error updating the product.",
+    "create": "Error creating the product."
+  },
+  "import": {
+    "token-expired": "{{provider}} token expired or invalid.",
+    "namespaces-error": "Error fetching {{organizations}} from {{provider}}.",
+    "organizations-error": "Error loading {{organizations}}.",
+    "organization-import-error": "Error importing {{organization}} into MeasureSoftGram.",
+    "server-error": "Error communicating with the server.",
+    "repository-imported": "{{Repository}} {{name}} imported successfully!",
+    "repository-error": "Error importing {{repository}}: {{message}}",
+    "unknown-error": "Unknown error",
+    "repositories-load-error": "Could not load the {{repositories}}",
+    "retry": "Try Again",
+    "no-products": "{{organization}} has no product registered yet.",
+    "select-organization": "Select {{organization}} and a product to load the corresponding {{repositories}}.",
+    "first-product": "Register First Product",
+    "search": "Search product {{repositories}}...",
+    "tab": {
+      "imported": "Imported",
+      "all": "All",
+      "to-import": "To Import"
+    },
+    "title": "{{Repositories}} Import",
+    "subtitle": "Select {{organization}} and the corresponding product to manage your {{repositories}}.",
+    "loading-organizations": "Loading {{organizations}}...",
+    "provider-organizations": "{{provider}} {{Organizations}}",
+    "missing-organization": "Can't see {{organization}}?",
+    "grant-access": "Grant access or manage permissions on {{provider}}",
+    "loading-products": "Loading products...",
+    "products": "MeasureSoftGram Products",
+    "create-product": "Create Product",
+    "no-repositories": "No {{repository}} associated with this product was found.",
+    "token-expired-title": "{{provider}} token expired or invalid",
+    "reauthorize-description": "To load the {{repositories}}, authorize the application again.",
+    "authorize": "Authorize {{provider}}",
+    "repositories-fetch-error": "Error fetching {{repositories}} from {{provider}}."
   }
 }

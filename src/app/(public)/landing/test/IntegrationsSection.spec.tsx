@@ -1,6 +1,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { IntegrationsSection } from '../components/IntegrationsSection';
+import i18n from '../../../../shared/i18n/i18n';
+
+const t = i18n.getFixedT('pt', 'landing');
 
 // A secao de integracoes lista as ferramentas que o MeasureSoftGram conecta:
 // SonarQube, GitHub, assistentes de IA via MCP e VS Code. O texto vem
@@ -15,8 +18,8 @@ describe('IntegrationsSection', () => {
   it('renderiza o cabecalho da secao', () => {
     render(<IntegrationsSection />);
 
-    expect(screen.getByText('integrations.title')).toBeInTheDocument();
-    expect(screen.getByText('integrations.subtitle')).toBeInTheDocument();
+    expect(screen.getByText('Integra com o seu fluxo de trabalho')).toBeInTheDocument();
+    expect(screen.getByText('O MeasureSoftGram se conecta às ferramentas que o seu time já usa para coletar métricas, visualizar resultados e agir sobre eles.')).toBeInTheDocument();
   });
 
   it('renderiza um cartao para cada integracao suportada', () => {
@@ -24,10 +27,10 @@ describe('IntegrationsSection', () => {
 
     ITEM_KEYS.forEach((key) => {
       expect(
-        screen.getByText(`integrations.items.${key}.title`)
-      ).toBeInTheDocument();
+        screen.getAllByText(t(`integrations.items.${key}.title`)).length
+      ).toBeGreaterThan(0);
       expect(
-        screen.getByText(`integrations.items.${key}.description`)
+        screen.getByText(t(`integrations.items.${key}.description`))
       ).toBeInTheDocument();
     });
   });

@@ -35,18 +35,15 @@ import EntityHeatmap, { QualityGradeLegend, SelectedCell } from './EntityHeatmap
 import ContributionChart from './ContributionChart';
 import WorstPairsRanking from './WorstPairsRanking';
 import RepositoryDetailDialog from './RepositoryDetailDialog';
-
-const TITLE = '4. Análise por Entidade';
-const CARD_TITLE = 'Análise por Entidade';
-export const CONTRIBUTION_TITLE = 'O que puxa a qualidade total para baixo';
-export const RANKING_TITLE = 'Ranking dos piores pares';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 
 const levelNoun = (level: EntityMatrixLevel) => LEVEL_LABELS[level].toLowerCase();
 
 /** "17/08" de uma data da release, para a orientação do estado sem análise. */
 function formatReleaseDay(date: Date | string): string {
   const [, month, day] = toLocalDay(date).split('-');
-  return `${day}/${month}`;
+  return i18n.t('dashboards:entity.day-format', { day, month });
 }
 
 function HeatmapSkeleton() {
@@ -61,6 +58,7 @@ function HeatmapSkeleton() {
 
 /** Frase de leitura do mapa (CA4). */
 function Reading({ matrix }: { matrix: EntityMatrix }) {
+  const { t } = useTranslation('dashboards');
   const reading = getReading(matrix);
   if (!reading) return null;
   const noun = levelNoun(matrix.level);
@@ -72,13 +70,18 @@ function Reading({ matrix }: { matrix: EntityMatrix }) {
       sx={{ backgroundColor: '#F3F4F6', borderRadius: '6px', padding: '10px 14px', fontSize: '14px' }}
     >
       <Typography component="p" fontSize="14px" color={DASHBOARD_COLORS.text}>
-        <strong>Leitura:</strong> {weakest.column.name} é a {noun} mais fraca do produto (média{' '}
-        {formatScore(weakest.mean)}).
+        <strong>{t('entity.reading.label')}</strong>{' '}
+        {t('entity.reading.weakest', { name: weakest.column.name, noun, mean: formatScore(weakest.mean) })}
         {widest && (
           <>
             {' '}
-            {widest.column.name} tem a maior dispersão entre os repositórios: de {formatScore(widest.lowest.value)} (
-            {widest.lowest.repository}) a {formatScore(widest.highest.value)} ({widest.highest.repository}).
+            {t('entity.reading.widest', {
+              name: widest.column.name,
+              low: formatScore(widest.lowest.value),
+              lowRepository: widest.lowest.repository,
+              high: formatScore(widest.highest.value),
+              highRepository: widest.highest.repository
+            })}
           </>
         )}
       </Typography>
@@ -88,6 +91,8 @@ function Reading({ matrix }: { matrix: EntityMatrix }) {
 
 const EntityAnalysisDashboard: React.FC = () => {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
+  const contributionTitle = t('entity.contribution-title');
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
 
@@ -137,40 +142,47 @@ const EntityAnalysisDashboard: React.FC = () => {
     [readyMatrix, contributions, worstPairs, bands]
   );
 
-  const heatmapTitle = `Mapa de calor: repositório × ${levelNoun(level)}`;
+  const heatmapTitle = t('entity.heatmap-title', { noun: levelNoun(level) });
 
   const renderContribution = (data: EntityMatrix) => {
     if (!data.previous_release) {
       return (
         <DashboardCard
-          title={CONTRIBUTION_TITLE}
+          title={contributionTitle}
           status="empty"
-          badgeLabel="Primeira release"
-          emptyTitle={`${data.release.release_name} é a primeira release do produto`}
-          emptyDescription="Não há release anterior para comparar. A contribuição de cada par aparece a partir da próxima release."
+          badgeLabel={t('entity.first-release.badge')}
+          emptyTitle={t('entity.first-release.title', { release: data.release.release_name })}
+          emptyDescription={t('entity.first-release.description')}
         />
       );
     }
     if (contributions.length === 0) {
       return (
         <DashboardCard
-          title={CONTRIBUTION_TITLE}
+          title={contributionTitle}
           status="empty"
-          emptyTitle={`Nenhum par mudou o TSQMI de ${data.previous_release.release_name} para ${data.release.release_name}`}
-          emptyDescription={`A contribuição só aparece quando a entidade tem valor nas duas releases no mesmo ${terms.repository}.`}
+          emptyTitle={t('entity.no-contribution.title', {
+            previous: data.previous_release.release_name,
+            release: data.release.release_name
+          })}
+          emptyDescription={t('entity.no-contribution.description', { repository: terms.repository })}
         />
       );
     }
     return (
       <DashboardCard
-        title={CONTRIBUTION_TITLE}
+        title={contributionTitle}
         status="ready"
         headerAction={csvCharts && <ExportCsvButton dashboard={ENTITY_CSV.dashboard} chart={csvCharts.contribution} />}
       >
         <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-          Quanto cada par {terms.repository} × {levelNoun(data.level)} fez o TSQMI do {terms.repository} subir ou descer
-          de {data.previous_release.release_name} para {data.release.release_name}: o TSQMI recalculado com o valor da
-          release anterior, pelos pesos do modelo. Os {contributions.length} pares que mais mudaram o indicador.
+          {t('entity.contribution-description', {
+            repository: terms.repository,
+            noun: levelNoun(data.level),
+            previous: data.previous_release.release_name,
+            release: data.release.release_name,
+            amount: contributions.length
+          })}
         </Typography>
         <ContributionChart pairs={contributions} />
       </DashboardCard>
@@ -180,23 +192,18 @@ const EntityAnalysisDashboard: React.FC = () => {
   const renderContent = () => {
     if (error) {
       return (
-        <DashboardCard
-          title={CARD_TITLE}
-          status="error"
-          errorTitle="Não foi possível carregar a análise por entidade"
-          onRetry={retry}
-        />
+        <DashboardCard title={t('entity.card-title')} status="error" errorTitle={t('entity.error')} onRetry={retry} />
       );
     }
 
     if (!isLoadingReleases && releases.length === 0) {
       return (
         <DashboardCard
-          title="Produto sem release"
+          title={t('entity.no-release.title')}
           status="empty"
-          badgeLabel="Sem release"
-          emptyTitle="Este produto ainda não tem release"
-          emptyDescription={`A análise compara os ${terms.repositories} dentro do período de uma release. Planeje a primeira release para começar.`}
+          badgeLabel={t('entity.no-release.badge')}
+          emptyTitle={t('entity.no-release.empty-title')}
+          emptyDescription={t('entity.no-release.description', { repositories: terms.repositories })}
           emptyAction={
             <Button
               variant="contained"
@@ -204,7 +211,7 @@ const EntityAnalysisDashboard: React.FC = () => {
               onClick={() => void router.push(`/products/${router.query.product}/releases/create`)}
               sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
             >
-              Planejar release
+              {t('entity.plan-release')}
             </Button>
           }
         />
@@ -220,10 +227,11 @@ const EntityAnalysisDashboard: React.FC = () => {
         <DashboardCard
           title={heatmapTitle}
           status="empty"
-          emptyTitle={`A configuração da release ${
-            matrix.release.release_name
-          } não tem nenhuma entidade no nível ${levelNoun(matrix.level)}`}
-          emptyDescription="Escolha outro nível ou confira a configuração do modelo da release."
+          emptyTitle={t('entity.no-columns.title', {
+            release: matrix.release.release_name,
+            noun: levelNoun(matrix.level)
+          })}
+          emptyDescription={t('entity.no-columns.description')}
         />
       );
     }
@@ -233,8 +241,8 @@ const EntityAnalysisDashboard: React.FC = () => {
         <DashboardCard
           title={heatmapTitle}
           status="empty"
-          emptyTitle={`Este produto ainda não tem ${terms.repositories}`}
-          emptyDescription={`Adicione um ${terms.repository} ao produto e rode a coleta do MeasureSoftGram para comparar os valores.`}
+          emptyTitle={t('entity.no-repositories.title', { repositories: terms.repositories })}
+          emptyDescription={t('entity.no-repositories.description', { repository: terms.repository })}
         />
       );
     }
@@ -244,20 +252,20 @@ const EntityAnalysisDashboard: React.FC = () => {
         <DashboardCard
           title={heatmapTitle}
           status="empty"
-          badgeLabel="Sem análise"
-          emptyTitle={`A release ${matrix.release.release_name} ainda não tem análises`}
-          emptyDescription={`Os valores aparecem quando a Action ou a CLI do MeasureSoftGram roda nos ${
-            terms.repositories
-          } entre ${formatReleaseDay(matrix.release.start_at)} e ${formatReleaseDay(
-            matrix.release.end_at
-          )}, o período da release.`}
+          badgeLabel={t('entity.no-analysis.badge')}
+          emptyTitle={t('entity.no-analysis.title', { release: matrix.release.release_name })}
+          emptyDescription={t('entity.no-analysis.description', {
+            repositories: terms.repositories,
+            start: formatReleaseDay(matrix.release.start_at),
+            end: formatReleaseDay(matrix.release.end_at)
+          })}
         />
       );
     }
 
     const deltaCaption = matrix.previous_release
-      ? ` Δ é a variação em relação à release anterior, ${matrix.previous_release.release_name}.`
-      : ` ${matrix.release.release_name} é a primeira release do produto: sem variação para mostrar.`;
+      ? t('entity.delta.previous', { release: matrix.previous_release.release_name })
+      : t('entity.delta.first', { release: matrix.release.release_name });
 
     return (
       <>
@@ -267,8 +275,8 @@ const EntityAnalysisDashboard: React.FC = () => {
           headerAction={csvCharts && <ExportCsvButton dashboard={ENTITY_CSV.dashboard} chart={csvCharts.heatmap} />}
         >
           <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-            Linhas do pior para o melhor TSQMI. Cada célula mostra o valor normalizado [0, 1] e o grau; clique numa
-            célula para ver a composição da entidade naquele {terms.repository}.{deltaCaption}
+            {t('entity.heatmap-description', { repository: terms.repository })}
+            {deltaCaption}
           </Typography>
           <EntityHeatmap matrix={matrix} highlighted={highlighted} onSelectCell={setSelectedCell} bands={bands} />
           <QualityGradeLegend bands={bands} />
@@ -283,13 +291,13 @@ const EntityAnalysisDashboard: React.FC = () => {
         >
           {renderContribution(matrix)}
           <DashboardCard
-            title={RANKING_TITLE}
+            title={t('entity.ranking-title')}
             status="ready"
             headerAction={
               <Box display="flex" flexWrap="wrap" alignItems="center" gap="8px">
                 <Box sx={{ backgroundColor: DASHBOARD_COLORS.text, borderRadius: '12px', padding: '4px 10px' }}>
                   <Typography fontWeight="bold" fontSize="12px" color="#FFFFFF">
-                    Nível: {LEVEL_LABELS[matrix.level]}
+                    {t('entity.level-badge', { level: LEVEL_LABELS[matrix.level] })}
                   </Typography>
                 </Box>
                 {csvCharts && <ExportCsvButton dashboard={ENTITY_CSV.dashboard} chart={csvCharts.ranking} />}
@@ -297,7 +305,8 @@ const EntityAnalysisDashboard: React.FC = () => {
             }
           >
             <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-              {terms.repository} × {levelNoun(matrix.level)}, do menor valor para o maior.{deltaCaption}
+              {t('entity.ranking-description', { repository: terms.repository, noun: levelNoun(matrix.level) })}
+              {deltaCaption}
             </Typography>
             <WorstPairsRanking pairs={worstPairs} bands={bands} />
           </DashboardCard>
@@ -318,18 +327,16 @@ const EntityAnalysisDashboard: React.FC = () => {
 
   return (
     <>
-      <title>{TITLE}</title>
+      <title>{t('entity.title')}</title>
 
       <Container maxWidth="xl">
         <Box display="flex" flexDirection="column" gap="24px" marginTop="40px" marginBottom="40px">
           <Box display="flex" flexWrap="wrap" alignItems="flex-start" gap="16px">
             <Box flex={1} minWidth="260px">
               <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
-                {TITLE}
+                {t('entity.title')}
               </Typography>
-              <Typography color={DASHBOARD_COLORS.mutedText}>
-                Em qual entidade e em qual nível do modelo a qualidade está caindo
-              </Typography>
+              <Typography color={DASHBOARD_COLORS.mutedText}>{t('entity.subtitle')}</Typography>
             </Box>
             {releases.length > 0 && (
               <ReleaseSelect
@@ -350,7 +357,7 @@ const EntityAnalysisDashboard: React.FC = () => {
             <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent="space-between" gap="12px">
               <Box display="flex" flexWrap="wrap" alignItems="center" gap="12px" minWidth={0} maxWidth="100%">
                 <Typography id="entity-level-label" fontSize="14px" fontWeight="bold" color={DASHBOARD_COLORS.text}>
-                  Nível do modelo
+                  {t('entity.level-label')}
                 </Typography>
                 <Tabs
                   value={level}

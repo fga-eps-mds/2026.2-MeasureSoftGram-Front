@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import MSGAlert from '../../../components/idv/feedback';
 
 export interface QualityBandsUnavailableAlertProps {
@@ -7,14 +8,15 @@ export interface QualityBandsUnavailableAlertProps {
 
 /** Aviso discreto quando as faixas de qualidade do produto não puderam ser carregadas; os gráficos usam o padrão. */
 export default function QualityBandsUnavailableAlert({ onRetry }: Readonly<QualityBandsUnavailableAlertProps>) {
+  const { t } = useTranslation('dashboards');
   return (
     <MSGAlert
       severity="warning"
-      title="Não foi possível carregar as faixas do produto"
-      actionLabel={onRetry ? 'Tentar novamente' : undefined}
+      title={t('bands-unavailable.title')}
+      actionLabel={onRetry ? t('card.retry') : undefined}
       onAction={onRetry}
     >
-      Os gráficos estão sendo exibidos com as faixas padrão.
+      {t('bands-unavailable.description')}
     </MSGAlert>
   );
 }

@@ -34,7 +34,7 @@ function RepositoriesList() {
             {t('title')}
             <IconButton
               color="primary"
-              aria-label={t('add', 'add repository')}
+              aria-label={t('add')}
               style={{
                 backgroundColor: '#538BA3',
                 marginLeft: '80%',

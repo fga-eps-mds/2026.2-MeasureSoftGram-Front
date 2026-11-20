@@ -14,6 +14,10 @@
       "text": "Releases",
       "tooltip": "Releases de cada repositório",
       "tooltip_gitlab": "Releases de cada projeto"
+    },
+    "settings": {
+      "text": "Configurações",
+      "tooltip": "Configurações do produto"
     }
   },
   "tooltip": {
@@ -34,10 +38,12 @@
     "placeholder": "Selecione a organização",
     "placeholder_gitlab": "Selecione o grupo",
     "add-organization": "Adicionar organização",
-    "add-organization_gitlab": "Adicionar grupo"
+    "add-organization_gitlab": "Adicionar grupo",
+    "select": "Selecione {{organization}}"
   },
   "release": {
-    "more": "VER MAIS..."
+    "more": "VER MAIS...",
+    "last-created": "Última Release criada"
   },
   "delete": {
     "title": "Confirmar exclusão",
@@ -47,5 +53,6 @@
     "organization-text2": ", assim como seus produtos e todos os membros associados.",
     "product-text": "Isso irá deletar permanentemente o produto: ",
     "button": "EU LI E ENTENDO OS EFEITOS"
-  }
+  },
+  "user-fallback": "Usuário"
 }

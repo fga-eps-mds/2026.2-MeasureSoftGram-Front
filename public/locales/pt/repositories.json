@@ -76,5 +76,18 @@
     "badge-stale-tooltip_gitlab": "Badge desatualizada a mais de 30 dias. Reexecute o workflow do projeto para gerar a versão mais recente.",
     "badge-error": "Ocorreu um erro ao tentar carregar as informações da badge.",
     "characteristic-badges": "Badges de Características"
+  },
+  "form-errors": {
+    "save": "Erro ao criar/atualizar {{repository}}.",
+    "duplicate": "Já existe um {{repository}} com este nome.",
+    "url-scheme": "A URL deve começar com http ou https.",
+    "url-inaccessible": "A URL do {{repository}} não é acessível.",
+    "url-unverified": "Não foi possível verificar a URL do {{repository}}.",
+    "unknown": "Erro desconhecido ao criar {{repository}}.",
+    "create": "Erro ao criar {{repository}}."
+  },
+  "no-access": "Você não tem acesso a este repositório no {{provider}}.",
+  "confirmation": {
+    "wrong-name": "O nome '{{name}}' está incorreto."
   }
 }

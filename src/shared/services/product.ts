@@ -19,9 +19,15 @@ import { AxiosError, AxiosRequestConfig } from 'axios';
 import type { GetRequest } from '@hooks/useRequest';
 import api from './api';
 import { DuplicateMessages, saveError } from './saveError';
+import i18n from '../i18n/i18n';
 
 const PRODUCT_DUPLICATES: DuplicateMessages = {
-  name: { server: 'Product with this name already exists.', message: 'Já existe um produto com este nome.' }
+  name: {
+    server: 'Product with this name already exists.',
+    get message() {
+      return i18n.t('product:errors.duplicate-name');
+    }
+  }
 };
 
 export interface ProductFormData {
@@ -54,7 +60,7 @@ class ProductQuery {
       const response = await api.put(`/v1/organizations/${data.organizationId}/products/${productId}/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, 'Erro ao atualizar o produto.') };
+      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, i18n.t('product:errors.update')) };
     }
   }
 
@@ -352,7 +358,7 @@ class ProductQuery {
       const response = await api.post(`/v1/organizations/${data.organizationId}/products/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, 'Erro ao criar o produto.') };
+      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, i18n.t('product:errors.create')) };
     }
   }
 

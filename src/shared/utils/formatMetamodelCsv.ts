@@ -1,6 +1,7 @@
 import { QualityModelNode } from '@customTypes/metamodel';
 import { DISTRIBUTION_LEVEL_LABELS } from '@utils/distributionCascade';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
+import { translatedColumns } from '../i18n/translatedRecord';
 
 /** Nome do dashboard e do quadro nos arquivos exportados: `msgram-metamodelo-arvore-<data>.csv`. */
 export const METAMODEL_CSV = {
@@ -19,16 +20,16 @@ export type MetamodelCsvRow = {
   max: number | null;
 };
 
-const METAMODEL_CSV_COLUMNS: CsvColumn<MetamodelCsvRow>[] = [
-  { key: 'release', title: 'Release' },
-  { key: 'level', title: 'Nível' },
-  { key: 'key', title: 'Chave' },
-  { key: 'name', title: 'Nome' },
-  { key: 'parent', title: 'Entidade pai' },
-  { key: 'weight', title: 'Peso (%)' },
-  { key: 'min', title: 'Mínimo' },
-  { key: 'max', title: 'Máximo' }
-];
+const METAMODEL_CSV_COLUMNS: CsvColumn<MetamodelCsvRow>[] = translatedColumns<MetamodelCsvRow>([
+  ['release', 'csv.release'],
+  ['level', 'csv.level'],
+  ['key', 'csv.key'],
+  ['name', 'csv.name'],
+  ['parent', 'csv.parent'],
+  ['weight', 'csv.weight'],
+  ['min', 'csv.min'],
+  ['max', 'csv.max']
+]);
 
 function flattenTree(releaseName: string, node: QualityModelNode, parentName: string | null = null): MetamodelCsvRow[] {
   const isTsqmi = node.type === 'tsqmi';

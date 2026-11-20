@@ -7,19 +7,23 @@ import { Box, Container, Tab, Tabs, Typography } from '@mui/material';
 import { useProductContext } from '@contexts/ProductProvider';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { getPathId } from '@utils/pathDestructer';
+import { useTranslation } from 'react-i18next';
 import QualityBandsTab from './components/QualityBandsTab';
 
-const TABS = [{ value: 'quality-bands', label: 'Faixas de qualidade' }] as const;
+const TABS = [{ value: 'quality-bands', label: 'quality-bands.tab' }] as const;
 
 type SettingsTab = (typeof TABS)[number]['value'];
 
 /** Configurações do produto (US30.01). Por enquanto só a aba "Faixas de qualidade". */
 const ProductSettings: React.FC = () => {
+  const { t } = useTranslation('settings');
   const router = useRouter();
   const { currentProduct } = useProductContext();
   const [organizationId, productId] = getPathId(router.query?.product as string);
   const [tab, setTab] = useState<SettingsTab>('quality-bands');
-  const pageTitle = currentProduct?.name ? `Configurações · ${currentProduct.name}` : 'Configurações';
+  const pageTitle = currentProduct?.name
+    ? t('page.title-with-product', { product: currentProduct.name })
+    : t('page.title');
 
   return (
     <>
@@ -28,7 +32,7 @@ const ProductSettings: React.FC = () => {
 
       <Container sx={{ paddingY: '40px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <Box display="flex" alignItems="baseline" flexWrap="wrap" gap="10px">
-          <Typography variant="h4">Configurações</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           {currentProduct?.name && (
             <Typography variant="h4" fontWeight="500" color="#33568E">
               {currentProduct.name}
@@ -39,7 +43,7 @@ const ProductSettings: React.FC = () => {
         <Tabs
           value={tab}
           onChange={(_event, value: SettingsTab) => setTab(value)}
-          aria-label="Configurações do produto"
+          aria-label={t('page.tabs-aria')}
           sx={{
             borderBottom: `1px solid ${DASHBOARD_COLORS.gridLine}`,
             '& .MuiTab-root': { textTransform: 'none', fontWeight: 'bold' },
@@ -48,7 +52,7 @@ const ProductSettings: React.FC = () => {
           }}
         >
           {TABS.map((item) => (
-            <Tab key={item.value} value={item.value} label={item.label} id={`tab-${item.value}`} />
+            <Tab key={item.value} value={item.value} label={t(item.label)} id={`tab-${item.value}`} />
           ))}
         </Tabs>
 

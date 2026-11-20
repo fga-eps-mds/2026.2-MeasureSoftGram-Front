@@ -7,8 +7,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { SentimentDissatisfied } from '@mui/icons-material';
 import { AuthLayout } from '@layouts/auth';
 import logoImage from '@public/images/svg/logo.svg';
+import { useTranslation } from 'react-i18next';
 
 export default function NotFound() {
+  const { t } = useTranslation();
   return (
     <AuthLayout>
       <Box display="flex" flexDirection="column" alignItems="center" gap="1.5rem" textAlign="center">
@@ -20,16 +22,23 @@ export default function NotFound() {
           <SentimentDissatisfied sx={{ fontSize: '3rem', color: 'text.secondary' }} />
 
           <Typography variant="h5" fontWeight="bold" color="text.primary">
-            Página não encontrada
+            {t('not-found.title')}
           </Typography>
 
           <Typography variant="body1" color="text.secondary">
-            O endereço que você acessou não existe ou foi movido.
+            {t('not-found.description')}
           </Typography>
         </Box>
 
-        <Button component={Link} href="/" fullWidth variant="contained" size="large" sx={{ py: 1.5, textTransform: 'none' }}>
-          Voltar para o início
+        <Button
+          component={Link}
+          href="/"
+          fullWidth
+          variant="contained"
+          size="large"
+          sx={{ py: 1.5, textTransform: 'none' }}
+        >
+          {t('not-found.back')}
         </Button>
       </Box>
     </AuthLayout>

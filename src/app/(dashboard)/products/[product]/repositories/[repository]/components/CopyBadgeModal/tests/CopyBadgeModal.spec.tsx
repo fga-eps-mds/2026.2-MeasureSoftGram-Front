@@ -6,11 +6,6 @@ import CopyBadgeModal from '../CopyBadgeModal';
 
 const mockBadgeUrl = 'http://localhost:8000/organizations/1/products/1/repositories/1/latest-values/tsqmi/badge';
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback: string) => fallback
-  })
-}));
 
 jest.mock('react-toastify', () => ({
   toast: {
@@ -106,7 +101,7 @@ describe('<CopyBadgeModal />', () => {
     render(<CopyBadgeModal />);
     fireEvent.click(screen.getByRole('button'));
 
-    expect(screen.getByText('Ocorreu um erro ao tentar carregar as informações.')).toBeInTheDocument();
+    expect(screen.getByText('Ocorreu um erro ao tentar carregar as informações da badge.')).toBeInTheDocument();
   });
 
   it('should close modal when cancel button is clicked', async () => {

@@ -9,7 +9,10 @@ import { CsvChart } from '@utils/exportCsv';
 import { DISTRIBUTION_CSV, SummaryCsvRow } from '@utils/formatDistributionCsv';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
 
-export const SUMMARY_TITLE = 'Resumo estatístico e IQR';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
+
+export const summaryTitle = () => i18n.t('dashboards:distribution.card.summary');
 
 /** Resumo estatístico das análises (CA8), com a nota sobre o IQR, os discrepantes e a assimetria. */
 export default function DistributionSummary({
@@ -20,12 +23,13 @@ export default function DistributionSummary({
   /** O CSV do quadro, montado pela página; com ele, o cabeçalho ganha o botão "Exportar .csv". */
   csv?: CsvChart<SummaryCsvRow>;
 }) {
+  const { t } = useTranslation('dashboards');
   const warning = getSkewnessWarning(summary);
   const skewness = describeSkewness(summary.skewness);
 
   return (
     <DashboardCard
-      title={SUMMARY_TITLE}
+      title={summaryTitle()}
       status="ready"
       headerAction={csv && <ExportCsvButton dashboard={DISTRIBUTION_CSV.dashboard} chart={csv} />}
     >
@@ -76,13 +80,10 @@ export default function DistributionSummary({
         sx={{ backgroundColor: COLOR_TOKENS.bgEven, borderRadius: '6px', padding: '10px 12px' }}
       >
         <Typography fontSize="12px" color={DASHBOARD_COLORS.text}>
-          O IQR é a distância entre o Q3 e o Q1, onde ficam as 50% análises do meio. Discrepantes são as análises fora
-          dos limites: abaixo de Q1 − 1,5 × IQR ou acima de Q3 + 1,5 × IQR. O desvio padrão e a variância medem o quanto
-          as análises se afastam da média e, por serem amostrais, precisam de pelo menos 2 análises.
+          {t('distribution.summary-card.note')}
         </Typography>
         <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText} marginTop="6px">
-          {skewness ??
-            'Assimetria positiva: a cauda longa fica à direita (valores altos isolados). Negativa: à esquerda (valores baixos isolados).'}
+          {skewness ?? t('distribution.summary-card.skewness-default')}
         </Typography>
       </Box>
     </DashboardCard>

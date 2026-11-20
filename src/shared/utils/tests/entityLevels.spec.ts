@@ -1,9 +1,9 @@
-import { formatEntityValue, NO_DATA_LABEL } from '../entityLevels';
+import { formatEntityValue, noDataLabel } from '../entityLevels';
 
 describe('formatEntityValue', () => {
   it('mostra "sem dado" em vez de zero quando não há valor', () => {
-    expect(formatEntityValue(null, 'characteristic')).toBe(NO_DATA_LABEL);
-    expect(formatEntityValue(null, 'metric', 'PERCENT')).toBe(NO_DATA_LABEL);
+    expect(formatEntityValue(null, 'characteristic')).toBe(noDataLabel());
+    expect(formatEntityValue(null, 'metric', 'PERCENT')).toBe(noDataLabel());
   });
 
   it('usa duas casas para valores de 0 a 1', () => {

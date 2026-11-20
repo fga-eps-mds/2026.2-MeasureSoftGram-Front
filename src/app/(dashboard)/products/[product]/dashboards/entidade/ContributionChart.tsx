@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { formatContribution, MatrixPair } from '@utils/entityMatrix';
+import { useTranslation } from 'react-i18next';
 
 export const WORSENING_COLOR = '#B42318';
 export const IMPROVEMENT_COLOR = '#1F6FB2';
@@ -13,6 +14,7 @@ const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
  * melhora, com a piora à esquerda em vermelho e a melhora à direita em azul.
  */
 export default function ContributionChart({ pairs }: { pairs: MatrixPair[] }) {
+  const { t } = useTranslation('dashboards');
   const largest = Math.max(...pairs.map((pair) => Math.abs(pair.contribution as number)));
 
   return (
@@ -57,10 +59,10 @@ export default function ContributionChart({ pairs }: { pairs: MatrixPair[] }) {
         <span />
         <Box display="flex" justifyContent="space-around">
           <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-            ← piora
+            {t('entity.contribution.worse')}
           </Typography>
           <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-            melhora →
+            {t('entity.contribution.better')}
           </Typography>
         </Box>
       </Box>

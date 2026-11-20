@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Paper, Typography } from '@mui/material';
 import type { ProviderTerms } from '@utils/providerTerminology';
+import { useTranslation } from 'react-i18next';
 
 interface ReauthorizePanelProps {
   terms: ProviderTerms;
@@ -11,13 +12,14 @@ interface ReauthorizePanelProps {
 }
 
 const ReauthorizePanel = ({ terms, isGitlab, onReauthorize, embedded = false }: ReauthorizePanelProps) => {
+  const { t } = useTranslation('product');
   const content = (
     <>
       <Typography variant="h6" color="error" gutterBottom>
-        {`Token do ${terms.providerName} expirado ou inválido`}
+        {t('import.token-expired-title', { provider: terms.providerName })}
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
-        {`Para carregar os ${terms.repositories}, autorize o aplicativo novamente.`}
+        {t('import.reauthorize-description', { repositories: terms.repositories })}
       </Typography>
       <Button
         variant="contained"
@@ -25,7 +27,7 @@ const ReauthorizePanel = ({ terms, isGitlab, onReauthorize, embedded = false }: 
         sx={isGitlab ? { backgroundColor: '#fc6d26', '&:hover': { backgroundColor: '#e24329' } } : undefined}
         color={isGitlab ? undefined : 'primary'}
       >
-        {`Autorizar ${terms.providerName}`}
+        {t('import.authorize', { provider: terms.providerName })}
       </Button>
     </>
   );

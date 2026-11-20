@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import ReactEcharts from '@components/ECharts';
 import { Box, Button, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { QualityModelNode } from '@customTypes/metamodel';
 import {
   buildEChartsTreeOption,
@@ -56,6 +57,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
   onPerformanceMeasured,
   minHeight = 720,
 }) => {
+  const { t, i18n } = useTranslation('dashboards');
   const echartsRef = useRef<any>(null);
   const chartAreaRef = useRef<HTMLDivElement>(null);
   const [isAllExpanded, setIsAllExpanded] = useState(false);
@@ -104,7 +106,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
     if (!treeData) return null;
     const metricCounts = countMetricOccurrences(treeData);
     return enrichTreeNodes(treeData, metricCounts, '', 0, undefined, visibleExpandedPaths);
-  }, [treeData, visibleExpandedPaths]);
+  }, [treeData, visibleExpandedPaths, i18n.language]);
 
   const chartOptions = useMemo(() => {
     return buildEChartsTreeOption(enrichedTree);
@@ -191,7 +193,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
               ●
             </Typography>
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
-              Característica
+              {t('metamodel.tree.type.characteristic')}
             </Typography>
           </Box>
 
@@ -200,7 +202,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
               ■
             </Typography>
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
-              Subcaracterística
+              {t('metamodel.tree.type.subcharacteristic')}
             </Typography>
           </Box>
 
@@ -209,7 +211,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
               ◆
             </Typography>
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
-              Medida
+              {t('metamodel.tree.type.measure')}
             </Typography>
           </Box>
 
@@ -218,7 +220,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
               ▲
             </Typography>
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
-              Métrica
+              {t('metamodel.tree.type.metric')}
             </Typography>
           </Box>
         </Box>
@@ -226,7 +228,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
         {/* Instrução de clique e botão Expandir / Recolher */}
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-            Peso (%) em relação ao nível acima · clique em &apos;+&apos; para abrir um ramo
+            {t('metamodel.tree.instruction')}
           </Typography>
 
           <Button
@@ -248,7 +250,7 @@ export const MetamodelTreeChart: React.FC<MetamodelTreeChartProps> = ({
               },
             }}
           >
-            {isAllExpanded ? 'Recolher tudo' : 'Expandir tudo'}
+            {isAllExpanded ? t('metamodel.tree.collapse-all') : t('metamodel.tree.expand-all')}
           </Button>
         </Box>
       </Box>

@@ -17,10 +17,10 @@ Object {
             <h4
               class="MuiTypography-root MuiTypography-h4 css-1odv9dh-MuiTypography-root"
             >
-              title
+              Repositórios
             </h4>
             <button
-              aria-label="add"
+              aria-label="Adicionar repositório"
               class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorPrimary MuiIconButton-sizeMedium css-1kuq5xv-MuiButtonBase-root-MuiIconButton-root"
               style="background-color: rgb(51, 86, 142); margin-left: auto; border-radius: 50%; width: 25px; height: 25px;"
               tabindex="0"
@@ -73,7 +73,7 @@ Object {
                     style="padding-bottom: 35px;"
                   >
                     <div
-                      aria-label="input-placeholder"
+                      aria-label="Insira o nome do repositório"
                       class="MuiFormControl-root MuiTextField-root text css-1u3bzj6-MuiFormControl-root-MuiTextField-root"
                       data-testid="input"
                       style="min-width: 250px;"
@@ -84,7 +84,7 @@ Object {
                         for="search-bar"
                         id="search-bar-label"
                       >
-                        input-placeholder
+                        Insira o nome do repositório
                       </label>
                       <div
                         class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd css-o9k5xi-MuiInputBase-root-MuiOutlinedInput-root"
@@ -120,7 +120,7 @@ Object {
                             class="css-njhac4-MuiNotchedOutlined-root"
                           >
                             <span>
-                              input-placeholder
+                              Insira o nome do repositório
                             </span>
                           </legend>
                         </fieldset>
@@ -156,10 +156,10 @@ Object {
           <h4
             class="MuiTypography-root MuiTypography-h4 css-1odv9dh-MuiTypography-root"
           >
-            title
+            Repositórios
           </h4>
           <button
-            aria-label="add"
+            aria-label="Adicionar repositório"
             class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorPrimary MuiIconButton-sizeMedium css-1kuq5xv-MuiButtonBase-root-MuiIconButton-root"
             style="background-color: rgb(51, 86, 142); margin-left: auto; border-radius: 50%; width: 25px; height: 25px;"
             tabindex="0"
@@ -212,7 +212,7 @@ Object {
                   style="padding-bottom: 35px;"
                 >
                   <div
-                    aria-label="input-placeholder"
+                    aria-label="Insira o nome do repositório"
                     class="MuiFormControl-root MuiTextField-root text css-1u3bzj6-MuiFormControl-root-MuiTextField-root"
                     data-testid="input"
                     style="min-width: 250px;"
@@ -223,7 +223,7 @@ Object {
                       for="search-bar"
                       id="search-bar-label"
                     >
-                      input-placeholder
+                      Insira o nome do repositório
                     </label>
                     <div
                       class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd css-o9k5xi-MuiInputBase-root-MuiOutlinedInput-root"
@@ -259,7 +259,7 @@ Object {
                           class="css-njhac4-MuiNotchedOutlined-root"
                         >
                           <span>
-                            input-placeholder
+                            Insira o nome do repositório
                           </span>
                         </legend>
                       </fieldset>

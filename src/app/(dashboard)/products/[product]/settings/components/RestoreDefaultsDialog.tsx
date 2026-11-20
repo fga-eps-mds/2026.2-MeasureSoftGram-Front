@@ -3,6 +3,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { DEFAULT_LIMITS, formatLimit } from '@utils/qualityBandsForm';
+import { useTranslation } from 'react-i18next';
 
 interface RestoreDefaultsDialogProps {
   open: boolean;
@@ -11,23 +12,27 @@ interface RestoreDefaultsDialogProps {
 }
 
 const defaults = DEFAULT_LIMITS.map(formatLimit);
-const defaultsText = `${defaults.slice(0, -1).join(', ')} e ${defaults.at(-1)}`;
 
 /** Confirmação do "Restaurar padrão" (CA4). */
 export default function RestoreDefaultsDialog({ open, onCancel, onConfirm }: RestoreDefaultsDialogProps) {
+  const { t } = useTranslation('settings');
+  const defaultsText = t('quality-bands.restore-dialog.limits', {
+    list: defaults.slice(0, -1).join(', '),
+    last: defaults.at(-1)
+  });
   return (
     <Dialog open={open} onClose={onCancel} aria-labelledby="restore-defaults-title" maxWidth="xs">
       <DialogTitle id="restore-defaults-title" fontWeight="bold" color={DASHBOARD_COLORS.text}>
-        Restaurar os limites padrão?
+        {t('quality-bands.restore-dialog.title')}
       </DialogTitle>
       <DialogContent>
         <DialogContentText color={DASHBOARD_COLORS.mutedText}>
-          Os limites entre as faixas voltam a {defaultsText}, e a alteração é salva.
+          {t('quality-bands.restore-dialog.description', { limits: defaultsText })}
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ padding: '0 24px 20px' }}>
         <Button onClick={onCancel} sx={{ textTransform: 'none', color: DASHBOARD_COLORS.primary }}>
-          Cancelar
+          {t('quality-bands.restore-dialog.cancel')}
         </Button>
         <Button
           variant="contained"
@@ -35,7 +40,7 @@ export default function RestoreDefaultsDialog({ open, onCancel, onConfirm }: Res
           onClick={onConfirm}
           sx={{ textTransform: 'none', fontWeight: 'bold', backgroundColor: DASHBOARD_COLORS.primary }}
         >
-          Restaurar padrão
+          {t('quality-bands.restore')}
         </Button>
       </DialogActions>
     </Dialog>

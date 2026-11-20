@@ -123,7 +123,7 @@ describe('RepositoriesTable', () => {
     const confirmationInput = screen.getByRole('textbox');
     fireEvent.change(confirmationInput, { target: { value: repoName } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'delete.button' }));
+    fireEvent.click(screen.getByRole('button', { name: 'CONFIRMAR EXCLUSÃO' }));
 
     await waitFor(() => {
       expect(handleRepositoryAction).toHaveBeenCalled();

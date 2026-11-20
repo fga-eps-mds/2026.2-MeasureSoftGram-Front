@@ -40,7 +40,7 @@ function TsqmiBadge({ latestTSQMI, latestTSQMIBadgeUrl, showCopyButton = true }:
       marginY="16px"
     >
       <Box display="flex" alignItems="center" gap="8px">
-        <Tooltip title={t('repository.badge-tooltip', 'Qualidade do repositório')} placement="bottom">
+        <Tooltip title={t('repository.badge-tooltip')} placement="bottom">
           {/* eslint-disable-next-line @next/next/no-img-element -- o badge é um SVG da API, com a URL pública que vai para o README; o next/image o passaria pelo otimizador */}
           <img
             src={latestTSQMIBadgeUrl}
@@ -49,15 +49,8 @@ function TsqmiBadge({ latestTSQMI, latestTSQMIBadgeUrl, showCopyButton = true }:
           />
         </Tooltip>
         {shouldShowStaleWarning && (
-          <Tooltip
-            title={t('repository.badge-stale-tooltip', 'Badge desatualizada. Execute uma nova análise para atualizar os dados.')}
-            placement="bottom"
-          >
-            <IconButton
-              size="small"
-              aria-label={t('repository.badge-stale-label', 'Badge desatualizada')}
-              color="warning"
-            >
+          <Tooltip title={t('repository.badge-stale-tooltip')} placement="bottom">
+            <IconButton size="small" aria-label={t('repository.badge-stale-label')} color="warning">
               <WarningAmberIcon fontSize="small" />
             </IconButton>
           </Tooltip>

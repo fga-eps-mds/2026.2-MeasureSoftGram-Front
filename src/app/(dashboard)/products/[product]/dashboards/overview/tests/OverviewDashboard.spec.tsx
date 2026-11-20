@@ -383,7 +383,7 @@ describe('<OverviewDashboard />', () => {
       ]);
       expect(downloadedChart().rows[0]).toMatchObject({
         release: '2026.2 R2',
-        characteristic: 'reliability',
+        characteristic: 'Confiabilidade',
         planned: 0.7,
         accomplished: 0.74,
         normDiff: 0.05
@@ -395,7 +395,7 @@ describe('<OverviewDashboard />', () => {
       expect(downloadedChart().rows[1]).toEqual({
         release: '2026.2 R2',
         repository: 'front',
-        characteristic: 'maintainability',
+        characteristic: 'Manutenibilidade',
         planned: 0.8,
         accomplished: null,
         difference: null,
@@ -411,8 +411,8 @@ describe('<OverviewDashboard />', () => {
 
       expect(downloadedChart().name).toBe('radar');
       expect(downloadedChart().rows).toEqual([
-        { release: '2026.2 R2', repository: 'front', characteristic: 'reliability', value: 0.7 },
-        { release: '2026.2 R2', repository: 'front', characteristic: 'maintainability', value: null }
+        { release: '2026.2 R2', repository: 'front', characteristic: 'Confiabilidade', value: 0.7 },
+        { release: '2026.2 R2', repository: 'front', characteristic: 'Manutenibilidade', value: null }
       ]);
     });
 

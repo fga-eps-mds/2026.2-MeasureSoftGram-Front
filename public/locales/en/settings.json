@@ -1,5 +1,33 @@
 {
   "pageTitle": "Settings",
   "apiKeyHeader": "API Access Secret Key",
-  "apiKeyLabel": "Secret Key"
+  "apiKeyLabel": "Secret Key",
+  "page": {
+    "title": "Settings",
+    "title-with-product": "Settings · {{product}}",
+    "tabs-aria": "Product settings"
+  },
+  "quality-bands": {
+    "tab": "Quality bands",
+    "save-error": "Could not save the bands. Try again.",
+    "loading": "Loading the quality bands…",
+    "load-error": "Could not load the quality bands",
+    "description": "The 0 to 1 ruler that classifies the product indicators, from the worst band (E) to the best (A). The end of a band is always the start of the next one.",
+    "admin-only": " Only the organization administrator changes the limits.",
+    "from": "From",
+    "to": "To",
+    "to-aria": "To of band {{band}}",
+    "saved": "Bands saved",
+    "restore": "Restore default",
+    "saving": "Saving…",
+    "save": "Save",
+    "ruler-aria": "Band ruler: {{segments}}",
+    "ruler-segment": "{{grade}} from {{start}} to {{end}}",
+    "restore-dialog": {
+      "title": "Restore the default limits?",
+      "description": "The limits between the bands go back to {{limits}}, and the change is saved.",
+      "limits": "{{list}} and {{last}}",
+      "cancel": "Cancel"
+    }
+  }
 }

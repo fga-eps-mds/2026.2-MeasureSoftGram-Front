@@ -20,6 +20,8 @@ import { QualityLegend } from './QualityLegend';
 import { useFontLoaded } from '@hooks/useFontLoaded';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { ProviderTerms } from '@utils/providerTerminology';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n/i18n';
 
 // Protótipo aprovado pelo PO (US06.01): sem linhas horizontais, a etiqueta da release em cada faixa (sem a de início)
 // e os detalhes da release no ponto do indicador.
@@ -50,21 +52,21 @@ export function getReferenceRelease(releases: PulseRelease[], measurements: Puls
 export function getEmptyMessage(repositoriesCount: number, totalMeasurements: number, terms: ProviderTerms) {
   if (repositoriesCount === 0) {
     return {
-      title: `Este produto ainda não tem ${terms.repositories}`,
-      description: `Importe um ${terms.repository} ao produto para o MeasureSoftGram começar a medir a qualidade.`,
+      title: i18n.t('dashboards:pulse.empty.no-repositories.title', { repositories: terms.repositories }),
+      description: i18n.t('dashboards:pulse.empty.no-repositories.description', { repository: terms.repository })
     };
   }
 
   if (totalMeasurements === 0) {
     return {
-      title: 'Ainda não há medições neste produto',
-      description: `Os valores aparecem depois que a Action do MeasureSoftGram analisa os ${terms.repositories} do produto.`,
+      title: i18n.t('dashboards:pulse.empty.no-measurements.title'),
+      description: i18n.t('dashboards:pulse.empty.no-measurements.description', { repositories: terms.repositories })
     };
   }
 
   return {
-    title: 'Nenhuma medição no período selecionado',
-    description: 'Ajuste as datas De/Até para incluir um intervalo com medições.',
+    title: i18n.t('dashboards:pulse.empty.no-period.title'),
+    description: i18n.t('dashboards:pulse.empty.no-period.description')
   };
 }
 
@@ -75,6 +77,7 @@ interface Props {
 
 export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
   const echartsRef = useRef<any>(null);
   const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
@@ -136,11 +139,11 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
           severity="error"
           action={
             <Button color="inherit" size="small" onClick={retry}>
-              Tentar novamente
+              {t('pulse.retry')}
             </Button>
           }
         >
-          Não foi possível carregar os dados do gráfico de pulso.
+          {t('pulse.error')}
         </Alert>
       </Paper>
     );
@@ -166,11 +169,10 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         )}
         <Box display="flex" flexDirection="column" gap="4px" marginBottom="16px">
           <Typography variant="h6" fontWeight="bold" color="#1F2937">
-            Gráfico MSG — Evolução de Qualidade por Release
+            {t('pulse.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-            Gráfico de pulso por {terms.repository} (indicador TSQMI) • pico = variação entre medições • marcador = Release
-            • ponto = indicador consolidado no encerramento da Release • cor = faixa de qualidade
+            {t('pulse.subtitle', { repository: terms.repository })}
           </Typography>
           <QualityLegend bands={bands} />
         </Box>
@@ -203,7 +205,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
                 name={repo.name}
                 measurements={repo.measurements}
                 topOffset={PULSE_GRID.topOffset + index * (PULSE_GRID.height + PULSE_GRID.gap)}
-                valueLabel="último indicador TSQMI"
+                valueLabel={t('pulse.last-indicator')}
                 showIcon={false}
                 reference={getReferenceRelease(repo.releases, repo.measurements)}
                 bands={bands}
@@ -244,10 +246,14 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
       {/* Footer summary */}
       <Box marginTop="16px">
         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-          {filteredRepositories.length} {terms.repository}
-          {filteredRepositories.length === 1 ? '' : 's'} • {selectedMeasurements}{' '}
-          {selectedMeasurements === 1 ? 'medição' : 'medições'} no período selecionado • {releasesInPeriod}{' '}
-          {releasesInPeriod === 1 ? 'Release' : 'Releases'} no período • última medição: {latestDate || 'N/A'}
+          {t('pulse.footer.line', {
+            repositories: `${filteredRepositories.length} ${
+              filteredRepositories.length === 1 ? terms.repository : terms.repositories
+            }`,
+            measurements: t('pulse.footer.measurements', { count: selectedMeasurements }),
+            releases: t('pulse.footer.releases', { count: releasesInPeriod }),
+            latest: latestDate || 'N/A'
+          })}
         </Typography>
       </Box>
     </Paper>

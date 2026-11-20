@@ -29,7 +29,7 @@ const Repositories: React.FC = () => {
             </Typography>
             <IconButton
               color="primary"
-              aria-label={t('add', 'add repository')}
+              aria-label={t('add')}
               style={{
                 backgroundColor: '#33568E',
                 marginLeft: 'auto',
