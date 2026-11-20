@@ -50,7 +50,7 @@ describe('AuthCallback', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: 'abc', error: null, state: 'xyz' })
     });
-    expect(flash()).toEqual({ type: 'success', text: 'Login realizado com sucesso!' });
+    expect(flash()).toEqual({ type: 'success', text: 'auth:flash.login-success' });
   });
 
   it('state inválido vai para /auth/error', async () => {
@@ -70,7 +70,7 @@ describe('AuthCallback', () => {
     render(<AuthCallback />);
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/auth'));
-    expect(flash()).toEqual({ type: 'info', text: 'Login cancelado' });
+    expect(flash()).toEqual({ type: 'info', text: 'auth:flash.login-cancelled' });
   });
 
   it('cancelamento da reautorização volta para onde a pessoa estava', async () => {
@@ -89,7 +89,7 @@ describe('AuthCallback', () => {
     render(<AuthCallback />);
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/auth'));
-    expect(flash().text).toBe('Sua sessão expirou. Por favor, faça login novamente!');
+    expect(flash().text).toBe('auth:flash.session-expired');
   });
 
   it('sem code nem error volta para /auth sem chamar o servidor', async () => {
@@ -105,10 +105,10 @@ describe('AuthCallback', () => {
     expect(resolveCallbackResult(200, { outcome: 'success' }).destination).toBe('/home');
     expect(resolveCallbackResult(200, { outcome: 'provider_error', redirectTo: null })).toMatchObject({
       destination: '/auth',
-      flash: { type: 'error', text: 'Erro na autorização do provedor.' }
+      flash: { type: 'error', text: 'auth:flash.provider-error' }
     });
     // sem o detalhe técnico do Service (US11.01 CA5)
-    const expired = { destination: '/auth', flash: { type: 'error', text: 'Sua sessão expirou. Por favor, faça login novamente!' } };
+    const expired = { destination: '/auth', flash: { type: 'error', text: 'auth:flash.session-expired' } };
     expect(resolveCallbackResult(400, { error: 'login_failed', message: 'E-mail em uso' })).toMatchObject(expired);
     expect(resolveCallbackResult(502, {})).toMatchObject(expired);
     expect(resolveCallbackResult(400, {})).toMatchObject(expired);

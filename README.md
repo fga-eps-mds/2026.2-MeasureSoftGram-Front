@@ -122,6 +122,9 @@ pnpm i18n:check     # falha (exit 1) e lista as chaves que faltam no en, sem gra
 
 - A extração só **adiciona** chaves. Chaves montadas em tempo de execução (``t(`status.${valor}`)``) não aparecem para o extrator, por isso nenhuma chave é removida automaticamente.
 - Chaves novas entram só no `en`. O `pt` não recebe texto vazio: a tradução é feita no Weblate e, enquanto falta, o i18next mostra o texto em inglês.
+- Fora de componentes React (formatadores de gráfico e de CSV, serviços), use a instância de `src/shared/i18n/i18n.ts` (`i18n.t('dashboards:chave')`). Constantes com texto (rótulos de níveis, colunas de CSV) usam `translatedRecord`/`translatedColumns`, que traduzem na hora da leitura e acompanham a troca de idioma.
+- Mensagens que atravessam uma recarga (o flash do login e do logout) guardam a chave, e o `FlashMessage` traduz no idioma salvo.
+- Os testes do Jest rodam em português: o `tests/jestSetup.ts` carrega o `pt` e o mock do `react-i18next` traduz de verdade, então as asserções usam o texto que a pessoa vê, como nos E2E.
 - O `i18next-cli` exige Node 22.22.2+, 24.15+ ou 26+ (no Node 20 do projeto o `pnpm install` só avisa, mas o comando falha ao iniciar). Os comandos acima rodam na máquina de quem desenvolve; o build e os testes continuam no Node 20. Um job de CI que rode `pnpm i18n:check` precisa usar `actions/setup-node` com `node-version: 24`.
 
 ## Testes E2E

@@ -66,56 +66,42 @@ function CopyBadgeModal({ badgeUrl, badgeLabel = 'MeasureSoftGram' }: CopyBadgeM
           <Typography variant="h6" gutterBottom>
             {t('repository.copy-badge')}
           </Typography>
-          {
-            resolvedBadgeUrl ?
-              <>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {t('repository.badge-instructions')}
-                </Typography>
-                <Box
-                  sx={{
-                    backgroundColor: '#E9E9E9',
-                    borderRadius: 1,
-                    p: 2,
-                    wordBreak: 'break-word',
-                    marginBottom: '10px',
-                    fontFamily: 'monospace',
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  {badgeMarkdown}
-                </Box>
-                <Box display="flex" justifyContent="center" mb={2}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- o badge é um SVG da API, com a URL pública que vai para o README; o next/image o passaria pelo otimizador */}
-                  <img src={resolvedBadgeUrl} alt="Badge Preview" style={{ height: '20px' }} />
-                </Box>
-                <Box
-                  display="flex"
-                  flexDirection="row"
-                  justifyContent="center"
-                  gap="20px"
-                >
-                  <Button
-                    onClick={handleCloseModal}
-                    variant='outlined'
-                  >
-                    {t('repository.badge-cancel')}
-                  </Button>
-                  <Button
-                    variant='contained'
-                    onClick={copyToClipboard}
-                    startIcon={<ContentCopyIcon />}
-                  >
-                    {t('repository.badge-copy-btn')}
-                  </Button>
-                </Box>
-              </>
-              :
-              <Alert sx={{ display: "flex", justifyContent: "center", textAlign: 'center' }} severity="error">
-                {t('repository.badge-error')}
-              </Alert>
-          }
-
+          {resolvedBadgeUrl ? (
+            <>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {t('repository.badge-instructions')}
+              </Typography>
+              <Box
+                sx={{
+                  backgroundColor: '#E9E9E9',
+                  borderRadius: 1,
+                  p: 2,
+                  wordBreak: 'break-word',
+                  marginBottom: '10px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.85rem'
+                }}
+              >
+                {badgeMarkdown}
+              </Box>
+              <Box display="flex" justifyContent="center" mb={2}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- o badge é um SVG da API, com a URL pública que vai para o README; o next/image o passaria pelo otimizador */}
+                <img src={resolvedBadgeUrl} alt="Badge Preview" style={{ height: '20px' }} />
+              </Box>
+              <Box display="flex" flexDirection="row" justifyContent="center" gap="20px">
+                <Button onClick={handleCloseModal} variant="outlined">
+                  {t('repository.badge-cancel')}
+                </Button>
+                <Button variant="contained" onClick={copyToClipboard} startIcon={<ContentCopyIcon />}>
+                  {t('repository.badge-copy-btn')}
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <Alert sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }} severity="error">
+              {t('repository.badge-error')}
+            </Alert>
+          )}
         </Box>
       </Modal>
     </>

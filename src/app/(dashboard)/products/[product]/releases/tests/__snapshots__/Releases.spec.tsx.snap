@@ -17,7 +17,7 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
           <h4
             class="MuiTypography-root MuiTypography-h4 css-1f3qdbj-MuiTypography-root"
           >
-            heading
+            Releases
           </h4>
         </div>
         <div
@@ -43,7 +43,7 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
                 />
               </svg>
             </span>
-            planRelease
+            Planejar release
             <span
               class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
             />
@@ -67,7 +67,7 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
             <p
               class="MuiTypography-root MuiTypography-body1 css-3lak7q-MuiTypography-root"
             >
-              searchButtonLabel
+              Buscar releases
             </p>
             <div
               aria-label="search-bar-label"
@@ -82,7 +82,7 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
                   aria-invalid="false"
                   class="MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd css-19qh8xo-MuiInputBase-input-MuiOutlinedInput-input"
                   id="search-bar"
-                  placeholder="searchPlaceholder"
+                  placeholder="Insira o nome da release"
                   type="text"
                 />
                 <div
@@ -128,10 +128,10 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
             <p
               class="MuiTypography-root MuiTypography-body1 css-3lak7q-MuiTypography-root"
             >
-              startDateLabel
+              Início da release
             </p>
             <div
-              aria-label="startDateTooltip"
+              aria-label="Ao selecionar uma data, são apresentadas todas as releases com datas iniciais exatamente iguais e posteriores às da selecionada"
               class="MuiFormControl-root MuiTextField-root css-1u3bzj6-MuiFormControl-root-MuiTextField-root"
               data-mui-internal-clone-element="true"
             >
@@ -174,10 +174,10 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
             <p
               class="MuiTypography-root MuiTypography-body1 css-3lak7q-MuiTypography-root"
             >
-              endDateLabel
+              Fim da release
             </p>
             <div
-              aria-label="endDateTooltip"
+              aria-label="Ao selecionar uma data, são apresentadas todas as releases com datas finais exatamente iguais e anteriores às da selecionada"
               class="MuiFormControl-root MuiTextField-root css-1u3bzj6-MuiFormControl-root-MuiTextField-root"
               data-mui-internal-clone-element="true"
             >
@@ -228,25 +228,25 @@ exports[`<Releases /> Deve corresponder ao snapshot 1`] = `
                 class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                 scope="col"
               >
-                table.name
+                Nome
               </th>
               <th
                 class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                 scope="col"
               >
-                table.startDate
+                Início da Release
               </th>
               <th
                 class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                 scope="col"
               >
-                table.endDate
+                Fim da Release
               </th>
               <th
                 class="MuiTableCell-root MuiTableCell-head MuiTableCell-sizeMedium css-1ygcj2i-MuiTableCell-root"
                 scope="col"
               >
-                table.details
+                Ver Detalhes
               </th>
             </tr>
           </thead>

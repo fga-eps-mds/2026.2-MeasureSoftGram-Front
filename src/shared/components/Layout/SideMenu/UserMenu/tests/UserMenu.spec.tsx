@@ -26,7 +26,7 @@ describe('<UserMenu />', () => {
     render(<UserMenu username="testuser" />);
 
     fireEvent.click(screen.getByText('testuser'));
-    fireEvent.click(screen.getByText('select.config'));
+    fireEvent.click(screen.getByText('Configurações'));
 
     expect(mockPush).toHaveBeenCalledWith('/config');
   });
@@ -35,7 +35,7 @@ describe('<UserMenu />', () => {
     render(<UserMenu username="testuser" />);
 
     fireEvent.click(screen.getByText('testuser'));
-    fireEvent.click(screen.getByText('select.end-session'));
+    fireEvent.click(screen.getByText('Finalizar Sessão'));
 
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });

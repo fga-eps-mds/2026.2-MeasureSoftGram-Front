@@ -1,5 +1,6 @@
 import type { ProductQualityBand } from '@customTypes/qualityBands';
 import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import i18n from '../i18n/i18n';
 
 /**
  * Formulário das faixas de qualidade do produto (US30.01). As 5 faixas de E a A são separadas por 4 limites:
@@ -11,11 +12,19 @@ import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 export const DEFAULT_LIMITS: number[] = QUALITY_BANDS.slice(0, -1).map((band) => band.max);
 
 export const LIMIT_MESSAGES = {
-  notANumber: 'Use um número entre 0 e 1.',
-  decimals: 'Use no máximo duas casas decimais.',
-  range: 'Use um valor entre 0 e 1.',
-  greaterThan: (value: number) => `O limite precisa ser maior que ${formatLimit(value)}.`,
-  lessThanOne: 'O limite precisa ser menor que 1,00.'
+  get notANumber() {
+    return i18n.t('quality-band.limit.not-a-number');
+  },
+  get decimals() {
+    return i18n.t('quality-band.limit.decimals');
+  },
+  get range() {
+    return i18n.t('quality-band.limit.range');
+  },
+  greaterThan: (value: number) => i18n.t('quality-band.limit.greater-than', { value: formatLimit(value) }),
+  get lessThanOne() {
+    return i18n.t('quality-band.limit.less-than-one');
+  }
 };
 
 /** Limite como aparece na tela: duas casas e vírgula decimal (0,40). */

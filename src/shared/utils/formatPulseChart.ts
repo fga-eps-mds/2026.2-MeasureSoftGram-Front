@@ -2,6 +2,7 @@ import { TsqmiReleasePoint } from '@customTypes/product';
 import { escapeHtml, formatDecimal, formatVariation } from './formatNumber';
 import { getQualityBandClamped, QUALITY_BANDS, QualityBand, QualityGrade } from './qualityBands';
 import { getPulseHalfWidth, PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
+import i18n from '../i18n/i18n';
 
 export const COLOR_TOKENS = {
   primary: '#2B4D6F',
@@ -263,11 +264,11 @@ export function formatPulseChartOptions(
         const startMs = new Date(rel.start_at).getTime();
         if (!isNaN(startMs)) {
           markLineData.push({
-            name: `Início ${labelText}`,
+            name: i18n.t('dashboards:pulse.release-start', { release: labelText }),
             xAxis: startMs,
             label: {
               show: showReleaseLabels && releaseStartLabels,
-              formatter: `Início ${labelText}`,
+              formatter: i18n.t('dashboards:pulse.release-start', { release: labelText }),
               position: 'start',
               backgroundColor: 'rgba(95, 126, 163, 0.85)',
               color: '#FFFFFF',

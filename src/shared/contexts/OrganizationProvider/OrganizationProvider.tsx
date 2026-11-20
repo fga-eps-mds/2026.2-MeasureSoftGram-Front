@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@contexts/Auth';
 import { useLocalStorage } from '@hooks/useLocalStorage';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import i18n from '../../i18n/i18n';
 
 interface Props {
   children: ReactNode;
@@ -107,12 +108,12 @@ export function OrganizationProvider({ children }: Props) {
           void syncGithubOrganizations(organizations);
         }
       } else {
-        toast.error(`Erro ao carregar ${terms.organizations}.`);
+        toast.error(i18n.t('organization:errors.load', { organizations: terms.organizations }));
         setHasFetched(true);
       }
     } catch (error) {
       console.error("Failed to fetch organizations:", error);
-      toast.error(`Erro ao carregar ${terms.organizations}. Por favor, tente novamente.`);
+      toast.error(i18n.t('organization:errors.load-retry', { organizations: terms.organizations }));
       setHasFetched(true);
     } finally {
       setIsLoading(false);

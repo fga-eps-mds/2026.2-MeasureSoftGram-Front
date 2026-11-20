@@ -1,6 +1,7 @@
 import { COLOR_TOKENS, PulseRelease, PulseReleaseHover, getQualityStatus } from '@utils/formatPulseChart';
 import { escapeHtml, formatDecimal, formatQualityGrade, formatVariation } from '@utils/formatOverviewCharts';
 import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import i18n from '../i18n/i18n';
 
 /** +12,50% ou −3,10%, com o sinal de menos tipográfico. */
 export function formatVariationPercent(percent: number): string {
@@ -27,16 +28,18 @@ function formatEndDate(release: PulseRelease): string {
 function formatReleaseVariation(release: PulseRelease): string {
   const { tsqmi } = release;
   if (!tsqmi || tsqmi.previous_value === null || tsqmi.variation === null) {
-    return 'Variação: sem base anterior para comparar';
+    return i18n.t('dashboards:pulse.tooltip.no-base');
   }
 
-  const base = release.previousName ? ` em relação à ${escapeHtml(release.previousName)}` : '';
   const absolute = formatVariation(tsqmi.variation);
-  const text =
-    tsqmi.variation_percent === null
-      ? `${absolute}${base}`
-      : `${formatVariationPercent(tsqmi.variation_percent)} (${absolute})${base}`;
-  return `Variação: <span style="color:${variationColor(tsqmi.variation)}">${text}</span>`;
+  const value =
+    tsqmi.variation_percent === null ? absolute : `${formatVariationPercent(tsqmi.variation_percent)} (${absolute})`;
+  const text = release.previousName
+    ? i18n.t('dashboards:pulse.tooltip.variation-from', { value, release: escapeHtml(release.previousName) })
+    : value;
+  return i18n.t('dashboards:pulse.tooltip.variation', {
+    value: `<span style="color:${variationColor(tsqmi.variation)}">${text}</span>`
+  });
 }
 
 /**
@@ -62,15 +65,20 @@ export function formatPulseReleaseTooltip(
           `<div style="display:flex; align-items:center; gap:6px; margin-top:6px;">`,
           `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:${color};"></span>`,
           `<strong>${escapeHtml(repository)}</strong></div>`,
-          `<div>Indicador TSQMI: ${formatDecimal(value)} (${formatQualityGrade(value, bands)})</div>`,
-          `<div>${formatReleaseVariation(repositoryRelease)}</div>`,
+          `<div>${i18n.t('dashboards:pulse.tooltip.tsqmi', {
+            value: formatDecimal(value),
+            grade: formatQualityGrade(value, bands)
+          })}</div>`,
+          `<div>${formatReleaseVariation(repositoryRelease)}</div>`
         ].join('');
       });
 
       return [
         `<div style="font-weight:bold; font-size:14px;">${escapeHtml(release.name)}</div>`,
-        `<div style="color:${COLOR_TOKENS.mutedText};">Encerramento: ${formatEndDate(release)}</div>`,
-        ...repositories,
+        `<div style="color:${COLOR_TOKENS.mutedText};">${i18n.t('dashboards:pulse.tooltip.end', {
+          date: formatEndDate(release)
+        })}</div>`,
+        ...repositories
       ].join('');
     })
     .join('<div style="margin-top:10px;"></div>');

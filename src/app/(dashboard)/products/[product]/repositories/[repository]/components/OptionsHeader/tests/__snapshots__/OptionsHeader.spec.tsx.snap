@@ -23,7 +23,7 @@ Object {
             tabindex="0"
             type="button"
           >
-            history
+            Histórico
             <span
               class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
             />
@@ -34,7 +34,7 @@ Object {
             tabindex="0"
             type="button"
           >
-            current-scenario
+            Cenário Atual
             <span
               class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
             />
@@ -62,7 +62,7 @@ Object {
           tabindex="0"
           type="button"
         >
-          history
+          Histórico
           <span
             class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
           />
@@ -73,7 +73,7 @@ Object {
           tabindex="0"
           type="button"
         >
-          current-scenario
+          Cenário Atual
           <span
             class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"
           />

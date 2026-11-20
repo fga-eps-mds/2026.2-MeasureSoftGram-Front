@@ -41,7 +41,7 @@ Object {
               </p>
             </div>
             <aside
-              aria-label="academicNotice.title"
+              aria-label="Aviso de ambiente acadêmico"
               class="MuiBox-root css-ogp1r0"
               data-testid="academic-notice-card"
             >
@@ -66,19 +66,30 @@ Object {
                 <p
                   class="MuiTypography-root MuiTypography-body1 css-1cisfaq-MuiTypography-root"
                 >
-                  academicNotice.title
+                  Aviso de ambiente acadêmico
                 </p>
                 <ul
                   class="MuiBox-root css-1wq7gdu"
                 >
                   <li>
-                    academicNotice.experimental
+                    O MeasureSoftGram é um 
+                    <strong>
+                      projeto universitário em fase experimental
+                    </strong>
+                    .
                   </li>
                   <li>
-                    academicNotice.noGuarantee
+                    Não oferecemos 
+                    <strong>
+                      garantias sobre a persistência ou segurança
+                    </strong>
+                     dos dados armazenados.
                   </li>
                   <li>
-                    academicNotice.noRealData
+                    <strong>
+                      Não utilize dados reais, confidenciais ou tokens
+                    </strong>
+                     com permissões sensíveis nesta instância.
                   </li>
                 </ul>
               </div>
@@ -179,7 +190,7 @@ Object {
             </p>
           </div>
           <aside
-            aria-label="academicNotice.title"
+            aria-label="Aviso de ambiente acadêmico"
             class="MuiBox-root css-ogp1r0"
             data-testid="academic-notice-card"
           >
@@ -204,19 +215,30 @@ Object {
               <p
                 class="MuiTypography-root MuiTypography-body1 css-1cisfaq-MuiTypography-root"
               >
-                academicNotice.title
+                Aviso de ambiente acadêmico
               </p>
               <ul
                 class="MuiBox-root css-1wq7gdu"
               >
                 <li>
-                  academicNotice.experimental
+                  O MeasureSoftGram é um 
+                  <strong>
+                    projeto universitário em fase experimental
+                  </strong>
+                  .
                 </li>
                 <li>
-                  academicNotice.noGuarantee
+                  Não oferecemos 
+                  <strong>
+                    garantias sobre a persistência ou segurança
+                  </strong>
+                   dos dados armazenados.
                 </li>
                 <li>
-                  academicNotice.noRealData
+                  <strong>
+                    Não utilize dados reais, confidenciais ou tokens
+                  </strong>
+                   com permissões sensíveis nesta instância.
                 </li>
               </ul>
             </div>

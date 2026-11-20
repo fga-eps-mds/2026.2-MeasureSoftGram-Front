@@ -19,13 +19,19 @@ import { AxiosError, AxiosRequestConfig } from 'axios';
 import type { GetRequest } from '@hooks/useRequest';
 import api from './api';
 import { DuplicateMessages, saveError } from './saveError';
+import i18n from '../i18n/i18n';
 
 const PRODUCT_DUPLICATES: DuplicateMessages = {
-  name: { server: 'Product with this name already exists.', message: 'Já existe um produto com este nome.' }
+  name: {
+    server: 'Product with this name already exists.',
+    get message() {
+      return i18n.t('product:errors.duplicate-name');
+    }
+  }
 };
 
 /** A mensagem do erro de nome repetido: a tela a reconhece por aqui e mostra o texto traduzido (BUG00.04). */
-export const PRODUCT_NAME_EXISTS = PRODUCT_DUPLICATES.name.message;
+export const productNameExistsMessage = (): string => PRODUCT_DUPLICATES.name.message;
 
 export interface ProductFormData {
   name: string;
@@ -57,7 +63,7 @@ class ProductQuery {
       const response = await api.put(`/v1/organizations/${data.organizationId}/products/${productId}/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, 'Erro ao atualizar o produto.') };
+      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, i18n.t('product:errors.update')) };
     }
   }
 
@@ -355,7 +361,7 @@ class ProductQuery {
       const response = await api.post(`/v1/organizations/${data.organizationId}/products/`, data);
       return { type: 'success', value: response?.data };
     } catch (err) {
-      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, 'Erro ao criar o produto.') };
+      return { type: 'error', error: saveError(err, PRODUCT_DUPLICATES, i18n.t('product:errors.create')) };
     }
   }
 

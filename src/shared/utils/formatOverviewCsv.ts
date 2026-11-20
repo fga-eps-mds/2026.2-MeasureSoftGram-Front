@@ -2,6 +2,7 @@ import { CharacteristicComparison } from '@utils/comparePlannedAccomplished';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { TotalItem, TsqmiBar } from '@utils/formatOverviewCharts';
 import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { translatedColumns } from '../i18n/translatedRecord';
 
 /** Nome do dashboard e de cada gráfico nos arquivos exportados: `msgram-overview-<grafico>-<data>.csv`. */
 export const OVERVIEW_CSV = {
@@ -15,16 +16,14 @@ export const OVERVIEW_CSV = {
 /** A release escolhida, no começo de toda linha. */
 type ReleaseField = { release: string };
 
-const RELEASE_COLUMN = { key: 'release', title: 'Release' } as const;
-
 /** `quantity` fica vazia no total que não se aplica à release, como nos outros CSVs do produto. */
 export type TotalsCsvRow = ReleaseField & { total: string; quantity: number | null };
 
-const TOTALS_CSV_COLUMNS: CsvColumn<TotalsCsvRow>[] = [
-  RELEASE_COLUMN,
-  { key: 'total', title: 'Total' },
-  { key: 'quantity', title: 'Quantidade' }
-];
+const TOTALS_CSV_COLUMNS: CsvColumn<TotalsCsvRow>[] = translatedColumns<TotalsCsvRow>([
+  ['release', 'csv.release'],
+  ['total', 'csv.total'],
+  ['quantity', 'csv.quantity']
+]);
 
 /** CSV dos totais da release: uma linha por total que já chegou. */
 export function formatTotalsCsv(releaseName: string, items: TotalItem[]): CsvChart<TotalsCsvRow> {
@@ -39,12 +38,12 @@ export function formatTotalsCsv(releaseName: string, items: TotalItem[]): CsvCha
 
 export type IndicatorCsvRow = ReleaseField & { repository: string; indicator: number; grade: string };
 
-const INDICATOR_CSV_COLUMNS: CsvColumn<IndicatorCsvRow>[] = [
-  RELEASE_COLUMN,
-  { key: 'repository', title: 'Repositório' },
-  { key: 'indicator', title: 'Indicador' },
-  { key: 'grade', title: 'Grau' }
-];
+const INDICATOR_CSV_COLUMNS: CsvColumn<IndicatorCsvRow>[] = translatedColumns<IndicatorCsvRow>([
+  ['release', 'csv.release'],
+  ['repository', 'csv.repository'],
+  ['indicator', 'csv.indicator'],
+  ['grade', 'csv.grade']
+]);
 
 /** CSV do Indicador Total da Qualidade: o valor e o grau (A a E) de cada barra da tela, na mesma ordem. */
 export function formatIndicatorCsv(
@@ -66,11 +65,11 @@ export function formatIndicatorCsv(
 
 type RepositoryFields = ReleaseField & { repository: string; characteristic: string };
 
-const REPOSITORY_COLUMNS = [
-  RELEASE_COLUMN,
-  { key: 'repository', title: 'Repositório' },
-  { key: 'characteristic', title: 'Característica' }
-] as const;
+const REPOSITORY_COLUMNS: [keyof RepositoryFields, string][] = [
+  ['release', 'csv.release'],
+  ['repository', 'csv.repository'],
+  ['characteristic', 'csv.characteristic']
+];
 
 export type PlannedAccomplishedCsvRow = RepositoryFields & {
   planned: number;
@@ -79,13 +78,14 @@ export type PlannedAccomplishedCsvRow = RepositoryFields & {
   normDiff: number | null;
 };
 
-const PLANNED_ACCOMPLISHED_CSV_COLUMNS: CsvColumn<PlannedAccomplishedCsvRow>[] = [
-  ...REPOSITORY_COLUMNS,
-  { key: 'planned', title: 'Planejado (Rp)' },
-  { key: 'accomplished', title: 'Realizado (Rd)' },
-  { key: 'difference', title: 'Diferença' },
-  { key: 'normDiff', title: 'Desvio geral' }
-];
+const PLANNED_ACCOMPLISHED_CSV_COLUMNS: CsvColumn<PlannedAccomplishedCsvRow>[] =
+  translatedColumns<PlannedAccomplishedCsvRow>([
+    ...REPOSITORY_COLUMNS,
+    ['planned', 'csv.planned'],
+    ['accomplished', 'csv.accomplished'],
+    ['difference', 'csv.difference'],
+    ['normDiff', 'csv.norm-diff']
+  ]);
 
 /**
  * CSV do planejado × realizado do repositório escolhido: uma linha por característica planejada, com a diferença
@@ -115,7 +115,10 @@ export function formatPlannedAccomplishedCsv(
 
 export type RadarCsvRow = RepositoryFields & { value: number | null };
 
-const RADAR_CSV_COLUMNS: CsvColumn<RadarCsvRow>[] = [...REPOSITORY_COLUMNS, { key: 'value', title: 'Valor' }];
+const RADAR_CSV_COLUMNS: CsvColumn<RadarCsvRow>[] = translatedColumns<RadarCsvRow>([
+  ...REPOSITORY_COLUMNS,
+  ['value', 'csv.value']
+]);
 
 /** CSV do radar: os mesmos valores do realizado (Rd), um por eixo; o eixo sem realizado fica sem valor, como sem ponto. */
 export function formatRadarCsv(

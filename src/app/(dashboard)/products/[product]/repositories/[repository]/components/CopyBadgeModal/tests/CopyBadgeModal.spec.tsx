@@ -6,11 +6,6 @@ import CopyBadgeModal from '../CopyBadgeModal';
 
 const mockBadgeUrl = 'http://localhost:8000/organizations/1/products/1/repositories/1/latest-values/tsqmi/badge';
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key
-  })
-}));
 
 jest.mock('react-toastify', () => ({
   toast: {
@@ -43,8 +38,8 @@ describe('<CopyBadgeModal />', () => {
     const button = screen.getByRole('button');
     fireEvent.click(button);
 
-    expect(screen.getByText('repository.copy-badge')).toBeInTheDocument();
-    expect(screen.getByText('repository.badge-instructions')).toBeInTheDocument();
+    expect(screen.getByText('Copiar Badge')).toBeInTheDocument();
+    expect(screen.getByText('Cole o código abaixo no README do seu repositório:')).toBeInTheDocument();
   });
 
   it('should display the markdown code in the modal', () => {
@@ -72,12 +67,12 @@ describe('<CopyBadgeModal />', () => {
     render(<CopyBadgeModal />);
     fireEvent.click(screen.getByRole('button'));
 
-    const copyButton = screen.getByText('repository.badge-copy-btn');
+    const copyButton = screen.getByText('Copiar');
     fireEvent.click(copyButton);
 
     await waitFor(() => {
       expect(writeTextMock).toHaveBeenCalledWith(`![MeasureSoftGram](${mockBadgeUrl})`);
-      expect(toast.success).toHaveBeenCalledWith('repository.badge-copied');
+      expect(toast.success).toHaveBeenCalledWith('Badge copiada com sucesso!');
     });
   });
 
@@ -90,11 +85,11 @@ describe('<CopyBadgeModal />', () => {
     render(<CopyBadgeModal />);
     fireEvent.click(screen.getByRole('button'));
 
-    const copyButton = screen.getByText('repository.badge-copy-btn');
+    const copyButton = screen.getByText('Copiar');
     fireEvent.click(copyButton);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('repository.badge-copy-error');
+      expect(toast.error).toHaveBeenCalledWith('Falha ao copiar para a área de transferência.');
     });
   });
 
@@ -106,20 +101,20 @@ describe('<CopyBadgeModal />', () => {
     render(<CopyBadgeModal />);
     fireEvent.click(screen.getByRole('button'));
 
-    expect(screen.getByText('repository.badge-error')).toBeInTheDocument();
+    expect(screen.getByText('Ocorreu um erro ao tentar carregar as informações da badge.')).toBeInTheDocument();
   });
 
   it('should close modal when cancel button is clicked', async () => {
     render(<CopyBadgeModal />);
     fireEvent.click(screen.getByRole('button'));
 
-    expect(screen.getByText('repository.copy-badge')).toBeInTheDocument();
+    expect(screen.getByText('Copiar Badge')).toBeInTheDocument();
 
-    const cancelButton = screen.getByText('repository.badge-cancel');
+    const cancelButton = screen.getByText('Cancelar');
     fireEvent.click(cancelButton);
 
     await waitFor(() => {
-      expect(screen.queryByText('repository.badge-instructions')).not.toBeInTheDocument();
+      expect(screen.queryByText('Cole o código abaixo no README do seu repositório:')).not.toBeInTheDocument();
     });
   });
 });

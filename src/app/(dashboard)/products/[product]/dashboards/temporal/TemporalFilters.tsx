@@ -1,5 +1,6 @@
 import React from 'react';
 import { Checkbox, ListItemText, MenuItem, TextField } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { MultiSelection } from '@utils/historicalValues';
 import { FilterOption } from './useTemporalEvolution';
 
@@ -44,6 +45,7 @@ interface MultiSelectFilterProps {
 
 /** Filtro de vários valores com a opção "Todas", como as variáveis do dashboard do Grafana. */
 export function MultiSelectFilter({ label, value, options, onChange }: MultiSelectFilterProps) {
+  const { t } = useTranslation('dashboards');
   const selected = value === 'all' ? [ALL] : value;
   const names = new Map(options.map((option) => [option.key, option.name]));
 
@@ -65,12 +67,13 @@ export function MultiSelectFilter({ label, value, options, onChange }: MultiSele
       SelectProps={{
         ...SELECT_PROPS,
         multiple: true,
-        renderValue: () => (value === 'all' ? 'Todas' : value.map((key) => names.get(key) ?? key).join(', '))
+        renderValue: () =>
+          value === 'all' ? t('temporal.filter.all') : value.map((key) => names.get(key) ?? key).join(', ')
       }}
     >
       <MenuItem value={ALL}>
         <Checkbox size="small" checked={value === 'all'} />
-        <ListItemText primary="Todas" />
+        <ListItemText primary={t('temporal.filter.all')} />
       </MenuItem>
       {options.map((option) => (
         <MenuItem key={option.key} value={option.key}>

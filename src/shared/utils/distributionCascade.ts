@@ -1,6 +1,7 @@
 import { QualityModelNode } from '@customTypes/metamodel';
 import { DistributionLevel, EntityLevel } from '@customTypes/product';
 import { LEVEL_LABELS } from '@utils/entityLevels';
+import { translatedRecord } from '../i18n/translatedRecord';
 
 /** Níveis do seletor da Distribuição Estatística, do topo do modelo para baixo. */
 export const DISTRIBUTION_LEVELS: DistributionLevel[] = [
@@ -11,7 +12,13 @@ export const DISTRIBUTION_LEVELS: DistributionLevel[] = [
   'metric'
 ];
 
-export const DISTRIBUTION_LEVEL_LABELS: Record<DistributionLevel, string> = { tsqmi: 'TSQMI', ...LEVEL_LABELS };
+export const DISTRIBUTION_LEVEL_LABELS: Record<DistributionLevel, string> = translatedRecord({
+  tsqmi: 'entity.level.tsqmi',
+  characteristic: 'entity.level.characteristic',
+  subcharacteristic: 'entity.level.subcharacteristic',
+  measure: 'entity.level.measure',
+  metric: 'entity.level.metric'
+});
 
 /** Níveis que têm seletor de entidade, na ordem da cascata; o TSQMI é um só e não tem. */
 const ENTITY_LEVELS: EntityLevel[] = ['characteristic', 'subcharacteristic', 'measure', 'metric'];

@@ -29,7 +29,7 @@ describe('CommunitySection', () => {
   it('o card de documentacao abre o link externo de docs em nova aba', () => {
     render(<CommunitySection />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'community.docs.cta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ler a documentação' }));
 
     expect(window.open).toHaveBeenCalledWith(
       EXTERNAL_LINKS.docs,
@@ -41,7 +41,7 @@ describe('CommunitySection', () => {
   it('o card de repositorios abre a organizacao do GitHub em nova aba', () => {
     render(<CommunitySection />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'community.repos.cta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ver no GitHub' }));
 
     expect(window.open).toHaveBeenCalledWith(
       EXTERNAL_LINKS.repositories,
@@ -53,7 +53,7 @@ describe('CommunitySection', () => {
   it('o card de acesso ao app navega para a rota interna de entrada', () => {
     render(<CommunitySection />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'community.app.cta' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Acessar o sistema' }));
 
     expect(mockPush).toHaveBeenCalledWith(APP_ENTRY_ROUTE);
   });

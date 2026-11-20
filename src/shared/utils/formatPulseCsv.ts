@@ -1,18 +1,19 @@
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { PulseMeasurement, PulseRepositoryData } from '@utils/formatPulseChart';
 import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import { translatedColumns } from '../i18n/translatedRecord';
 
 /** Nome do dashboard de cada pulso e do gráfico nos arquivos exportados: `msgram-<produto|repositorio>-pulso-<data>.csv`. */
 export const PULSE_CSV = { product: 'produto', repository: 'repositorio', pulse: 'pulso' };
 
 export type ProductPulseCsvRow = { repository: string; date: string; value: number; grade: string };
 
-const PRODUCT_PULSE_CSV_COLUMNS: CsvColumn<ProductPulseCsvRow>[] = [
-  { key: 'repository', title: 'Repositório' },
-  { key: 'date', title: 'Data' },
-  { key: 'value', title: 'Valor' },
-  { key: 'grade', title: 'Grau' }
-];
+const PRODUCT_PULSE_CSV_COLUMNS: CsvColumn<ProductPulseCsvRow>[] = translatedColumns<ProductPulseCsvRow>([
+  ['repository', 'csv.repository'],
+  ['date', 'csv.date'],
+  ['value', 'csv.value'],
+  ['grade', 'csv.grade']
+]);
 
 export type RepositoryPulseCsvRow = {
   repository: string;
@@ -22,13 +23,13 @@ export type RepositoryPulseCsvRow = {
   grade: string;
 };
 
-const REPOSITORY_PULSE_CSV_COLUMNS: CsvColumn<RepositoryPulseCsvRow>[] = [
-  { key: 'repository', title: 'Repositório' },
-  { key: 'characteristic', title: 'Característica' },
-  { key: 'date', title: 'Data' },
-  { key: 'value', title: 'Valor' },
-  { key: 'grade', title: 'Grau' }
-];
+const REPOSITORY_PULSE_CSV_COLUMNS: CsvColumn<RepositoryPulseCsvRow>[] = translatedColumns<RepositoryPulseCsvRow>([
+  ['repository', 'csv.repository'],
+  ['characteristic', 'csv.characteristic'],
+  ['date', 'csv.date'],
+  ['value', 'csv.value'],
+  ['grade', 'csv.grade']
+]);
 
 function byDate(measurements: PulseMeasurement[]): PulseMeasurement[] {
   return [...measurements].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { toast } from 'react-toastify';
 import { usePathname } from 'next/navigation';
 import FlashMessage from '@components/FlashMessage';
@@ -67,21 +67,21 @@ describe('<FlashMessage />', () => {
     (usePathname as jest.Mock).mockReturnValue('/');
   });
 
-  it('mostra o toast guardado antes da recarga', () => {
+  it('mostra o toast guardado antes da recarga', async () => {
     setFlashMessage({ type: 'success', text: 'Volte logo!' });
 
     render(<FlashMessage />);
 
-    expect(toast.success).toHaveBeenCalledWith('Volte logo!');
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Volte logo!'));
     expect(sessionStorage.getItem(FLASH_MESSAGE_KEY)).toBeNull();
   });
 
-  it.each(['info', 'warning', 'error'] as const)('usa o toast do tipo %s', (type) => {
+  it.each(['info', 'warning', 'error'] as const)('usa o toast do tipo %s', async (type) => {
     setFlashMessage({ type, text: 'aviso' });
 
     render(<FlashMessage />);
 
-    expect(toast[type]).toHaveBeenCalledWith('aviso');
+    await waitFor(() => expect(toast[type]).toHaveBeenCalledWith('aviso'));
   });
 
   it('sem mensagem não mostra nada', () => {
@@ -91,13 +91,31 @@ describe('<FlashMessage />', () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it('lê de novo a cada navegação do cliente, sem recarga', () => {
+  it('lê de novo a cada navegação do cliente, sem recarga', async () => {
     const { rerender } = render(<FlashMessage />);
 
     setFlashMessage({ type: 'info', text: 'depois' });
     (usePathname as jest.Mock).mockReturnValue('/home');
     rerender(<FlashMessage />);
 
-    expect(toast.info).toHaveBeenCalledWith('depois');
+    await waitFor(() => expect(toast.info).toHaveBeenCalledWith('depois'));
+  });
+
+  it('traduz a chave guardada no idioma salvo', async () => {
+    localStorage.setItem('locale_lang', 'en');
+    setFlashMessage({ type: 'success', text: 'auth:flash.login-success' });
+
+    render(<FlashMessage />);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Signed in successfully!'));
+    localStorage.removeItem('locale_lang');
+  });
+
+  it('sem idioma salvo, traduz em inglês', async () => {
+    setFlashMessage({ type: 'warning', text: 'auth:session-expired' });
+
+    render(<FlashMessage />);
+
+    await waitFor(() => expect(toast.warning).toHaveBeenCalledWith('Your session has expired. Sign in again.'));
   });
 });

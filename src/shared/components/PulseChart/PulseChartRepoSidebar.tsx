@@ -9,6 +9,7 @@ import {
   PULSE_GRID,
 } from '@utils/formatPulseChart';
 import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
+import i18n from '../../i18n/i18n';
 
 interface Props {
   name: string;
@@ -46,7 +47,7 @@ export const PulseChartRepoSidebar: React.FC<Props> = ({
   name,
   measurements,
   topOffset,
-  valueLabel = 'último TSQMI',
+  valueLabel = i18n.t('dashboards:pulse.last-tsqmi'),
   showIcon = true,
   reference,
   bands = QUALITY_BANDS,

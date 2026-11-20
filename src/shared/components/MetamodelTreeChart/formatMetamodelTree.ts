@@ -1,4 +1,5 @@
 import { QualityModelNode, QualityModelNodeType } from '@customTypes/metamodel';
+import i18n from '../../i18n/i18n';
 
 export const METAMODEL_COLORS = {
   tsqmi: '#234361',
@@ -80,10 +81,11 @@ export function enrichTreeNodes(
 
   const currentPath = parentPath ? `${parentPath} › ${node.name}` : node.name;
 
-  let parentWeightLabel = 'Peso';
-  if (node.type === 'characteristic') parentWeightLabel = 'Peso no TSQMI';
-  else if (node.type === 'subcharacteristic') parentWeightLabel = 'Peso na característica';
-  else if (node.type === 'measure') parentWeightLabel = 'Peso na subcaracterística';
+  let parentWeightLabel = i18n.t('dashboards:metamodel.tree.weight');
+  if (node.type === 'characteristic') parentWeightLabel = i18n.t('dashboards:metamodel.tree.weight-tsqmi');
+  else if (node.type === 'subcharacteristic')
+    parentWeightLabel = i18n.t('dashboards:metamodel.tree.weight-characteristic');
+  else if (node.type === 'measure') parentWeightLabel = i18n.t('dashboards:metamodel.tree.weight-subcharacteristic');
 
   // Por padrão: depth 0 (tsqmi) e 1 (characteristic) abertos; depth >= 2 (subcharacteristic) recolhido
   // Se forceCollapseDepth for passado:
@@ -117,13 +119,13 @@ export function formatThresholdSummary(min?: number | null, max?: number | null)
   const hasMax = max !== undefined && max !== null;
 
   if (hasMin && hasMax) {
-    return `mín. ${min} · máx. ${max}`;
+    return i18n.t('dashboards:metamodel.tree.min-max', { min, max });
   }
   if (hasMin) {
-    return `mín. ${min}`;
+    return i18n.t('dashboards:metamodel.tree.min', { min });
   }
   if (hasMax) {
-    return `máx. ${max}`;
+    return i18n.t('dashboards:metamodel.tree.max', { max });
   }
   return '';
 }
@@ -194,7 +196,7 @@ export function estimateLabelWidth(node: EnrichedQualityModelNode): number {
       return (
         Math.max(
           textWidth(`▲  ${node.name || node.key}`, 12),
-          node.isSharedMetric ? textWidth('também em outra medida', 10) + 14 : 0
+          node.isSharedMetric ? textWidth(i18n.t('dashboards:metamodel.tree.shared'), 10) + 14 : 0
         ) + CARD_PADDING_X
       );
   }
@@ -324,7 +326,9 @@ export function buildEChartsTreeOption(rootNode: EnrichedQualityModelNode | null
             }
 
             if (node.type === 'metric') {
-              const sharedLine = node.isSharedMetric ? `\n{metricShared|também em outra medida}` : '';
+              const sharedLine = node.isSharedMetric
+                ? `\n{metricShared|${i18n.t('dashboards:metamodel.tree.shared')}}`
+                : '';
               return `{metricTriangle|▲}  {metricName|${node.name || node.key}}${sharedLine}`;
             }
 

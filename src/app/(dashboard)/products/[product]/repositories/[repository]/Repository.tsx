@@ -20,9 +20,11 @@ import RepositoryPulseChart from './components/RepositoryPulseChart';
 import TsqmiBadge from './components/TsqmiBadge';
 import { useQuery } from './hooks/useQuery';
 import { useRepositoryPulse } from './hooks/useRepositoryPulse';
+import { useTranslation } from 'react-i18next';
 
 const Repository: React.FC = () => {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('repositories');
   const { currentRepository, latestTSQMI, latestTSQMIBadgeUrl, setCharacteristicBadgeUrls } = useRepositoryContext();
   usePreloadECharts();
   const { repositoryNotFound } = useQuery();
@@ -61,7 +63,7 @@ const Repository: React.FC = () => {
       <>
         <title>{terms.Repository}</title>
         <Container sx={{ marginTop: '40px' }}>
-          <Alert severity="warning">Você não tem acesso a este repositório no {terms.providerName}.</Alert>
+          <Alert severity="warning">{t('no-access', { provider: terms.providerName })}</Alert>
         </Container>
       </>
     );

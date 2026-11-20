@@ -2,10 +2,9 @@ import React from 'react';
 import { Box, Button } from '@mui/material';
 import DashboardCard, { SkeletonBlock } from '@components/DashboardCard';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
+import { useTranslation } from 'react-i18next';
 
 /** Textos do estado de erro (CA9): sem detalhes técnicos, com "Tentar novamente". */
-export const DISTRIBUTION_ERROR_CARD_TITLE = 'Falha ao carregar';
-export const DISTRIBUTION_ERROR_TITLE = 'Não foi possível carregar a distribuição';
 
 const COLLECTION_GUIDE_URL = 'https://github.com/fga-eps-mds/MeasureSoftGram-Action';
 const SKELETON_BAR_HEIGHTS = [26, 52, 96, 150, 170, 130, 70, 38, 18, 12];
@@ -13,6 +12,7 @@ const SKELETON_SUMMARY_ROWS = 12;
 
 /** Guia de configuração da coleta: botão com contorno; com href, o MUI desenha um link. */
 export function CollectionGuideLink() {
+  const { t } = useTranslation('dashboards');
   return (
     <Button
       variant="outlined"
@@ -26,7 +26,7 @@ export function CollectionGuideLink() {
         borderColor: DASHBOARD_COLORS.primary
       }}
     >
-      Ver como configurar a coleta
+      {t('common.collection-guide')}
     </Button>
   );
 }
@@ -55,11 +55,12 @@ export function SummarySkeleton() {
 
 /** Cartão de falha ao carregar, com o botão de tentar de novo. */
 export function DistributionErrorCard({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation('dashboards');
   return (
     <DashboardCard
-      title={DISTRIBUTION_ERROR_CARD_TITLE}
+      title={t('distribution.card.error-card')}
       status="error"
-      errorTitle={DISTRIBUTION_ERROR_TITLE}
+      errorTitle={t('distribution.card.error')}
       onRetry={onRetry}
     />
   );

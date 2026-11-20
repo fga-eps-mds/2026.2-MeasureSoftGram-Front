@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 
 import { MeasuresHistoryResult } from '@customTypes/product';
+import i18n from '../i18n/i18n';
 
 const longestHistoryMetricsIndex = (measuresHistoryResults: Array<MeasuresHistoryResult>) =>
   measuresHistoryResults.reduce((prevIndex, historyResult, currentIndex) => {
@@ -32,7 +33,7 @@ const formatMeasuresHistoryChartData = (measuresHistoryResults: Array<MeasuresHi
 
   return {
     title: {
-      text: 'Histórico de Medidas',
+      text: i18n.t('dashboards:measures-history.title'),
       left: 'center'
     },
     tooltip: {

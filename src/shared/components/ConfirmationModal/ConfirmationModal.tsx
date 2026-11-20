@@ -38,7 +38,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   const handleConfirmationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setConfirmationName(e.target.value);
     if (e.target.value !== itemName) {
-      setErrorText(`O nome '${itemName}' está incorreto.`);
+      setErrorText(t('confirmation.wrong-name', { name: itemName }));
     } else {
       setErrorText('');
     }

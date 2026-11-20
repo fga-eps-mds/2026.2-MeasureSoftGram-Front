@@ -5,6 +5,8 @@ import { buildHistogram, Histogram } from '@utils/distributionHistogram';
 import { SUMMARY_STATISTICS } from '@utils/distributionSummary';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { getLevelBoxplotRows } from '@utils/formatDistributionCharts';
+import i18n from '../i18n/i18n';
+import { translatedColumns } from '../i18n/translatedRecord';
 
 /** Nome do dashboard e de cada quadro nos arquivos exportados: `msgram-distribuicao-<quadro>-<data>.csv`. */
 export const DISTRIBUTION_CSV = {
@@ -19,12 +21,12 @@ export const DISTRIBUTION_CSV = {
 /** Os filtros da tela, no começo de toda linha: a release, o repositório, o nível e a entidade. */
 type FilterFields = { release: string; repository: string; level: string; entity: string };
 
-const FILTER_COLUMNS = [
-  { key: 'release', title: 'Release' },
-  { key: 'repository', title: 'Repositório' },
-  { key: 'level', title: 'Nível' },
-  { key: 'entity', title: 'Entidade' }
-] as const;
+const FILTER_COLUMNS: [keyof FilterFields, string][] = [
+  ['release', 'csv.release'],
+  ['repository', 'csv.repository'],
+  ['level', 'csv.level'],
+  ['entity', 'csv.entity']
+];
 
 /** No boxplot, cada linha é uma entidade da tela (a escolhida ou um filho), com o nível dela. */
 function filterFields(distribution: AnalysisDistribution, entity = distribution.entity): FilterFields {
@@ -47,12 +49,12 @@ function entityHistogram(entity: DistributionEntity): Histogram {
 
 export type HistogramCsvRow = FilterFields & { start: number; end: number; count: number };
 
-const HISTOGRAM_CSV_COLUMNS: CsvColumn<HistogramCsvRow>[] = [
+const HISTOGRAM_CSV_COLUMNS: CsvColumn<HistogramCsvRow>[] = translatedColumns<HistogramCsvRow>([
   ...FILTER_COLUMNS,
-  { key: 'start', title: 'Início da faixa' },
-  { key: 'end', title: 'Fim da faixa' },
-  { key: 'count', title: 'Quantidade de análises' }
-];
+  ['start', 'csv.range-start'],
+  ['end', 'csv.range-end'],
+  ['count', 'csv.analyses-count']
+]);
 
 /** CSV do histograma: uma linha por faixa da tela, inclusive as vazias, com o início, o fim e a quantidade de análises. */
 export function formatHistogramCsv(distribution: AnalysisDistribution): CsvChart<HistogramCsvRow> {
@@ -71,11 +73,11 @@ export function formatHistogramCsv(distribution: AnalysisDistribution): CsvChart
 
 export type DensityCsvRow = FilterFields & { value: number; density: number };
 
-const DENSITY_CSV_COLUMNS: CsvColumn<DensityCsvRow>[] = [
+const DENSITY_CSV_COLUMNS: CsvColumn<DensityCsvRow>[] = translatedColumns<DensityCsvRow>([
   ...FILTER_COLUMNS,
-  { key: 'value', title: 'Valor' },
-  { key: 'density', title: 'Densidade' }
-];
+  ['value', 'csv.value'],
+  ['density', 'csv.density']
+]);
 
 /** CSV da curva de densidade: os pontos da curva desenhada; sem linhas quando não há curva (menos de 3 análises). */
 export function formatDensityCsv(distribution: AnalysisDistribution): CsvChart<DensityCsvRow> {
@@ -102,18 +104,18 @@ export type BoxplotCsvRow = FilterFields & {
   outliers: number;
 };
 
-const BOXPLOT_CSV_COLUMNS: CsvColumn<BoxplotCsvRow>[] = [
+const BOXPLOT_CSV_COLUMNS: CsvColumn<BoxplotCsvRow>[] = translatedColumns<BoxplotCsvRow>([
   ...FILTER_COLUMNS,
-  { key: 'p10', title: 'P10' },
-  { key: 'q1', title: 'Q1' },
-  { key: 'median', title: 'Mediana' },
-  { key: 'q3', title: 'Q3' },
-  { key: 'p90', title: 'P90' },
-  { key: 'iqr', title: 'IQR' },
-  { key: 'lower_limit', title: 'Limite inferior' },
-  { key: 'upper_limit', title: 'Limite superior' },
-  { key: 'outliers', title: 'Quantidade de discrepantes' }
-];
+  ['p10', 'csv.p10'],
+  ['q1', 'csv.q1'],
+  ['median', 'csv.median'],
+  ['q3', 'csv.q3'],
+  ['p90', 'csv.p90'],
+  ['iqr', 'csv.iqr'],
+  ['lower_limit', 'csv.lower-limit'],
+  ['upper_limit', 'csv.upper-limit'],
+  ['outliers', 'csv.outliers-count']
+]);
 
 /**
  * CSV do boxplot do nível: uma linha por entidade da tela (a escolhida e os filhos que aparecem), com os percentis,
@@ -143,12 +145,12 @@ export function formatBoxplotCsv(distribution: AnalysisDistribution): CsvChart<B
 
 export type ScatterCsvRow = FilterFields & { date: string; value: number; outlier: string };
 
-const SCATTER_CSV_COLUMNS: CsvColumn<ScatterCsvRow>[] = [
+const SCATTER_CSV_COLUMNS: CsvColumn<ScatterCsvRow>[] = translatedColumns<ScatterCsvRow>([
   ...FILTER_COLUMNS,
-  { key: 'date', title: 'Data da análise' },
-  { key: 'value', title: 'Valor' },
-  { key: 'outlier', title: 'Discrepante' }
-];
+  ['date', 'csv.analysis-date'],
+  ['value', 'csv.value'],
+  ['outlier', 'csv.outlier']
+]);
 
 /** CSV da dispersão no tempo: uma linha por análise, na ordem de data, com a data como o Service devolve. */
 export function formatScatterCsv(distribution: AnalysisDistribution): CsvChart<ScatterCsvRow> {
@@ -160,18 +162,18 @@ export function formatScatterCsv(distribution: AnalysisDistribution): CsvChart<S
       ...filters,
       date: analysis.date,
       value: analysis.value,
-      outlier: analysis.is_outlier ? 'sim' : 'não'
+      outlier: analysis.is_outlier ? i18n.t('csv.yes') : i18n.t('csv.no')
     }))
   };
 }
 
 export type SummaryCsvRow = FilterFields & { statistic: string; value: number | null };
 
-const SUMMARY_CSV_COLUMNS: CsvColumn<SummaryCsvRow>[] = [
+const SUMMARY_CSV_COLUMNS: CsvColumn<SummaryCsvRow>[] = translatedColumns<SummaryCsvRow>([
   ...FILTER_COLUMNS,
-  { key: 'statistic', title: 'Estatística' },
-  { key: 'value', title: 'Valor' }
-];
+  ['statistic', 'csv.statistic'],
+  ['value', 'csv.value']
+]);
 
 /** CSV do resumo estatístico: uma linha por estatística da tela; a que o Service não calcula fica vazia. */
 export function formatSummaryCsv(distribution: AnalysisDistribution): CsvChart<SummaryCsvRow> {

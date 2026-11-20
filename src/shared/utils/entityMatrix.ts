@@ -9,14 +9,31 @@ import {
 import { LEVEL_LABELS } from '@utils/entityLevels';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { getQualityBand, QualityBand } from '@utils/qualityBands';
+import i18n from '../i18n/i18n';
+import { translatedColumns } from '../i18n/translatedRecord';
 
 export const MATRIX_LEVELS: EntityMatrixLevel[] = ['characteristic', 'subcharacteristic', 'measure'];
 
 /** Caminho do nível na hierarquia do modelo (CA2), do TSQMI até o nível escolhido. */
 export const LEVEL_PATHS: Record<EntityMatrixLevel, string[]> = {
-  characteristic: ['TSQMI', 'características'],
-  subcharacteristic: ['TSQMI', 'todas as características', 'subcaracterísticas'],
-  measure: ['TSQMI', 'todas as características', 'todas as subcaracterísticas', 'medidas']
+  get characteristic() {
+    return ['TSQMI', i18n.t('dashboards:entity.path.characteristics')];
+  },
+  get subcharacteristic() {
+    return [
+      'TSQMI',
+      i18n.t('dashboards:entity.path.all-characteristics'),
+      i18n.t('dashboards:entity.path.subcharacteristics')
+    ];
+  },
+  get measure() {
+    return [
+      'TSQMI',
+      i18n.t('dashboards:entity.path.all-characteristics'),
+      i18n.t('dashboards:entity.path.all-subcharacteristics'),
+      i18n.t('dashboards:entity.path.measures')
+    ];
+  }
 };
 
 /** Quantas células ficam destacadas como as maiores contribuições para a queda (CA4). */
@@ -241,16 +258,14 @@ const releaseFields = (matrix: EntityMatrix) => ({
 
 const entityFields = (column: EntityMatrixColumn) => ({ entity: column.name, key: column.key });
 
-const RELEASE_COLUMNS = [
-  { key: 'release', title: 'Release' },
-  { key: 'level', title: 'Nível' }
-] as const;
+const RELEASE_COLUMN: ['release', string] = ['release', 'csv.release'];
+const LEVEL_COLUMN: ['level', string] = ['level', 'csv.level'];
 
-const ENTITY_COLUMNS = [
-  { key: 'repository', title: 'Repositório' },
-  { key: 'entity', title: 'Entidade' },
-  { key: 'key', title: 'Chave da entidade' }
-] as const;
+const ENTITY_COLUMNS: [['repository', string], ['entity', string], ['key', string]] = [
+  ['repository', 'csv.repository'],
+  ['entity', 'csv.entity'],
+  ['key', 'csv.entity-key']
+];
 
 export type EntityHeatmapCsvRow = {
   release: string;
@@ -267,17 +282,18 @@ export type EntityHeatmapCsvRow = {
   tsqmi_variation: number | null;
 };
 
-const HEATMAP_CSV_COLUMNS: CsvColumn<EntityHeatmapCsvRow>[] = [
-  ...RELEASE_COLUMNS,
+const HEATMAP_CSV_COLUMNS: CsvColumn<EntityHeatmapCsvRow>[] = translatedColumns<EntityHeatmapCsvRow>([
+  RELEASE_COLUMN,
+  LEVEL_COLUMN,
   ...ENTITY_COLUMNS,
-  { key: 'path', title: 'Entidades de cima' },
-  { key: 'weight', title: 'Peso (%)' },
-  { key: 'value', title: 'Valor' },
-  { key: 'grade', title: 'Grau' },
-  { key: 'tsqmi', title: 'Indicador Total da Qualidade' },
-  { key: 'tsqmi_grade', title: 'Grau do indicador' },
-  { key: 'tsqmi_variation', title: 'Variação do indicador' }
-];
+  ['path', 'csv.path'],
+  ['weight', 'csv.weight'],
+  ['value', 'csv.value'],
+  ['grade', 'csv.grade'],
+  ['tsqmi', 'csv.tsqmi'],
+  ['tsqmi_grade', 'csv.tsqmi-grade'],
+  ['tsqmi_variation', 'csv.tsqmi-variation']
+]);
 
 /**
  * CSV do mapa de calor: uma linha por célula, na ordem da tela (linhas do pior para o melhor TSQMI), com a célula
@@ -323,15 +339,15 @@ export type EntityContributionCsvRow = {
   contribution: number | null;
 };
 
-const CONTRIBUTION_CSV_COLUMNS: CsvColumn<EntityContributionCsvRow>[] = [
-  RELEASE_COLUMNS[0],
-  { key: 'previous_release', title: 'Release anterior' },
-  RELEASE_COLUMNS[1],
+const CONTRIBUTION_CSV_COLUMNS: CsvColumn<EntityContributionCsvRow>[] = translatedColumns<EntityContributionCsvRow>([
+  RELEASE_COLUMN,
+  ['previous_release', 'csv.previous-release'],
+  LEVEL_COLUMN,
   ...ENTITY_COLUMNS,
-  { key: 'value', title: 'Valor' },
-  { key: 'previous_value', title: 'Valor na release anterior' },
-  { key: 'contribution', title: 'Contribuição para a variação do indicador' }
-];
+  ['value', 'csv.value'],
+  ['previous_value', 'csv.previous-value'],
+  ['contribution', 'csv.contribution']
+]);
 
 /** CSV de "O que puxa a qualidade total para baixo": os pares do quadro, na ordem da tela; vazio na primeira release. */
 export function formatEntityContributionCsv(
@@ -368,14 +384,15 @@ export type EntityRankingCsvRow = {
   variation: number | null;
 };
 
-const RANKING_CSV_COLUMNS: CsvColumn<EntityRankingCsvRow>[] = [
-  ...RELEASE_COLUMNS,
-  { key: 'position', title: 'Posição' },
+const RANKING_CSV_COLUMNS: CsvColumn<EntityRankingCsvRow>[] = translatedColumns<EntityRankingCsvRow>([
+  RELEASE_COLUMN,
+  LEVEL_COLUMN,
+  ['position', 'csv.position'],
   ...ENTITY_COLUMNS,
-  { key: 'value', title: 'Valor' },
-  { key: 'grade', title: 'Grau' },
-  { key: 'variation', title: 'Variação' }
-];
+  ['value', 'csv.value'],
+  ['grade', 'csv.grade'],
+  ['variation', 'csv.variation']
+]);
 
 /** CSV do "Ranking dos piores pares": a posição na tela, o valor, o grau e a variação (vazia na primeira release). */
 export function formatEntityRankingCsv(

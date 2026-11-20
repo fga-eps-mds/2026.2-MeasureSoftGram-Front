@@ -29,21 +29,21 @@ describe('Landing', () => {
   it('renderiza as secoes principais da landing', () => {
     render(<Landing />);
 
-    expect(screen.getByText('hero.title')).toBeInTheDocument();
-    expect(screen.getByText('howItWorks.title')).toBeInTheDocument();
-    expect(screen.getByText('integrations.title')).toBeInTheDocument();
-    expect(screen.getByText('value.title')).toBeInTheDocument();
-    expect(screen.getByText('publications.title')).toBeInTheDocument();
-    expect(screen.getByText('community.title')).toBeInTheDocument();
+    expect(screen.getByText('Meça a qualidade do seu software de forma objetiva')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Como funciona' })).toBeInTheDocument();
+    expect(screen.getByText('Integra com o seu fluxo de trabalho')).toBeInTheDocument();
+    expect(screen.getByText('Por que usar o MeasureSoftGram')).toBeInTheDocument();
+    expect(screen.getByText('Base científica do projeto')).toBeInTheDocument();
+    expect(screen.getByText('Conheça mais sobre o projeto')).toBeInTheDocument();
   });
 
   it('exibe o aviso de ambiente academico no topo, antes do header', () => {
     render(<Landing />);
 
-    const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
+    const notice = screen.getByRole('complementary', { name: 'Aviso de ambiente acadêmico' });
     const header = screen.getByRole('banner');
     expect(notice.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(notice).getByRole('link', { name: 'academicNotice.learnMore' })).toHaveAttribute(
+    expect(within(notice).getByRole('link', { name: 'Saiba mais' })).toHaveAttribute(
       'href',
       ACADEMIC_NOTICE_LEARN_MORE_URL
     );
@@ -52,7 +52,7 @@ describe('Landing', () => {
   it('exibe o selo flutuante do aviso academico', () => {
     render(<Landing />);
 
-    expect(screen.getByRole('button', { name: /academicNotice.badge/ })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /Ambiente acadêmico/ })).toHaveAttribute(
       'aria-controls',
       ACADEMIC_NOTICE_BANNER_ID
     );
@@ -61,7 +61,7 @@ describe('Landing', () => {
   it('o CTA principal do hero leva o usuario para /auth', () => {
     render(<Landing />);
 
-    const ctas = screen.getAllByRole('button', { name: 'hero.primaryCta' });
+    const ctas = screen.getAllByRole('button', { name: 'Acessar o sistema' });
     fireEvent.click(ctas[0]);
 
     expect(mockPush).toHaveBeenCalledWith('/auth');
@@ -70,7 +70,7 @@ describe('Landing', () => {
   it('expoe os links externos publicos esperados', () => {
     render(<Landing />);
 
-    const docsLinks = screen.getAllByRole('link', { name: 'nav.docs' });
+    const docsLinks = screen.getAllByRole('link', { name: 'Documentação' });
     expect(docsLinks[0]).toHaveAttribute('href', EXTERNAL_LINKS.docs);
     expect(docsLinks[0]).toHaveAttribute('target', '_blank');
   });

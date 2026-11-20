@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { TimeGranularity, TimeSeries } from '@utils/historicalValues';
+import i18n from '../i18n/i18n';
 
 /** Nome do dashboard e de cada gráfico nos arquivos exportados: `msgram-temporal-<grafico>-<data>.csv`. */
 export const TEMPORAL_CSV = {
@@ -15,11 +16,11 @@ export type TemporalCsvLevel = Exclude<keyof typeof TEMPORAL_CSV, 'dashboard'>;
 
 export type TemporalCsvRow = { repository: string; entity: string; date: string; value: number };
 
-const TEMPORAL_CSV_COLUMNS: CsvColumn<TemporalCsvRow>[] = [
-  { key: 'repository', title: 'Repositório' },
-  { key: 'entity', title: 'Entidade' },
-  { key: 'date', title: 'Data' },
-  { key: 'value', title: 'Valor' }
+const temporalCsvColumns = (): CsvColumn<TemporalCsvRow>[] => [
+  { key: 'repository', title: i18n.t('csv.repository') },
+  { key: 'entity', title: i18n.t('csv.entity') },
+  { key: 'date', title: i18n.t('csv.date') },
+  { key: 'value', title: i18n.t('csv.value') }
 ];
 
 const DATE_FORMATS: Record<TimeGranularity, string> = { day: 'yyyy-MM-dd', month: 'yyyy-MM' };
@@ -36,7 +37,7 @@ export function formatTemporalCsv(
 ): CsvChart<TemporalCsvRow> {
   return {
     name: TEMPORAL_CSV[level],
-    columns: TEMPORAL_CSV_COLUMNS,
+    columns: temporalCsvColumns(),
     rows: series.flatMap(({ name, points }) =>
       points.map(([time, value]) => ({
         repository: repositoryName,

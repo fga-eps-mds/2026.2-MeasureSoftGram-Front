@@ -1,7 +1,7 @@
 import type { AnyCsvChart } from '@utils/exportCsv';
+import i18n from '../i18n/i18n';
 
 /** Título que as colunas de repositório têm nos formatadores dos dashboards (termo do GitHub). */
-const REPOSITORY_COLUMN_TITLE = 'Repositório';
 
 /**
  * Troca o título "Repositório" das colunas pelo termo do provedor da sessão (ex.: "Projeto" no GitLab). Fica fora de
@@ -11,7 +11,7 @@ export function withRepositoryTerm<Chart extends AnyCsvChart>(chart: Chart, repo
   return {
     ...chart,
     columns: chart.columns.map((column) =>
-      column.title === REPOSITORY_COLUMN_TITLE ? { ...column, title: repositoryTerm } : column
+      column.title === i18n.t('csv.repository') ? { ...column, title: repositoryTerm } : column
     )
   };
 }

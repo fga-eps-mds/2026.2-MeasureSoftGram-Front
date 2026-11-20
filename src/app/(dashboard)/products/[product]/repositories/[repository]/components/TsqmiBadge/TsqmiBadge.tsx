@@ -49,15 +49,8 @@ function TsqmiBadge({ latestTSQMI, latestTSQMIBadgeUrl, showCopyButton = true }:
           />
         </Tooltip>
         {shouldShowStaleWarning && (
-          <Tooltip
-            title={t('repository.badge-stale-tooltip')}
-            placement="bottom"
-          >
-            <IconButton
-              size="small"
-              aria-label={t('repository.badge-stale-label')}
-              color="warning"
-            >
+          <Tooltip title={t('repository.badge-stale-tooltip')} placement="bottom">
+            <IconButton size="small" aria-label={t('repository.badge-stale-label')} color="warning">
               <WarningAmberIcon fontSize="small" />
             </IconButton>
           </Tooltip>

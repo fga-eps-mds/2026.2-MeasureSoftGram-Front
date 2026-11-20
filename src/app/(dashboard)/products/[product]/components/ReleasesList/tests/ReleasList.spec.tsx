@@ -56,9 +56,9 @@ describe('<ReleasesList />', () => {
 
     const { queryByText } = render(<ReleasesList />);
 
-    expect(queryByText('table.name')).toBeInTheDocument();
-    expect(queryByText('table.startDate')).toBeInTheDocument();
-    expect(queryByText('table.endDate')).toBeInTheDocument();
+    expect(queryByText('Nome')).toBeInTheDocument();
+    expect(queryByText('Início da Release')).toBeInTheDocument();
+    expect(queryByText('Fim da Release')).toBeInTheDocument();
   });
 
   it('renders the skeleton when loading', () => {
@@ -78,7 +78,7 @@ describe('<ReleasesList />', () => {
     });
 
     const { queryByText } = render(<ReleasesList />);
-    expect(queryByText('table.name')).toBeInTheDocument();
+    expect(queryByText('Nome')).toBeInTheDocument();
   });
 
   it('call pushToReleasesPath when click on button', () => {

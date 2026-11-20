@@ -6,6 +6,7 @@ import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { withRepositoryTerm } from '@utils/csvRepositoryTerm';
 import { AnyCsvChart, downloadCsv, downloadCsvZip } from '@utils/exportCsv';
+import { useTranslation } from 'react-i18next';
 
 const BUTTON_SX = {
   borderColor: DASHBOARD_COLORS.cardBorder,
@@ -27,6 +28,7 @@ export default function ExportCsvButton({
   ariaLabel
 }: Readonly<{ dashboard: string; chart: AnyCsvChart; ariaLabel?: string }>) {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
 
   return (
     <Button
@@ -38,7 +40,7 @@ export default function ExportCsvButton({
       onClick={() => downloadCsv(dashboard, withRepositoryTerm(chart, terms.Repository))}
       sx={BUTTON_SX}
     >
-      Exportar .csv
+      {t('export.csv')}
     </Button>
   );
 }
@@ -48,6 +50,7 @@ export function ExportAllCsvButton({
   dashboard,
   charts
 }: Readonly<{ dashboard: string; charts: ReadonlyArray<AnyCsvChart> }>) {
+  const { t } = useTranslation('dashboards');
   const { terms } = useProviderTerms();
   const [isExporting, setIsExporting] = useState(false);
   const withRows = charts.filter((chart) => chart.rows.length > 0);
@@ -60,7 +63,7 @@ export function ExportAllCsvButton({
         withRows.map((chart) => withRepositoryTerm(chart, terms.Repository))
       );
     } catch {
-      toast.error('Não foi possível gerar o .zip. Tente de novo.');
+      toast.error(t('export.zip-error'));
     } finally {
       setIsExporting(false);
     }
@@ -75,7 +78,7 @@ export function ExportAllCsvButton({
       onClick={() => void handleClick()}
       sx={BUTTON_SX}
     >
-      {isExporting ? 'Exportando…' : 'Exportar todos (.zip)'}
+      {isExporting ? t('export.exporting') : t('export.all')}
     </Button>
   );
 }

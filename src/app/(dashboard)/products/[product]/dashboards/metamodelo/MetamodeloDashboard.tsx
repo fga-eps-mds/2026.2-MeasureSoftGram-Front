@@ -12,12 +12,12 @@ import { usePreloadECharts } from '@components/ECharts';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { METAMODEL_CSV, formatMetamodelCsv } from '@utils/formatMetamodelCsv';
 import { getPathId } from '@utils/pathDestructer';
+import { useTranslation } from 'react-i18next';
 import { useMetamodelo } from './useMetamodelo';
-
-const TITLE = '3. Estrutura das Medidas e Indicadores (Metamodelo)';
 
 const MetamodeloDashboard: React.FC = () => {
   usePreloadECharts();
+  const { t } = useTranslation('dashboards');
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
 
@@ -38,14 +38,12 @@ const MetamodeloDashboard: React.FC = () => {
   // Produto sem release orienta a planejar uma; release sem configuração orienta a revisar o planejamento.
   const emptyProps = hasReleases
     ? {
-        emptyTitle: 'Esta release não tem um modelo de qualidade configurado',
-        emptyDescription:
-          'Os pesos e os valores de referência são definidos no planejamento da release. Escolha outra release ou revise o planejamento.',
+        emptyTitle: t('metamodel.no-model.title'),
+        emptyDescription: t('metamodel.no-model.description')
       }
     : {
-        emptyTitle: 'Este produto ainda não tem uma release configurada',
-        emptyDescription:
-          'O metamodelo mostra as características, subcaracterísticas, medidas e métricas configuradas para uma release, com os pesos e os valores de referência. Planeje a primeira release para vê-lo aqui.',
+        emptyTitle: t('metamodel.no-release.title'),
+        emptyDescription: t('metamodel.no-release.description'),
         emptyAction: (
           <Button
             variant="contained"
@@ -53,25 +51,24 @@ const MetamodeloDashboard: React.FC = () => {
             onClick={goToPlanRelease}
             sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
           >
-            Planejar release
+            {t('metamodel.plan-release')}
           </Button>
         ),
       };
 
   return (
     <>
-      <title>{TITLE}</title>
+      <title>{t('metamodel.title')}</title>
 
       <Container maxWidth="xl">
         <Box display="flex" flexDirection="column" gap="28px" marginTop="40px" marginBottom="40px">
           <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap="16px">
             <Box>
               <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
-                {TITLE}
+                {t('metamodel.title')}
               </Typography>
               <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-                Como as características, subcaracterísticas, medidas e métricas da release se ligam, com o peso de
-                cada uma.
+                {t('metamodel.subtitle')}
               </Typography>
             </Box>
 
@@ -85,12 +82,12 @@ const MetamodeloDashboard: React.FC = () => {
           </Box>
 
           <DashboardCard
-            title="Configuração do modelo de qualidade da release"
+            title={t('metamodel.card-title')}
             status={status}
             headerAction={exportButton}
             emptyHeaderAction={exportButton}
             loadingContent={<SkeletonBlock width="100%" height={420} />}
-            loadingMessage="Carregando o modelo de qualidade da release…"
+            loadingMessage={t('metamodel.loading')}
             onRetry={retry}
             {...emptyProps}
           >

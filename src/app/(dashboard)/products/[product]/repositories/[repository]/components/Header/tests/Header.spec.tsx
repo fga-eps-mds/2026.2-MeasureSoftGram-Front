@@ -125,7 +125,7 @@ describe('Header', () => {
   it('exibe o link adjust_bands apontando para as configurações do produto', () => {
     render(<Header />);
 
-    const adjustLink = screen.getByRole('link', { name: 'adjust_bands' });
+    const adjustLink = screen.getByRole('link', { name: 'Ajustar faixas' });
     expect(adjustLink).toHaveAttribute('href', '/products/1-5-MeasureSoftGram/settings');
   });
 
@@ -148,7 +148,7 @@ describe('Header', () => {
   it('exibe o título com o nome e a descrição do repositório', () => {
     render(<Header />);
 
-    expect(screen.getByText('repository')).toBeInTheDocument();
+    expect(screen.getByText('Repositório')).toBeInTheDocument();
     expect(screen.getByText('2026.2-MeasureSoftGram-Front')).toBeInTheDocument();
     expect(screen.getByText('Frontend do MeasureSoftGram')).toBeInTheDocument();
     expect(screen.getByTestId('copy-badge-modal')).toBeInTheDocument();

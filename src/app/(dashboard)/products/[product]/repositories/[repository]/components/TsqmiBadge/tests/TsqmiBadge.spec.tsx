@@ -2,11 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import TsqmiBadge from '../TsqmiBadge';
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key
-  })
-}));
 
 jest.mock('../../CopyBadgeModal', () => ({
   __esModule: true,
@@ -20,7 +15,7 @@ const mockLatestTSQMI = {
 };
 
 const mockBadgeUrl = 'http://localhost:8000/organizations/1/products/1/repositories/1/latest-values/tsqmi/badge';
-const STALE_WARNING_LABEL = 'repository.badge-stale-label';
+const STALE_WARNING_LABEL = 'Badge desatualizada';
 
 describe('<TsqmiBadge />', () => {
   it('should render the badge image when latestTSQMIBadgeUrl is provided', () => {

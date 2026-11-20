@@ -12,6 +12,7 @@ import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 
 import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../../../shared/i18n/i18n';
 import * as Styled from './styles';
 
 interface Node {
@@ -45,22 +46,22 @@ function formatData(rawData: Characteristic[]) {
       children: _.map(rawData, (characteristic) => ({
         id: characteristic.key,
         name: _.capitalize(characteristic.key.replace(/_/g, ' ')),
-        description: 'Característica',
+        description: i18n.t('tree-view.characteristic'),
         parent: 'root',
         children: _.map(characteristic.subcharacteristics, (subcharacteristic) => ({
           id: subcharacteristic.key,
           name: _.capitalize(subcharacteristic.key.replace(/_/g, ' ')),
-          description: 'Sub-Característica',
+          description: i18n.t('tree-view.subcharacteristic'),
           parent: characteristic.key,
           children: _.map(subcharacteristic.measures, (measure) => ({
             id: measure.key,
             name: _.capitalize(measure.key.replace(/_/g, ' ')),
-            description: 'Medida',
+            description: i18n.t('tree-view.measure'),
             parent: subcharacteristic.key,
             children: _.map(measure.metrics, (metric) => ({
               id: metric.key,
               name: _.capitalize(metric.key.replace(/_/g, ' ')),
-              description: 'Métrica',
+              description: i18n.t('tree-view.metric'),
               parent: measure.key
             }))
           }))

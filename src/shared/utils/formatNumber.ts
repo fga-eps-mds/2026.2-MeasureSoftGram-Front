@@ -1,3 +1,5 @@
+import i18n from '../i18n/i18n';
+
 /**
  * Formatação de números e texto dos tooltips e legendas dos dashboards. Fica sem dependências para poder ser usada
  * por qualquer formatador de gráfico sem criar ciclos de import.
@@ -5,7 +7,7 @@
 
 /** 0,81 — duas casas, vírgula decimal. */
 export function formatDecimal(value: number | null | undefined): string {
-  if (value === null || value === undefined) return 'sem dado';
+  if (value === null || value === undefined) return i18n.t('entity.no-data');
   return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 

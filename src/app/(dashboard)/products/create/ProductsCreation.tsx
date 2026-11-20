@@ -10,7 +10,7 @@ import { Botoes, Container, Description, Form, Header, Wrapper } from '@app/(das
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import MSGButton from '../../../../components/idv/buttons/MSGButton';
 import { useProductQuery } from '../hooks/useProductQuery';
-import { PRODUCT_NAME_EXISTS, ProductFormData } from '@services/product';
+import { productNameExistsMessage, ProductFormData } from '@services/product';
 import { Product } from '@customTypes/product';
 
 const ProductsCreation: React.FC = () => {
@@ -70,7 +70,7 @@ const ProductsCreation: React.FC = () => {
       return;
     }
     // o erro traz a mensagem do service, em português; a tela mostra a do idioma escolhido
-    if (result.error.message === PRODUCT_NAME_EXISTS) {
+    if (result.error.message === productNameExistsMessage()) {
       toast.error(t('toast.name-exists'));
       return;
     }
@@ -87,7 +87,7 @@ const ProductsCreation: React.FC = () => {
         router.push('/products');
         return;
       }
-      if (result.error.message === PRODUCT_NAME_EXISTS) {
+      if (result.error.message === productNameExistsMessage()) {
         toast.error(t('toast.name-exists'));
         return;
       }

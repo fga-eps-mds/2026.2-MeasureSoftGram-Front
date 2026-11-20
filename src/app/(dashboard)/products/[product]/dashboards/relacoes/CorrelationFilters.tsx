@@ -4,6 +4,7 @@ import { useProviderTerms } from '@hooks/useProviderTerms';
 import { CorrelationLevel } from '@customTypes/product';
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { CORRELATION_LEVEL_LABELS } from '@utils/formatCorrelationCharts';
+import { useTranslation } from 'react-i18next';
 import { useCorrelationDashboard } from './useCorrelationDashboard';
 
 const SELECT_PROPS = { MenuProps: { disableScrollLock: true } };
@@ -33,6 +34,7 @@ export default function CorrelationFilters({
   setLevel
 }: CorrelationFiltersProps) {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
 
   return (
     <Box display="flex" alignItems="center" flexWrap="wrap" gap="16px">
@@ -60,7 +62,7 @@ export default function CorrelationFilters({
         onChange={(_event, value: CorrelationLevel | null) => {
           if (value) setLevel(value);
         }}
-        aria-label="Nível do modelo"
+        aria-label={t('correlation.level-aria')}
         sx={{ backgroundColor: '#FFFFFF', flexWrap: 'wrap' }}
       >
         {LEVELS.map((item) => (

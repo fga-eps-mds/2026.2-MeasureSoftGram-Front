@@ -7,11 +7,6 @@ const mockBadgeUrls = {
   maintainability: 'http://localhost:8000/organizations/1/products/1/repositories/1/latest-values/characteristics/maintainability/badge/'
 };
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key
-  })
-}));
 
 jest.mock('react-toastify', () => ({
   toast: {
@@ -37,7 +32,7 @@ describe('<CharacteristicsBadges />', () => {
   it('should render the title', () => {
     render(<CharacteristicsBadges />);
 
-    expect(screen.getByText('repository.characteristic-badges')).toBeInTheDocument();
+    expect(screen.getByText('Badges de Características')).toBeInTheDocument();
   });
 
   it('should render copy buttons for each characteristic', () => {

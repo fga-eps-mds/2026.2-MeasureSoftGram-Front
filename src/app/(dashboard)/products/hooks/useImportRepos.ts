@@ -5,6 +5,7 @@ import type { AxiosError } from 'axios';
 import { organizationQuery } from '@services/organization';
 import { productQuery } from '@services/product';
 import type { ProviderTerms } from '@utils/providerTerminology';
+import i18n from '../../../../shared/i18n/i18n';
 
 export interface UnifiedRepoItem {
   github_repo_id?: number;
@@ -202,9 +203,14 @@ export function useImportList({ provider, terms, orgDbId, productId, namespace, 
 
   useEffect(() => {
     if (errorKind === '409') {
-      toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
+      toast.error(i18n.t('product:import.token-expired', { provider: terms.providerName }));
     } else if (errorKind) {
-      toast.error(`Erro ao buscar ${terms.repositories} do ${terms.providerName}.`);
+      toast.error(
+        i18n.t('product:import.repositories-fetch-error', {
+          repositories: terms.repositories,
+          provider: terms.providerName
+        })
+      );
     }
   }, [errorKind]);
 

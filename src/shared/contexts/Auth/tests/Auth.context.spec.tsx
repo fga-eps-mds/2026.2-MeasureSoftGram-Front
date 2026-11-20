@@ -140,7 +140,7 @@ describe('AuthProvider', () => {
 
       await waitFor(() => expect(assign).toHaveBeenCalledWith('/'));
       expect(global.fetch).toHaveBeenCalledWith('/bff/session', { method: 'DELETE', credentials: 'same-origin' });
-      expect(flash()).toEqual({ type: 'success', text: 'Volte logo para acompanhar seus produtos!' });
+      expect(flash()).toEqual({ type: 'success', text: 'auth:flash.goodbye' });
     });
 
     it('sai mesmo se o servidor não responder', async () => {
@@ -246,7 +246,7 @@ describe('AuthProvider', () => {
       );
 
       await waitFor(() => expect(assign).toHaveBeenCalledWith('/'));
-      expect(flash()).toEqual({ type: 'warning', text: 'Sua sessão expirou. Por favor, faça login novamente!' });
+      expect(flash()).toEqual({ type: 'warning', text: 'auth:flash.session-expired' });
     });
   });
 
@@ -255,8 +255,9 @@ describe('AuthProvider', () => {
       document.cookie = 'msgram_welcome=; Max-Age=0; path=/';
     });
 
-    it('com o cookie do login, dá as boas-vindas uma vez e apaga o cookie', () => {
+    it('com o cookie do login, dá as boas-vindas uma vez, no idioma salvo, e apaga o cookie', async () => {
       document.cookie = 'msgram_welcome=1; path=/';
+      localStorage.setItem('locale_lang', 'pt');
 
       const { rerender } = render(
         <AuthProvider initialUser={user}>
@@ -269,9 +270,10 @@ describe('AuthProvider', () => {
         </AuthProvider>
       );
 
+      await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Bem vindo ao MeasureSoftGram alice!'));
       expect(toast.success).toHaveBeenCalledTimes(1);
-      expect(toast.success).toHaveBeenCalledWith('Bem vindo ao MeasureSoftGram alice!');
       expect(document.cookie).not.toContain('msgram_welcome');
+      localStorage.removeItem('locale_lang');
     });
 
     it('sem o cookie, não dá boas-vindas', () => {

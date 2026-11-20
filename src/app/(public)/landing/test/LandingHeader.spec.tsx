@@ -22,14 +22,14 @@ describe('LandingHeader', () => {
   it('renderiza os dois botoes de entrada (mobile e desktop)', () => {
     render(<LandingHeader />);
 
-    const enterButtons = screen.getAllByRole('button', { name: 'nav.enter' });
+    const enterButtons = screen.getAllByRole('button', { name: 'Entrar' });
     expect(enterButtons).toHaveLength(2);
   });
 
   it('cada botao de entrada navega para a rota interna de acesso', () => {
     render(<LandingHeader />);
 
-    const enterButtons = screen.getAllByRole('button', { name: 'nav.enter' });
+    const enterButtons = screen.getAllByRole('button', { name: 'Entrar' });
     enterButtons.forEach((button) => {
       fireEvent.click(button);
     });
