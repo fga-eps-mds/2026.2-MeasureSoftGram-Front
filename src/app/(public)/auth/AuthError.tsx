@@ -53,7 +53,7 @@ const AuthError: React.FC = () => {
           variant="contained"
           size="large"
           onClick={() => {
-            void router.push('/auth');
+            router.push('/auth');
           }}
           sx={{
             py: 1.5,

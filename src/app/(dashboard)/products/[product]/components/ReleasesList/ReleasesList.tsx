@@ -30,7 +30,7 @@ function ReleasesList() {
 
   function pushToReleasesPath() {
     const releasesPath = `/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/releases`;
-    void router.push(releasesPath);
+    router.push(releasesPath);
   }
 
 

@@ -121,7 +121,7 @@ const DistributionDashboard: React.FC = () => {
             <Button
               variant="contained"
               disableElevation
-              onClick={() => void router.push(`/products/${router.query.product}/releases/create`)}
+              onClick={() => router.push(`/products/${router.query.product}/releases/create`)}
               sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
             >
               Planejar release

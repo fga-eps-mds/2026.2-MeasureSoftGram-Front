@@ -171,7 +171,7 @@ function SideMenu() {
                 {...item}
                 onClick={() => {
                   closeOverlay();
-                  void router.push(item.path);
+                  router.push(item.path);
                 }}
               />
             ))}
@@ -213,7 +213,7 @@ function SideMenu() {
                     {...item}
                     onClick={() => {
                       closeOverlay();
-                      void router.push(item.path);
+                      router.push(item.path);
                     }}
                   />
                 </Box>
@@ -224,7 +224,7 @@ function SideMenu() {
               {...settingsItem}
               onClick={() => {
                 closeOverlay();
-                void router.push(settingsItem.path);
+                router.push(settingsItem.path);
               }}
             />
           </>

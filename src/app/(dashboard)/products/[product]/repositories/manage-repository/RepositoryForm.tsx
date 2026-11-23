@@ -79,7 +79,7 @@ const RepositoryForm: React.FC = () => {
     if (!isContextReady) return;
 
     if (!currentOrganization?.id || !currentProduct?.id) {
-      void router.push('/home');
+      router.push('/home');
       return;
     }
 
@@ -112,7 +112,7 @@ const RepositoryForm: React.FC = () => {
     e.preventDefault();
 
     if (!currentOrganization?.id || !currentProduct?.id) {
-      await router.push('/home');
+      router.push('/home');
       return;
     }
 
@@ -146,7 +146,7 @@ const RepositoryForm: React.FC = () => {
 
       if (result.type === 'success') {
         toast.success(isEditMode ? t('edit.sucess') : t('register.sucess'));
-        void router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}/repositories`);
+        router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}/repositories`);
       } else if (result.type === 'error') {
         handleResultError(result.error as AxiosError<ApiErrorResponse>);
       }

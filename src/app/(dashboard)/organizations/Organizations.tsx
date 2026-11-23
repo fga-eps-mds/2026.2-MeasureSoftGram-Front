@@ -103,7 +103,7 @@ const Organizations: React.FC = () => {
       if (result.type === 'success') {
         toast.success(t('toast.sucess-edit'));
         setTimeout(() => {
-          void router.push('/home');
+          router.push('/home');
         }, 2000);
       } else {
         handleResultError(result, 'toast.error-edit');
@@ -119,7 +119,7 @@ const Organizations: React.FC = () => {
         }
         void fetchOrganizations(true);
         setTimeout(() => {
-          void router.push('/home');
+          router.push('/home');
         }, 2000);
       } else {
         handleResultError(result, 'toast.error');

@@ -20,11 +20,11 @@ const Product: React.FC = () => {
   const { t } = useTranslation('overview');
 
   const handleViewRepositories = () => {
-    void router.push(`/products/${router.query.product}/repositories`);
+    router.push(`/products/${router.query.product}/repositories`);
   };
 
   const handleViewReleases = () => {
-    void router.push(`/products/${router.query.product}/releases`);
+    router.push(`/products/${router.query.product}/releases`);
   };
 
   return (

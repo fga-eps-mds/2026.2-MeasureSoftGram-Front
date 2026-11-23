@@ -8,6 +8,55 @@ const HOME = '/home/';
 const LOGIN = '/auth';
 const OAUTH_CALLBACK = '/auth/callback/';
 
+function createLoginRedirect(request: NextRequest, path: string, search: string, secure: boolean, clearSession: boolean) {
+  const loginUrl = new URL(LOGIN, request.url);
+  loginUrl.searchParams.set('returnTo', `${path}${search}`);
+
+  const response = NextResponse.redirect(loginUrl);
+  if (clearSession) clearSessionCookies(response.cookies, secure);
+  return response;
+}
+
+async function handlePublicPath(
+  request: NextRequest,
+  path: string,
+  token: string | undefined,
+  secure: boolean
+): Promise<NextResponse> {
+  const isLanding = path === '/' || path === '/landing';
+  const isEntryPage = isLanding || path === LOGIN;
+  if (!token || !isEntryPage) return NextResponse.next();
+
+  const validation = await validateToken(token);
+  if (validation.status === 'valid') {
+    const destination = sanitizeReturnTo(request.nextUrl.searchParams.get('returnTo')) ?? HOME;
+    const response = NextResponse.redirect(new URL(destination, request.url));
+    if (isLanding) response.cookies.set(WELCOME_COOKIE, '1', welcomeCookieOptions(secure));
+    return response;
+  }
+  if (validation.status === 'invalid') {
+    const response = NextResponse.next();
+    clearSessionCookies(response.cookies, secure);
+    return response;
+  }
+  return NextResponse.next();
+}
+
+async function handleProtectedPath(
+  request: NextRequest,
+  path: string,
+  search: string,
+  token: string | undefined,
+  secure: boolean
+): Promise<NextResponse> {
+  if (!token) return createLoginRedirect(request, path, search, secure, false);
+
+  const validation = await validateToken(token);
+  if (validation.status === 'invalid') return createLoginRedirect(request, path, search, secure, true);
+
+  return NextResponse.next();
+}
+
 export async function proxy(request: NextRequest) {
   if (isMockingEnabled()) return NextResponse.next();
 
@@ -20,44 +69,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`${OAUTH_CALLBACK}${search}`, request.url));
   }
 
-  const redirectToLogin = (clearSession: boolean) => {
-    const loginUrl = new URL(LOGIN, request.url);
-    loginUrl.searchParams.set('returnTo', `${path}${search}`);
-
-    const response = NextResponse.redirect(loginUrl);
-    if (clearSession) clearSessionCookies(response.cookies, secure);
-    return response;
-  };
-
   if (isPublicPath(path)) {
-    const isLanding = path === '/' || path === '/landing';
-    const isEntryPage = isLanding || path === LOGIN;
-    if (!token || !isEntryPage) return NextResponse.next();
-
-    const validation = await validateToken(token);
-    if (validation.status === 'valid') {
-      const destination = sanitizeReturnTo(searchParams.get('returnTo')) ?? HOME;
-      const response = NextResponse.redirect(new URL(destination, request.url));
-      if (isLanding) response.cookies.set(WELCOME_COOKIE, '1', welcomeCookieOptions(secure));
-      return response;
-    }
-    if (validation.status === 'invalid') {
-      const response = NextResponse.next();
-      clearSessionCookies(response.cookies, secure);
-      return response;
-    }
-    return NextResponse.next();
+    return handlePublicPath(request, path, token, secure);
   }
 
   // não é página: deixa o Next responder com o 404, sem mandar quem não está logado para o login
   if (!isProtectedPath(path)) return NextResponse.next();
 
-  if (!token) return redirectToLogin(false);
-
-  const validation = await validateToken(token);
-  if (validation.status === 'invalid') return redirectToLogin(true);
-
-  return NextResponse.next();
+  return handleProtectedPath(request, path, search, token, secure);
 }
 
 export const config = {

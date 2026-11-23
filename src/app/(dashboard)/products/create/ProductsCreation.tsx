@@ -10,7 +10,7 @@ import { Botoes, Container, Description, Form, Header, Wrapper } from '@app/(das
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import MSGButton from '../../../../components/idv/buttons/MSGButton';
 import { useProductQuery } from '../hooks/useProductQuery';
-import { PRODUCT_NAME_EXISTS } from '@services/product';
+import { PRODUCT_NAME_EXISTS, ProductFormData } from '@services/product';
 
 const ProductsCreation: React.FC = () => {
   const router = useRouter();
@@ -47,67 +47,73 @@ const ProductsCreation: React.FC = () => {
     }
   }, [router.query.id_product]);
 
+  const syncCreatedSelection = (createdProduct: any, finalOrgId: number | undefined) => {
+    if (createdProduct && createdProduct.id) {
+      localStorage.setItem('selectedProductId', JSON.stringify(createdProduct.id.toString()));
+      setCurrentProduct(createdProduct);
+    }
+    if (finalOrgId) {
+      localStorage.setItem('selectedOrgId', JSON.stringify(finalOrgId.toString()));
+      const selectedOrg = organizationList?.find((org) => String(org.id) === String(finalOrgId));
+      if (selectedOrg) {
+        setCurrentOrganizations([selectedOrg]);
+      }
+    }
+  };
+
+  const handleEditProduct = async (novoProduto: ProductFormData) => {
+    const result = await updateProduct(currentProductId as string, novoProduto);
+    if (result.type === 'success') {
+      toast.success(t('toast.success-edit'));
+      router.push('/products');
+      return;
+    }
+    if (result.error.message === PRODUCT_NAME_EXISTS) {
+      toast.error(t('toast.name-exists'));
+      return;
+    }
+    toast.error(t('toast.error-edit'));
+  };
+
+  const handleCreateProduct = async (novoProduto: ProductFormData, finalOrgId: number | undefined) => {
+    try {
+      const result = await createProduct(novoProduto);
+      if (result.type === 'success') {
+        toast.success(t('toast.sucess'));
+        syncCreatedSelection(result.value, finalOrgId);
+        await loadAllProducts();
+        router.push('/products');
+        return;
+      }
+      if (result.error.message === PRODUCT_NAME_EXISTS) {
+        toast.error(t('toast.name-exists'));
+        return;
+      }
+      toast.error(t('toast.error-create'));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const novoProduto = {
+    let resolvedOrgId = organizationId;
+    if (!resolvedOrgId && currentOrganizationId) {
+      const orgIdStr = Array.isArray(currentOrganizationId) ? currentOrganizationId[0] : currentOrganizationId;
+      resolvedOrgId = parseInt(orgIdStr, 10);
+    }
+
+    const novoProduto: ProductFormData = {
       name: nome,
       description: descricao,
-      organizationId,
-    }
-
-    let result;
-
-    if (!novoProduto.organizationId && currentOrganizationId) {
-      const orgIdStr = Array.isArray(currentOrganizationId) ? currentOrganizationId[0] : currentOrganizationId;
-      novoProduto.organizationId = parseInt(orgIdStr, 10);
-    }
-
-    // o erro traz a mensagem do service, em português; a tela mostra a do idioma escolhido
-    const nameExist = t('toast.name-exists')
+      organizationId: resolvedOrgId,
+    };
 
     if (isEditMode) {
-      result = await updateProduct(currentProductId as string, novoProduto);
-      if (result.type === 'success') {
-        toast.success(t('toast.success-edit'));
-        void router.push('/products');
-      } else if (result.error.message === PRODUCT_NAME_EXISTS) {
-        toast.error(nameExist);
-      } else {
-        toast.error(t('toast.error-edit'));
-      }
+      await handleEditProduct(novoProduto);
     } else {
-
-      try {
-        result = await createProduct(novoProduto);
-        if (result.type === 'success') {
-          toast.success(t('toast.sucess'));
-          const createdProduct = result.value as any;
-          if (createdProduct && createdProduct.id) {
-            localStorage.setItem('selectedProductId', JSON.stringify(createdProduct.id.toString()));
-            setCurrentProduct(createdProduct);
-          }
-          if (organizationId || currentOrganizationId) {
-            const finalOrgId = organizationId || (currentOrganizationId ? parseInt(currentOrganizationId as string, 10) : null);
-            if (finalOrgId) {
-              localStorage.setItem('selectedOrgId', JSON.stringify(finalOrgId.toString()));
-              const selectedOrg = organizationList?.find(org => String(org.id) === String(finalOrgId));
-              if (selectedOrg) {
-                setCurrentOrganizations([selectedOrg]);
-              }
-            }
-          }
-          await loadAllProducts();
-          void router.push('/products');
-        } else if (result.error.message === PRODUCT_NAME_EXISTS) {
-          toast.error(nameExist);
-        } else {
-          toast.error(t('toast.error-create'));
-        }
-      }
-      catch (e) {
-        console.error(e)
-      }
+      await handleCreateProduct(novoProduto, resolvedOrgId);
     }
   };
 
