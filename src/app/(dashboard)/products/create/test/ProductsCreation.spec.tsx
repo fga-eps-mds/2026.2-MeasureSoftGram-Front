@@ -159,7 +159,7 @@ describe('ProductsCreation Component', () => {
 
   it('deve capturar erro no catch se createProduct lançar exceção', async () => {
     mockCreateProduct.mockRejectedValue(new Error('Create Error'));
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     render(<ProductsCreation />);
 
     const nameInput = screen.getByTestId(nameInputTestId).querySelector('input')!;
@@ -203,7 +203,7 @@ describe('ProductsCreation Component', () => {
       id_product: '456',
     };
     mockGetProductById.mockRejectedValue(new Error('Fetch Error'));
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     render(<ProductsCreation />);
 
