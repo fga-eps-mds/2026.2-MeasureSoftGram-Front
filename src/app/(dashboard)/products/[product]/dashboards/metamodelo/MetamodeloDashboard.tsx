@@ -32,7 +32,7 @@ const MetamodeloDashboard: React.FC = () => {
   const exportButton = <ExportCsvButton dashboard={METAMODEL_CSV.dashboard} chart={csv} />;
 
   const goToPlanRelease = () => {
-    void router.push(`/products/${router.query.product}/releases/create`);
+    router.push(`/products/${router.query.product}/releases/create`);
   };
 
   // Produto sem release orienta a planejar uma; release sem configuração orienta a revisar o planejamento.

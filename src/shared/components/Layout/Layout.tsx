@@ -71,7 +71,7 @@ function HeaderUserMenu() {
         <MenuItem
           onClick={() => {
             handleClose();
-            void router.push('/config');
+            router.push('/config');
           }}
         >
           <ListItemIcon>

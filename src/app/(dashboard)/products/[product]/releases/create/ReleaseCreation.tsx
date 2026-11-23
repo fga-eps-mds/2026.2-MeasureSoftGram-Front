@@ -346,7 +346,7 @@ function ReleaseCreation() {
       await productQuery.createProductRelease(organizationId, productId, release);
 
       toast.success(t('releaseCreated'), { autoClose: 6000 });
-      void router.push(`/products/${router.query.product}/releases/`);
+      router.push(`/products/${router.query.product}/releases/`);
     } catch (error: any) {
       toast.error(`${error.response?.data?.message ?? error}`, { autoClose: 10000 });
     }
