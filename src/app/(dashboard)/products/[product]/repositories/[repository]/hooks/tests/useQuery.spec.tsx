@@ -171,10 +171,9 @@ describe('useQuery', () => {
       renderHook(() => useQuery());
 
       await waitFor(() => {
-        // O catch do loadLatestTsqmi chama console.log.
-        expect(logSpy).toHaveBeenCalledWith(error);
-        // O catch do loadProduct chama console.error.
+        // Os catches do loadLatestTsqmi e do loadProduct registram o erro com console.error, sem console.log.
         expect(errorSpy).toHaveBeenCalledWith(error);
+        expect(logSpy).not.toHaveBeenCalled();
         // A limpeza inicial do estado roda sem quebrar mesmo diante dos erros.
         expect(mockSetters.setLatestTSQMI).toHaveBeenCalledWith(undefined);
         // Como getRepository falhou, o repositório nunca recebe dados reais.

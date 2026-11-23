@@ -40,7 +40,7 @@ const ProductsCreation: React.FC = () => {
           }
         }
         catch (e) {
-          console.log(e)
+          console.error(e)
         }
       };
       void fetchProductData();
@@ -106,7 +106,7 @@ const ProductsCreation: React.FC = () => {
         }
       }
       catch (e) {
-        console.log(e)
+        console.error(e)
       }
     }
   };

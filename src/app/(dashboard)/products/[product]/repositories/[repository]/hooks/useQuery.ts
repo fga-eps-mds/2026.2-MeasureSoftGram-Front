@@ -42,7 +42,7 @@ export const useQuery = () => {
       setLatestTSQMI(result);
       setLatestTSQMIBadgeUrl(badgeUrl);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
