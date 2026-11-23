@@ -11,6 +11,7 @@ import { useProviderTranslation as useTranslation } from '@hooks/useProviderTran
 import MSGButton from '../../../../components/idv/buttons/MSGButton';
 import { useProductQuery } from '../hooks/useProductQuery';
 import { PRODUCT_NAME_EXISTS, ProductFormData } from '@services/product';
+import { Product } from '@customTypes/product';
 
 const ProductsCreation: React.FC = () => {
   const router = useRouter();
@@ -47,7 +48,7 @@ const ProductsCreation: React.FC = () => {
     }
   }, [router.query.id_product]);
 
-  const syncCreatedSelection = (createdProduct: any, finalOrgId: number | undefined) => {
+  const syncCreatedSelection = (createdProduct: Product, finalOrgId: number | undefined) => {
     if (createdProduct && createdProduct.id) {
       localStorage.setItem('selectedProductId', JSON.stringify(createdProduct.id.toString()));
       setCurrentProduct(createdProduct);
@@ -68,6 +69,7 @@ const ProductsCreation: React.FC = () => {
       router.push('/products');
       return;
     }
+    // o erro traz a mensagem do service, em português; a tela mostra a do idioma escolhido
     if (result.error.message === PRODUCT_NAME_EXISTS) {
       toast.error(t('toast.name-exists'));
       return;

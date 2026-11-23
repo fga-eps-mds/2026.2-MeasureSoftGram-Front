@@ -350,7 +350,7 @@ class ProductQuery {
     };
   }
 
-  async createProduct(data: ProductFormData): Promise<Result<ProductFormData>> {
+  async createProduct(data: ProductFormData): Promise<Result<Product>> {
     try {
       const response = await api.post(`/v1/organizations/${data.organizationId}/products/`, data);
       return { type: 'success', value: response?.data };
