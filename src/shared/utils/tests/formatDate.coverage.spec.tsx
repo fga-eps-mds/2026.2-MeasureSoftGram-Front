@@ -26,6 +26,8 @@ describe('formatDate and formatDateTime coverage', () => {
     expect(ptFormatted).toBe('10/05/2026, às 12:30');
 
     window.localStorage.setItem('locale_lang', 'en');
+    // fixa o comportamento atual, que tem bug: o formatDateTime ignora o formato pedido e usa "às" mesmo em inglês.
+    // Quando o bug for corrigido, esta asserção muda (ver a revisão do PR #166).
     const enFormatted = formatDateTime(new Date(isoDate), 'long');
     expect(enFormatted).toBe('05/10/2026, às 12:30');
   });
