@@ -52,25 +52,3 @@ export async function getUserRepos(code: string): Promise<Result<GetUserRepoResp
     return { type: 'error', error };
   }
 }
-
-export async function getGithubUser(accessToken: string) {
-  try {
-    return await api.get(`https://api.github.com/user`, {
-      headers: {
-        Authorization: `token ${accessToken}`
-      }
-    });
-  } catch (err) {
-    const error = err as AxiosError;
-    return { type: 'error', error };
-  }
-}
-
-export async function getUserRepositories(userName: string) {
-  try {
-    return await api.get(`https://api.github.com/search/repositories?q=user:${userName}`);
-  } catch (err) {
-    const error = err as AxiosError;
-    return { type: 'error', error };
-  }
-}

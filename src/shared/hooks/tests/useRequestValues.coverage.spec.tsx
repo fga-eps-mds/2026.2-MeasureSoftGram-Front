@@ -31,8 +31,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('useRequestValues coverage', () => {
+  let getSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    getSpy = jest.spyOn(api, 'get');
     (useOrganizationContext as jest.Mock).mockReturnValue({
       currentOrganization: { id: 'org-1', name: 'Org 1' }
     });
@@ -45,9 +48,12 @@ describe('useRequestValues coverage', () => {
     });
   });
 
+  afterEach(() => {
+    getSpy.mockRestore();
+  });
+
   it('não faz requisição quando falta contexto de organização, produto ou repositório', () => {
     (useOrganizationContext as jest.Mock).mockReturnValue({ currentOrganization: null });
-    const getSpy = jest.spyOn(api, 'get');
 
     const { result } = renderHook(
       () => useRequestValues({ type: 'latest-values', value: 'characteristics' }),
@@ -59,7 +65,7 @@ describe('useRequestValues coverage', () => {
   });
 
   it('adiciona metas da release atual (addCurrentGoal) e histórico TSQMI (addHistoricalTSQMI)', async () => {
-    jest.spyOn(api, 'get').mockResolvedValue({
+    getSpy.mockResolvedValue({
       data: {
         results: [{ id: 1, key: 'reliability', name: 'Reliability', history: [] }]
       }
@@ -91,7 +97,7 @@ describe('useRequestValues coverage', () => {
   });
 
   it('define goal como undefined quando getCurrentReleaseGoal falha', async () => {
-    jest.spyOn(api, 'get').mockResolvedValue({
+    getSpy.mockResolvedValue({
       data: {
         results: [{ id: 1, key: 'security', name: 'Security', history: [] }]
       }
@@ -126,7 +132,7 @@ describe('useRequestValues coverage', () => {
         ]
       }
     };
-    jest.spyOn(api, 'get').mockResolvedValue(metricsPayload as any);
+    getSpy.mockResolvedValue(metricsPayload as any);
 
     const { result: githubResult } = renderHook(
       () =>

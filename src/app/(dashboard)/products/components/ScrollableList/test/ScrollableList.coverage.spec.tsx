@@ -4,6 +4,16 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ScrollableList from '../ScrollableList';
 
 describe('ScrollableList interactions coverage', () => {
+  const originalScrollBy = HTMLElement.prototype.scrollBy;
+
+  afterEach(() => {
+    if (originalScrollBy) {
+      HTMLElement.prototype.scrollBy = originalScrollBy;
+    } else {
+      delete (HTMLElement.prototype as { scrollBy?: unknown }).scrollBy;
+    }
+  });
+
   const organizations = [
     { id: '1', name: 'Org Alpha', description: 'Desc 1', url: 'http://a.com', key: 'alpha', products: [] },
     { id: '2', name: 'Org Beta', description: 'Desc 2', url: 'http://b.com', key: 'beta', products: [] }

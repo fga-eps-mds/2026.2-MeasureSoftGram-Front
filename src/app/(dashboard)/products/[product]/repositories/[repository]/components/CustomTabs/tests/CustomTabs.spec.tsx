@@ -20,10 +20,19 @@ describe('CustomTabs', () => {
 
     expect(screen.getByText('Aba Texto')).toBeInTheDocument();
     expect(screen.getByTestId('tab-icon')).toBeInTheDocument();
-    expect(screen.getByText('Painel 1')).toBeInTheDocument();
+
+    expect(screen.getByRole('tab', { name: 'Aba Texto' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Painel 1')).toBeVisible();
+    expect(screen.getByText('Painel 2')).not.toBeVisible();
+    expect(screen.getByText('Painel 3')).not.toBeVisible();
 
     fireEvent.click(screen.getByTestId('tab-icon'));
-    expect(screen.getByText('Painel 2')).toBeInTheDocument();
+
+    expect(screen.getByRole('tab', { name: 'Aba Texto' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getAllByRole('tab')[1]).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Painel 1')).not.toBeVisible();
+    expect(screen.getByText('Painel 2')).toBeVisible();
+    expect(screen.getByText('Painel 3')).not.toBeVisible();
 
     rerender(
       <CustomTabs
@@ -35,5 +44,7 @@ describe('CustomTabs', () => {
     );
 
     expect(screen.getByText('Aba Unica')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Aba Unica' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Painel 1')).toBeVisible();
   });
 });

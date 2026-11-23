@@ -86,14 +86,13 @@ describe('RepositoryForm coverage', () => {
     const nameInput = screen.getByTestId('repo-name-input').querySelector('input') as HTMLInputElement;
     const descInput = screen.getByTestId('repo-description-input').querySelector('textarea') as HTMLTextAreaElement;
     const urlInput = screen.getByTestId('repo-url-input').querySelector('input') as HTMLInputElement;
-    const platformInput = screen.getByTestId('repo-platform-input').querySelector('input') as HTMLInputElement;
 
     fireEvent.change(nameInput, { target: { value: 'Novo Repo' } });
     fireEvent.change(descInput, { target: { value: 'Descrição do repo' } });
     fireEvent.change(urlInput, { target: { value: 'https://github.com/org/repo' } });
-    fireEvent.change(platformInput, { target: { value: 'github' } });
 
     fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByRole('option', { name: /GitHub/ }));
 
     fireEvent.submit(container.querySelector('form') as HTMLFormElement);
 
@@ -118,7 +117,7 @@ describe('RepositoryForm coverage', () => {
     render(<RepositoryForm />);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith('error.error');
     });
   });
 
