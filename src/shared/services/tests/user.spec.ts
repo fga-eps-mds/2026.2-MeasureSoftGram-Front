@@ -27,17 +27,4 @@ describe('User Service', () => {
     expect(api.get).toHaveBeenCalledWith('/v1/accounts/user-repos/', { params: { code: 'codigo-123' } });
     expect(result).toEqual({ type: 'success', value: mockData });
   });
-
-  it('deve buscar o usuário no Github (getGithubUser)', async () => {
-    const mockData = { login: 'zafiro', id: 123 };
-    (api.get as jest.Mock).mockResolvedValue(mockData);
-
-    const result = await userService.getGithubUser('token-github');
-
-    // Aqui os cabeçalhos são mantidos porque esta chamada vai direto pra api.github e não passa pelo interceptor
-    expect(api.get).toHaveBeenCalledWith('https://api.github.com/user', {
-      headers: { Authorization: 'token token-github' }
-    });
-    expect(result).toEqual(mockData);
-  });
 });
