@@ -20,7 +20,7 @@ function ReleasesTable({ releaseList }: ReleasesTableProps) {
   const router = useRouter();
 
   const handleClickCell = (path: string) => {
-    void router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/releases/${path}`);
+    router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/releases/${path}`);
   };
 
   const { t } = useTranslation('releases');

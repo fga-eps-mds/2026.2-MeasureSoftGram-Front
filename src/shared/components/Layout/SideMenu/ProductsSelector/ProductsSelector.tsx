@@ -21,7 +21,7 @@ function ProductSelector() {
       const selectedProduct = productsList.find(product => product.id === value.id) || null;
       setCurrentProduct(selectedProduct);
       closeOverlay();
-      void router.push(`/products/${currentOrganization?.id}-${selectedProduct?.id}-${selectedProduct?.name}`);
+      router.push(`/products/${currentOrganization?.id}-${selectedProduct?.id}-${selectedProduct?.name}`);
     }
   };
 

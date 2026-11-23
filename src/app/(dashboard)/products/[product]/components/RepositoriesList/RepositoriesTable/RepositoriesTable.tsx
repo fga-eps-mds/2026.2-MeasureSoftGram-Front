@@ -78,7 +78,7 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
 
   const handleClickRedirects = (id: string) => {
     const path = `/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/repositories/${id}`;
-    void router.push(path);
+    router.push(path);
   };
 
   const getTsqmiValue = (id: number) => repositoriesLatestTsqmi?.results.find(result => result.id === id)?.current_tsqmi

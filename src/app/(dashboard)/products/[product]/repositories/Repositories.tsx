@@ -14,7 +14,7 @@ const Repositories: React.FC = () => {
   const { t } = useTranslation('repositories');
 
   const handleAddIconClick = () => {
-    void router.push('/products');
+    router.push('/products');
   };
 
   return (
