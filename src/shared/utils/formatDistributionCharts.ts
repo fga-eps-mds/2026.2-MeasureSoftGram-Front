@@ -9,7 +9,7 @@ import { escapeHtml } from '@utils/formatOverviewCharts';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
 import { BoxplotStats, getBoxplotStats, groupOutliers, OutlierGroup } from '@utils/metricDistribution';
 import i18n from '../i18n/i18n';
-import { dateLocale } from '../i18n/dateLocale';
+import { dateLocale, datePattern } from '../i18n/dateLocale';
 
 /** Cores dos gráficos da distribuição: barras em azul claro, caixa na cor primária e discrepantes em laranja. */
 export const DISTRIBUTION_COLORS = {
@@ -279,7 +279,7 @@ const MAX_DESCRIBED_OUTLIERS = 10;
 
 /** Data e hora de uma análise no tooltip: "17/08/2026 às 10:00". */
 export function formatAnalysisDateTime(date: string | number): string {
-  return format(new Date(date), i18n.t('dashboards:distribution.chart.analysis-datetime'), { locale: dateLocale() });
+  return format(new Date(date), datePattern('dateTime'), { locale: dateLocale() });
 }
 
 function toScatterPoint(analysis: DistributionAnalysis): [number, number] {
@@ -304,7 +304,7 @@ export function scatterTimeAxis(analyses: DistributionAnalysis[]) {
   const times = analyses.map((analysis) => new Date(analysis.date).getTime());
   const days = new Set(times.map((time) => format(new Date(time), 'yyyy-MM-dd')));
   const sameDay = days.size === 1;
-  const pattern = sameDay ? i18n.t('dashboards:distribution.chart.day-format') : 'd MMM';
+  const pattern = sameDay ? datePattern('date') : 'd MMM';
   return {
     type: 'time',
     ...(sameDay ? { min: Math.min(...times) - DAY_MS, max: Math.max(...times) + DAY_MS, minInterval: DAY_MS } : {}),
@@ -325,7 +325,7 @@ function describeOutliers(outliers: DistributionAnalysis[]): string {
   const listed = outliers.slice(0, MAX_DESCRIBED_OUTLIERS).map((analysis) =>
     i18n.t('dashboards:distribution.chart.outlier-at', {
       value: formatStatistic(analysis.value),
-      date: format(new Date(analysis.date), i18n.t('dashboards:distribution.chart.day-format'))
+      date: format(new Date(analysis.date), datePattern('date'))
     })
   );
   const rest = outliers.length - listed.length;

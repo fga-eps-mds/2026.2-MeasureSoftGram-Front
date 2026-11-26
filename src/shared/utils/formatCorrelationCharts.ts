@@ -11,7 +11,7 @@ import { formatCount, formatStatistic, MISSING_STATISTIC } from '@utils/distribu
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { CsvChart, CsvColumn, CsvValue } from '@utils/exportCsv';
 import i18n from '../i18n/i18n';
-import { intlLocale } from '../i18n/dateLocale';
+import { intlLocale, datePattern } from '../i18n/dateLocale';
 import { translatedColumns, translatedRecord } from '../i18n/translatedRecord';
 
 /** Escala divergente da correlação: laranja em −1, cinza claro em 0 e azul em +1, como na referência. */
@@ -440,8 +440,8 @@ export function formatCorrelationReleasesCsv(correlation: RepositoryCorrelation)
     ],
     rows: correlation.release_values.map((row) => ({
       release: row.release.release_name,
-      start_at: format(new Date(row.release.start_at), i18n.t('dashboards:correlation.release-date')),
-      end_at: format(new Date(row.release.end_at), i18n.t('dashboards:correlation.release-date')),
+      start_at: format(new Date(row.release.start_at), datePattern('date')),
+      end_at: format(new Date(row.release.end_at), datePattern('date')),
       ...row.values,
       status: formatReleaseStatus(row, correlation)
     }))
