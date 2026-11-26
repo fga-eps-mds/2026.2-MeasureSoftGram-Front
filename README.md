@@ -122,7 +122,7 @@ pnpm i18n:check     # falha (exit 1) e lista as chaves que faltam no en, sem gra
 
 - A extração só **adiciona** chaves. Chaves montadas em tempo de execução (``t(`status.${valor}`)``) não aparecem para o extrator, por isso nenhuma chave é removida automaticamente.
 - Chaves novas entram só no `en`. O `pt` não recebe texto vazio: a tradução é feita no Weblate e, enquanto falta, o i18next mostra o texto em inglês.
-- O `i18next-cli` exige Node 22 ou mais novo. Os comandos acima rodam na máquina de quem desenvolve; o build e os testes continuam no Node do projeto.
+- O `i18next-cli` exige Node 22.22.2+, 24.15+ ou 26+ (no Node 20 do projeto o `pnpm install` só avisa, mas o comando falha ao iniciar). Os comandos acima rodam na máquina de quem desenvolve; o build e os testes continuam no Node 20. Um job de CI que rode `pnpm i18n:check` precisa usar `actions/setup-node` com `node-version: 24`.
 
 ## Testes E2E
 
