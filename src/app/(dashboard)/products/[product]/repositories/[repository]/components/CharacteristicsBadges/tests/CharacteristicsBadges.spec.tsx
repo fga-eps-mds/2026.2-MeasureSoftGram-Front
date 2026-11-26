@@ -9,7 +9,7 @@ const mockBadgeUrls = {
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, fallback: string) => fallback
+    t: (key: string) => key
   })
 }));
 
@@ -37,7 +37,7 @@ describe('<CharacteristicsBadges />', () => {
   it('should render the title', () => {
     render(<CharacteristicsBadges />);
 
-    expect(screen.getByText('Badges de Características')).toBeInTheDocument();
+    expect(screen.getByText('repository.characteristic-badges')).toBeInTheDocument();
   });
 
   it('should render copy buttons for each characteristic', () => {

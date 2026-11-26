@@ -17,7 +17,7 @@ function CharacteristicsBadges() {
   return (
     <Box display="flex" flexDirection="column" gap="8px" marginY="8px">
       <Typography variant="subtitle2" color="text.secondary">
-        {t('repository.characteristic-badges', 'Badges de Características')}
+        {t('repository.characteristic-badges')}
       </Typography>
       <Box display="flex" flexWrap="wrap" gap="12px" alignItems="center">
         {characteristicKeys.map((key) => {
