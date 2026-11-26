@@ -99,7 +99,7 @@ export const AuthProvider = ({
       } else if (elapsed >= SESSION_LIMIT_MS - WARNING_BEFORE_LIMIT_MS && !warningShownRef.current) {
         warningShownRef.current = true;
         setIsWarningOpen(true);
-        toast.warning(t('session-expiring'));
+        void translateInSavedLanguage('auth:session-expiring').then((text) => toast.warning(text));
       }
     };
 
@@ -107,7 +107,7 @@ export const AuthProvider = ({
     const interval = setInterval(checkSessionTime, CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [loginAt, logout, t]);
+  }, [loginAt, logout]);
 
   const value = useMemo<authContextType>(
     () => ({

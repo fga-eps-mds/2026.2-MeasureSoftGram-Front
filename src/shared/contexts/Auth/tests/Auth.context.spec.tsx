@@ -204,11 +204,18 @@ describe('AuthProvider', () => {
       expect(assign).not.toHaveBeenCalled();
     });
 
-    it('avisa uma vez só aos 1h50, com toast e modal', () => {
+    it('avisa uma vez só aos 1h50, com toast no idioma salvo e modal', async () => {
+      localStorage.setItem('locale_lang', 'en');
       renderWithLoginAt(HOUR + 50 * MINUTE);
 
+      await waitFor(() =>
+        expect(toast.warning).toHaveBeenCalledWith(
+          'Your session will expire in less than 10 minutes. Save your work to avoid data loss.'
+        )
+      );
       expect(toast.warning).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('confirm-modal')).toBeInTheDocument();
+      localStorage.removeItem('locale_lang');
 
       act(() => {
         jest.advanceTimersByTime(MINUTE);
