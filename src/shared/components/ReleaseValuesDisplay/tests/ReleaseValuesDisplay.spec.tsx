@@ -24,10 +24,10 @@ describe('ReleaseValuesDisplay', () => {
       />
     );
 
-    expect(screen.getByText('planned')).toBeInTheDocument();
-    expect(screen.getByText('accomplised')).toBeInTheDocument();
-    expect(screen.getByText('diff')).toBeInTheDocument();
-    expect(screen.getByText('norm-diff.title')).toBeInTheDocument();
+    expect(screen.getByText('Planejado')).toBeInTheDocument();
+    expect(screen.getByText('Realizado')).toBeInTheDocument();
+    expect(screen.getByText('Diferença')).toBeInTheDocument();
+    expect(screen.getByText('Diferença normalizada')).toBeInTheDocument();
 
     expect(screen.getByText('0.75')).toBeInTheDocument();
     expect(screen.getByText('0.85')).toBeInTheDocument();
@@ -44,6 +44,6 @@ describe('ReleaseValuesDisplay', () => {
       />
     );
 
-    expect(screen.queryByText('norm-diff.title')).not.toBeInTheDocument();
+    expect(screen.queryByText('Diferença normalizada')).not.toBeInTheDocument();
   });
 });

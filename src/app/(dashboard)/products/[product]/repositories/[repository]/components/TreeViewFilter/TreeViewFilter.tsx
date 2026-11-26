@@ -45,22 +45,22 @@ function formatData(rawData: Characteristic[]) {
       children: _.map(rawData, (characteristic) => ({
         id: characteristic.key,
         name: _.capitalize(characteristic.key.replace(/_/g, ' ')),
-        description: 'Característica',
+        description: 'tree-view.characteristic',
         parent: 'root',
         children: _.map(characteristic.subcharacteristics, (subcharacteristic) => ({
           id: subcharacteristic.key,
           name: _.capitalize(subcharacteristic.key.replace(/_/g, ' ')),
-          description: 'Sub-Característica',
+          description: 'tree-view.subcharacteristic',
           parent: characteristic.key,
           children: _.map(subcharacteristic.measures, (measure) => ({
             id: measure.key,
             name: _.capitalize(measure.key.replace(/_/g, ' ')),
-            description: 'Medida',
+            description: 'tree-view.measure',
             parent: subcharacteristic.key,
             children: _.map(measure.metrics, (metric) => ({
               id: metric.key,
               name: _.capitalize(metric.key.replace(/_/g, ' ')),
-              description: 'Métrica',
+              description: 'tree-view.metric',
               parent: measure.key
             }))
           }))
@@ -180,7 +180,7 @@ export default function TreeViewFilter() {
           <Box display="flex" flexDirection="column">
             <Typography variant="body1" whiteSpace="nowrap">{nodes.name}</Typography>
             <Typography variant="caption" whiteSpace="nowrap" color="gray" mt="-6px">
-              {nodes.description}
+              {nodes.description && t(nodes.description)}
             </Typography>
           </Box>
         </Box>

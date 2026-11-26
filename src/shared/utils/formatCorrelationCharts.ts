@@ -10,6 +10,9 @@ import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { formatCount, formatStatistic, MISSING_STATISTIC } from '@utils/distributionSummary';
 import { escapeHtml } from '@utils/formatOverviewCharts';
 import { CsvChart, CsvColumn, CsvValue } from '@utils/exportCsv';
+import i18n from '../i18n/i18n';
+import { intlLocale, datePattern } from '../i18n/dateLocale';
+import { translatedColumns, translatedRecord } from '../i18n/translatedRecord';
 
 /** Escala divergente da correlação: laranja em −1, cinza claro em 0 e azul em +1, como na referência. */
 export const CORRELATION_COLORS = {
@@ -40,16 +43,16 @@ export const METHOD_LABELS: Record<NonNullable<RepositoryCorrelation['method']>,
   spearman: 'Spearman'
 };
 
-export const CORRELATION_LEVEL_LABELS: Record<CorrelationLevel, string> = {
-  characteristic: 'Característica',
-  subcharacteristic: 'Subcaracterística'
-};
+export const CORRELATION_LEVEL_LABELS: Record<CorrelationLevel, string> = translatedRecord({
+  characteristic: 'dashboards:correlation.level.characteristic',
+  subcharacteristic: 'dashboards:correlation.level.subcharacteristic'
+});
 
 /** Nome do nível no plural, como aparece nas frases da página. */
-export const CORRELATION_LEVEL_PLURALS: Record<CorrelationLevel, string> = {
-  characteristic: 'características',
-  subcharacteristic: 'subcaracterísticas'
-};
+export const CORRELATION_LEVEL_PLURALS: Record<CorrelationLevel, string> = translatedRecord({
+  characteristic: 'dashboards:correlation.plural.characteristic',
+  subcharacteristic: 'dashboards:correlation.plural.subcharacteristic'
+});
 
 /** Uma célula do triângulo de baixo: o par, com a posição da linha e da coluna na ordem das entidades. */
 export interface CorrelationCell {
@@ -107,19 +110,21 @@ function methodLabel(correlation: RepositoryCorrelation): string {
 /** Tooltip das duas matrizes: o par e o coeficiente, como "Maintainability × Reliability: Spearman = 0,71". */
 export function formatPairTooltip(cell: CorrelationCell, correlation: RepositoryCorrelation): string {
   const names = `${escapeHtml(cell.rowName)} × ${escapeHtml(cell.columnName)}`;
-  if (cell.pair.coefficient === null) return `${names}: sem correlação<br/>Uma delas não variou entre as releases`;
+  if (cell.pair.coefficient === null) return i18n.t('dashboards:correlation.no-correlation-tooltip', { names });
   return `${names}: ${methodLabel(correlation)} = <strong>${formatStatistic(cell.pair.coefficient)}</strong>`;
 }
 
 /** Nomes das entidades numa frase: "Reliability, Maintainability e Functional Suitability". */
 function formatNames(entities: RepositoryCorrelation['entities']): string {
-  return new Intl.ListFormat('pt-BR', { type: 'conjunction' }).format(entities.map((entity) => entity.name));
+  return new Intl.ListFormat(intlLocale(), { type: 'conjunction' }).format(entities.map((entity) => entity.name));
 }
 
 /** Situação da release na análise: "Usada" ou "Fora: sem valor de Reliability e Maintainability". */
 export function formatReleaseStatus(row: CorrelationReleaseValues, correlation: RepositoryCorrelation): string {
-  if (row.used) return 'Usada';
-  return `Fora: sem valor de ${formatNames(correlation.entities.filter((entity) => row.values[entity.key] === null))}`;
+  if (row.used) return i18n.t('dashboards:correlation.status.used');
+  return i18n.t('dashboards:correlation.status.out', {
+    names: formatNames(correlation.entities.filter((entity) => row.values[entity.key] === null))
+  });
 }
 
 /**
@@ -132,46 +137,58 @@ export function formatCorrelationInfo(correlation: RepositoryCorrelation): strin
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
   // a linha só aparece com as matrizes, que precisam de pelo menos 3 releases
   const parts = [
-    `${formatCount(releases)} releases de ${correlation.repository.name}`,
-    `${formatCount(entities)} ${noun}`
+    i18n.t('dashboards:correlation.info.releases', {
+      amount: formatCount(releases),
+      repository: correlation.repository.name
+    }),
+    i18n.t('dashboards:correlation.info.entities', { amount: formatCount(entities), noun })
   ];
   if (correlation.method && correlation.non_normal !== null) {
     const nonNormal = formatNames(correlation.entities.filter((entity) => entity.normal === false));
     const normality = correlation.non_normal
-      ? `distribuição não normal em ${formatCount(correlation.non_normal)} de ${formatCount(
-          entities
-        )} ${noun}: ${nonNormal}`
-      : `distribuição normal nas ${formatCount(entities)} ${noun}`;
-    parts.push(`coeficiente aplicado: ${methodLabel(correlation)} (${normality})`);
+      ? i18n.t('dashboards:correlation.info.non-normal', {
+          nonNormal: formatCount(correlation.non_normal),
+          total: formatCount(entities),
+          noun,
+          names: nonNormal
+        })
+      : i18n.t('dashboards:correlation.info.normal', { total: formatCount(entities), noun });
+    parts.push(i18n.t('dashboards:correlation.info.method', { method: methodLabel(correlation), normality }));
   }
   const excluded = correlation.excluded_releases;
   if (excluded) {
-    parts.push(
-      excluded === 1
-        ? '1 release deixada de fora por falta de valor'
-        : `${formatCount(excluded)} releases deixadas de fora por falta de valor`
-    );
+    parts.push(i18n.t('dashboards:correlation.info.excluded', { count: excluded, formatted: formatCount(excluded) }));
   }
   return parts.join(' · ');
 }
 
 /** Nota da legenda (CA4): "Itálico e opaco: não significativo (|r| < 0,44, p < 0,05, n = 20)". */
 export function formatSignificanceNote(correlation: RepositoryCorrelation): string {
-  return `Itálico e opaco: não significativo (|r| < ${formatStatistic(
-    correlation.critical_value
-  )}, p < 0,05, n = ${formatCount(correlation.releases.length)})`;
+  return i18n.t('dashboards:correlation.significance-note', {
+    critical: formatStatistic(correlation.critical_value),
+    amount: formatCount(correlation.releases.length)
+  });
 }
 
 /** Texto acessível das matrizes: o coeficiente de cada par e se ele é significativo. */
 export function describeCorrelation(correlation: RepositoryCorrelation, kind: string): string {
   const pairs = getCorrelationCells(correlation).map(({ pair, rowName, columnName }) => {
-    if (pair.coefficient === null) return `${rowName} × ${columnName}: sem correlação`;
-    const significance = pair.significant ? '' : ', não significativo';
-    return `${rowName} × ${columnName}: ${formatStatistic(pair.coefficient)}${significance}`;
+    if (pair.coefficient === null)
+      return i18n.t('dashboards:correlation.pair.none', { row: rowName, column: columnName });
+    const key = pair.significant
+      ? 'dashboards:correlation.pair.value'
+      : 'dashboards:correlation.pair.value-not-significant';
+    return i18n.t(key, { row: rowName, column: columnName, value: formatStatistic(pair.coefficient) });
   });
-  return `${kind} de ${methodLabel(correlation)} entre ${formatCount(correlation.entities.length)} ${
-    CORRELATION_LEVEL_PLURALS[correlation.level]
-  } de ${correlation.repository.name} em ${formatCount(correlation.releases.length)} releases. ${pairs.join('; ')}.`;
+  return i18n.t('dashboards:correlation.describe', {
+    kind,
+    method: methodLabel(correlation),
+    amount: formatCount(correlation.entities.length),
+    noun: CORRELATION_LEVEL_PLURALS[correlation.level],
+    repository: correlation.repository.name,
+    releases: formatCount(correlation.releases.length),
+    pairs: pairs.join('; ')
+  });
 }
 
 /** Largura e altura do gráfico: uma célula por entidade e, à direita, o espaço do último nome da diagonal. */
@@ -340,7 +357,7 @@ export function formatCorrelationMatrixOptions(correlation: RepositoryCorrelatio
   return formatMatrixBase(
     correlation,
     cells,
-    describeCorrelation(correlation, 'Matriz de correlação'),
+    describeCorrelation(correlation, i18n.t('dashboards:correlation.matrix')),
     renderCorrelationCell(cells)
   );
 }
@@ -351,7 +368,7 @@ export function formatCorrelationBubbleOptions(correlation: RepositoryCorrelatio
   return formatMatrixBase(
     correlation,
     cells,
-    describeCorrelation(correlation, 'Matriz de bolhas'),
+    describeCorrelation(correlation, i18n.t('dashboards:correlation.bubbles')),
     renderBubbleCell(cells)
   );
 }
@@ -376,17 +393,17 @@ export type CorrelationCsvRow = {
   releases: number;
 };
 
-const CORRELATION_CSV_COLUMNS: CsvColumn<CorrelationCsvRow>[] = [
-  { key: 'repository', title: 'Repositório' },
-  { key: 'level', title: 'Nível' },
-  { key: 'row', title: 'Linha' },
-  { key: 'column', title: 'Coluna' },
-  { key: 'coefficient', title: 'Coeficiente' },
-  { key: 'p_value', title: 'p-valor' },
-  { key: 'significant', title: 'Significativo' },
-  { key: 'method', title: 'Coeficiente aplicado' },
-  { key: 'releases', title: 'Releases' }
-];
+const CORRELATION_CSV_COLUMNS: CsvColumn<CorrelationCsvRow>[] = translatedColumns<CorrelationCsvRow>([
+  ['repository', 'csv.repository'],
+  ['level', 'csv.level'],
+  ['row', 'csv.row'],
+  ['column', 'csv.column'],
+  ['coefficient', 'csv.coefficient'],
+  ['p_value', 'csv.p-value'],
+  ['significant', 'csv.significant'],
+  ['method', 'csv.method'],
+  ['releases', 'csv.releases']
+]);
 
 /** CSV de uma matriz: um par por linha, com o coeficiente e o p-valor do Service, sem arredondar. */
 export function formatCorrelationCsv(correlation: RepositoryCorrelation, name: string): CsvChart<CorrelationCsvRow> {
@@ -400,7 +417,7 @@ export function formatCorrelationCsv(correlation: RepositoryCorrelation, name: s
       column: columnName,
       coefficient: pair.coefficient,
       p_value: pair.p_value,
-      significant: pair.significant ? 'sim' : 'não',
+      significant: pair.significant ? i18n.t('csv.yes') : i18n.t('csv.no'),
       method: methodLabel(correlation),
       releases: correlation.releases.length
     }))
@@ -415,16 +432,16 @@ export function formatCorrelationReleasesCsv(correlation: RepositoryCorrelation)
   return {
     name: CORRELATION_CSV.releases,
     columns: [
-      { key: 'release', title: 'Release' },
-      { key: 'start_at', title: 'Início' },
-      { key: 'end_at', title: 'Fim' },
+      { key: 'release', title: i18n.t('csv.release') },
+      { key: 'start_at', title: i18n.t('csv.start') },
+      { key: 'end_at', title: i18n.t('csv.end') },
       ...correlation.entities.map((entity) => ({ key: entity.key, title: entity.name })),
-      { key: 'status', title: 'Situação' }
+      { key: 'status', title: i18n.t('csv.status') }
     ],
     rows: correlation.release_values.map((row) => ({
       release: row.release.release_name,
-      start_at: format(new Date(row.release.start_at), 'dd/MM/yyyy'),
-      end_at: format(new Date(row.release.end_at), 'dd/MM/yyyy'),
+      start_at: format(new Date(row.release.start_at), datePattern('date')),
+      end_at: format(new Date(row.release.end_at), datePattern('date')),
       ...row.values,
       status: formatReleaseStatus(row, correlation)
     }))

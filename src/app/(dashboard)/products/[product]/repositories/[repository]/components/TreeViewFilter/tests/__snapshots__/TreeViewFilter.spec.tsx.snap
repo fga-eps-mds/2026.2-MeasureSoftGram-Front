@@ -44,7 +44,7 @@ exports[`<TreeViewFilter /> should render correctly 1`] = `
             class="MuiBox-root css-1lr0f54"
           >
             <div
-              aria-label="search"
+              aria-label="Pesquisar"
               class="MuiFormControl-root MuiTextField-root text css-1u3bzj6-MuiFormControl-root-MuiTextField-root"
               data-testid="input"
               style="min-width: 250px;"
@@ -55,7 +55,7 @@ exports[`<TreeViewFilter /> should render correctly 1`] = `
                 for="search-bar"
                 id="search-bar-label"
               >
-                search
+                Pesquisar
               </label>
               <div
                 class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl MuiInputBase-sizeSmall MuiInputBase-adornedEnd css-o9k5xi-MuiInputBase-root-MuiOutlinedInput-root"
@@ -91,7 +91,7 @@ exports[`<TreeViewFilter /> should render correctly 1`] = `
                     class="css-njhac4-MuiNotchedOutlined-root"
                   >
                     <span>
-                      search
+                      Pesquisar
                     </span>
                   </legend>
                 </fieldset>

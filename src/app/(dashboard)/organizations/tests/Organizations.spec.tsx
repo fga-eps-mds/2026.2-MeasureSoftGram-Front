@@ -4,6 +4,7 @@ import { useRouter } from '@hooks/useRouter';
 import { toast } from 'react-toastify';
 import { getAllUsers } from '@services/user';
 import { useOrganizationContext } from '@contexts/OrganizationProvider';
+import { DuplicateFieldError } from '@services/saveError';
 import Organizations from '../Organizations';
 import { useOrganizationQuery } from '../hooks/useOrganizationQuery';
 
@@ -45,8 +46,8 @@ describe('Organizations Component', () => {
   const NAME_EXISTS_MESSAGE = 'toast.name-exists';
   const KEY_EXISTS_MESSAGE = 'toast.key-exists';
   const SERVER_ERROR_MESSAGE = 'server_down';
-  const CREATE_SUCCESS_MESSAGE = 'toast.sucess';
-  const EDIT_SUCCESS_MESSAGE = 'toast.sucess-edit';
+  const CREATE_SUCCESS_MESSAGE = 'toast.success';
+  const EDIT_SUCCESS_MESSAGE = 'toast.success-edit';
   const GENERIC_ERROR_MESSAGE = 'toast.error';
   const GENERIC_ERROR_EDIT_MESSAGE = 'toast.error-edit';
 
@@ -174,11 +175,11 @@ fireEvent.change(screen.getByTestId(INPUT_NAME_TEST_ID).querySelector(INPUT_SELE
     const nomeInput = screen.getByTestId(INPUT_NAME_TEST_ID).querySelector(INPUT_SELECTOR)!;
     fireEvent.change(nomeInput, { target: { value: 'Org Falha' } });
 
-    mockCreateOrganization.mockResolvedValueOnce({ type: 'error', error: { message: NAME_EXISTS_MESSAGE } });
+    mockCreateOrganization.mockResolvedValueOnce({ type: 'error', error: new DuplicateFieldError('name', 'duplicado') });
     fireEvent.click(screen.getByText('create'));
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith(NAME_EXISTS_MESSAGE));
 
-    mockCreateOrganization.mockResolvedValueOnce({ type: 'error', error: { message: KEY_EXISTS_MESSAGE } });
+    mockCreateOrganization.mockResolvedValueOnce({ type: 'error', error: new DuplicateFieldError('key', 'duplicada') });
     fireEvent.click(screen.getByText('create'));
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith(KEY_EXISTS_MESSAGE));
 
@@ -222,11 +223,11 @@ fireEvent.change(screen.getByTestId(INPUT_NAME_TEST_ID).querySelector(INPUT_SELE
       expect(screen.getByTestId(INPUT_NAME_TEST_ID).querySelector(INPUT_SELECTOR)?.value).toBe(ORG_EXISTING_NAME);
     });
 
-    mockUpdateOrganization.mockResolvedValueOnce({ type: 'error', error: { message: NAME_EXISTS_MESSAGE } });
+    mockUpdateOrganization.mockResolvedValueOnce({ type: 'error', error: new DuplicateFieldError('name', 'duplicado') });
     fireEvent.click(screen.getByText('save'));
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith(NAME_EXISTS_MESSAGE));
 
-    mockUpdateOrganization.mockResolvedValueOnce({ type: 'error', error: { message: KEY_EXISTS_MESSAGE } });
+    mockUpdateOrganization.mockResolvedValueOnce({ type: 'error', error: new DuplicateFieldError('key', 'duplicada') });
     fireEvent.click(screen.getByText('save'));
     
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith(KEY_EXISTS_MESSAGE));

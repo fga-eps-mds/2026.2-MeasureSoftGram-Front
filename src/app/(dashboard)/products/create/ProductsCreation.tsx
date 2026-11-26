@@ -10,7 +10,8 @@ import { Botoes, Container, Description, Form, Header, Wrapper } from '@app/(das
 import { useProviderTranslation as useTranslation } from '@hooks/useProviderTranslation';
 import MSGButton from '../../../../components/idv/buttons/MSGButton';
 import { useProductQuery } from '../hooks/useProductQuery';
-import { PRODUCT_NAME_EXISTS, ProductFormData } from '@services/product';
+import { ProductFormData } from '@services/product';
+import { isDuplicateField } from '@services/saveError';
 import { Product } from '@customTypes/product';
 
 const ProductsCreation: React.FC = () => {
@@ -69,8 +70,7 @@ const ProductsCreation: React.FC = () => {
       router.push('/products');
       return;
     }
-    // o erro traz a mensagem do service, em português; a tela mostra a do idioma escolhido
-    if (result.error.message === PRODUCT_NAME_EXISTS) {
+    if (isDuplicateField(result.error, 'name')) {
       toast.error(t('toast.name-exists'));
       return;
     }
@@ -81,13 +81,13 @@ const ProductsCreation: React.FC = () => {
     try {
       const result = await createProduct(novoProduto);
       if (result.type === 'success') {
-        toast.success(t('toast.sucess'));
+        toast.success(t('toast.success'));
         syncCreatedSelection(result.value, finalOrgId);
         await loadAllProducts();
         router.push('/products');
         return;
       }
-      if (result.error.message === PRODUCT_NAME_EXISTS) {
+      if (isDuplicateField(result.error, 'name')) {
         toast.error(t('toast.name-exists'));
         return;
       }

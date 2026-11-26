@@ -17,7 +17,8 @@ import {
 import { EntityAnalysis, EntityLevel, EntityMatrixLevel } from '@customTypes/product';
 import { useRequest } from '@hooks/useRequest';
 import { productQuery } from '@services/product';
-import { formatEntityValue, LEVEL_LABELS, NO_DATA_LABEL } from '@utils/entityLevels';
+import { formatEntityValue, LEVEL_LABELS, noDataLabel } from '@utils/entityLevels';
+import { useTranslation } from 'react-i18next';
 import { formatScore } from '@utils/entityMatrix';
 import { getQualityBand, QualityBand } from '@utils/qualityBands';
 import { SelectedCell } from './EntityHeatmap';
@@ -40,7 +41,7 @@ interface Props {
 }
 
 function formatCellValue(value: number | null, bands: QualityBand[]): string {
-  if (value === null) return NO_DATA_LABEL;
+  if (value === null) return noDataLabel();
   const band = getQualityBand(value, bands);
   return band ? `${formatScore(value)} (${band.grade}, ${band.label})` : formatScore(value);
 }
@@ -55,6 +56,7 @@ export default function RepositoryDetailDialog({
   onClose,
   bands
 }: Readonly<Props>) {
+  const { t } = useTranslation('dashboards');
   const childLevel = CHILD_LEVEL[level];
   const {
     data: analysis,
@@ -70,9 +72,9 @@ export default function RepositoryDetailDialog({
     if (error) {
       return (
         <Box display="flex" alignItems="center" gap={2}>
-          <Typography color="text.secondary">Não foi possível carregar a composição.</Typography>
+          <Typography color="text.secondary">{t('entity.detail.error')}</Typography>
           <Button size="small" onClick={() => void mutate()}>
-            Tentar novamente
+            {t('entity.detail.retry')}
           </Button>
         </Box>
       );
@@ -85,15 +87,15 @@ export default function RepositoryDetailDialog({
       );
     }
     if (!children || children.length === 0) {
-      return <Typography color="text.secondary">Esta entidade não tem filhos na configuração da release.</Typography>;
+      return <Typography color="text.secondary">{t('entity.detail.no-children')}</Typography>;
     }
     return (
-      <Table size="small" aria-label={`Filhos de ${cell?.column.name}`}>
+      <Table size="small" aria-label={t('entity.detail.children', { name: cell?.column.name })}>
         <TableHead>
           <TableRow>
             <TableCell>{LEVEL_LABELS[childLevel]}</TableCell>
-            <TableCell align="right">Peso</TableCell>
-            <TableCell align="right">Valor</TableCell>
+            <TableCell align="right">{t('entity.detail.weight')}</TableCell>
+            <TableCell align="right">{t('entity.detail.value')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -121,14 +123,14 @@ export default function RepositoryDetailDialog({
       {cell && (
         <>
           <DialogTitle>
-            {cell.column.name} em {cell.repository.name}
+            {t('entity.detail.title', { entity: cell.column.name, repository: cell.repository.name })}
             <Typography variant="body2" color="text.secondary">
-              Valor: {formatCellValue(cell.value, bands)}
+              {t('entity.detail.value-line', { value: formatCellValue(cell.value, bands) })}
             </Typography>
           </DialogTitle>
           <DialogContent dividers>{renderContent()}</DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Fechar</Button>
+            <Button onClick={onClose}>{t('entity.detail.close')}</Button>
           </DialogActions>
         </>
       )}

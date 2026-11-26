@@ -69,7 +69,7 @@ export function GithubRepositoriesModal({ handleCloseModal, open }: GithubReposi
       );
 
       if (result.type === 'success') {
-        toast.success(t('register.sucess'));
+        toast.success(t('register.success'));
         // router.push(`/products/${currentOrganization?.id}-${currentProduct?.id}-${currentProduct?.name}/repositories`, undefined, { shallow: true });
         handleCloseModal()
       }

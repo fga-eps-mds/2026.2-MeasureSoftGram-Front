@@ -16,19 +16,21 @@ import {
   getLevelBoxplotRows
 } from '@utils/formatDistributionCharts';
 import { BoxplotCsvRow, DISTRIBUTION_CSV } from '@utils/formatDistributionCsv';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 import DistributionChart from './DistributionChart';
 
-export const BOXPLOT_TITLE = 'Boxplot e percentis do nível';
+export const boxplotTitle = () => i18n.t('dashboards:distribution.card.boxplot');
 
 /** Colunas da tabela de percentis, com duas casas; a mediana fica em negrito e os discrepantes são uma contagem. */
 const PERCENTILE_COLUMNS: { label: string; key: keyof DistributionSummary; bold?: boolean }[] = [
-  { label: 'P10', key: 'p10' },
-  { label: 'Q1', key: 'q1' },
-  { label: 'Mediana', key: 'median', bold: true },
-  { label: 'Q3', key: 'q3' },
-  { label: 'P90', key: 'p90' },
-  { label: 'IQR', key: 'iqr' },
-  { label: 'Discrepantes', key: 'outliers' }
+  { label: 'distribution.boxplot.p10', key: 'p10' },
+  { label: 'distribution.boxplot.q1', key: 'q1' },
+  { label: 'distribution.boxplot.median', key: 'median', bold: true },
+  { label: 'distribution.boxplot.q3', key: 'q3' },
+  { label: 'distribution.boxplot.p90', key: 'p90' },
+  { label: 'distribution.boxplot.iqr', key: 'iqr' },
+  { label: 'distribution.boxplot.outliers', key: 'outliers' }
 ];
 
 function formatPercentile(summary: DistributionSummary, key: keyof DistributionSummary): string {
@@ -60,15 +62,15 @@ const nameCell = (theme: Theme) => ({
 
 const LEGEND_ITEMS = [
   {
-    label: 'Entidade escolhida',
+    label: 'distribution.boxplot.chosen',
     swatch: { backgroundColor: DISTRIBUTION_COLORS.entityBoxFill, border: `2px solid ${DISTRIBUTION_COLORS.entityBox}` }
   },
   {
-    label: 'Filhos no modelo',
+    label: 'distribution.boxplot.children',
     swatch: { backgroundColor: DISTRIBUTION_COLORS.childBoxFill, border: `1.5px solid ${DISTRIBUTION_COLORS.childBox}` }
   },
   {
-    label: 'Valor discrepante',
+    label: 'distribution.boxplot.outlier',
     swatch: {
       borderRadius: '50%',
       width: 9,
@@ -79,13 +81,14 @@ const LEGEND_ITEMS = [
 ];
 
 function BoxplotLegend() {
+  const { t } = useTranslation('dashboards');
   return (
     <Box component="ul" display="flex" flexWrap="wrap" gap="4px 16px" margin={0} padding={0} sx={{ listStyle: 'none' }}>
       {LEGEND_ITEMS.map((item) => (
         <Box component="li" key={item.label} display="flex" alignItems="center" gap="6px">
           <Box aria-hidden sx={{ width: 16, height: 9, boxSizing: 'border-box', flexShrink: 0, ...item.swatch }} />
           <Typography fontSize="11px" color={DASHBOARD_COLORS.text}>
-            {item.label}
+            {t(item.label)}
           </Typography>
         </Box>
       ))}
@@ -108,6 +111,10 @@ export default function DistributionBoxplot({
   /** O CSV do quadro, montado pela página; com ele, o cabeçalho ganha o botão "Exportar .csv". */
   csv?: CsvChart<BoxplotCsvRow>;
 }) {
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
   const rows = useMemo(() => getLevelBoxplotRows(entity, childEntities), [entity, childEntities]);
   const option = useMemo(() => {
     // o eixo x é o mesmo eixo de valores do histograma: 0 a 1, ou a escala da métrica
@@ -117,12 +124,12 @@ export default function DistributionBoxplot({
       entity.metric_type
     );
     return formatLevelBoxplotOptions(rows, histogram);
-  }, [entity, rows]);
+  }, [entity, rows, language]);
   const hasMetricChildren = entity.level === 'measure' && childEntities.some((child) => child.level === 'metric');
 
   return (
     <DashboardCard
-      title={BOXPLOT_TITLE}
+      title={boxplotTitle()}
       status="ready"
       headerAction={csv && <ExportCsvButton dashboard={DISTRIBUTION_CSV.dashboard} chart={csv} />}
     >
@@ -141,7 +148,7 @@ export default function DistributionBoxplot({
         <Box
           data-testid="percentile-scroll"
           role="group"
-          aria-label="Percentis de cada linha"
+          aria-label={t('distribution.boxplot.percentiles-aria')}
           tabIndex={0}
           // relative: o caption e os nomes escondidos (position absolute) ficam presos aqui dentro; sem isso, eles
           // escapam da rolagem e alargam a página em tela estreita
@@ -149,7 +156,7 @@ export default function DistributionBoxplot({
         >
           <Box component="table" sx={{ borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
             <Box component="caption" sx={VISUALLY_HIDDEN}>
-              Percentis de cada linha do boxplot
+              {t('distribution.boxplot.percentiles-caption')}
             </Box>
             <thead>
               <Box component="tr" sx={{ height: BOXPLOT_GRID.top }}>
@@ -165,7 +172,7 @@ export default function DistributionBoxplot({
                     color: DASHBOARD_COLORS.mutedText
                   })}
                 >
-                  Entidade
+                  {t('distribution.boxplot.entity')}
                 </Box>
                 {PERCENTILE_COLUMNS.map((column) => (
                   <Box
@@ -181,7 +188,7 @@ export default function DistributionBoxplot({
                       color: DASHBOARD_COLORS.mutedText
                     }}
                   >
-                    {column.label}
+                    {t(column.label)}
                   </Box>
                 ))}
               </Box>
@@ -233,13 +240,11 @@ export default function DistributionBoxplot({
 
       <BoxplotLegend />
       <Typography fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-        Cada caixa vai do Q1 ao Q3, com a marca da mediana, e as hastes vão até o último valor dentro dos limites. Os
-        círculos vazados são os valores discrepantes.
+        {t('distribution.boxplot.caption')}
       </Typography>
       {hasMetricChildren && (
         <Typography data-testid="boxplot-metric-note" fontSize="12px" color={DASHBOARD_COLORS.mutedText}>
-          As métricas de {entity.name} têm escala própria e não cabem no eixo de 0 a 1. Escolha o nível Métrica para ver
-          a distribuição de cada uma.
+          {t('distribution.boxplot.metric-note', { name: entity.name })}
         </Typography>
       )}
     </DashboardCard>

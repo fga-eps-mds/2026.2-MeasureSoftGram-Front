@@ -92,7 +92,7 @@ Object {
                   data-shrink="true"
                   id="demo-simple-select-autowidth-label"
                 >
-                  organization.placeholder
+                  Selecione a organização
                 </label>
                 <div
                   class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 kIApQp css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
@@ -135,7 +135,7 @@ Object {
                       class="css-sl37lx-MuiNotchedOutlined-root"
                     >
                       <span>
-                        organization.placeholder
+                        Selecione a organização
                       </span>
                     </legend>
                   </fieldset>
@@ -149,7 +149,7 @@ Object {
                   data-shrink="true"
                   id="demo-simple-select-autowidth-label"
                 >
-                  product.placeholder
+                  Selecione o produto
                 </label>
                 <div
                   class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 kIApQp css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
@@ -192,7 +192,7 @@ Object {
                       class="css-sl37lx-MuiNotchedOutlined-root"
                     >
                       <span>
-                        product.placeholder
+                        Selecione o produto
                       </span>
                     </legend>
                   </fieldset>
@@ -208,7 +208,7 @@ Object {
                   class="MuiBox-root css-10wzbhq"
                 >
                   <div
-                    aria-label="sidebar-options.overview.tooltip"
+                    aria-label="Visão Geral do Produto"
                     class="sc-ad80db87-0 gycRAr"
                     data-mui-internal-clone-element="true"
                   >
@@ -250,7 +250,7 @@ Object {
                     <div
                       class="MuiBox-root css-1113w14"
                     >
-                      sidebar-options.overview.text
+                      Visão Geral
                     </div>
                   </div>
                 </div>
@@ -258,7 +258,7 @@ Object {
                   class="MuiBox-root css-10wzbhq"
                 >
                   <div
-                    aria-label="sidebar-options.repos.tooltip"
+                    aria-label="Repositórios do Produto"
                     class="sc-ad80db87-0 gycRAr"
                     data-mui-internal-clone-element="true"
                   >
@@ -301,7 +301,7 @@ Object {
                     <div
                       class="MuiBox-root css-1113w14"
                     >
-                      sidebar-options.repos.text
+                      Repositórios
                     </div>
                   </div>
                 </div>
@@ -309,7 +309,7 @@ Object {
                   class="MuiBox-root css-10wzbhq"
                 >
                   <div
-                    aria-label="sidebar-options.release.tooltip"
+                    aria-label="Releases de cada repositório"
                     class="sc-ad80db87-0 gycRAr"
                     data-mui-internal-clone-element="true"
                   >
@@ -464,7 +464,7 @@ Object {
                 class="MuiBox-root css-10wzbhq"
               >
                 <div
-                  aria-label="tooltip.user-menu"
+                  aria-label="Menu do usuário"
                   class="sc-ad80db87-0 gycRAr"
                   data-mui-internal-clone-element="true"
                 >
@@ -580,7 +580,7 @@ Object {
                       <h6
                         class="MuiTypography-root MuiTypography-subtitle1 css-65a2cr-MuiTypography-root"
                       >
-                        organizations
+                        Organizações
                       </h6>
                     </li>
                     <li
@@ -711,7 +711,7 @@ Object {
                 data-shrink="true"
                 id="demo-simple-select-autowidth-label"
               >
-                organization.placeholder
+                Selecione a organização
               </label>
               <div
                 class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 kIApQp css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
@@ -754,7 +754,7 @@ Object {
                     class="css-sl37lx-MuiNotchedOutlined-root"
                   >
                     <span>
-                      organization.placeholder
+                      Selecione a organização
                     </span>
                   </legend>
                 </fieldset>
@@ -768,7 +768,7 @@ Object {
                 data-shrink="true"
                 id="demo-simple-select-autowidth-label"
               >
-                product.placeholder
+                Selecione o produto
               </label>
               <div
                 class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-formControl sc-779df817-0 kIApQp css-1yk1gt9-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root"
@@ -811,7 +811,7 @@ Object {
                     class="css-sl37lx-MuiNotchedOutlined-root"
                   >
                     <span>
-                      product.placeholder
+                      Selecione o produto
                     </span>
                   </legend>
                 </fieldset>
@@ -827,7 +827,7 @@ Object {
                 class="MuiBox-root css-10wzbhq"
               >
                 <div
-                  aria-label="sidebar-options.overview.tooltip"
+                  aria-label="Visão Geral do Produto"
                   class="sc-ad80db87-0 gycRAr"
                   data-mui-internal-clone-element="true"
                 >
@@ -869,7 +869,7 @@ Object {
                   <div
                     class="MuiBox-root css-1113w14"
                   >
-                    sidebar-options.overview.text
+                    Visão Geral
                   </div>
                 </div>
               </div>
@@ -877,7 +877,7 @@ Object {
                 class="MuiBox-root css-10wzbhq"
               >
                 <div
-                  aria-label="sidebar-options.repos.tooltip"
+                  aria-label="Repositórios do Produto"
                   class="sc-ad80db87-0 gycRAr"
                   data-mui-internal-clone-element="true"
                 >
@@ -920,7 +920,7 @@ Object {
                   <div
                     class="MuiBox-root css-1113w14"
                   >
-                    sidebar-options.repos.text
+                    Repositórios
                   </div>
                 </div>
               </div>
@@ -928,7 +928,7 @@ Object {
                 class="MuiBox-root css-10wzbhq"
               >
                 <div
-                  aria-label="sidebar-options.release.tooltip"
+                  aria-label="Releases de cada repositório"
                   class="sc-ad80db87-0 gycRAr"
                   data-mui-internal-clone-element="true"
                 >
@@ -1083,7 +1083,7 @@ Object {
               class="MuiBox-root css-10wzbhq"
             >
               <div
-                aria-label="tooltip.user-menu"
+                aria-label="Menu do usuário"
                 class="sc-ad80db87-0 gycRAr"
                 data-mui-internal-clone-element="true"
               >
@@ -1199,7 +1199,7 @@ Object {
                     <h6
                       class="MuiTypography-root MuiTypography-subtitle1 css-65a2cr-MuiTypography-root"
                     >
-                      organizations
+                      Organizações
                     </h6>
                   </li>
                   <li
@@ -1424,7 +1424,7 @@ Object {
                       <h6
                         class="MuiTypography-root MuiTypography-subtitle1 css-65a2cr-MuiTypography-root"
                       >
-                        organizations
+                        Organizações
                       </h6>
                     </li>
                     <li
@@ -1592,7 +1592,7 @@ Object {
                     <h6
                       class="MuiTypography-root MuiTypography-subtitle1 css-65a2cr-MuiTypography-root"
                     >
-                      organizations
+                      Organizações
                     </h6>
                   </li>
                   <li

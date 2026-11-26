@@ -19,16 +19,24 @@
   "toast": {
     "error": "Erro ao criar a organização",
     "error_gitlab": "Erro ao criar o grupo",
-    "sucess": "Organização criada com sucesso",
-    "sucess_gitlab": "Grupo criado com sucesso",
+    "success": "Organização criada com sucesso",
+    "success_gitlab": "Grupo criado com sucesso",
     "error-edit": "Erro ao atualizar a organização!",
     "error-edit_gitlab": "Erro ao atualizar o grupo!",
-    "sucess-edit": "Organização atualizada com sucesso!",
-    "sucess-edit_gitlab": "Grupo atualizado com sucesso!",
+    "success-edit": "Organização atualizada com sucesso!",
+    "success-edit_gitlab": "Grupo atualizado com sucesso!",
     "name-exists": "Já existe uma organização com este nome.",
     "name-exists_gitlab": "Já existe um grupo com este nome.",
     "key-exists": "Já existe uma organização com esta chave.",
     "key-exists_gitlab": "Já existe um grupo com esta chave.",
     "load-users": "Erro ao carregar os usuários."
+  },
+  "errors": {
+    "duplicate-name": "Já existe uma organização com este nome.",
+    "duplicate-key": "Já existe uma organização com esta chave.",
+    "create": "Ocorreu um erro ao criar organização.",
+    "update": "Ocorreu um erro ao atualizar organização.",
+    "load": "Erro ao carregar {{organizations}}.",
+    "load-retry": "Erro ao carregar {{organizations}}. Por favor, tente novamente."
   }
 }

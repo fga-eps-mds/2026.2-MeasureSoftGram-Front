@@ -51,9 +51,9 @@ describe('PlannedVsAccomplishedEqualizer', () => {
     expect(screen.getByTestId('equalizer-curve-accomplished')).toBeInTheDocument();
 
     const legend = screen.getByTestId('equalizer-legend');
-    expect(legend).toHaveTextContent('equalizer.legend.planned');
-    expect(legend).toHaveTextContent('equalizer.legend.accomplished');
-    expect(legend).toHaveTextContent('equalizer.legend.cursor');
+    expect(legend).toHaveTextContent('Planejado (Rp)');
+    expect(legend).toHaveTextContent('Realizado (Rd)');
+    expect(legend).toHaveTextContent('Cursor: valor planejado');
   });
 
   it('não exibe a escala vertical de 0 a 1', () => {
@@ -88,9 +88,9 @@ describe('PlannedVsAccomplishedEqualizer', () => {
     render(<PlannedVsAccomplishedEqualizer planned={planned} accomplished={accomplished} />);
 
     const status = screen.getByTestId('vector-status');
-    expect(status).toHaveTextContent('= equalizer.status.equal');
-    expect(status).toHaveTextContent('▼ equalizer.status.below');
-    expect(status).toHaveTextContent('▲ equalizer.status.above');
+    expect(status).toHaveTextContent('= Igual ao planejado');
+    expect(status).toHaveTextContent('▼ Abaixo do planejado');
+    expect(status).toHaveTextContent('▲ Acima do planejado');
   });
 
   it('mostra planejado, realizado, diferença e situação ao passar o mouse', async () => {
@@ -102,7 +102,7 @@ describe('PlannedVsAccomplishedEqualizer', () => {
     expect(tooltip).toHaveTextContent('(Rp): 0.50');
     expect(tooltip).toHaveTextContent('(Rd): 0.30');
     expect(tooltip).toHaveTextContent('(Rp − Rd): 0.20');
-    expect(tooltip).toHaveTextContent('equalizer.status.below');
+    expect(tooltip).toHaveTextContent('Abaixo do planejado');
   });
 
   it('sinaliza característica sem valor realizado como sem dado, sem exibir zero', () => {
@@ -114,8 +114,8 @@ describe('PlannedVsAccomplishedEqualizer', () => {
       />,
     );
 
-    expect(screen.getByTestId('vector-rd')).toHaveTextContent('Rd0.70equalizer.noData0.60');
-    expect(screen.getByTestId('vector-status')).toHaveTextContent('equalizer.status.no-data');
+    expect(screen.getByTestId('vector-rd')).toHaveTextContent('Rd0.70Sem dado0.60');
+    expect(screen.getByTestId('vector-status')).toHaveTextContent('Sem dado realizado');
     // a curva do realizado é interrompida na característica sem dado (dois trechos)
     const accomplishedPath = screen.getByTestId('equalizer-curve-accomplished').getAttribute('d') ?? '';
     expect(accomplishedPath.match(/M/g)).toHaveLength(2);
@@ -162,7 +162,7 @@ describe('PlannedVsAccomplishedEqualizer', () => {
   it('não exibe o equalizador quando a release não tem planejamento', () => {
     render(<PlannedVsAccomplishedEqualizer planned={[]} accomplished={accomplished} />);
 
-    expect(screen.getByTestId('equalizer-no-planning')).toHaveTextContent('equalizer.noPlanning');
+    expect(screen.getByTestId('equalizer-no-planning')).toHaveTextContent('Esta release não possui planejamento. Planeje a release para ver a comparação entre o planejado e o realizado.');
     expect(screen.queryByTestId('planned-vs-accomplished-equalizer')).not.toBeInTheDocument();
   });
 });

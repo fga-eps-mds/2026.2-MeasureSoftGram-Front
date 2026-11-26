@@ -35,7 +35,10 @@ jest.mock('@contexts/ProductProvider', () => ({
 
 jest.mock('@hooks/useProviderTranslation', () => ({
   useProviderTranslation: () => ({
-    t: (key: string) => (key.includes('repos.text') ? 'Repositórios' : key),
+    t: (key: string) => {
+      if (key.includes('repos.text')) return 'Repositórios';
+      return key.startsWith('dashboards:') ? jest.requireActual('../../../../i18n/i18n').default.getFixedT('pt')(key) : key;
+    },
     i18n: { language: 'pt' },
   }),
 }));

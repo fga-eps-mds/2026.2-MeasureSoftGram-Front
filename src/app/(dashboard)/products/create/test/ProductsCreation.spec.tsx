@@ -1,5 +1,5 @@
 import React from 'react';
-import { PRODUCT_NAME_EXISTS } from '@services/product';
+import { DuplicateFieldError } from '@services/saveError';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { toast } from 'react-toastify';
 import ProductsCreation from '../ProductsCreation';
@@ -56,7 +56,7 @@ describe('ProductsCreation Component', () => {
 
   const nameInputTestId = 'name-input';
   const newProductTitle = 'Produto Novo';
-  const toastNameExists = 'toast.name-exists';
+  const toastNameExists = 'Já existe um produto com este nome.';
   const editingProductTitle = 'Produto Editando';
   const editingProductDesc = 'Desc Editando';
 
@@ -107,7 +107,7 @@ describe('ProductsCreation Component', () => {
     fireEvent.change(nameInput, { target: { value: newProductTitle } });
     fireEvent.change(descInput, { target: { value: 'Desc Novo' } });
 
-    const submitButton = screen.getByRole('button', { name: /create/i });
+    const submitButton = screen.getByRole('button', { name: /criar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -124,14 +124,14 @@ describe('ProductsCreation Component', () => {
   it('deve exibir toast.error se a criação de produto falhar com erro com mensagem ja existente', async () => {
     mockCreateProduct.mockResolvedValue({
       type: 'error',
-      error: { message: PRODUCT_NAME_EXISTS },
+      error: new DuplicateFieldError('name', 'duplicado'),
     });
     render(<ProductsCreation />);
 
     const nameInput = screen.getByTestId(nameInputTestId).querySelector('input')!;
     fireEvent.change(nameInput, { target: { value: newProductTitle } });
 
-    const submitButton = screen.getByRole('button', { name: /create/i });
+    const submitButton = screen.getByRole('button', { name: /criar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -149,11 +149,11 @@ describe('ProductsCreation Component', () => {
     const nameInput = screen.getByTestId(nameInputTestId).querySelector('input')!;
     fireEvent.change(nameInput, { target: { value: newProductTitle } });
 
-    const submitButton = screen.getByRole('button', { name: /create/i });
+    const submitButton = screen.getByRole('button', { name: /criar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('toast.error-create');
+      expect(toast.error).toHaveBeenCalledWith('Erro ao criar o Produto!');
     });
   });
 
@@ -165,7 +165,7 @@ describe('ProductsCreation Component', () => {
     const nameInput = screen.getByTestId(nameInputTestId).querySelector('input')!;
     fireEvent.change(nameInput, { target: { value: newProductTitle } });
 
-    const submitButton = screen.getByRole('button', { name: /create/i });
+    const submitButton = screen.getByRole('button', { name: /criar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -232,7 +232,7 @@ describe('ProductsCreation Component', () => {
 
     await screen.findByDisplayValue(editingProductTitle);
 
-    const submitButton = screen.getByRole('button', { name: /save/i });
+    const submitButton = screen.getByRole('button', { name: /salvar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -241,7 +241,7 @@ describe('ProductsCreation Component', () => {
         description: editingProductDesc,
         organizationId: 123,
       });
-      expect(toast.success).toHaveBeenCalledWith('toast.success-edit');
+      expect(toast.success).toHaveBeenCalledWith('Produto atualizado com sucesso!');
     });
   });
 
@@ -260,14 +260,14 @@ describe('ProductsCreation Component', () => {
     });
     mockUpdateProduct.mockResolvedValue({
       type: 'error',
-      error: { message: PRODUCT_NAME_EXISTS },
+      error: new DuplicateFieldError('name', 'duplicado'),
     });
 
     render(<ProductsCreation />);
 
     await screen.findByDisplayValue(editingProductTitle);
 
-    const submitButton = screen.getByRole('button', { name: /save/i });
+    const submitButton = screen.getByRole('button', { name: /salvar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -297,11 +297,11 @@ describe('ProductsCreation Component', () => {
 
     await screen.findByDisplayValue(editingProductTitle);
 
-    const submitButton = screen.getByRole('button', { name: /save/i });
+    const submitButton = screen.getByRole('button', { name: /salvar/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('toast.error-edit');
+      expect(toast.error).toHaveBeenCalledWith('Erro ao atualizar o Produto!');
     });
   });
 
@@ -318,7 +318,7 @@ describe('ProductsCreation Component', () => {
 
   it('deve voltar para a listagem ao clicar no botão de voltar', () => {
     render(<ProductsCreation />);
-    const backButton = screen.getByRole('button', { name: /back/i });
+    const backButton = screen.getByRole('button', { name: /voltar/i });
     fireEvent.click(backButton);
     expect(mockPush).toHaveBeenCalledWith('/products');
   });

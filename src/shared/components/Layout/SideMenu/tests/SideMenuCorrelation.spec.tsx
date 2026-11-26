@@ -30,7 +30,7 @@ jest.mock('@contexts/SidebarProvider/SideMenuProvider', () => ({
 }));
 jest.mock('@hooks/useProviderTranslation', () => ({
   useProviderTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string) => (key.startsWith('dashboards:') ? jest.requireActual('../../../../i18n/i18n').default.getFixedT('pt')(key) : key),
     i18n: { language: 'pt', changeLanguage: jest.fn() }
   })
 }));

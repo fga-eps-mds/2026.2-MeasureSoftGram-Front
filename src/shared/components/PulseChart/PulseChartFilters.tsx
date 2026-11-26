@@ -3,6 +3,7 @@ import { Box, MenuItem, Select, TextField, Typography } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useProviderTerms } from '@hooks/useProviderTerms';
 import { COLOR_TOKENS } from '@utils/formatPulseChart';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   /** Sem a lista, a barra mostra só o período e o botão de exportar (pulso das características do repositório). */
@@ -64,6 +65,7 @@ export const PulseChartFilters: React.FC<Props> = ({
   exportAction,
 }) => {
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
   const handleSelectRepo = (e: SelectChangeEvent<string>) => {
     onRepoChange?.(e.target.value);
   };
@@ -80,9 +82,7 @@ export const PulseChartFilters: React.FC<Props> = ({
             inputProps={{ 'aria-label': terms.Repository }}
             sx={{ ...FIELD_SX, minWidth: 240, height: `${FIELD_HEIGHT}px` }}
           >
-            <MenuItem value="all">
-              Todos ({repositories.length})
-            </MenuItem>
+            <MenuItem value="all">{t('pulse.filters.all', { amount: repositories.length })}</MenuItem>
             {repositories.map((repo) => (
               <MenuItem key={repo.id} value={String(repo.id)}>
                 {repo.name}
@@ -93,25 +93,25 @@ export const PulseChartFilters: React.FC<Props> = ({
       )}
 
       {/* Start Date */}
-      <LabeledField label="De">
+      <LabeledField label={t('pulse.filters.from')}>
         <TextField
           type="date"
           size="small"
           value={startDate}
           onChange={(e) => onStartDateChange(e.target.value)}
-          inputProps={{ 'aria-label': 'De' }}
+          inputProps={{ 'aria-label': t('pulse.filters.from') }}
           sx={FIELD_SX}
         />
       </LabeledField>
 
       {/* End Date */}
-      <LabeledField label="Até">
+      <LabeledField label={t('pulse.filters.to')}>
         <TextField
           type="date"
           size="small"
           value={endDate}
           onChange={(e) => onEndDateChange(e.target.value)}
-          inputProps={{ 'aria-label': 'Até' }}
+          inputProps={{ 'aria-label': t('pulse.filters.to') }}
           sx={FIELD_SX}
         />
       </LabeledField>

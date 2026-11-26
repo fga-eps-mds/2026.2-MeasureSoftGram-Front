@@ -130,7 +130,7 @@ const RepositoriesTable: React.FC<Props> = ({ maxCount }: Props) => {
               },
             { revalidate: false }
           );
-          toast.success(t('delete.toast-sucess'));
+          toast.success(t('delete.toast-success'));
         } else {
           toast.error(t('delete.toast-error'));
         }

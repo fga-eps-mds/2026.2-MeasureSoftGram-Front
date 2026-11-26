@@ -10,6 +10,7 @@ import { useOrganizationContext } from '@contexts/OrganizationProvider';
 import MSGButton from '../../../components/idv/buttons/MSGButton';
 import { useOrganizationQuery } from './hooks/useOrganizationQuery';
 import { Title, Container, Wrapper, Description, Form, Header } from './styles';
+import { isDuplicateField } from '@services/saveError';
 
 const Organizations: React.FC = () => {
   const router = useRouter();
@@ -77,12 +78,10 @@ const Organizations: React.FC = () => {
   };
 
   const handleResultError = (result: any, defaultErrorMsg: string) => {
-    const nameExist = t('toast.name-exists');
-    const keyExist = t('toast.key-exists');
-    if (result.error?.message === nameExist) {
-      toast.error(nameExist);
-    } else if (result.error?.message === keyExist) {
-      toast.error(keyExist);
+    if (isDuplicateField(result.error, 'name')) {
+      toast.error(t('toast.name-exists'));
+    } else if (isDuplicateField(result.error, 'key')) {
+      toast.error(t('toast.key-exists'));
     } else {
       toast.error(t(defaultErrorMsg));
     }
@@ -101,7 +100,7 @@ const Organizations: React.FC = () => {
     if (isEditMode && router.query.edit) {
       result = await updateOrganization(router.query.edit as string, novaOrganizacao);
       if (result.type === 'success') {
-        toast.success(t('toast.sucess-edit'));
+        toast.success(t('toast.success-edit'));
         setTimeout(() => {
           router.push('/home');
         }, 2000);
@@ -111,7 +110,7 @@ const Organizations: React.FC = () => {
     } else {
       result = await createOrganization(novaOrganizacao);
       if (result.type === 'success') {
-        toast.success(t('toast.sucess'));
+        toast.success(t('toast.success'));
         const createdOrg = result.value as any;
         if (createdOrg && createdOrg.id) {
           localStorage.setItem('selectedOrgId', JSON.stringify(createdOrg.id.toString()));

@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { DistributionSummary } from '@customTypes/product';
+import i18n from '../i18n/i18n';
+import { dateLocale, intlLocale } from '../i18n/dateLocale';
 
 /** O que aparece no lugar de uma estatística que o Service devolve null. */
 export const MISSING_STATISTIC = '—';
@@ -16,16 +17,16 @@ export const MIN_ANALYSES_FOR_SKEWNESS = 3;
 export function formatStatistic(value: number | null | undefined): string {
   if (value === null || value === undefined) return MISSING_STATISTIC;
   const rounded = Math.abs(value) < 0.005 ? 0 : value;
-  return rounded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return rounded.toLocaleString(intlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** Contagem com separador de milhar: 1.284. */
 export function formatCount(value: number): string {
-  return value.toLocaleString('pt-BR');
+  return value.toLocaleString(intlLocale());
 }
 
 export function formatAnalysisCount(count: number): string {
-  return count === 1 ? '1 análise' : `${formatCount(count)} análises`;
+  return i18n.t('dashboards:distribution.analysis-count', { count, formatted: formatCount(count) });
 }
 
 export interface SummaryRow {
@@ -43,21 +44,29 @@ export interface SummaryStatistic {
 }
 
 /** As estatísticas do resumo, na ordem da referência; a tela e o CSV usam a mesma lista. */
+const summaryStatistic = (key: keyof DistributionSummary, highlight?: boolean): SummaryStatistic => ({
+  key,
+  ...(highlight ? { highlight } : {}),
+  get label() {
+    return i18n.t(`dashboards:distribution.summary.${key}`);
+  }
+});
+
 export const SUMMARY_STATISTICS: SummaryStatistic[] = [
-  { label: 'Análises', key: 'count' },
-  { label: 'Mínimo', key: 'min' },
-  { label: 'Q1 (1º quartil)', key: 'q1' },
-  { label: 'Mediana', key: 'median' },
-  { label: 'Q3 (3º quartil)', key: 'q3' },
-  { label: 'Máximo', key: 'max' },
-  { label: 'IQR (Q3 − Q1)', key: 'iqr', highlight: true },
-  { label: 'Limite inferior', key: 'lower_limit' },
-  { label: 'Limite superior', key: 'upper_limit' },
-  { label: 'Discrepantes', key: 'outliers' },
-  { label: 'Média', key: 'mean' },
-  { label: 'Desvio padrão', key: 'std' },
-  { label: 'Variância', key: 'variance' },
-  { label: 'Assimetria', key: 'skewness' }
+  summaryStatistic('count'),
+  summaryStatistic('min'),
+  summaryStatistic('q1'),
+  summaryStatistic('median'),
+  summaryStatistic('q3'),
+  summaryStatistic('max'),
+  summaryStatistic('iqr', true),
+  summaryStatistic('lower_limit'),
+  summaryStatistic('upper_limit'),
+  summaryStatistic('outliers'),
+  summaryStatistic('mean'),
+  summaryStatistic('std'),
+  summaryStatistic('variance'),
+  summaryStatistic('skewness')
 ];
 
 /** Contagens sem casas e o resto com duas. */
@@ -80,12 +89,12 @@ export function describeSkewness(skewness: number | null): string | null {
   if (skewness === null) return null;
   const value = formatStatistic(skewness);
   if (value === formatStatistic(0)) {
-    return 'Assimetria perto de zero: os valores se espalham por igual dos dois lados da mediana.';
+    return i18n.t('dashboards:distribution.skewness.zero');
   }
   if (skewness > 0) {
-    return `Assimetria positiva (${value}): a cauda longa fica à direita, com valores altos isolados.`;
+    return i18n.t('dashboards:distribution.skewness.positive', { value });
   }
-  return `Assimetria negativa (${value}): a cauda longa fica à esquerda, com valores baixos isolados.`;
+  return i18n.t('dashboards:distribution.skewness.negative', { value });
 }
 
 /**
@@ -97,11 +106,12 @@ export function getSkewnessWarning({
   skewness
 }: Pick<DistributionSummary, 'count' | 'skewness'>): string | null {
   if (count < MIN_ANALYSES_FOR_SKEWNESS) {
-    return `Faltam análises para a assimetria: ela precisa de pelo menos ${MIN_ANALYSES_FOR_SKEWNESS}, e o período tem ${formatAnalysisCount(
-      count
-    )}.`;
+    return i18n.t('dashboards:distribution.skewness.few-analyses', {
+      min: MIN_ANALYSES_FOR_SKEWNESS,
+      amount: formatAnalysisCount(count)
+    });
   }
-  if (skewness === null) return 'Sem assimetria: todas as análises do período têm o mesmo valor.';
+  if (skewness === null) return i18n.t('dashboards:distribution.skewness.same-value');
   return null;
 }
 
@@ -110,7 +120,7 @@ export function formatPeriod(first: string, last: string): string {
   const start = new Date(first);
   const end = new Date(last);
   const pattern = start.getFullYear() === end.getFullYear() ? 'd MMM' : 'd MMM yyyy';
-  const from = format(start, pattern, { locale: ptBR });
-  const to = format(end, pattern, { locale: ptBR });
-  return from === to ? from : `${from} a ${to}`;
+  const from = format(start, pattern, { locale: dateLocale() });
+  const to = format(end, pattern, { locale: dateLocale() });
+  return from === to ? from : i18n.t('dashboards:distribution.period', { from, to });
 }

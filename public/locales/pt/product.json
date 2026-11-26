@@ -17,7 +17,47 @@
     "name-exists": "Já existe um produto com este nome.",
     "success-edit": "Produto atualizado com sucesso!",
     "error-edit": "Erro ao atualizar o Produto!",
-    "sucess": "Produto criado com sucesso!",
+    "success": "Produto criado com sucesso!",
     "error-create": "Erro ao criar o Produto!"
+  },
+  "errors": {
+    "duplicate-name": "Já existe um produto com este nome.",
+    "update": "Erro ao atualizar o produto.",
+    "create": "Erro ao criar o produto."
+  },
+  "import": {
+    "token-expired": "Token do {{provider}} expirado ou inválido.",
+    "namespaces-error": "Erro ao buscar {{organizations}} do {{provider}}.",
+    "organizations-error": "Erro ao carregar {{organizations}}.",
+    "organization-import-error": "Erro ao importar {{organization}} no MeasureSoftGram.",
+    "server-error": "Erro de comunicação com o servidor.",
+    "repository-imported": "{{Repository}} {{name}} importado com sucesso!",
+    "repository-error": "Erro ao importar {{repository}}: {{message}}",
+    "unknown-error": "Erro desconhecido",
+    "repositories-load-error": "Não foi possível carregar os {{repositories}}",
+    "retry": "Tentar Novamente",
+    "no-products": "{{organization}} ainda não possui nenhum produto cadastrado.",
+    "select-organization": "Selecione {{organization}} e um produto para carregar os {{repositories}} correspondentes.",
+    "first-product": "Cadastrar Primeiro Produto",
+    "search": "Buscar {{repositories}} do produto...",
+    "tab": {
+      "imported": "Importados",
+      "all": "Todos",
+      "to-import": "A Importar"
+    },
+    "title": "Importação de {{Repositories}}",
+    "subtitle": "Selecione {{organization}} e o produto correspondente para gerenciar seus {{repositories}}.",
+    "loading-organizations": "Carregando {{organizations}}...",
+    "provider-organizations": "{{Organizations}} do {{provider}}",
+    "missing-organization": "Não está vendo {{organization}}?",
+    "grant-access": "Conceder acesso ou gerenciar permissões no {{provider}}",
+    "loading-products": "Carregando produtos...",
+    "products": "Produtos do MeasureSoftGram",
+    "create-product": "Criar Produto",
+    "no-repositories": "Nenhum {{repository}} associado a este produto foi encontrado.",
+    "token-expired-title": "Token do {{provider}} expirado ou inválido",
+    "reauthorize-description": "Para carregar os {{repositories}}, autorize o aplicativo novamente.",
+    "authorize": "Autorizar {{provider}}",
+    "repositories-fetch-error": "Erro ao buscar {{repositories}} do {{provider}}."
   }
 }

@@ -47,7 +47,7 @@ describe('API Interceptors', () => {
       expect(window.location.href).toBe(`/auth?returnTo=${encodeURIComponent('/products/1-2-x/?tab=1')}`);
       expect(JSON.parse(sessionStorage.getItem(FLASH_MESSAGE_KEY) as string)).toEqual({
         type: 'warning',
-        text: 'Sua sessão expirou. Entre novamente.'
+        text: 'auth:session-expired'
       });
     });
 

@@ -45,7 +45,7 @@ describe('Auth', () => {
     it('Deve exibir o aviso antes dos botões de login', () => {
       render(<Auth />);
 
-      const notice = screen.getByRole('complementary', { name: 'academicNotice.title' });
+      const notice = screen.getByRole('complementary', { name: 'Aviso de ambiente acadêmico' });
       const githubButton = screen.getByRole('button', { name: /LOGIN COM GITHUB/i });
       expect(notice.compareDocumentPosition(githubButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(notice.querySelectorAll('li')).toHaveLength(3);

@@ -305,7 +305,7 @@ function ReleaseCreation() {
       case 0: {
         const selectedRepos = getValues('repositories_ids');
         if (!selectedRepos || selectedRepos.length === 0) {
-          toast.error(t(`Selecione pelo menos um ${terms.repository} para a release.`), { autoClose: 6000 });
+          toast.error(t('repositories.select-one', { repository: terms.repository }), { autoClose: 6000 });
           break;
         }
         setActiveStep(activeStep + 1);

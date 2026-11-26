@@ -7,8 +7,10 @@ import { useNavigation } from '@hooks/useRouter';
 import { AuthLayout } from '@layouts/auth';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
+import { useTranslation } from 'react-i18next';
 
 const AuthError: React.FC = () => {
+  const { t } = useTranslation('auth');
   const router = useNavigation();
 
   return (
@@ -22,28 +24,28 @@ const AuthError: React.FC = () => {
           <SentimentDissatisfied sx={{ fontSize: '3rem', color: 'text.secondary' }} />
 
           <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
-            Sua sessão expirou. Por favor, faça login novamente!
+            {t('error.title')}
           </Typography>
 
           <Typography variant="body1" color="text.secondary">
-            Por segurança, você precisa entrar de novo. Volte para o login e tente novamente.
+            {t('error.description')}
           </Typography>
         </Box>
 
         <Box sx={{ backgroundColor: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '1.5rem', width: '100%' }}>
           <Typography variant="body2" color="text.primary" fontWeight="bold" textAlign="left" gutterBottom>
-            O que você pode tentar:
+            {t('error.tips-title')}
           </Typography>
 
           <Box display="flex" flexDirection="column" gap="0.75rem" mt={1}>
             <Typography variant="body2" color="text.secondary" textAlign="left">
-              <strong>1. Tente novamente:</strong> Volte para a tela inicial e repita o login. Na maioria das vezes, isso resolve o problema.
+              <strong>{t('error.tip1-title')}</strong> {t('error.tip1')}
             </Typography>
             <Typography variant="body2" color="text.secondary" textAlign="left">
-              <strong>2. Verifique seu navegador:</strong> Extensões que bloqueiam pop-ups ou rastreadores podem interromper o redirecionamento do provedor (GitHub/GitLab).
+              <strong>{t('error.tip2-title')}</strong> {t('error.tip2')}
             </Typography>
             <Typography variant="body2" color="text.secondary" textAlign="left">
-              <strong>3. Aguarde um momento:</strong> Os serviços de autenticação podem estar passando por uma breve instabilidade.
+              <strong>{t('error.tip3-title')}</strong> {t('error.tip3')}
             </Typography>
           </Box>
         </Box>
@@ -67,7 +69,7 @@ const AuthError: React.FC = () => {
             },
           }}
         >
-          Voltar para o Login
+          {t('error.back')}
         </Button>
       </Box>
     </AuthLayout>

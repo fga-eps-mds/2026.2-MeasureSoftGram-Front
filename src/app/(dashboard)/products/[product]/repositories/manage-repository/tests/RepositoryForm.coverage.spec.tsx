@@ -117,7 +117,7 @@ describe('RepositoryForm coverage', () => {
     render(<RepositoryForm />);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('error.error');
+      expect(toast.error).toHaveBeenCalledWith('Não foi possível carregar os dados do repositório.');
     });
   });
 

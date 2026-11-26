@@ -14,6 +14,10 @@
       "text": "Releases",
       "tooltip": "Releases from each repository",
       "tooltip_gitlab": "Releases from each project"
+    },
+    "settings": {
+      "text": "Settings",
+      "tooltip": "Product settings"
     }
   },
   "tooltip": {
@@ -34,10 +38,12 @@
     "placeholder": "Select Organization",
     "placeholder_gitlab": "Select Group",
     "add-organization": "Add organization",
-    "add-organization_gitlab": "Add group"
+    "add-organization_gitlab": "Add group",
+    "select": "Select {{organization}}"
   },
   "release": {
-    "more": "MORE..."
+    "more": "MORE...",
+    "last-created": "Latest Release created"
   },
   "delete": {
     "title": "Confirm deletion",
@@ -47,5 +53,6 @@
     "organization-text2": ", as well as its products and all associated members.",
     "product-text": "This will permanently delete the product :",
     "button": "I HAVE READ AND UNDERSTAND THE EFFECTS"
-  }
+  },
+  "user-fallback": "User"
 }

@@ -1,9 +1,10 @@
 import { IReleases } from '@customTypes/product';
+import i18n from '../i18n/i18n';
 
 const formatCompareGoalsChart = (data: IReleases) => ({
   title: {
-    text: 'Realizado x Planejado - Características',
-    subtext: `release criada por ${data?.created_by}`,
+    text: i18n.t('dashboards:compare-goals.title'),
+    subtext: i18n.t('dashboards:compare-goals.created-by', { user: data?.created_by }),
     subtextStyle: {
       color: '#4461A5',
       fontSize: 14
@@ -32,7 +33,7 @@ const formatCompareGoalsChart = (data: IReleases) => ({
     trigger: 'item'
   },
   legend: {
-    data: ['Realizado', 'Planejado'],
+    data: [i18n.t('dashboards:compare-goals.accomplished'), i18n.t('dashboards:compare-goals.planned')],
     left: 'center'
   },
   xAxis: {
@@ -51,12 +52,12 @@ const formatCompareGoalsChart = (data: IReleases) => ({
   },
   series: [
     {
-      name: 'Planejado',
+      name: i18n.t('dashboards:compare-goals.planned'),
       type: 'line',
       data: 0.7
     },
     {
-      name: 'Realizado',
+      name: i18n.t('dashboards:compare-goals.accomplished'),
       type: 'line',
       data: {
         reliability: 1,

@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 
 import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { RulerSegment, formatLimit } from '@utils/qualityBandsForm';
+import { useTranslation } from 'react-i18next';
 
 // em centésimos, para 0,8 − 0,6 não virar 19.999999999999996%
 const percent = (value: number) => Math.round(value * 10000) / 100;
@@ -36,15 +37,24 @@ function labelShift(index: number, count: number) {
 
 /** Barra de 0 a 1 com o trecho de cada faixa, na cor dela, e os limites embaixo (CA1, CA2). */
 export default function QualityBandsRuler({ segments }: { segments: RulerSegment[] }) {
+  const { t } = useTranslation('settings');
   const limits = visibleLimits([0, ...segments.map((segment) => segment.end)]);
 
   return (
     <Box data-testid="quality-bands-ruler" paddingBottom="22px">
       <Box
         role="img"
-        aria-label={`Régua das faixas: ${segments
-          .map((segment) => `${segment.band.grade} de ${formatLimit(segment.start)} a ${formatLimit(segment.end)}`)
-          .join(', ')}`}
+        aria-label={t('quality-bands.ruler-aria', {
+          segments: segments
+            .map((segment) =>
+              t('quality-bands.ruler-segment', {
+                grade: segment.band.grade,
+                start: formatLimit(segment.start),
+                end: formatLimit(segment.end)
+              })
+            )
+            .join(', ')
+        })}
         sx={{ display: 'flex', height: '24px', borderRadius: '4px', overflow: 'hidden' }}
       >
         {segments.map((segment) => (

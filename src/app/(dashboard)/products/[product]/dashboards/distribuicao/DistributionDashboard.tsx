@@ -17,22 +17,21 @@ import { DISTRIBUTION_CSV, formatDistributionCsvs } from '@utils/formatDistribut
 import { getPathId } from '@utils/pathDestructer';
 import { toLocalDay } from '@utils/releaseSelection';
 
-import DistributionBoxplot, { BOXPLOT_TITLE } from './DistributionBoxplot';
-import DistributionDensity, { DENSITY_TITLE } from './DistributionDensity';
+import DistributionBoxplot, { boxplotTitle } from './DistributionBoxplot';
+import DistributionDensity, { densityTitle } from './DistributionDensity';
 import DistributionFilters from './DistributionFilters';
-import DistributionHistogram, { HISTOGRAM_TITLE } from './DistributionHistogram';
-import DistributionScatter, { SCATTER_TITLE } from './DistributionScatter';
-import DistributionSummary, { SUMMARY_TITLE } from './DistributionSummary';
+import DistributionHistogram, { histogramTitle } from './DistributionHistogram';
+import DistributionScatter, { scatterTitle } from './DistributionScatter';
+import DistributionSummary, { summaryTitle } from './DistributionSummary';
 import { ChartSkeleton, CollectionGuideLink, DistributionErrorCard, SummarySkeleton } from './DistributionStates';
 import { useDistributionDashboard } from './useDistributionDashboard';
-
-const TITLE = '5. Distribuição Estatística';
-const CARD_TITLE = 'Distribuição Estatística';
+import { Trans, useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 
 /** "17/08" de uma data da release, para a orientação do estado sem análise. */
 function formatReleaseDay(date: Date | string): string {
   const [, month, day] = toLocalDay(date).split('-');
-  return `${day}/${month}`;
+  return i18n.t('dashboards:entity.day-format', { day, month });
 }
 
 /** Cada célula também é grade, para o cartão esticar até a altura da linha sem alargar a coluna. */
@@ -84,6 +83,8 @@ function DistributionGrid({
 const DistributionDashboard: React.FC = () => {
   usePreloadECharts();
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
+  const cardTitle = t('distribution.card-title');
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
 
@@ -112,11 +113,11 @@ const DistributionDashboard: React.FC = () => {
     if (status === 'noRelease') {
       return (
         <DashboardCard
-          title="Produto sem release"
+          title={t('distribution.no-release.title')}
           status="empty"
-          badgeLabel="Sem release"
-          emptyTitle="Este produto ainda não tem release"
-          emptyDescription="A distribuição usa as análises feitas dentro do período de uma release. Planeje a primeira release para começar."
+          badgeLabel={t('distribution.no-release.badge')}
+          emptyTitle={t('distribution.no-release.empty-title')}
+          emptyDescription={t('distribution.no-release.description')}
           emptyAction={
             <Button
               variant="contained"
@@ -124,7 +125,7 @@ const DistributionDashboard: React.FC = () => {
               onClick={() => router.push(`/products/${router.query.product}/releases/create`)}
               sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
             >
-              Planejar release
+              {t('distribution.plan-release')}
             </Button>
           }
         />
@@ -134,10 +135,10 @@ const DistributionDashboard: React.FC = () => {
     if (status === 'noRepository') {
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
-          emptyTitle={`Este produto ainda não tem ${terms.repositories}`}
-          emptyDescription={`Adicione um ${terms.repository} ao produto e rode a coleta do MeasureSoftGram para ver a distribuição dos valores.`}
+          emptyTitle={t('distribution.no-repository.title', { repositories: terms.repositories })}
+          emptyDescription={t('distribution.no-repository.description', { repository: terms.repository })}
         />
       );
     }
@@ -146,17 +147,17 @@ const DistributionDashboard: React.FC = () => {
       const label = DISTRIBUTION_LEVEL_LABELS[level].toLowerCase();
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
           emptyTitle={
             level === 'metric'
-              ? `Nenhuma métrica da release ${release?.release_name} tem um valor por análise`
-              : `A configuração da release ${release?.release_name} não tem nenhuma entidade no nível ${label}`
+              ? t('distribution.no-entities.metric-title', { release: release?.release_name })
+              : t('distribution.no-entities.title', { release: release?.release_name, label })
           }
           emptyDescription={
             level === 'metric'
-              ? 'Só entram as métricas gravadas a cada análise, como as do GitHub. As do SonarQube são coletadas por arquivo.'
-              : 'Escolha outro nível ou confira a configuração do modelo da release.'
+              ? t('distribution.no-entities.metric-description')
+              : t('distribution.no-entities.description')
           }
         />
       );
@@ -166,15 +167,20 @@ const DistributionDashboard: React.FC = () => {
       const { release: analyzed, repository: analyzedRepository, entity: emptyEntity } = distribution;
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
-          badgeLabel="Sem análise"
-          emptyTitle={`O ${terms.repository} ${analyzedRepository.name} não tem análises de ${emptyEntity.name} na release ${analyzed.release_name}`}
-          emptyDescription={`As análises aparecem quando a Action ou a CLI do MeasureSoftGram roda no ${
-            terms.repository
-          } entre ${formatReleaseDay(analyzed.start_at)} e ${formatReleaseDay(
-            analyzed.end_at
-          )}, o período da release. Escolha outro ${terms.repository} ou configure a coleta.`}
+          badgeLabel={t('distribution.no-analyses.badge')}
+          emptyTitle={t('distribution.no-analyses.title', {
+            repository: terms.repository,
+            name: analyzedRepository.name,
+            entity: emptyEntity.name,
+            release: analyzed.release_name
+          })}
+          emptyDescription={t('distribution.no-analyses.description', {
+            repository: terms.repository,
+            start: formatReleaseDay(analyzed.start_at),
+            end: formatReleaseDay(analyzed.end_at)
+          })}
           emptyAction={<CollectionGuideLink />}
         />
       );
@@ -195,18 +201,18 @@ const DistributionDashboard: React.FC = () => {
 
     return (
       <DistributionGrid
-        histogram={<DashboardCard title={HISTOGRAM_TITLE} status="loading" loadingContent={<ChartSkeleton />} />}
-        density={<DashboardCard title={DENSITY_TITLE} status="loading" loadingContent={<ChartSkeleton />} />}
-        boxplot={<DashboardCard title={BOXPLOT_TITLE} status="loading" loadingContent={<ChartSkeleton />} />}
-        scatter={<DashboardCard title={SCATTER_TITLE} status="loading" loadingContent={<ChartSkeleton />} />}
-        summary={<DashboardCard title={SUMMARY_TITLE} status="loading" loadingContent={<SummarySkeleton />} />}
+        histogram={<DashboardCard title={histogramTitle()} status="loading" loadingContent={<ChartSkeleton />} />}
+        density={<DashboardCard title={densityTitle()} status="loading" loadingContent={<ChartSkeleton />} />}
+        boxplot={<DashboardCard title={boxplotTitle()} status="loading" loadingContent={<ChartSkeleton />} />}
+        scatter={<DashboardCard title={scatterTitle()} status="loading" loadingContent={<ChartSkeleton />} />}
+        summary={<DashboardCard title={summaryTitle()} status="loading" loadingContent={<SummarySkeleton />} />}
       />
     );
   };
 
   return (
     <>
-      <title>{TITLE}</title>
+      <title>{t('distribution.title')}</title>
 
       <Container maxWidth="xl">
         <Box display="flex" flexDirection="column" gap="24px" marginTop="40px" marginBottom="40px">
@@ -214,10 +220,16 @@ const DistributionDashboard: React.FC = () => {
           <Box display="flex" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" gap="16px">
             <Box>
               <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
-                {TITLE}
+                {t('distribution.title')}
               </Typography>
               <Typography color={DASHBOARD_COLORS.mutedText} data-testid="distribution-subtitle">
-                Como os valores de <em>{entityName ?? 'uma entidade do modelo'}</em> se espalham entre as suas análises
+                <Trans
+                  t={t}
+                  i18n={i18n}
+                  i18nKey="distribution.subtitle.text"
+                  values={{ name: entityName ?? t('distribution.subtitle.fallback') }}
+                  components={{ em: <em /> }}
+                />
               </Typography>
             </Box>
             <ExportAllCsvButton dashboard={DISTRIBUTION_CSV.dashboard} charts={csvCharts} />
@@ -231,8 +243,11 @@ const DistributionDashboard: React.FC = () => {
           {status === 'ready' && distribution && period?.first && period.last && (
             <Typography fontSize="14px" color={DASHBOARD_COLORS.text} data-testid="distribution-period">
               Release <strong>{distribution.release.release_name}</strong> · {terms.repository}{' '}
-              <strong>{distribution.repository.name}</strong> · {formatAnalysisCount(period.count)} no período (
-              {formatPeriod(period.first, period.last)})
+              <strong>{distribution.repository.name}</strong> ·{' '}
+              {t('distribution.period-line.in-period', {
+                amount: formatAnalysisCount(period.count),
+                period: formatPeriod(period.first, period.last)
+              })}
             </Typography>
           )}
 

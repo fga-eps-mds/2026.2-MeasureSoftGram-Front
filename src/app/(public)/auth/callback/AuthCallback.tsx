@@ -4,12 +4,13 @@ import React, { useEffect, useRef } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Image from 'next/image';
 import logoImage from '@public/images/svg/logo.svg';
+import { useTranslation } from 'react-i18next';
 import { setFlashMessage } from '../../../../shared/utils/flashMessage';
 
 const LOGIN_PAGE = '/auth';
 const ERROR_PAGE = '/auth/error';
-const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Por favor, faça login novamente!';
-const OAUTH_REJECTED_MESSAGE = 'Não foi possível confirmar o login. Tente entrar novamente.';
+const SESSION_EXPIRED_MESSAGE = 'auth:flash.session-expired';
+const OAUTH_REJECTED_MESSAGE = 'auth:flash.oauth-rejected';
 
 interface SessionResponse {
   outcome?: 'success' | 'cancelled' | 'provider_error';
@@ -23,13 +24,22 @@ export function resolveCallbackResult(status: number, data: SessionResponse) {
     return { flash: { type: 'error', text: OAUTH_REJECTED_MESSAGE }, destination: ERROR_PAGE } as const;
   }
   if (data.outcome === 'success') {
-    return { flash: { type: 'success', text: 'Login realizado com sucesso!' }, destination: data.redirectTo || '/home' } as const;
+    return {
+      flash: { type: 'success', text: 'auth:flash.login-success' },
+      destination: data.redirectTo || '/home'
+    } as const;
   }
   if (data.outcome === 'cancelled') {
-    return { flash: { type: 'info', text: 'Login cancelado' }, destination: data.redirectTo || LOGIN_PAGE } as const;
+    return {
+      flash: { type: 'info', text: 'auth:flash.login-cancelled' },
+      destination: data.redirectTo || LOGIN_PAGE
+    } as const;
   }
   if (data.outcome === 'provider_error') {
-    return { flash: { type: 'error', text: 'Erro na autorização do provedor.' }, destination: data.redirectTo || LOGIN_PAGE } as const;
+    return {
+      flash: { type: 'error', text: 'auth:flash.provider-error' },
+      destination: data.redirectTo || LOGIN_PAGE
+    } as const;
   }
 
   // Sem o detalhe técnico do Service (US11.01 CA5): a sessão foi limpa e o login recomeça.
@@ -37,6 +47,7 @@ export function resolveCallbackResult(status: number, data: SessionResponse) {
 }
 
 const AuthCallback: React.FC = () => {
+  const { t } = useTranslation('auth');
   const started = useRef(false);
 
   useEffect(() => {
@@ -65,7 +76,7 @@ const AuthCallback: React.FC = () => {
       body: JSON.stringify({ code, error, state: params.get('state') })
     })
       .then(async (response) => finish(response.status, (await response.json().catch(() => ({}))) as SessionResponse))
-      .catch(() => finish(502, { message: 'Serviço indisponível' }));
+      .catch(() => finish(502, { message: 'service_unavailable' }));
   }, []);
 
   return (
@@ -85,7 +96,7 @@ const AuthCallback: React.FC = () => {
       </Box>
       <CircularProgress />
       <Typography variant="body1" color="text.secondary">
-        Autenticando no MeasureSoftGram...
+        {t('callback.authenticating')}
       </Typography>
     </Box>
   );

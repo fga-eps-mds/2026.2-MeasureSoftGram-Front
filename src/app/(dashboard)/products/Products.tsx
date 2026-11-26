@@ -217,10 +217,10 @@ const Products: React.FC = () => {
   const notifyNamespacesError = (error: ResultError['error']) => {
     if ((error as AxiosError)?.response?.status === 409) {
       setRepoFetchError('409');
-      toast.error(`Token do ${terms.providerName} expirado ou inválido.`);
+      toast.error(tp('import.token-expired', { provider: terms.providerName }));
       return;
     }
-    toast.error(`Erro ao buscar ${terms.organizations} do ${terms.providerName}.`);
+    toast.error(tp('import.namespaces-error', { organizations: terms.organizations, provider: terms.providerName }));
   };
 
   const loadProviderNamespaces = async (estaAtivo: () => boolean = () => true) => {
@@ -242,7 +242,7 @@ const Products: React.FC = () => {
     } catch (error) {
       if (!estaAtivo()) return;
       console.error(error);
-      toast.error(`Erro ao carregar ${terms.organizations}.`);
+      toast.error(tp('import.organizations-error', { organizations: terms.organizations }));
     } finally {
       if (estaAtivo()) setLoadingOrgs(false);
     }
@@ -315,7 +315,7 @@ const Products: React.FC = () => {
         ? await importOrg(ns)
         : (await getBackendOrgId(ns.name)) || (await importOrg(ns));
       if (!orgDbId) {
-        toast.error(`Erro ao importar ${terms.organization} no MeasureSoftGram.`);
+        toast.error(tp('import.organization-import-error', { organization: terms.organization }));
         return;
       }
 
@@ -323,7 +323,7 @@ const Products: React.FC = () => {
       await loadProductsForOrg(orgDbId);
     } catch (error: any) {
       console.error(error);
-      toast.error(`Erro de comunicação com o servidor.`);
+      toast.error(tp('import.server-error'));
     } finally {
       setLoadingProducts(false);
       handleSelectOrgRef.current = false;
@@ -345,18 +345,28 @@ const Products: React.FC = () => {
         ...(provider === 'gitlab' && { gitlab_project_id: repo.gitlab_project_id })
       });
       if (response.type === 'success') {
-        toast.success(`${terms.Repository} ${repo.name} importado com sucesso!`);
-        setPendingImports(prev => new Set(prev).add(`${orgDbId}:${productId}|${normalizeRepoUrl(repo.url)}`));
+        toast.success(tp('import.repository-imported', { Repository: terms.Repository, name: repo.name }));
+        setPendingImports((prev) => new Set(prev).add(`${orgDbId}:${productId}|${normalizeRepoUrl(repo.url)}`));
         void mutateImported();
         // "A Importar" e "Todos" mudam com o repositório importado
         void refreshProviderRepos();
         // a lista guardada para as outras telas do produto também passa a ter o repositório importado
         void refreshRepositoryList(orgDbId, productId);
       } else {
-        toast.error(`Erro ao importar ${terms.repository}: ${response.error.message || 'Erro desconhecido'}`);
+        toast.error(
+          tp('import.repository-error', {
+            repository: terms.repository,
+            message: response.error.message || tp('import.unknown-error')
+          })
+        );
       }
     } catch (error: any) {
-      toast.error(`Erro ao importar ${terms.repository}: ${error.message || 'Erro desconhecido'}`);
+      toast.error(
+        tp('import.repository-error', {
+          repository: terms.repository,
+          message: error.message || tp('import.unknown-error')
+        })
+      );
     }
   };
 
@@ -438,10 +448,10 @@ const Products: React.FC = () => {
       return (
         <Box padding="4rem" textAlign="center">
           <Typography variant="h6" color="error" gutterBottom>
-            {`Não foi possível carregar os ${terms.repositories}`}
+            {tp('import.repositories-load-error', { repositories: terms.repositories })}
           </Typography>
           <Button variant="outlined" color="primary" onClick={importList.retry}>
-            Tentar Novamente
+            {tp('import.retry')}
           </Button>
         </Box>
       );
@@ -458,25 +468,29 @@ const Products: React.FC = () => {
   };
 
   const renderEmptySelection = () => (
-      <Paper variant="outlined" sx={{ padding: '3rem', textAlign: 'center', borderRadius: '12px' }}>
-        <FolderSpecial color="disabled" sx={{ fontSize: '3rem', marginBottom: '1rem' }} />
-        <Typography variant="body1" color="text.secondary" gutterBottom>
-          {selectedOrgDbId && products.length === 0
-            ? `${terms.thisOrganization.charAt(0).toUpperCase()}${terms.thisOrganization.slice(1)} ainda não possui nenhum produto cadastrado.`
-            : `Selecione ${terms.anOrganization} e um produto para carregar os ${terms.repositories} correspondentes.`
-          }
-        </Typography>
-        {selectedOrgDbId && products.length === 0 && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => router.push(`/products/create/?id_organization=${selectedOrgDbId}`)}
-            sx={{ marginTop: '1.5rem', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}
-          >
-            Cadastrar Primeiro Produto
-          </Button>
-        )}
-      </Paper>
+    <Paper variant="outlined" sx={{ padding: '3rem', textAlign: 'center', borderRadius: '12px' }}>
+      <FolderSpecial color="disabled" sx={{ fontSize: '3rem', marginBottom: '1rem' }} />
+      <Typography variant="body1" color="text.secondary" gutterBottom>
+        {selectedOrgDbId && products.length === 0
+          ? tp('import.no-products', {
+              organization: `${terms.thisOrganization.charAt(0).toUpperCase()}${terms.thisOrganization.slice(1)}`
+            })
+          : tp('import.select-organization', {
+              organization: terms.anOrganization,
+              repositories: terms.repositories
+            })}
+      </Typography>
+      {selectedOrgDbId && products.length === 0 && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => router.push(`/products/create/?id_organization=${selectedOrgDbId}`)}
+          sx={{ marginTop: '1.5rem', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px' }}
+        >
+          {tp('import.first-product')}
+        </Button>
+      )}
+    </Paper>
   );
 
   const renderContent = () => {
@@ -497,7 +511,7 @@ const Products: React.FC = () => {
           gap="1rem"
         >
           <TextField
-            placeholder={`Buscar ${terms.repositories} do produto...`}
+            placeholder={tp('import.search', { repositories: terms.repositories })}
             size="small"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -519,9 +533,9 @@ const Products: React.FC = () => {
               textColor="primary"
               sx={{ marginRight: '1rem' }}
             >
-              <Tab label="Importados" />
-              <Tab label="Todos" />
-              <Tab label="A Importar" />
+              <Tab label={tp('import.tab.imported')} />
+              <Tab label={tp('import.tab.all')} />
+              <Tab label={tp('import.tab.to-import')} />
             </Tabs>
           </Box>
         </Box>
@@ -551,10 +565,10 @@ const Products: React.FC = () => {
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom color="text.primary">
-                {`Importação de ${terms.Repositories}`}
+                {tp('import.title', { Repositories: terms.Repositories })}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {`Selecione ${terms.yourOrganization} e o produto correspondente para gerenciar seus ${terms.repositories}.`}
+                {tp('import.subtitle', { organization: terms.yourOrganization, repositories: terms.repositories })}
               </Typography>
             </Box>
             {provider === 'gitlab' ? (
@@ -568,12 +582,20 @@ const Products: React.FC = () => {
             <Box display="flex" flexDirection="column" gap="0.5rem">
               <FormControl fullWidth size="medium" disabled={loadingOrgs}>
                 <InputLabel id="org-select-label">
-                  {loadingOrgs ? `Carregando ${terms.organizations}...` : `${terms.Organizations} do ${terms.providerName}`}
+                  {loadingOrgs
+                    ? tp('import.loading-organizations', { organizations: terms.organizations })
+                    : tp('import.provider-organizations', {
+                        Organizations: terms.Organizations,
+                        provider: terms.providerName
+                      })}
                 </InputLabel>
                 <Select
                   labelId="org-select-label"
                   value={selectedNamespaceId}
-                  label={`${terms.Organizations} do ${terms.providerName}`}
+                  label={tp('import.provider-organizations', {
+                    Organizations: terms.Organizations,
+                    provider: terms.providerName
+                  })}
                   onChange={(e) => setSelectedNamespaceId(e.target.value)}
                 >
                   {providerNamespaces.map((o) => (
@@ -584,7 +606,7 @@ const Products: React.FC = () => {
                 </Select>
               </FormControl>
               <Typography variant="caption" color="text.secondary">
-                {`Não está vendo ${terms.yourOrganization}?`}{" "}
+                {tp('import.missing-organization', { organization: terms.yourOrganization })}{' '}
                 <Link
                   href={
                     provider === 'gitlab'
@@ -596,7 +618,7 @@ const Products: React.FC = () => {
                   underline="hover"
                   sx={{ fontWeight: 'bold', cursor: 'pointer' }}
                 >
-                  {`Conceder acesso ou gerenciar permissões no ${terms.providerName}`}
+                  {tp('import.grant-access', { provider: terms.providerName })}
                 </Link>
               </Typography>
             </Box>
@@ -604,12 +626,12 @@ const Products: React.FC = () => {
             <Box display="flex" gap="1rem" alignItems="center" width="100%">
               <FormControl fullWidth size="medium" disabled={loadingProducts || products.length === 0}>
                 <InputLabel id="product-select-label">
-                  {loadingProducts ? "Carregando produtos..." : "Produtos do MeasureSoftGram"}
+                  {loadingProducts ? tp('import.loading-products') : tp('import.products')}
                 </InputLabel>
                 <Select
                   labelId="product-select-label"
                   value={selectedProductId}
-                  label="Produtos do MeasureSoftGram"
+                  label={tp('import.products')}
                   onChange={(e) => setSelectedProductId(e.target.value)}
                 >
                   {products.map((product) => (
@@ -626,7 +648,7 @@ const Products: React.FC = () => {
                 disabled={!selectedOrgDbId}
                 sx={{ height: '56px', textTransform: 'none', fontWeight: 'bold', whiteSpace: 'nowrap', borderRadius: '8px' }}
               >
-                Criar Produto
+                {tp('import.create-product')}
               </Button>
             </Box>
           </Paper>

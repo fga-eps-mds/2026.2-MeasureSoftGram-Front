@@ -1,0 +1,546 @@
+{
+  "compare-goals": {
+    "title": "Accomplished x Planned - Characteristics",
+    "created-by": "release created by {{user}}",
+    "accomplished": "Accomplished",
+    "planned": "Planned"
+  },
+  "measures-history": {
+    "title": "Measures History"
+  },
+  "pulse": {
+    "tooltip": {
+      "no-base": "Variation: no previous base to compare",
+      "variation": "Variation: {{value}}",
+      "variation-from": "{{value}} compared to {{release}}",
+      "tsqmi": "TSQMI indicator: {{value}} ({{grade}})",
+      "end": "End: {{date}}"
+    },
+    "release-start": "Start {{release}}",
+    "empty": {
+      "no-repositories": {
+        "title": "This product has no {{repositories}} yet",
+        "description": "Import a {{repository}} into the product for MeasureSoftGram to start measuring quality."
+      },
+      "no-measurements": {
+        "title": "There are no measurements in this product yet",
+        "description": "Values appear after the MeasureSoftGram Action analyzes the product {{repositories}}."
+      },
+      "no-period": {
+        "title": "No measurement in the selected period",
+        "description": "Adjust the From/To dates to include a range with measurements."
+      }
+    },
+    "retry": "Try again",
+    "error": "Could not load the pulse chart data.",
+    "title": "MSG Chart — Quality Evolution by Release",
+    "subtitle": "Pulse chart per {{repository}} (TSQMI indicator) • peak = variation between measurements • marker = Release • point = indicator consolidated at the Release end • color = quality band",
+    "last-indicator": "latest TSQMI indicator",
+    "last-tsqmi": "latest TSQMI",
+    "footer": {
+      "measurements_one": "{{count}} measurement",
+      "measurements_other": "{{count}} measurements",
+      "measurements_zero": "{{count}} measurements",
+      "releases_one": "{{count}} Release",
+      "releases_other": "{{count}} Releases",
+      "releases_zero": "{{count}} Releases",
+      "line": "{{repositories}} • {{measurements}} in the selected period • {{releases}} in the period • latest measurement: {{latest}}"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "all": "All ({{amount}})"
+    }
+  },
+  "overview": {
+    "totals": {
+      "characteristics": "Characteristics",
+      "subcharacteristics": "Subcharacteristics",
+      "measures": "Measures",
+      "metrics": "Metrics",
+      "files": "Analyzed files",
+      "title": "Release totals",
+      "no-model-title": "This release has no quality model configured",
+      "no-model-description": "Without the model there are no characteristics, subcharacteristics, measures or metrics to count, hence the dash. The count of {{repositories}} and analyzed files does not depend on it and still applies."
+    },
+    "tooltip": {
+      "indicator": "Total Quality Indicator: {{value}} ({{grade}})",
+      "variation": "Variation: {{value}} compared to {{release}}"
+    },
+    "title": "1. Quality Overview",
+    "page-title": "Quality Overview",
+    "subtitle": "Values from the latest analysis of each {{repository}} made within the release period.",
+    "no-release": {
+      "title": "Release overview",
+      "empty-title": "This product has no releases yet",
+      "empty-description": "The Overview shows the data of a release. Create a release to follow the product quality."
+    },
+    "indicator": {
+      "title": "Total Quality Indicator",
+      "empty": "Run the MeasureSoftGram collection (GitHub Action or CLI) on at least one {{repository}} of the product to see the indicator."
+    },
+    "planned": {
+      "title": "Planned × Accomplished of the {{repository}}",
+      "empty": "Run the MeasureSoftGram collection (GitHub Action or CLI) on at least one {{repository}} of the product to compare with the planned values."
+    },
+    "radar": {
+      "title": "Characteristics radar",
+      "export": "Export radar .csv",
+      "caption": "Same accomplished (Rd) values of the {{repository}} {{name}} in release {{release}}.",
+      "no-analysis-title": "There are no analyses in this release yet",
+      "no-analysis": "The {{repository}} {{name}} has no calculated characteristics in release {{release}} yet. Run the MeasureSoftGram collection (GitHub Action or CLI) to see the radar."
+    }
+  },
+  "distribution": {
+    "analysis-count_one": "{{formatted}} analysis",
+    "analysis-count_other": "{{formatted}} analyses",
+    "summary": {
+      "count": "Analyses",
+      "min": "Minimum",
+      "q1": "Q1 (1st quartile)",
+      "median": "Median",
+      "q3": "Q3 (3rd quartile)",
+      "max": "Maximum",
+      "iqr": "IQR (Q3 − Q1)",
+      "lower_limit": "Lower limit",
+      "upper_limit": "Upper limit",
+      "outliers": "Outliers",
+      "mean": "Mean",
+      "std": "Standard deviation",
+      "variance": "Variance",
+      "skewness": "Skewness"
+    },
+    "skewness": {
+      "zero": "Skewness close to zero: values spread evenly on both sides of the median.",
+      "positive": "Positive skewness ({{value}}): the long tail is on the right, with isolated high values.",
+      "negative": "Negative skewness ({{value}}): the long tail is on the left, with isolated low values.",
+      "few-analyses": "Not enough analyses for skewness: it needs at least {{min}}, and the period has {{amount}}.",
+      "same-value": "No skewness: all analyses in the period have the same value."
+    },
+    "period": "{{from}} to {{to}}",
+    "chart": {
+      "boxplot": "Boxplot",
+      "upper-whisker": "Upper whisker: {{value}}",
+      "q3": "Q3: {{value}}",
+      "median-value": "Median: {{value}}",
+      "q1": "Q1: {{value}}",
+      "lower-whisker": "Lower whisker: {{value}}",
+      "indicator-axis": "Total Quality Indicator (0–1)",
+      "histogram-aria": "Histogram of {{name}}: {{amount}} in bins of {{width}}. {{filled}}.",
+      "frequency-axis": "No. of analyses (frequency)",
+      "median-label": "Median ({{value}})",
+      "density-aria": "Density curve of {{name}}, from {{min}} to {{max}}, peaking at {{peak}}.",
+      "density-tooltip": "Density: <strong>{{value}}</strong>",
+      "density": "Density",
+      "estimated-density": "Estimated density",
+      "no-outliers": "No outliers.",
+      "outlier-at": "{{value}} on {{date}}",
+      "outliers-count_one": "{{formatted}} outlier",
+      "outliers-count_other": "{{formatted}} outliers",
+      "outliers-count_zero": "no outliers",
+      "outliers-list": "{{label}}: {{list}}.",
+      "outliers-list-more": "{{label}}: {{list}} and {{amount}} more.",
+      "quartiles": "Q1 {{q1}}, median {{median}} and Q3 {{q3}}",
+      "scatter-aria": "Scatter of {{name}} over time: {{amount}} from {{period}}. {{quartiles}}. {{outliers}}",
+      "analysis": "Analysis",
+      "outlier": "Outlier",
+      "q1-q3": "Q1 to Q3",
+      "median": "Median",
+      "median-line": "Median {{value}}",
+      "outlier-tooltip-at": "<strong>{{value}}</strong> on {{date}}",
+      "boxplot-row": "{{name}}: median {{median}}, Q1 {{q1}} and Q3 {{q3}}, {{outliers}}",
+      "boxplot-aria": "Boxplot of {{name}}, from {{min}} to {{max}}. {{rows}}.",
+      "boxplot-aria-children_one": "Boxplot of {{name}} and of its child in the model, from {{min}} to {{max}}. {{rows}}.",
+      "boxplot-aria-children_other": "Boxplot of {{name}} and of its {{formatted}} children in the model, from {{min}} to {{max}}. {{rows}}."
+    },
+    "analysis-count_zero": "{{formatted}} analyses",
+    "title": "5. Statistical Distribution",
+    "card-title": "Statistical Distribution",
+    "no-release": {
+      "title": "Product without release",
+      "badge": "No release",
+      "empty-title": "This product has no release yet",
+      "description": "The distribution uses the analyses made within the period of a release. Plan the first release to start."
+    },
+    "plan-release": "Plan release",
+    "no-repository": {
+      "title": "This product has no {{repositories}} yet",
+      "description": "Add a {{repository}} to the product and run the MeasureSoftGram collection to see the value distribution."
+    },
+    "no-entities": {
+      "metric-title": "No metric of release {{release}} has a value per analysis",
+      "title": "The configuration of release {{release}} has no entity at the {{label}} level",
+      "metric-description": "Only metrics recorded at each analysis, such as GitHub's, are included. SonarQube's are collected per file.",
+      "description": "Choose another level or check the release model configuration."
+    },
+    "no-analyses": {
+      "badge": "No analysis",
+      "title": "The {{repository}} {{name}} has no analyses of {{entity}} in release {{release}}",
+      "description": "Analyses appear when the MeasureSoftGram Action or CLI runs on the {{repository}} between {{start}} and {{end}}, the release period. Choose another {{repository}} or set up the collection."
+    },
+    "subtitle": {
+      "text": "How the values of <em>{{name}}</em> spread across its analyses",
+      "fallback": "an entity of the model"
+    },
+    "period-line": {
+      "in-period": "{{amount}} in the period ({{period}})"
+    },
+    "card": {
+      "histogram": "Histogram",
+      "density": "Density curve",
+      "boxplot": "Level boxplot and percentiles",
+      "scatter": "Analyses scatter over time",
+      "summary": "Statistical summary and IQR",
+      "error-card": "Loading failed",
+      "error": "Could not load the distribution"
+    },
+    "histogram": {
+      "ruler-aria": "Quality bands from A to E",
+      "caption-unit": "How many analyses fall in each 0,10 bin. The ruler shows the A to E bands of the Total Quality Indicator.",
+      "caption-metric": "How many analyses fall in each {{width}} bin of {{name}}, on the metric scale."
+    },
+    "density": {
+      "few-title": "Not enough analyses for the density curve",
+      "few-description": "The curve needs at least {{min}} analyses, and the period has {{amount}}. The histogram and the summary still apply.",
+      "same-title": "Not enough analyses with different values for the curve",
+      "same-description": "The {{amount}} of the period have the same value, and the curve needs different values to show the shape of the distribution.",
+      "few-badge": "Few analyses",
+      "caption": "The area under the curve adds up to 1: the higher the curve in a stretch, the more analyses concentrate there. The dashed line marks the median."
+    },
+    "boxplot": {
+      "median": "Median",
+      "outliers": "Outliers",
+      "chosen": "Chosen entity",
+      "children": "Children in the model",
+      "outlier": "Outlier",
+      "percentiles-aria": "Percentiles of each row",
+      "percentiles-caption": "Percentiles of each boxplot row",
+      "entity": "Entity",
+      "caption": "Each box goes from Q1 to Q3, with the median mark, and the whiskers go up to the last value within the limits. The hollow circles are the outliers.",
+      "metric-note": "The metrics of {{name}} have their own scale and do not fit the 0 to 1 axis. Choose the Metric level to see the distribution of each one.",
+      "p10": "P10",
+      "q1": "Q1",
+      "q3": "Q3",
+      "p90": "P90",
+      "iqr": "IQR"
+    },
+    "scatter": {
+      "caption": "Each point is an analysis, on the date it was made. The light band goes from Q1 to Q3, where the middle 50% of the analyses are, and the dashed line marks the median."
+    },
+    "summary-card": {
+      "note": "The IQR is the distance between Q3 and Q1, where the middle 50% of the analyses are. Outliers are the analyses outside the limits: below Q1 − 1,5 × IQR or above Q3 + 1,5 × IQR. Standard deviation and variance measure how far the analyses are from the mean and, being sample statistics, need at least 2 analyses.",
+      "skewness-default": "Positive skewness: the long tail is on the right (isolated high values). Negative: on the left (isolated low values)."
+    },
+    "filters": {
+      "no-analysis": "{{name}} (no analysis in the release)",
+      "level-aria": "Model level"
+    }
+  },
+  "correlation": {
+    "level": {
+      "characteristic": "Characteristic",
+      "subcharacteristic": "Subcharacteristic"
+    },
+    "plural": {
+      "characteristic": "characteristics",
+      "subcharacteristic": "subcharacteristics"
+    },
+    "no-correlation-tooltip": "{{names}}: no correlation<br/>One of them did not vary across releases",
+    "status": {
+      "used": "Used",
+      "out": "Out: no value for {{names}}"
+    },
+    "info": {
+      "releases": "{{amount}} releases of {{repository}}",
+      "entities": "{{amount}} {{noun}}",
+      "non-normal": "non-normal distribution in {{nonNormal}} of {{total}} {{noun}}: {{names}}",
+      "normal": "normal distribution in all {{total}} {{noun}}",
+      "method": "applied coefficient: {{method}} ({{normality}})",
+      "excluded_one": "1 release left out for lack of value",
+      "excluded_other": "{{formatted}} releases left out for lack of value"
+    },
+    "significance-note": "Italic and faded: not significant (|r| < {{critical}}, p < 0,05, n = {{amount}})",
+    "pair": {
+      "none": "{{row}} × {{column}}: no correlation",
+      "value": "{{row}} × {{column}}: {{value}}",
+      "value-not-significant": "{{row}} × {{column}}: {{value}}, not significant"
+    },
+    "describe": "{{kind}} of {{method}} across {{amount}} {{noun}} of {{repository}} in {{releases}} releases. {{pairs}}.",
+    "matrix": "Correlation matrix",
+    "bubbles": "Bubble matrix",
+    "title": "6. Relationships and Correlations",
+    "card-title": "Relationships and Correlations",
+    "error-title": "Could not load the correlations",
+    "error-card": "Loading failed",
+    "no-repository": {
+      "title": "This product has no {{repositories}} yet",
+      "description": "Add a {{repository}} to the product and run the MeasureSoftGram collection to see the correlations."
+    },
+    "no-release": {
+      "title": "Product without release",
+      "badge": "No release",
+      "empty-title": "This product has no release yet",
+      "description": "The correlation compares the values of the {{noun}} across releases. Plan the first release to start."
+    },
+    "plan-release": "Plan release",
+    "no-entities": {
+      "title": "The model configuration has fewer than 2 {{noun}}",
+      "description": "The correlation needs at least two entities at the level. Choose another level or check the release model configuration."
+    },
+    "no-analyses": {
+      "badge": "No analysis",
+      "title": "The {{repository}} {{name}} has no analyses in the product releases",
+      "description": "The values of the {{noun}} appear when the MeasureSoftGram Action or CLI runs on the {{repository}} within the period of a release. Choose another {{repository}} or set up the collection."
+    },
+    "few-releases": {
+      "badge": "Few releases",
+      "title": "Not enough releases to calculate the correlation",
+      "description": "The correlation needs at least {{min}} releases with a value for all {{noun}}, and the {{repository}} {{name}} has {{releases}}."
+    },
+    "release-count_one": "{{count}} release",
+    "release-count_other": "{{count}} releases",
+    "release-count_zero": "{{count}} releases",
+    "subtitle": {
+      "text": "How the {{noun}} of <em>{{name}}</em> vary together across releases",
+      "fallback": "a {{repository}}"
+    },
+    "see-releases": "See analysis releases",
+    "bubbles-title": "Correlation bubble matrix",
+    "legend": {
+      "positive": "Positive",
+      "negative": "Negative",
+      "none": "No relationship",
+      "size": "Size = |r|:",
+      "colors": "Blue: move together · Orange: move in opposite directions"
+    },
+    "bubbles-description": "The same RD_Corr matrix of {{repository}}: the circle size is |r| and the color is the correlation sign. The names are on the diagonal, as in the matrix beside it.",
+    "matrix-title": "Correlation matrix of the {{noun}}",
+    "matrix-description": "correlation between the values of the {{noun}} in the {{amount}} releases of {{repository}}. Each name is on the diagonal: read the row to its left and the column below it.",
+    "method-rule": "Applied coefficient: {{method}}. Model rule: Pearson if the RD distribution is normal, Spearman otherwise.",
+    "releases": {
+      "title": "Analysis releases of {{repository}}",
+      "description": "The correlation includes the releases in which the repository has a value for all {{noun}}. The value is the one from the latest analysis within the release period.",
+      "release": "Release",
+      "period": "Period",
+      "status": "Status",
+      "close": "Close"
+    },
+    "level-aria": "Model level"
+  },
+  "entity": {
+    "path": {
+      "characteristics": "characteristics",
+      "all-characteristics": "all characteristics",
+      "subcharacteristics": "subcharacteristics",
+      "all-subcharacteristics": "all subcharacteristics",
+      "measures": "measures"
+    },
+    "title": "4. Analysis by Entity",
+    "card-title": "Analysis by Entity",
+    "subtitle": "In which entity and at which level of the model quality is dropping",
+    "contribution-title": "What pulls total quality down",
+    "ranking-title": "Ranking of the worst pairs",
+    "reading": {
+      "label": "Reading:",
+      "weakest": "{{name}} is the weakest {{noun}} of the product (mean {{mean}}).",
+      "widest": "{{name}} has the largest spread among repositories: from {{low}} ({{lowRepository}}) to {{high}} ({{highRepository}})."
+    },
+    "heatmap-title": "Heat map: repository × {{noun}}",
+    "first-release": {
+      "badge": "First release",
+      "title": "{{release}} is the first release of the product",
+      "description": "There is no previous release to compare. Each pair's contribution appears from the next release on."
+    },
+    "no-contribution": {
+      "title": "No pair changed the TSQMI from {{previous}} to {{release}}",
+      "description": "The contribution only appears when the entity has a value in both releases in the same {{repository}}."
+    },
+    "contribution-description": "How much each {{repository}} × {{noun}} pair made the {{repository}} TSQMI go up or down from {{previous}} to {{release}}: the TSQMI recalculated with the previous release value, using the model weights. The {{amount}} pairs that changed the indicator the most.",
+    "error": "Could not load the analysis by entity",
+    "no-release": {
+      "title": "Product without release",
+      "badge": "No release",
+      "empty-title": "This product has no release yet",
+      "description": "The analysis compares the {{repositories}} within the period of a release. Plan the first release to start."
+    },
+    "plan-release": "Plan release",
+    "no-columns": {
+      "title": "The configuration of release {{release}} has no entity at the {{noun}} level",
+      "description": "Choose another level or check the release model configuration."
+    },
+    "no-repositories": {
+      "title": "This product has no {{repositories}} yet",
+      "description": "Add a {{repository}} to the product and run the MeasureSoftGram collection to compare the values."
+    },
+    "no-analysis": {
+      "badge": "No analysis",
+      "title": "Release {{release}} has no analyses yet",
+      "description": "Values appear when the MeasureSoftGram Action or CLI runs on the {{repositories}} between {{start}} and {{end}}, the release period."
+    },
+    "delta": {
+      "previous": "Δ is the variation compared to the previous release, {{release}}.",
+      "first": "{{release}} is the first release of the product: no variation to show."
+    },
+    "heatmap-description": "Rows from the worst to the best TSQMI. Each cell shows the normalized value [0, 1] and the grade; click a cell to see the entity composition in that {{repository}}.",
+    "level-badge": "Level: {{level}}",
+    "ranking-description": "{{repository}} × {{noun}}, from the lowest value to the highest.",
+    "level-label": "Model level",
+    "day-format": "{{month}}/{{day}}",
+    "heatmap": {
+      "scale": "Scale",
+      "highlight-legend": "among the 3 largest contributions to the drop",
+      "aria": "Heat map",
+      "repository": "Repository",
+      "highlighted-cell": "{{label}}, among the largest contributions to the drop"
+    },
+    "detail": {
+      "error": "Could not load the composition.",
+      "retry": "Try again",
+      "no-children": "This entity has no children in the release configuration.",
+      "children": "Children of {{name}}",
+      "weight": "Weight",
+      "value": "Value",
+      "title": "{{entity}} in {{repository}}",
+      "value-line": "Value: {{value}}",
+      "close": "Close"
+    },
+    "ranking": {
+      "aria": "Ranking of the worst pairs",
+      "pair": "Repository · entity",
+      "value": "Value"
+    },
+    "contribution": {
+      "worse": "← worse",
+      "better": "better →"
+    }
+  },
+  "common": {
+    "collection-guide": "See how to set up the collection",
+    "not-applicable": "Not applicable",
+    "create-release": "Create release",
+    "product-releases": "Product releases",
+    "bands": "Bands"
+  },
+  "metamodel": {
+    "title": "3. Structure of Measures and Indicators (Metamodel)",
+    "subtitle": "How the characteristics, subcharacteristics, measures and metrics of the release are linked, with the weight of each one.",
+    "no-model": {
+      "title": "This release has no quality model configured",
+      "description": "Weights and reference values are defined in the release planning. Choose another release or review the planning."
+    },
+    "no-release": {
+      "title": "This product has no configured release yet",
+      "description": "The metamodel shows the characteristics, subcharacteristics, measures and metrics configured for a release, with the weights and reference values. Plan the first release to see it here."
+    },
+    "plan-release": "Plan release",
+    "card-title": "Release quality model configuration",
+    "loading": "Loading the release quality model…",
+    "tree": {
+      "weight": "Weight",
+      "weight-tsqmi": "Weight in TSQMI",
+      "weight-characteristic": "Weight in the characteristic",
+      "weight-subcharacteristic": "Weight in the subcharacteristic",
+      "min-max": "min. {{min}} · max. {{max}}",
+      "min": "min. {{min}}",
+      "max": "max. {{max}}",
+      "shared": "also in another measure",
+      "type": {
+        "tsqmi": "Quality Index",
+        "characteristic": "Characteristic",
+        "subcharacteristic": "Subcharacteristic",
+        "measure": "Measure",
+        "metric": "Metric"
+      },
+      "min-reference": "Minimum reference value:",
+      "max-reference": "Maximum reference value:",
+      "metrics-used": "Metrics used:",
+      "shared-metric": "▲ Metric also used in other measures",
+      "instruction": "Weight (%) relative to the level above · click '+' to open a branch",
+      "collapse-all": "Collapse all",
+      "expand-all": "Expand all"
+    }
+  },
+  "temporal": {
+    "title": "2. Temporal Evolution",
+    "card-title": "Temporal Evolution",
+    "subtitle": "Each level shows the children of what was chosen in the previous level. With more than one analysis on the same day or month, the latest one counts.",
+    "chart": {
+      "characteristics": "Characteristic",
+      "subcharacteristics": "Subcharacteristics",
+      "measures": "Measures",
+      "metrics": "Metrics"
+    },
+    "loading": {
+      "characteristics": "Loading the characteristic evolution…",
+      "subcharacteristics": "Loading the subcharacteristics evolution…",
+      "measures": "Loading the measures evolution…",
+      "metrics": "Loading the metrics evolution…"
+    },
+    "error": {
+      "characteristics": "Could not load the characteristic evolution",
+      "subcharacteristics": "Could not load the subcharacteristics evolution",
+      "measures": "Could not load the measures evolution",
+      "metrics": "Could not load the metrics evolution"
+    },
+    "missing": {
+      "title": "{{chart}} without values in this {{repository}}: {{names}}",
+      "description": "The others remain in the chart. {{description}}"
+    },
+    "empty": {
+      "characteristics": "There are no values for this characteristic in this {{repository}} yet",
+      "subcharacteristics": "There are no values for the chosen subcharacteristics in this {{repository}} yet",
+      "measures": "There are no values for the chosen measures in this {{repository}} yet",
+      "metrics-all": "No metric values for the measures in this {{repository}}",
+      "metrics-chosen": "No metric values for the chosen measures in this {{repository}}",
+      "after-action": "Values appear after the MeasureSoftGram Action analyzes the {{repository}}.",
+      "metrics-description": "This chart only shows metrics measured on the whole {{repository}}. The ones collected per file, such as SonarQube's, do not appear here even with the collection up to date — the measures above already summarize those values. If the charts above are also empty, run the MeasureSoftGram collection on this {{repository}}."
+    },
+    "repositories-error": "Could not load the product {{repositories}}",
+    "no-repositories": {
+      "title": "This product has no {{repositories}} yet",
+      "description": "Add a {{repository}} to follow the quality evolution."
+    },
+    "filter": {
+      "characteristic": "Characteristic",
+      "subcharacteristic": "Subcharacteristic",
+      "measure": "Measure",
+      "metric": "Metric",
+      "all": "All"
+    },
+    "time-axis": "Time axis",
+    "days": "Days",
+    "months": "Months"
+  },
+  "repository-pulse": {
+    "title": "Characteristics Indicator",
+    "loading": "Loading the characteristics measurements…",
+    "empty-title": "There are no characteristic measurements for this {{repository}} yet",
+    "empty-description": "Values appear after the MeasureSoftGram Action analyzes the {{repository}}.",
+    "error": "Could not load the characteristics indicator",
+    "subtitle": "Pulse chart per characteristic • peak = variation between measurements • markers = releases • color = quality band",
+    "no-period": "No measurement in the selected period. Adjust the From/To dates.",
+    "last-value": "latest value"
+  },
+  "card": {
+    "badge": {
+      "loading": "Loading",
+      "empty": "No data",
+      "error": "Error"
+    },
+    "loading": "Loading the release data…",
+    "empty": "There are no analyses in this release yet",
+    "error": "Could not load this chart",
+    "retry": "Try again",
+    "error-description": "Try again in a few moments. If the problem persists, notify the product administrator."
+  },
+  "bands-unavailable": {
+    "title": "Could not load the product bands",
+    "description": "The charts are being displayed with the default bands."
+  },
+  "export": {
+    "csv": "Export .csv",
+    "zip-error": "Could not generate the .zip. Try again.",
+    "exporting": "Exporting…",
+    "all": "Export all (.zip)"
+  }
+}

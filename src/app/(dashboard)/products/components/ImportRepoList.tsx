@@ -3,6 +3,7 @@ import { Box, Button, Chip, List, ListItem, Typography } from '@mui/material';
 import { AddCircle, CheckCircle } from '@mui/icons-material';
 import type { ProviderTerms } from '@utils/providerTerminology';
 import type { UnifiedRepoItem } from '../hooks/useImportRepos';
+import { useTranslation } from 'react-i18next';
 
 interface ImportRepoListProps {
   repos: UnifiedRepoItem[];
@@ -26,11 +27,12 @@ const itemSx = {
 };
 
 const ImportRepoList = ({ repos, terms, isImported, onImport, importDisabled = false }: ImportRepoListProps) => {
+  const { t } = useTranslation('product');
   if (repos.length === 0) {
     return (
       <Box padding="3rem" textAlign="center">
         <Typography variant="body1" color="text.secondary">
-          {`Nenhum ${terms.repository} associado a este produto foi encontrado.`}
+          {t('import.no-repositories', { repository: terms.repository })}
         </Typography>
       </Box>
     );

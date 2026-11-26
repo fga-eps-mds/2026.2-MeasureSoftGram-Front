@@ -2,11 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import TsqmiBadge from '../TsqmiBadge';
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback: string) => fallback
-  })
-}));
 
 jest.mock('../../CopyBadgeModal', () => ({
   __esModule: true,

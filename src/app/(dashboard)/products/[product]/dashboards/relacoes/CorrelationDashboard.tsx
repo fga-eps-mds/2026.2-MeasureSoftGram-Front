@@ -19,15 +19,14 @@ import {
 import { getPathId } from '@utils/pathDestructer';
 
 import { CollectionGuideLink } from '../distribuicao/DistributionStates';
-import CorrelationBubbles, { BUBBLES_TITLE } from './CorrelationBubbles';
+import CorrelationBubbles, { bubblesTitle } from './CorrelationBubbles';
 import CorrelationFilters from './CorrelationFilters';
 import CorrelationMatrix, { matrixTitle } from './CorrelationMatrix';
 import CorrelationReleasesDialog from './CorrelationReleasesDialog';
 import { MIN_RELEASES, useCorrelationDashboard } from './useCorrelationDashboard';
+import { Trans, useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 
-const TITLE = '6. Relações e Correlações';
-const CARD_TITLE = 'Relações e Correlações';
-const ERROR_TITLE = 'Não foi possível carregar as correlações';
 const SKELETON_ROWS = 4;
 
 /** Esqueleto do triângulo de baixo enquanto as correlações carregam. */
@@ -75,6 +74,8 @@ function CorrelationGrid({ matrix, bubbles, busy }: { matrix: ReactNode; bubbles
 const CorrelationDashboard: React.FC = () => {
   usePreloadECharts();
   const { terms } = useProviderTerms();
+  const { t } = useTranslation('dashboards');
+  const cardTitle = t('correlation.card-title');
   const router = useRouter();
   const [organizationId, productId] = getPathId(router.query?.product as string);
 
@@ -93,16 +94,23 @@ const CorrelationDashboard: React.FC = () => {
 
   const renderContent = () => {
     if (status === 'error') {
-      return <DashboardCard title="Falha ao carregar" status="error" errorTitle={ERROR_TITLE} onRetry={retry} />;
+      return (
+        <DashboardCard
+          title={t('correlation.error-card')}
+          status="error"
+          errorTitle={t('correlation.error-title')}
+          onRetry={retry}
+        />
+      );
     }
 
     if (status === 'noRepository') {
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
-          emptyTitle={`Este produto ainda não tem ${terms.repositories}`}
-          emptyDescription={`Adicione um ${terms.repository} ao produto e rode a coleta do MeasureSoftGram para ver as correlações.`}
+          emptyTitle={t('correlation.no-repository.title', { repositories: terms.repositories })}
+          emptyDescription={t('correlation.no-repository.description', { repository: terms.repository })}
         />
       );
     }
@@ -110,11 +118,11 @@ const CorrelationDashboard: React.FC = () => {
     if (status === 'noRelease') {
       return (
         <DashboardCard
-          title="Produto sem release"
+          title={t('correlation.no-release.title')}
           status="empty"
-          badgeLabel="Sem release"
-          emptyTitle="Este produto ainda não tem release"
-          emptyDescription={`A correlação compara os valores das ${noun} entre as releases. Planeje a primeira release para começar.`}
+          badgeLabel={t('correlation.no-release.badge')}
+          emptyTitle={t('correlation.no-release.empty-title')}
+          emptyDescription={t('correlation.no-release.description', { noun })}
           emptyAction={
             <Button
               variant="contained"
@@ -122,7 +130,7 @@ const CorrelationDashboard: React.FC = () => {
               onClick={() => router.push(`/products/${router.query.product}/releases/create`)}
               sx={{ backgroundColor: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
             >
-              Planejar release
+              {t('correlation.plan-release')}
             </Button>
           }
         />
@@ -132,10 +140,10 @@ const CorrelationDashboard: React.FC = () => {
     if (status === 'noEntities') {
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
-          emptyTitle={`A configuração do modelo tem menos de 2 ${noun}`}
-          emptyDescription="A correlação precisa de pelo menos duas entidades no nível. Escolha outro nível ou confira a configuração do modelo da release."
+          emptyTitle={t('correlation.no-entities.title', { noun })}
+          emptyDescription={t('correlation.no-entities.description')}
         />
       );
     }
@@ -143,25 +151,34 @@ const CorrelationDashboard: React.FC = () => {
     if (status === 'noAnalyses' && correlation) {
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
-          badgeLabel="Sem análise"
-          emptyTitle={`O ${terms.repository} ${correlation.repository.name} não tem análises nas releases do produto`}
-          emptyDescription={`Os valores das ${noun} aparecem quando a Action ou a CLI do MeasureSoftGram roda no ${terms.repository} dentro do período de uma release. Escolha outro ${terms.repository} ou configure a coleta.`}
+          badgeLabel={t('correlation.no-analyses.badge')}
+          emptyTitle={t('correlation.no-analyses.title', {
+            repository: terms.repository,
+            name: correlation.repository.name
+          })}
+          emptyDescription={t('correlation.no-analyses.description', { noun, repository: terms.repository })}
           emptyAction={<CollectionGuideLink />}
         />
       );
     }
 
     if (status === 'fewReleases' && correlation) {
-      const count = correlation.releases.length === 1 ? '1 release' : `${correlation.releases.length} releases`;
+      const releasesCount = t('correlation.release-count', { count: correlation.releases.length });
       return (
         <DashboardCard
-          title={CARD_TITLE}
+          title={cardTitle}
           status="empty"
-          badgeLabel="Poucas releases"
-          emptyTitle="Faltam releases para calcular a correlação"
-          emptyDescription={`A correlação precisa de pelo menos ${MIN_RELEASES} releases com valor para todas as ${noun}, e o ${terms.repository} ${correlation.repository.name} tem ${count}.`}
+          badgeLabel={t('correlation.few-releases.badge')}
+          emptyTitle={t('correlation.few-releases.title')}
+          emptyDescription={t('correlation.few-releases.description', {
+            min: MIN_RELEASES,
+            noun,
+            repository: terms.repository,
+            name: correlation.repository.name,
+            releases: releasesCount
+          })}
         />
       );
     }
@@ -179,25 +196,33 @@ const CorrelationDashboard: React.FC = () => {
     return (
       <CorrelationGrid
         matrix={<DashboardCard title={matrixTitle({ level })} status="loading" loadingContent={<MatrixSkeleton />} />}
-        bubbles={<DashboardCard title={BUBBLES_TITLE} status="loading" loadingContent={<MatrixSkeleton />} />}
+        bubbles={<DashboardCard title={bubblesTitle()} status="loading" loadingContent={<MatrixSkeleton />} />}
       />
     );
   };
 
   return (
     <>
-      <title>{TITLE}</title>
+      <title>{t('correlation.title')}</title>
 
       <Container maxWidth="xl">
         <Box display="flex" flexDirection="column" gap="24px" marginTop="40px" marginBottom="40px">
           <Box display="flex" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" gap="16px">
             <Box>
               <Typography component="h1" fontWeight="bold" fontSize="30px" color={DASHBOARD_COLORS.primary}>
-                {TITLE}
+                {t('correlation.title')}
               </Typography>
               <Typography color={DASHBOARD_COLORS.mutedText} data-testid="correlation-subtitle">
-                Como as {noun} de <em>{repository?.name ?? `um ${terms.repository}`}</em> variam juntas ao longo das
-                releases
+                <Trans
+                  t={t}
+                  i18n={i18n}
+                  i18nKey="correlation.subtitle.text"
+                  values={{
+                    noun,
+                    name: repository?.name ?? t('correlation.subtitle.fallback', { repository: terms.repository })
+                  }}
+                  components={{ em: <em /> }}
+                />
               </Typography>
             </Box>
             <ExportAllCsvButton dashboard={CORRELATION_CSV.dashboard} charts={csvCharts} />
@@ -215,7 +240,7 @@ const CorrelationDashboard: React.FC = () => {
                 onClick={() => setReleasesOpen(true)}
                 sx={{ color: DASHBOARD_COLORS.primary, fontWeight: 'bold', textTransform: 'none' }}
               >
-                Ver releases da análise
+                {t('correlation.see-releases')}
               </Button>
               <CorrelationReleasesDialog
                 correlation={correlation}

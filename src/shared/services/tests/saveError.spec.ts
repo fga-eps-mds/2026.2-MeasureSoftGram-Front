@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { saveError } from '../saveError';
+import { isDuplicateField, saveError } from '../saveError';
 
 const DUPLICATES = {
   name: { server: 'Organization with this name already exists.', message: 'Já existe uma organização com este nome.' },
@@ -13,6 +13,8 @@ const httpError = (status: number, data?: unknown) =>
 describe('saveError', () => {
   it('traduz o 400 de nome já usado', () => {
     const error = saveError(httpError(400, { name: [DUPLICATES.name.server] }), DUPLICATES, FALLBACK);
+    expect(isDuplicateField(error, 'name')).toBe(true);
+    expect(isDuplicateField(error, 'key')).toBe(false);
     expect(error.message).toBe(DUPLICATES.name.message);
   });
 
@@ -33,6 +35,7 @@ describe('saveError', () => {
 
   it('400 sem corpo cai no texto padrão', () => {
     expect(saveError(httpError(400), DUPLICATES, FALLBACK).message).toBe(FALLBACK);
+    expect(isDuplicateField(saveError(httpError(400), DUPLICATES, FALLBACK), 'name')).toBe(false);
   });
 
   it('outro status com a mesma mensagem cai no texto padrão', () => {

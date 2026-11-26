@@ -1,5 +1,33 @@
 {
   "pageTitle": "Configurações",
   "apiKeyHeader": "Chave secreta para acesso à API",
-  "apiKeyLabel": "Chave secreta"
+  "apiKeyLabel": "Chave secreta",
+  "page": {
+    "title": "Configurações",
+    "title-with-product": "Configurações · {{product}}",
+    "tabs-aria": "Configurações do produto"
+  },
+  "quality-bands": {
+    "tab": "Faixas de qualidade",
+    "save-error": "Não foi possível salvar as faixas. Tente novamente.",
+    "loading": "Carregando as faixas de qualidade…",
+    "load-error": "Não foi possível carregar as faixas de qualidade",
+    "description": "A régua de 0 a 1 que classifica os indicadores do produto, da pior faixa (E) para a melhor (A). O fim de uma faixa é sempre o início da seguinte.",
+    "admin-only": " Só o administrador da organização altera os limites.",
+    "from": "De",
+    "to": "Até",
+    "to-aria": "Até da faixa {{band}}",
+    "saved": "Faixas salvas",
+    "restore": "Restaurar padrão",
+    "saving": "Salvando…",
+    "save": "Salvar",
+    "ruler-aria": "Régua das faixas: {{segments}}",
+    "ruler-segment": "{{grade}} de {{start}} a {{end}}",
+    "restore-dialog": {
+      "title": "Restaurar os limites padrão?",
+      "description": "Os limites entre as faixas voltam a {{limits}}, e a alteração é salva.",
+      "limits": "{{list}} e {{last}}",
+      "cancel": "Cancelar"
+    }
+  }
 }

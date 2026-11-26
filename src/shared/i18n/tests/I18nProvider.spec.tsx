@@ -3,6 +3,7 @@ import { act, render } from '@testing-library/react';
 import { useTranslation as useRealTranslation } from 'react-i18next';
 import en from '../locales/en';
 import I18nProvider from '../I18nProvider';
+import i18n from '../i18n';
 
 // o jestSetup troca o react-i18next por um mock: aqui interessa o de verdade
 jest.mock('react-i18next', () => jest.requireActual('react-i18next'));
@@ -27,6 +28,8 @@ const Probe = ({ ns, text }: { ns: string; text: string }) => {
 
 // a instância do i18next é uma só por módulo: a troca de idioma fica por último
 describe('I18nProvider', () => {
+  beforeAll(() => i18n.changeLanguage('en'));
+
   beforeEach(() => {
     window.localStorage.clear();
   });
