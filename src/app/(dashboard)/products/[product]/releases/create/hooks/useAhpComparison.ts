@@ -64,8 +64,11 @@ export function useAhpComparison({ organizationId, productId, configPageData, se
     });
   }, [groups]);
 
+  // A escala só é pedida quando a comparação é aberta, e uma vez só.
+  const scaleRequested = useRef(false);
   useEffect(() => {
-    if (!enabled || !organizationId || !productId) return;
+    if (!enabled || !organizationId || !productId || scaleRequested.current) return;
+    scaleRequested.current = true;
     ahpService.getScale(organizationId, productId)
       ?.then(response => {
         const scale = response?.data;

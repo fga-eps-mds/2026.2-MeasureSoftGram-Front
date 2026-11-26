@@ -81,6 +81,9 @@ function OptionCard({ option, selected, title, onSelect, children }: OptionCardP
 
 const formatDate = (value: string | Date, pattern: string) => format(new Date(value), pattern);
 
+/** Nomes vindos do usuário (release, autor) sem o escape do i18next: o React já escapa o texto na tela. */
+const RAW = { interpolation: { escapeValue: false } };
+
 export default function StartingPointSelector({
   value,
   onChange,
@@ -107,7 +110,7 @@ export default function StartingPointSelector({
     const details = [
       release ? t('lastConfigPeriod', { start: formatDate(release.start_at, 'dd/MM'), end: formatDate(release.end_at, 'dd/MM/yyyy') }) : null,
       lastConfigMeta!.created_by
-        ? t('lastConfigSavedBy', { author: lastConfigMeta!.created_by, date: savedAt })
+        ? t('lastConfigSavedBy', { author: lastConfigMeta!.created_by, date: savedAt, ...RAW })
         : t('lastConfigSavedAt', { date: savedAt }),
     ].filter(Boolean).join(' · ');
 
@@ -171,7 +174,7 @@ export default function StartingPointSelector({
             <WeightsComparisonTable
               rows={comparisonRows}
               highlight={highlight}
-              lastColumnLabel={releaseName ? t('lastColumn', { name: releaseName }) : t('lastColumnFallback')}
+              lastColumnLabel={releaseName ? t('lastColumn', { name: releaseName, ...RAW }) : t('lastColumnFallback')}
             />
           )}
         </Box>

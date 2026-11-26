@@ -53,7 +53,8 @@ export default function PairwiseComparisonStep({ ahp, baselineConfig }: Pairwise
       status,
       cr: displayedCR(comparison.preview),
       threshold: comparison.preview.cr_threshold ?? ahp.crThreshold,
-      explanation: cycle ? t('consistencyCycle', { cycle: cycle.map(nameOf).join(' > ') }) : undefined,
+      // ">" sem escapar: o React já escapa o texto na tela.
+      explanation: cycle ? t('consistencyCycle', { cycle: cycle.map(nameOf).join(' > '), interpolation: { escapeValue: false } }) : undefined,
     };
   };
 

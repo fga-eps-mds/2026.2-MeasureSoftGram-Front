@@ -68,7 +68,7 @@ function ReleaseCreation() {
     productId,
     configPageData,
     setConfigPageData,
-    enabled: startingPoint === 'new',
+    enabled: startingPoint === 'new' && weightMethod === 'ahp' && activeStep === 'weights' && weightsView === 'groups',
   });
 
   const { t } = useTranslation('plan_release');
