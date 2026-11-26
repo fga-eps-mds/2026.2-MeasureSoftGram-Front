@@ -1,11 +1,11 @@
-import { getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from '../steps';
+import { StepFlags, getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from '../steps';
 
 describe('steps do planejamento de release', () => {
-  const semValoresDeReferencia = { changeRefValue: false };
-  const comValoresDeReferencia = { changeRefValue: true };
+  const novosPesos: StepFlags = { startingPoint: 'new', changeRefValue: false };
+  const novosPesosComValoresDeReferencia: StepFlags = { startingPoint: 'new', changeRefValue: true };
 
   it('omite valores de referência quando a chave está desligada', () => {
-    expect(getVisibleSteps(semValoresDeReferencia)).toEqual([
+    expect(getVisibleSteps(novosPesos)).toEqual([
       'repositories',
       'releaseInfo',
       'modelConfig',
@@ -14,7 +14,7 @@ describe('steps do planejamento de release', () => {
   });
 
   it('inclui valores de referência quando a chave está ligada', () => {
-    expect(getVisibleSteps(comValoresDeReferencia)).toEqual([
+    expect(getVisibleSteps(novosPesosComValoresDeReferencia)).toEqual([
       'repositories',
       'releaseInfo',
       'modelConfig',
@@ -23,28 +23,36 @@ describe('steps do planejamento de release', () => {
     ]);
   });
 
+  it.each(['last', 'default'] as const)('com o ponto de partida "%s" vai direto ao balanceamento', startingPoint => {
+    const flags: StepFlags = { startingPoint, changeRefValue: true };
+
+    expect(getVisibleSteps(flags)).toEqual(['repositories', 'releaseInfo', 'balance']);
+    expect(getNextStep('releaseInfo', flags)).toBe('balance');
+    expect(getPreviousStep('balance', flags)).toBe('releaseInfo');
+  });
+
   it('avança e volta pulando valores de referência quando desligada', () => {
-    expect(getNextStep('modelConfig', semValoresDeReferencia)).toBe('balance');
-    expect(getPreviousStep('balance', semValoresDeReferencia)).toBe('modelConfig');
+    expect(getNextStep('modelConfig', novosPesos)).toBe('balance');
+    expect(getPreviousStep('balance', novosPesos)).toBe('modelConfig');
   });
 
   it('avança e volta passando por valores de referência quando ligada', () => {
-    expect(getNextStep('modelConfig', comValoresDeReferencia)).toBe('referenceValues');
-    expect(getPreviousStep('balance', comValoresDeReferencia)).toBe('referenceValues');
+    expect(getNextStep('modelConfig', novosPesosComValoresDeReferencia)).toBe('referenceValues');
+    expect(getPreviousStep('balance', novosPesosComValoresDeReferencia)).toBe('referenceValues');
   });
 
   it('não tem etapa antes da primeira nem depois da última', () => {
-    expect(getPreviousStep('repositories', semValoresDeReferencia)).toBeUndefined();
-    expect(getNextStep('balance', semValoresDeReferencia)).toBeUndefined();
+    expect(getPreviousStep('repositories', novosPesos)).toBeUndefined();
+    expect(getNextStep('balance', novosPesos)).toBeUndefined();
   });
 
   it('não navega a partir de uma etapa oculta', () => {
-    expect(getNextStep('referenceValues', semValoresDeReferencia)).toBeUndefined();
-    expect(getPreviousStep('referenceValues', semValoresDeReferencia)).toBeUndefined();
+    expect(getNextStep('referenceValues', novosPesos)).toBeUndefined();
+    expect(getPreviousStep('referenceValues', novosPesos)).toBeUndefined();
   });
 
   it('identifica a última etapa', () => {
-    expect(isLastStep('balance', semValoresDeReferencia)).toBe(true);
-    expect(isLastStep('modelConfig', semValoresDeReferencia)).toBe(false);
+    expect(isLastStep('balance', novosPesos)).toBe(true);
+    expect(isLastStep('modelConfig', novosPesos)).toBe(false);
   });
 });

@@ -5,8 +5,11 @@ export type StepId =
   | 'referenceValues'
   | 'balance';
 
+export type StartingPoint = 'last' | 'default' | 'new';
+
 export interface StepFlags {
   changeRefValue: boolean;
+  startingPoint: StartingPoint;
 }
 
 const STEP_ORDER: StepId[] = [
@@ -17,8 +20,21 @@ const STEP_ORDER: StepId[] = [
   'balance',
 ];
 
+function isStepVisible(step: StepId, flags: StepFlags): boolean {
+  const definesNewWeights = flags.startingPoint === 'new';
+
+  switch (step) {
+    case 'modelConfig':
+      return definesNewWeights;
+    case 'referenceValues':
+      return definesNewWeights && flags.changeRefValue;
+    default:
+      return true;
+  }
+}
+
 export function getVisibleSteps(flags: StepFlags): StepId[] {
-  return STEP_ORDER.filter(step => step !== 'referenceValues' || flags.changeRefValue);
+  return STEP_ORDER.filter(step => isStepVisible(step, flags));
 }
 
 export function getNextStep(current: StepId, flags: StepFlags): StepId | undefined {

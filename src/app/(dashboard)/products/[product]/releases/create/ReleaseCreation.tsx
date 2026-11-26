@@ -8,7 +8,7 @@ import { format, addDays } from 'date-fns';
 import { useRouter } from '@hooks/useRouter';
 import { useTranslation } from 'react-i18next';
 import { Change, ReleaseGoal } from '@customTypes/product';
-import { Characteristic, Measure, PreConfigData, ReleaseInfoForm, Subcharacteristic } from '@customTypes/preConfig';
+import { Characteristic, Measure, PreConfigData, PreConfigMeta, ReleaseInfoForm, Subcharacteristic } from '@customTypes/preConfig';
 import { productQuery } from '@services/product';
 import { balanceMatrixService } from '@services/balanceMatrix';
 import { toast } from 'react-toastify';
@@ -20,7 +20,7 @@ import ReferenceValuesForm from './components/ReferenceValuesForm/ReferenceValue
 import CharacteristicsBalanceForm from './components/CharacteristicsBalanceForm/CharacteristicsBalanceForm';
 import RepositorySelectionForm from './components/RepositorySelectionForm/RepositorySelectionForm';
 import { useProviderTerms } from '@hooks/useProviderTerms';
-import { StepId, getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from './steps';
+import { StartingPoint, StepId, getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from './steps';
 
 function ReleaseCreation() {
   const { terms } = useProviderTerms();
@@ -31,11 +31,12 @@ function ReleaseCreation() {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showChangeDateModal, setShowChangeDateModal] = useState(false);
   const [changeRefValue, setChangeRefValue] = useState<boolean>(false);
-  const stepFlags = { changeRefValue };
-  const [followLastConfig, setFollowLastConfig] = useState<boolean>(false);
+  const [startingPoint, setStartingPoint] = useState<StartingPoint>('new');
+  const stepFlags = { changeRefValue, startingPoint };
   const [dinamicBalance, setDinamicBalance] = useState<boolean>(false);
   const [defaultPageData, setConfigDefaultPageData] = useState<PreConfigData>();
   const [lastConfigPageData, setLastConfigPageData] = useState<PreConfigData>();
+  const [lastConfigMeta, setLastConfigMeta] = useState<PreConfigMeta>();
   const [configPageData, setConfigPageData] = useState<PreConfigData>();
   const [balanceMatrix, setBalanceMatrix] = useState<any>();
   const [releaseGoal, setReleaseGoal] = useState<any>();
@@ -98,8 +99,11 @@ function ReleaseCreation() {
           setConfigPageData(formatConfig(defaultData, currentReleaseGoal));
           setConfigDefaultPageData(formatConfig(defaultData, currentReleaseGoal));
 
-          if (currentResult.status === 'fulfilled') {
-            setLastConfigPageData(formatConfig(mergeWithDefault(currentResult.value.data.data, defaultData), currentReleaseGoal));
+          const currentConfig = currentResult.status === 'fulfilled' ? currentResult.value?.data : undefined;
+          if (currentConfig?.data) {
+            const { data: currentData, ...currentMeta } = currentConfig;
+            setLastConfigPageData(formatConfig(mergeWithDefault(currentData, defaultData), currentReleaseGoal));
+            setLastConfigMeta(currentMeta);
           }
         }
 
@@ -169,13 +173,15 @@ function ReleaseCreation() {
     return data;
   }
 
-  function handleSetFollowLastConfig(value: boolean) {
-    if (value)
-      setConfigPageData(lastConfigPageData!);
-    else
-      setConfigPageData(defaultPageData!);
+  function handleSetStartingPoint(value: StartingPoint) {
+    // "Definir novos pesos" começa pelas entidades do padrão (comentário do PO na #276).
+    setConfigPageData(value === 'last' ? lastConfigPageData! : defaultPageData!);
 
-    setFollowLastConfig(value)
+    // Valores de referência só são ajustados em Definir entidades, que os caminhos
+    // "Última" e "Padrão" não percorrem.
+    if (value !== 'new') setChangeRefValue(false);
+
+    setStartingPoint(value);
   }
 
   async function checkBasicValues() {
@@ -230,7 +236,17 @@ function ReleaseCreation() {
       case 'repositories':
         return <RepositorySelectionForm organizationId={organizationId} productId={productId} watch={watch} setValue={setValue} />
       case 'releaseInfo':
-        return <BasicInfoForm configPageData={configPageData!} trigger={trigger} register={register} errors={errors} watch={watch} followLastConfig={followLastConfig} setFollowLastConfig={handleSetFollowLastConfig} />
+        return <BasicInfoForm
+          trigger={trigger}
+          register={register}
+          errors={errors}
+          watch={watch}
+          startingPoint={startingPoint}
+          setStartingPoint={handleSetStartingPoint}
+          lastConfigMeta={lastConfigMeta}
+          lastConfigData={lastConfigPageData}
+          defaultConfigData={defaultPageData}
+        />
       case 'modelConfig':
         return <ModelConfigForm changeRefValue={changeRefValue} setChangeRefValue={handleChangeRefValue} configPageData={configPageData!} setConfigPageData={setConfigPageData} />
       case 'referenceValues':
@@ -340,7 +356,11 @@ function ReleaseCreation() {
     const finalConfig = cleanConfigData();
 
     try {
-      await productQuery.postPreConfig(organizationId, productId, { name: productName, data: finalConfig });
+      // Com "Última configuração" a release usa a configuração atual do produto
+      // (a mais recente até o fim da release). Regravá-la criaria uma cópia sem o
+      // registro das comparações AHP da original.
+      if (startingPoint !== 'last')
+        await productQuery.postPreConfig(organizationId, productId, { name: productName, data: finalConfig });
 
       const productGoalResult = await productQuery.createProductGoal(organizationId, productId, goalChanges);
 

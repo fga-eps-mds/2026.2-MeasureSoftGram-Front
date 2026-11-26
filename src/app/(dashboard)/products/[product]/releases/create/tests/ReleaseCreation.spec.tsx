@@ -529,8 +529,7 @@ describe('ReleaseInfo Component', () => {
     const releaseNameInput = screen.getByTestId('apelido-release') as HTMLInputElement;
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     let nextButton = screen.getByText(/Next/i);
     fireEvent.click(nextButton);
@@ -658,8 +657,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
     await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
@@ -912,8 +910,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
     await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
@@ -1036,8 +1033,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
     await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
@@ -1159,8 +1155,7 @@ describe('ReleaseInfo Component', () => {
     const releaseNameInput = screen.getByTestId('apelido-release') as HTMLInputElement;
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     // Avança passo a passo de forma estável
     await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
@@ -1292,8 +1287,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     const nextButton = screen.getByText(/Next/i);
 
@@ -1441,5 +1435,62 @@ describe('ReleaseInfo Component', () => {
     expect(screen.getByText(t('planRelease'))).toBeInTheDocument();
     expect(productQuery.getProductDefaultPreConfig).toHaveBeenCalledTimes(1);
     expect(balanceMatrixService.getBalanceMatrix).toHaveBeenCalledTimes(1);
+  });
+
+  describe('ponto de partida da configuração (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.postPreConfig as jest.Mock).mockClear();
+      (productQuery.createProductRelease as jest.Mock).mockClear();
+      // Testes anteriores deixam getIsReleaseValid rejeitando (conflito de datas).
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+    });
+
+    async function preencherReleaseEEscolher(opcao: string) {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      fireEvent.click(screen.getByLabelText(opcao));
+    }
+
+    it('com a última configuração vai direto ao balanceamento e não regrava a configuração', async () => {
+      const { t } = useTranslation('plan_release');
+      await preencherReleaseEEscolher(t('startingPointLast'));
+
+      expect(screen.queryByText(t('defineConfiguration'))).not.toBeInTheDocument();
+
+      fireEvent.click(await screen.findByText(t('next'), { selector: 'button' }));
+      expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
+
+      fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
+      await waitFor(() => expect(productQuery.createProductRelease).toHaveBeenCalled());
+      expect(productQuery.postPreConfig).not.toHaveBeenCalled();
+    });
+
+    it('com o padrão vai direto ao balanceamento e grava a configuração padrão', async () => {
+      const { t } = useTranslation('plan_release');
+      await preencherReleaseEEscolher(t('startingPointDefault'));
+
+      fireEvent.click(await screen.findByText(t('next'), { selector: 'button' }));
+      expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
+
+      fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
+      await waitFor(() => expect(productQuery.createProductRelease).toHaveBeenCalled());
+      expect(productQuery.postPreConfig).toHaveBeenCalledWith('org', '123', expect.objectContaining({
+        name: 'prod',
+        data: expect.objectContaining({ characteristics: expect.any(Array) }),
+      }));
+    });
+
+    it('volta a mostrar a etapa de pesos ao trocar para definir novos pesos', async () => {
+      const { t } = useTranslation('plan_release');
+      await preencherReleaseEEscolher(t('startingPointLast'));
+      expect(screen.queryByText(t('defineConfiguration'))).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByLabelText(t('startingPointNew')));
+      expect(screen.getByText(t('defineConfiguration'))).toBeInTheDocument();
+    });
   });
 });
