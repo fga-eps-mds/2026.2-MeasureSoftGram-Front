@@ -56,6 +56,15 @@ function Harness() {
       <PairwiseComparisonStep ahp={ahp} baselineConfig={padrao()} />
       <button type="button" onClick={() => ahp.enter('forward')}>entrar</button>
       <button type="button" onClick={() => ahp.next()}>proximo</button>
+      <button
+        type="button"
+        onClick={() => setConfig(prev => prev && ({
+          ...prev,
+          characteristics: prev.characteristics.map(c => (c.key === 'functional_suitability' ? { ...c, active: false } : c)),
+        }))}
+      >
+        remover adequação
+      </button>
     </>
   );
 }
@@ -184,5 +193,26 @@ describe('PairwiseComparisonStep', () => {
 
     expect(await screen.findByText('Faltam comparações: a × c')).toBeInTheDocument();
     expect(ahpRef.canAdvance).toBe(false);
+  });
+
+  it('descarta as respostas e pede a comparação de novo quando as entidades mudam (Cenário 7)', async () => {
+    (ahpService.calculateGroup as jest.Mock).mockResolvedValue(resposta({ reliability: 43, maintainability: 43, functional_suitability: 14 }, 0));
+    render(<Harness />);
+    fireEvent.click(screen.getByText('entrar'));
+
+    await responder('reliability', 'maintainability', 'equallyImportant');
+    await responder('reliability', 'functional_suitability', 'characteristics.reliability', 'moderadamente');
+    await responder('maintainability', 'functional_suitability', 'characteristics.maintainability', 'moderadamente');
+    await waitFor(() => expect(ahpRef.canAdvance).toBe(true));
+
+    fireEvent.click(screen.getByText('remover adequação'));
+
+    const aviso = within(await screen.findByTestId('group-changed'));
+    expect(aviso.getByText('groupChangedTitle')).toBeInTheDocument();
+    expect(aviso.getByText(/groupChangedRemoved .*characteristics.functional_suitability/)).toBeInTheDocument();
+    expect(within(screen.getByTestId('pair-reliability-maintainability')).getByText('unanswered')).toBeInTheDocument();
+    expect(screen.queryByTestId('group-chip-functional_suitability/subcharacteristics')).not.toBeInTheDocument();
+    expect(ahpRef.canAdvance).toBe(false);
+    expect(ahpRef.comparisonsPayload()).toEqual([]);
   });
 });

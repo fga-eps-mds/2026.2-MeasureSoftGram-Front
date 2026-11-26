@@ -30,6 +30,8 @@ import PairwiseComparisonStep from './components/PairwiseComparisonStep/Pairwise
 import { GroupBadge } from './components/WeightsSummary/WeightsSummary';
 import { formatDecimal } from './components/GroupPreview/GroupPreview';
 import { useAhpComparison } from './hooks/useAhpComparison';
+import { useLeaveGuard } from './hooks/useLeaveGuard';
+import { extractApiError } from '@utils/apiError';
 import { displayedCR } from './utils/ahp';
 
 function ReleaseCreation() {
@@ -56,6 +58,10 @@ function ReleaseCreation() {
 
   const router = useRouter();
   const routerParams: any = router.query;
+
+  // "Sair sem salvar": só depois que a pessoa começou o planejamento.
+  const [planningStarted, setPlanningStarted] = useState(false);
+  const leaveGuard = useLeaveGuard(planningStarted, router.push);
 
   const ahp = useAhpComparison({
     organizationId,
@@ -385,6 +391,7 @@ function ReleaseCreation() {
   }
 
   async function handleNextButtonClick(): Promise<void> {
+    setPlanningStarted(true);
     switch (activeStep) {
       case 'repositories': {
         const selectedRepos = getValues('repositories_ids');
@@ -415,17 +422,49 @@ function ReleaseCreation() {
     }
   }
 
+  /**
+   * Pelo breadcrumb dá para chegar ao balanceamento com pesos incompletos (ex.:
+   * entidades mudaram depois da comparação). Leva de volta ao que falta.
+   */
+  function ensureWeightsReady(): boolean {
+    if (startingPoint !== 'new') return true;
+
+    if (weightMethod === 'ahp' && ahp.pendingGroups.length > 0) {
+      toast.error(t('submitPendingComparisons'), { autoClose: 10000 });
+      ahp.goToGroup(ahp.pendingGroups[0].path);
+      setWeightsView('groups');
+      setActiveStep('weights');
+      return false;
+    }
+
+    if (weightMethod === 'typed' && findInvalidGroups(configPageData!).length > 0) {
+      toast.error(t('submitInvalidWeights'), { autoClose: 10000 });
+      setWeightsView('typed');
+      setActiveStep('weights');
+      return false;
+    }
+
+    return true;
+  }
+
   async function submitRelease() {
+    if (!ensureWeightsReady()) return;
+
     const goalChanges = generateChanges();
     const release = getValues();
     const finalConfig = cleanConfigData();
+    const comparisons = startingPoint === 'new' && weightMethod === 'ahp' ? ahp.comparisonsPayload() : [];
 
     try {
       // Com "Última configuração" a release usa a configuração atual do produto
       // (a mais recente até o fim da release). Regravá-la criaria uma cópia sem o
       // registro das comparações AHP da original.
       if (startingPoint !== 'last')
-        await productQuery.postPreConfig(organizationId, productId, { name: productName, data: finalConfig });
+        await productQuery.postPreConfig(organizationId, productId, {
+          name: productName,
+          data: finalConfig,
+          ...(comparisons.length > 0 ? { comparisons } : {}),
+        });
 
       const productGoalResult = await productQuery.createProductGoal(organizationId, productId, goalChanges);
 
@@ -434,9 +473,10 @@ function ReleaseCreation() {
       await productQuery.createProductRelease(organizationId, productId, release);
 
       toast.success(t('releaseCreated'), { autoClose: 6000 });
+      leaveGuard.allowLeave();
       router.push(`/products/${router.query.product}/releases/`);
     } catch (error: any) {
-      toast.error(`${error.response?.data?.message ?? error}`, { autoClose: 10000 });
+      toast.error(extractApiError(error), { autoClose: 10000 });
     }
 
   }
@@ -601,6 +641,15 @@ function ReleaseCreation() {
           activeStep === 'entities' ? setChangeRefValue(false) : setDinamicBalance(false)
         }}
         handleConfirmBtnClick={handleModalBtnClick} />
+      <ConfirmModal
+        setIsModalOpen={(open: boolean) => { if (!open) leaveGuard.cancelLeave(); }}
+        text={t('leaveWithoutSavingText')}
+        btnConfirmText={t('leaveWithoutSaving')}
+        btnDismissText={t('back')}
+        isModalOpen={leaveGuard.isLeaveConfirmOpen}
+        handleConfirmBtnClick={leaveGuard.confirmLeave}
+        handleDismissBtnClick={leaveGuard.cancelLeave}
+      />
     </>
   );
 }

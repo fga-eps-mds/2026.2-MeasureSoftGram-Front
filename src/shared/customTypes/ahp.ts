@@ -39,3 +39,11 @@ export interface AHPCalculateResponse {
   cr_threshold: number;
   conflict: AHPConflict | null;
 }
+
+/** Um grupo comparado, no payload de POST .../create/release-config/ (campo `comparisons`). */
+export interface AHPGroupComparison {
+  group_path: string;
+  entities: string[];
+  answers: AHPAnswer[];
+  accepted_inconsistent: boolean;
+}

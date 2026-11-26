@@ -1,7 +1,10 @@
 import { AHPAnswer, AHPCalculateResponse } from '@customTypes/ahp';
 import {
+  GroupComparison,
   answersKey,
   buildAnswers,
+  buildComparisonsPayload,
+  reconcileComparisons,
   countAnswered,
   displayedCR,
   findPreferenceCycle,
@@ -108,5 +111,76 @@ describe('displayedCR', () => {
   it('mostra 0 quando o Service não calcula CR (2 entidades)', () => {
     expect(displayedCR(preview(true, null))).toBe(0);
     expect(displayedCR(preview(false, 4.95))).toBe(4.95);
+  });
+});
+
+const group = (path: string, keys: string[]) => ({
+  path,
+  level: 'characteristics' as const,
+  entities: keys.map(key => ({ key, weight: 0 })),
+});
+
+const answered = (entities: string[], consistent = true, accepted = false): GroupComparison => {
+  const answers = Object.fromEntries(pairsOf(entities).map(([a, b]) => [pairKey(a, b), { choice: 'equal' as const }]));
+  return {
+    entities,
+    answers,
+    preview: preview(consistent),
+    previewKey: answersKey(buildAnswers(entities, answers)!),
+    accepted,
+    loading: false,
+  };
+};
+
+describe('reconcileComparisons (Cenário 7)', () => {
+  const abc = ['a', 'b', 'c'];
+
+  it('mantém o mesmo objeto quando as entidades não mudaram', () => {
+    const previous = { characteristics: answered(abc) };
+    expect(reconcileComparisons(previous, [group('characteristics', abc)])).toBe(previous);
+  });
+
+  it('descarta as respostas do grupo cujas entidades mudaram e diz o que mudou', () => {
+    const next = reconcileComparisons({ characteristics: answered(abc) }, [group('characteristics', ['a', 'b', 'd'])]);
+
+    expect(next.characteristics).toEqual({
+      entities: ['a', 'b', 'd'],
+      answers: {},
+      accepted: false,
+      loading: false,
+      stale: { added: ['d'], removed: ['c'] },
+    });
+    expect(groupStatus(['a', 'b', 'd'], next.characteristics)).toBe('stale');
+  });
+
+  it('tira os grupos que deixaram de existir', () => {
+    const next = reconcileComparisons({ 'c/subcharacteristics': answered(['x', 'y']) }, [group('characteristics', abc)]);
+    expect(next).toEqual({});
+  });
+});
+
+describe('buildComparisonsPayload', () => {
+  it('envia só os grupos comparados e marca o aceite acima do limite', () => {
+    const groups = [
+      group('characteristics', ['a', 'b']),
+      group('a/subcharacteristics', ['x']),
+      group('a/x/measures', ['m1', 'm2', 'm3']),
+      group('b/subcharacteristics', ['y', 'z']),
+    ];
+    const payload = buildComparisonsPayload(groups, {
+      characteristics: answered(['a', 'b']),
+      'a/x/measures': answered(['m1', 'm2', 'm3'], false, true),
+      'b/subcharacteristics': { answers: {}, accepted: false, loading: false },
+    });
+
+    expect(payload).toEqual([
+      {
+        group_path: 'characteristics',
+        entities: ['a', 'b'],
+        answers: [{ a: 'a', b: 'b', preferred: null, intensity: 'igual' }],
+        accepted_inconsistent: false,
+      },
+      expect.objectContaining({ group_path: 'a/x/measures', entities: ['m1', 'm2', 'm3'], accepted_inconsistent: true }),
+    ]);
   });
 });

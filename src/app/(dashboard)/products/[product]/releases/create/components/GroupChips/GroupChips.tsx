@@ -18,7 +18,7 @@ type ChipTone = 'current' | 'done' | 'attention' | 'single' | 'pending';
 
 function toneOf(status: GroupStatus, isCurrent: boolean): ChipTone {
   if (isCurrent) return 'current';
-  if (status === 'accepted' || status === 'inconsistent') return 'attention';
+  if (status === 'accepted' || status === 'inconsistent' || status === 'stale') return 'attention';
   if (status === 'single') return 'single';
   if (isGroupDone(status)) return 'done';
   return 'pending';

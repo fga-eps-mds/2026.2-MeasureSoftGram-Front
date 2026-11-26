@@ -11,9 +11,11 @@ import {
   PairChoice,
   answersKey,
   buildAnswers,
+  buildComparisonsPayload,
   groupStatus,
   isGroupDone,
   pairKey,
+  reconcileComparisons,
 } from '../utils/ahp';
 
 interface UseAhpComparisonParams {
@@ -49,6 +51,19 @@ export function useAhpComparison({ organizationId, productId, configPageData, se
   const comparableGroups = useMemo(() => groups.filter(group => group.entities.length > 1), [groups]);
   const currentGroup = groups.find(group => group.path === currentPath) ?? groups[0];
 
+  // Entidades mudaram em "Definir entidades": descarta as respostas dos grupos afetados.
+  useEffect(() => {
+    setComparisons(prev => {
+      const next = reconcileComparisons(prev, groups);
+      if (next !== prev) {
+        Object.keys(prev)
+          .filter(path => next[path] !== prev[path])
+          .forEach(path => delete latestRequest.current[path]);
+      }
+      return next;
+    });
+  }, [groups]);
+
   useEffect(() => {
     if (!enabled || !organizationId || !productId) return;
     ahpService.getScale(organizationId, productId)
@@ -83,7 +98,7 @@ export function useAhpComparison({ organizationId, productId, configPageData, se
         const preview = response.data;
         setComparisons(prev => ({
           ...prev,
-          [group.path]: { ...(prev[group.path] ?? emptyComparison()), preview, previewKey: key, loading: false, error: undefined },
+          [group.path]: { ...(prev[group.path] ?? emptyComparison()), preview, previewKey: key, loading: false, error: undefined, stale: undefined },
         }));
         setConfigPageData(prev => prev && applyGroupWeights(prev, group, preview.weights));
       })
@@ -104,7 +119,7 @@ export function useAhpComparison({ organizationId, productId, configPageData, se
 
     setComparisons(prev => ({
       ...prev,
-      [group.path]: { ...current, answers, accepted: false, loading: complete, error: undefined },
+      [group.path]: { ...current, entities, answers, accepted: false, loading: complete, error: undefined },
     }));
 
     if (complete) requestPreview(group, answers);
@@ -157,8 +172,15 @@ export function useAhpComparison({ organizationId, productId, configPageData, se
     return 'leave';
   };
 
+  /** Grupos com 2+ entidades que ainda precisam de comparação (ou de revisão/aceite). */
+  const pendingGroups = comparableGroups.filter(group => !isGroupDone(statusOf(group)));
+
+  const comparisonsPayload = () => buildComparisonsPayload(groups, comparisons);
+
   return {
     groups,
+    pendingGroups,
+    comparisonsPayload,
     currentGroup,
     comparisons,
     intensities,

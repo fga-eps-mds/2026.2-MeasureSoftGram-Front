@@ -1,4 +1,5 @@
-import { AHPAnswer, AHPCalculateResponse, SaatyIntensity } from '@customTypes/ahp';
+import { AHPAnswer, AHPCalculateResponse, AHPGroupComparison, SaatyIntensity } from '@customTypes/ahp';
+import { WeightGroup } from './weightGroups';
 
 /** Intensidades além de "igual", em ordem crescente (usadas se a escala não carregar). */
 export const DEFAULT_INTENSITIES: SaatyIntensity[] = ['moderadamente', 'fortemente', 'muito_fortemente', 'extremamente'];
@@ -72,9 +73,19 @@ export function findPreferenceCycle(entities: string[], answers: AHPAnswer[]): s
   return null;
 }
 
-export type GroupStatus = 'single' | 'pending' | 'done' | 'accepted' | 'inconsistent';
+export type GroupStatus = 'single' | 'pending' | 'stale' | 'done' | 'accepted' | 'inconsistent';
+
+/** O que mudou nas entidades de um grupo depois de comparado (tela 09). */
+export interface StaleChange {
+  added: string[];
+  removed: string[];
+}
 
 export interface GroupComparison {
+  /** Entidades do grupo quando as respostas foram dadas. */
+  entities?: string[];
+  /** Preenchido quando as entidades mudaram e as respostas foram descartadas. */
+  stale?: StaleChange;
   answers: Record<string, PairChoice>;
   preview?: AHPCalculateResponse;
   /** Respostas a que a prévia corresponde; se mudarem, a prévia fica desatualizada. */
@@ -92,9 +103,75 @@ export function groupStatus(entities: string[], comparison?: GroupComparison): G
 
   const answers = buildAnswers(entities, comparison.answers);
   const preview = comparison.preview;
-  if (!answers || !preview || comparison.previewKey !== answersKey(answers)) return 'pending';
+  if (!answers || !preview || comparison.previewKey !== answersKey(answers)) return comparison.stale ? 'stale' : 'pending';
   if (preview.consistent) return 'done';
   return comparison.accepted ? 'accepted' : 'inconsistent';
 }
 
 export const isGroupDone = (status: GroupStatus) => status === 'single' || status === 'done' || status === 'accepted';
+
+const sameList = (x: string[], y: string[]) => x.length === y.length && x.every((item, index) => item === y[index]);
+
+/**
+ * Cenário 7: se as entidades de um grupo comparado mudaram em "Definir entidades",
+ * as respostas dele são descartadas e a comparação é pedida de novo. Grupos que
+ * deixaram de existir saem. Devolve o mesmo objeto quando nada mudou.
+ */
+export function reconcileComparisons(
+  previous: Record<string, GroupComparison>,
+  groups: WeightGroup[]
+): Record<string, GroupComparison> {
+  let changed = false;
+  const next: Record<string, GroupComparison> = {};
+
+  Object.entries(previous).forEach(([path, comparison]) => {
+    const group = groups.find(item => item.path === path);
+    if (!group) {
+      changed = true;
+      return;
+    }
+
+    const entities = group.entities.map(entity => entity.key);
+    const before = comparison.entities;
+    if (!before || sameList(before, entities)) {
+      next[path] = comparison;
+      return;
+    }
+
+    changed = true;
+    next[path] = {
+      entities,
+      answers: {},
+      accepted: false,
+      loading: false,
+      stale: {
+        added: entities.filter(entity => !before.includes(entity)),
+        removed: before.filter(entity => !entities.includes(entity)),
+      },
+    };
+  });
+
+  return changed ? next : previous;
+}
+
+/** Grupos comparados (2+ entidades, resolvidos) no formato que o Service grava com a configuração. */
+export function buildComparisonsPayload(
+  groups: WeightGroup[],
+  comparisons: Record<string, GroupComparison>
+): AHPGroupComparison[] {
+  return groups
+    .filter(group => group.entities.length > 1)
+    .flatMap(group => {
+      const entities = group.entities.map(entity => entity.key);
+      const comparison = comparisons[group.path];
+      const status = groupStatus(entities, comparison);
+      if (status !== 'done' && status !== 'accepted') return [];
+
+      return [{
+        group_path: group.path,
+        entities,
+        answers: buildAnswers(entities, comparison!.answers)!,
+        accepted_inconsistent: status === 'accepted',
+      }];
+    });
+}

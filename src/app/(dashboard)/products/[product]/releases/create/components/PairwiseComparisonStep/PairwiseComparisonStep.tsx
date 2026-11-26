@@ -64,8 +64,25 @@ export default function PairwiseComparisonStep({ ahp, baselineConfig }: Pairwise
       count: pairs.length,
     });
 
+  const renderStaleNotice = () => {
+    const stale = comparison?.stale;
+    if (!stale || status !== 'stale') return null;
+    const names = (keys: string[]) => keys.map(nameOf).join(', ');
+    const changes = [
+      stale.removed.length > 0 ? t('groupChangedRemoved', { names: names(stale.removed), count: stale.removed.length }) : null,
+      stale.added.length > 0 ? t('groupChangedAdded', { names: names(stale.added), count: stale.added.length }) : null,
+    ].filter(Boolean).join(' ');
+
+    return (
+      <Box sx={{ mb: 2 }} data-testid="group-changed">
+        <MSGAlert severity="warning" title={t('groupChangedTitle')}>{`${changes} ${t('groupChangedAnswerAgain')}`}</MSGAlert>
+      </Box>
+    );
+  };
+
   const renderComparableGroup = () => (
     <>
+      {renderStaleNotice()}
       {pairs.map(([a, b]) => (
         <AHPPairQuestion
           key={pairKey(a, b)}

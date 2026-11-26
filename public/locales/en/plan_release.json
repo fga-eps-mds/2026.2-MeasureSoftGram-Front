@@ -167,5 +167,13 @@
   "variation": "Change",
   "singleEntityGroup": "Single-entity group: {{name}} gets weight 100, with no comparisons.",
   "badgeAhp": "Qualitative (AHP) · CR {{cr}}",
-  "badgeAhpAccepted": "Qualitative (AHP) · accepted with CR {{cr}}"
+  "badgeAhpAccepted": "Qualitative (AHP) · accepted with CR {{cr}}",
+  "groupChangedTitle": "This group's selection changed",
+  "groupChangedRemoved": "{{names}} was removed in Define entities.",
+  "groupChangedAdded": "{{names}} was added in Define entities.",
+  "groupChangedAnswerAgain": "Answer the comparison again.",
+  "leaveWithoutSaving": "Leave without saving",
+  "leaveWithoutSavingText": "If you leave, the comparison answers and this release's configuration will not be saved.",
+  "submitPendingComparisons": "Some groups still need to be compared or reviewed in Define weights.",
+  "submitInvalidWeights": "Some group's weights do not add up to 100. Adjust them in Define weights."
 }

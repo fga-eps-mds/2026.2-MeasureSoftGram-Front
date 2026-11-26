@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { productQuery } from '@services/product';
 import { useRouter } from '@hooks/useRouter';
 import { ahpService } from '@services/ahp';
+import { runGuardedNavigation } from '@utils/navigationGuard';
 import ReleaseCreation from '../ReleaseCreation';
 
 jest.mock('@hooks/useRouter', () => ({
@@ -1587,6 +1588,19 @@ describe('ReleaseInfo Component', () => {
       await clickButtonAndWaitFor('next', 'balanceGoal');
       fireEvent.click(await screen.findByText('end', { selector: 'button' }));
       await waitFor(() => expect(productQuery.postPreConfig).toHaveBeenCalled());
+
+      // As comparações vão junto com a configuração, uma por grupo de 2+ entidades.
+      const [, , payload] = (productQuery.postPreConfig as jest.Mock).mock.calls[0];
+      expect(payload.comparisons.length).toBeGreaterThan(0);
+      expect(payload.comparisons[0]).toEqual(expect.objectContaining({
+        group_path: 'characteristics',
+        accepted_inconsistent: false,
+        entities: payload.data.characteristics.map((c: { key: string }) => c.key),
+      }));
+      payload.comparisons.forEach((comparison: { entities: string[]; answers: unknown[] }) => {
+        const n = comparison.entities.length;
+        expect(comparison.answers).toHaveLength((n * (n - 1)) / 2);
+      });
     });
 
     it('bloqueia o Próximo grupo até o grupo estar respondido', async () => {
@@ -1602,6 +1616,67 @@ describe('ReleaseInfo Component', () => {
       expect(nextButton()).toHaveTextContent('nextGroup');
 
       await clickButtonAndWaitFor('back', 'weightMethodDescription');
+    });
+  });
+
+  describe('sair sem salvar e erros ao gravar (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.postPreConfig as jest.Mock).mockClear();
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+    });
+
+    it('depois de começar o planejamento, pede confirmação para sair e não grava nada', async () => {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+
+      const navigate = jest.fn();
+      act(() => runGuardedNavigation(navigate));
+
+      expect(await screen.findByText('leaveWithoutSavingText')).toBeInTheDocument();
+      expect(navigate).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByText('leaveWithoutSaving'));
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(productQuery.postPreConfig).not.toHaveBeenCalled();
+    });
+
+    it('mostra a mensagem do Service quando ele recusa a configuração', async () => {
+      const toastError = jest.spyOn(toast, 'error');
+      (productQuery.postPreConfig as jest.Mock).mockRejectedValueOnce({
+        response: { data: { non_field_errors: ['The sum of weights of characteristics is not 100'] } },
+      });
+
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      fireEvent.click(screen.getByLabelText('startingPointDefault'));
+      await clickButtonAndWaitFor('next', 'balanceGoal');
+      fireEvent.click(await screen.findByText('end', { selector: 'button' }));
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('The sum of weights of characteristics is not 100', expect.anything()));
+    });
+
+    it('não grava se faltam comparações e volta para o grupo pendente', async () => {
+      const toastError = jest.spyOn(toast, 'error');
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+
+      // Pelo breadcrumb dá para pular a comparação.
+      fireEvent.click(screen.getByText('balanceCharacteristics', { selector: 'button' }));
+      fireEvent.click(await screen.findByText('end', { selector: 'button' }));
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('submitPendingComparisons', expect.anything()));
+      expect(await screen.findByText('groupProgress')).toBeInTheDocument();
+      expect(productQuery.postPreConfig).not.toHaveBeenCalled();
     });
   });
 });

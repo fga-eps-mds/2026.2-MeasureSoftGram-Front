@@ -167,5 +167,13 @@
   "variation": "Variação",
   "singleEntityGroup": "Grupo com uma única entidade: {{name}} fica com peso 100, sem comparações.",
   "badgeAhp": "Qualitativa (AHP) · CR {{cr}}",
-  "badgeAhpAccepted": "Qualitativa (AHP) · aceito com CR {{cr}}"
+  "badgeAhpAccepted": "Qualitativa (AHP) · aceito com CR {{cr}}",
+  "groupChangedTitle": "A seleção deste grupo mudou",
+  "groupChangedRemoved": "{{names}} saiu em Definir entidades.",
+  "groupChangedAdded": "{{names}} entrou em Definir entidades.",
+  "groupChangedAnswerAgain": "Responda à comparação de novo.",
+  "leaveWithoutSaving": "Sair sem salvar",
+  "leaveWithoutSavingText": "Ao sair, as respostas das comparações e a configuração desta release não serão gravadas.",
+  "submitPendingComparisons": "Ainda há grupos para comparar ou revisar em Definir pesos.",
+  "submitInvalidWeights": "A soma dos pesos de algum grupo não é 100. Ajuste em Definir pesos."
 }
