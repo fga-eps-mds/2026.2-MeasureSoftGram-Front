@@ -30,9 +30,6 @@ const PRODUCT_DUPLICATES: DuplicateMessages = {
   }
 };
 
-/** A mensagem do erro de nome repetido: a tela a reconhece por aqui e mostra o texto traduzido (BUG00.04). */
-export const productNameExistsMessage = (): string => PRODUCT_DUPLICATES.name.message;
-
 export interface ProductFormData {
   name: string;
   organizationId?: number;

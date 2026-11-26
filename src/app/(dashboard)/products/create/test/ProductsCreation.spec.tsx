@@ -1,5 +1,5 @@
 import React from 'react';
-import { productNameExistsMessage } from '@services/product';
+import { DuplicateFieldError } from '@services/saveError';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { toast } from 'react-toastify';
 import ProductsCreation from '../ProductsCreation';
@@ -124,7 +124,7 @@ describe('ProductsCreation Component', () => {
   it('deve exibir toast.error se a criação de produto falhar com erro com mensagem ja existente', async () => {
     mockCreateProduct.mockResolvedValue({
       type: 'error',
-      error: { message: productNameExistsMessage() },
+      error: new DuplicateFieldError('name', 'duplicado'),
     });
     render(<ProductsCreation />);
 
@@ -260,7 +260,7 @@ describe('ProductsCreation Component', () => {
     });
     mockUpdateProduct.mockResolvedValue({
       type: 'error',
-      error: { message: productNameExistsMessage() },
+      error: new DuplicateFieldError('name', 'duplicado'),
     });
 
     render(<ProductsCreation />);
