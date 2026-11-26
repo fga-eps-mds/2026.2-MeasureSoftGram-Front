@@ -20,16 +20,18 @@ import ReferenceValuesForm from './components/ReferenceValuesForm/ReferenceValue
 import CharacteristicsBalanceForm from './components/CharacteristicsBalanceForm/CharacteristicsBalanceForm';
 import RepositorySelectionForm from './components/RepositorySelectionForm/RepositorySelectionForm';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { StepId, getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from './steps';
 
 function ReleaseCreation() {
   const { terms } = useProviderTerms();
   const [organizationId, setOrganizationId] = useState<string>("");
   const [productId, setProductId] = useState<string>("");
   const [productName, setProductName] = useState<string>("");
-  const [activeStep, setActiveStep] = useState(process.env.NODE_ENV === 'test' ? 1 : 0);
+  const [activeStep, setActiveStep] = useState<StepId>(process.env.NODE_ENV === 'test' ? 'releaseInfo' : 'repositories');
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showChangeDateModal, setShowChangeDateModal] = useState(false);
   const [changeRefValue, setChangeRefValue] = useState<boolean>(false);
+  const stepFlags = { changeRefValue };
   const [followLastConfig, setFollowLastConfig] = useState<boolean>(false);
   const [dinamicBalance, setDinamicBalance] = useState<boolean>(false);
   const [defaultPageData, setConfigDefaultPageData] = useState<PreConfigData>();
@@ -182,7 +184,7 @@ function ReleaseCreation() {
 
     try {
       await productQuery.getIsReleaseValid(organizationId, productId, getValues());
-      setActiveStep(activeStep + 1);
+      goToNextStep();
     } catch (error: any) {
       if (error?.response?.data?.detail === "Já existe uma release neste período") {
         setReleaseConflict(error?.response?.data?.release?.id)
@@ -225,26 +227,29 @@ function ReleaseCreation() {
 
   function renderStep(): React.ReactNode {
     switch (activeStep) {
-      case 0:
+      case 'repositories':
         return <RepositorySelectionForm organizationId={organizationId} productId={productId} watch={watch} setValue={setValue} />
-      case 1: 
+      case 'releaseInfo':
         return <BasicInfoForm configPageData={configPageData!} trigger={trigger} register={register} errors={errors} watch={watch} followLastConfig={followLastConfig} setFollowLastConfig={handleSetFollowLastConfig} />
-      case 2: 
+      case 'modelConfig':
         return <ModelConfigForm changeRefValue={changeRefValue} setChangeRefValue={handleChangeRefValue} configPageData={configPageData!} setConfigPageData={setConfigPageData} />
-      case 3: 
+      case 'referenceValues':
         return <ReferenceValuesForm configPageData={configPageData!} defaultPageData={defaultPageData!} setConfigPageData={setConfigPageData} />
-      case 4: 
+      case 'balance':
         return <CharacteristicsBalanceForm characteristicRelations={balanceMatrix} configPageData={configPageData!} setConfigPageData={setConfigPageData} dinamicBalance={dinamicBalance} setDinamicBalance={handleChangeDinamicBalance} />
       default:
-        break
+        return null;
     }
   }
 
+  function goToNextStep(): void {
+    const next = getNextStep(activeStep, stepFlags);
+    if (next) setActiveStep(next);
+  }
+
   function handlePreviousButtonClick(): void {
-    if (activeStep === 4 && !changeRefValue)
-      setActiveStep(activeStep - 2);
-    else if (activeStep > 0)
-      setActiveStep(activeStep - 1);
+    const previous = getPreviousStep(activeStep, stepFlags);
+    if (previous) setActiveStep(previous);
   }
 
   function findItemWithSumNotEqualTo100(items: { key: string; weight: number; active?: boolean }[]) {
@@ -302,28 +307,26 @@ function ReleaseCreation() {
 
   async function handleNextButtonClick(): Promise<void> {
     switch (activeStep) {
-      case 0: {
+      case 'repositories': {
         const selectedRepos = getValues('repositories_ids');
         if (!selectedRepos || selectedRepos.length === 0) {
           toast.error(t(`Selecione pelo menos um ${terms.repository} para a release.`), { autoClose: 6000 });
           break;
         }
-        setActiveStep(activeStep + 1);
+        goToNextStep();
         break;
       }
-      case 1:
+      case 'releaseInfo':
         await checkBasicValues();
         break;
-      case 2:
+      case 'modelConfig':
         if (!isConfigDataWeightValid()) break;
-
-        if (!changeRefValue) setActiveStep(activeStep + 2);
-        else setActiveStep(activeStep + 1);
+        goToNextStep();
         break;
-      case 3:
-        setActiveStep(activeStep + 1);
+      case 'referenceValues':
+        goToNextStep();
         break;
-      case 4:
+      case 'balance':
         void submitRelease();
         break;
       default:
@@ -412,7 +415,7 @@ function ReleaseCreation() {
   }
 
   function handleModalBtnClick() {
-    if (activeStep === 2)
+    if (activeStep === 'modelConfig')
       handleChangeRefValue(true);
     else
       handleChangeDinamicBalance(true)
@@ -420,8 +423,25 @@ function ReleaseCreation() {
     setShowConfirmationModal(false)
   }
 
-  function renderBreadcrumb(label: string, step: number): any {
-    if (step === 3 && !changeRefValue) return
+  function getStepLabel(step: StepId): string {
+    switch (step) {
+      case 'repositories':
+        return `Selecionar ${terms.Repositories}`;
+      case 'releaseInfo':
+        return t('createRelease');
+      case 'modelConfig':
+        return t('defineConfiguration');
+      case 'referenceValues':
+        return t('changeRefValue');
+      case 'balance':
+        return t('balanceCharacteristics');
+      default:
+        return '';
+    }
+  }
+
+  function renderBreadcrumb(step: StepId): React.ReactNode {
+    const isFirstStepActive = activeStep === 'repositories';
 
     return <Button
       key={step}
@@ -431,11 +451,11 @@ function ReleaseCreation() {
         color: activeStep === step ? "text.primary" : "text.secondary",
         fontWeight: activeStep === step ? '800' : 'normal',
         textTransform: 'none',
-        pointerEvents: activeStep === 0 ? "none" : "auto"
+        pointerEvents: isFirstStepActive ? "none" : "auto"
       }}
-      onClick={() => activeStep === 0 ? {} : setActiveStep(step)}
+      onClick={() => isFirstStepActive ? {} : setActiveStep(step)}
     >
-      {label}
+      {getStepLabel(step)}
     </Button>
   }
 
@@ -447,13 +467,7 @@ function ReleaseCreation() {
           separator={<Box component="span" sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }} />}
           sx={{ fontSize: '14px' }}
         >
-          {[
-            { label: `Selecionar ${terms.Repositories}`, step: 0 },
-            { label: t('createRelease'), step: 1 },
-            { label: t('defineConfiguration'), step: 2 },
-            { label: t('changeRefValue'), step: 3 },
-            { label: t('balanceCharacteristics'), step: 4 },
-          ].map(({ label, step }) => renderBreadcrumb(label, step))}
+          {getVisibleSteps(stepFlags).map(renderBreadcrumb)}
         </Breadcrumbs>
       </Styles.Header>
       <Styles.Body>
@@ -464,17 +478,17 @@ function ReleaseCreation() {
               sx={{
                 display: 'grid',
                 columnGap: 2,
-                gridTemplateColumns: activeStep !== 0 ? 'repeat(2, 1fr)' : "none",
+                gridTemplateColumns: activeStep !== 'repositories' ? 'repeat(2, 1fr)' : "none",
                 marginTop: 2
               }}
             >
-              {activeStep !== 0 &&
+              {activeStep !== 'repositories' &&
                 <Button onClick={() => handlePreviousButtonClick()} variant="outlined">
                   {t('back')}
                 </Button>
               }
               <Button type="submit" variant="contained">
-                {activeStep < 4 ? t('next') : t('end')}
+                {isLastStep(activeStep, stepFlags) ? t('end') : t('next')}
               </Button>
             </Box>
           </form>
@@ -491,13 +505,13 @@ function ReleaseCreation() {
       />
       <ConfirmModal
         setIsModalOpen={setShowConfirmationModal}
-        text={activeStep === 2 ? t('alertRefValue') : t('alertDinamicBalance')}
+        text={activeStep === 'modelConfig' ? t('alertRefValue') : t('alertDinamicBalance')}
         btnConfirmText={t('continue')}
         btnDismissText={t('back')}
         isModalOpen={showConfirmationModal}
         handleDismissBtnClick={() => {
           setShowConfirmationModal(false)
-          activeStep === 2 ? setChangeRefValue(false) : setDinamicBalance(false)
+          activeStep === 'modelConfig' ? setChangeRefValue(false) : setDinamicBalance(false)
         }}
         handleConfirmBtnClick={handleModalBtnClick} />
     </>
