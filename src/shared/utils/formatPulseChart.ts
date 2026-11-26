@@ -3,6 +3,7 @@ import { escapeHtml, formatDecimal, formatVariation } from './formatNumber';
 import { getQualityBandClamped, QUALITY_BANDS, QualityBand, QualityGrade } from './qualityBands';
 import { getPulseHalfWidth, PULSE_POINTS_PER_MEASUREMENT, toPulseSeries } from './toPulseSeries';
 import i18n from '../i18n/i18n';
+import { intlLocale } from '../i18n/dateLocale';
 
 export const COLOR_TOKENS = {
   primary: '#2B4D6F',
@@ -465,7 +466,7 @@ export function formatPulseChartOptions(
           sortedByRepository[p.seriesIndex]?.[Math.floor(p.dataIndex / PULSE_POINTS_PER_MEASUREMENT)];
         const firstMeasurement = measurementOf(params[0]);
         if (!firstMeasurement) return '';
-        const dateStr = new Date(firstMeasurement.created_at).toLocaleDateString('pt-BR');
+        const dateStr = new Date(firstMeasurement.created_at).toLocaleDateString(intlLocale());
 
         let html = `<div style="font-weight:bold; font-size:14px; margin-bottom:8px;">${dateStr}</div>`;
 

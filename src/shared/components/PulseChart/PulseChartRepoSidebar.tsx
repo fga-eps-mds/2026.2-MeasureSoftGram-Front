@@ -10,6 +10,7 @@ import {
 } from '@utils/formatPulseChart';
 import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 import i18n from '../../i18n/i18n';
+import { intlLocale } from '../../i18n/dateLocale';
 
 interface Props {
   name: string;
@@ -39,7 +40,7 @@ function formatReferenceVariation(latest: number, reference: number) {
     symbol = '▼';
     color = COLOR_TOKENS.critical;
   }
-  const formatted = Math.abs(rounded).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatted = Math.abs(rounded).toLocaleString(intlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return { text: `${symbol} ${formatted}%`, color };
 }
 

@@ -4,6 +4,7 @@ import { DASHBOARD_COLORS } from '@utils/dashboardColors';
 import { escapeHtml, formatDecimal, formatVariation } from '@utils/formatNumber';
 import { getQualityBandClamped, QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 import i18n from '../i18n/i18n';
+import { intlLocale } from '../i18n/dateLocale';
 
 // Continuam exportados daqui para os imports existentes; a definição fica em formatNumber.
 export { escapeHtml, formatDecimal, formatVariation };
@@ -14,7 +15,7 @@ const VALUE_LABEL = { color: DASHBOARD_COLORS.text, fontSize: 11, fontWeight: 'b
 
 /** 1.284 — separador de milhar. */
 export function formatTotal(value: number): string {
-  return value.toLocaleString('pt-BR');
+  return value.toLocaleString(intlLocale());
 }
 
 export interface TotalItem {

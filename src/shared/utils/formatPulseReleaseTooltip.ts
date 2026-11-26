@@ -2,11 +2,12 @@ import { COLOR_TOKENS, PulseRelease, PulseReleaseHover, getQualityStatus } from 
 import { escapeHtml, formatDecimal, formatQualityGrade, formatVariation } from '@utils/formatOverviewCharts';
 import { QUALITY_BANDS, QualityBand } from '@utils/qualityBands';
 import i18n from '../i18n/i18n';
+import { intlLocale } from '../i18n/dateLocale';
 
 /** +12,50% ou −3,10%, com o sinal de menos tipográfico. */
 export function formatVariationPercent(percent: number): string {
   const rounded = Math.round(percent * 100) / 100;
-  const formatted = Math.abs(rounded).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatted = Math.abs(rounded).toLocaleString(intlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (rounded === 0) return `${formatted}%`;
   return `${rounded > 0 ? '+' : '−'}${formatted}%`;
 }
@@ -18,7 +19,7 @@ function variationColor(variation: number): string {
 }
 
 function formatEndDate(release: PulseRelease): string {
-  return new Date(release.end_at).toLocaleDateString('pt-BR');
+  return new Date(release.end_at).toLocaleDateString(intlLocale());
 }
 
 /**

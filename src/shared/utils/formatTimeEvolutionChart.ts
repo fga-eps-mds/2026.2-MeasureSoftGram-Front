@@ -1,6 +1,7 @@
 import { COLOR_TOKENS } from './formatPulseChart';
 import { SERIES_COLORS } from './dashboardColors';
 import { TimeGranularity, TimeSeries } from './historicalValues';
+import { intlLocale } from '../i18n/dateLocale';
 
 const DAY = 24 * 60 * 60 * 1000;
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -15,7 +16,7 @@ export function formatPeriod(time: number, granularity: TimeGranularity) {
 }
 
 function formatValue(value: number) {
-  return value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+  return value.toLocaleString(intlLocale(), { maximumFractionDigits: 2 });
 }
 
 /**

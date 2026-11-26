@@ -1,4 +1,5 @@
 import i18n from '../i18n/i18n';
+import { intlLocale } from '../i18n/dateLocale';
 
 export type QualityGrade = 'A' | 'B' | 'C' | 'D' | 'E';
 
@@ -75,7 +76,8 @@ export function getQualityBandClamped(value: number, bands: QualityBand[] = QUAL
   return getQualityBand(Math.min(1, Math.max(0, value)), bands) as QualityBand;
 }
 
-const decimal = (value: number) => value.toFixed(2).replace('.', ',');
+const decimal = (value: number) =>
+  value.toLocaleString(intlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /** Intervalo da faixa para as legendas: "0,00 a 0,19" … "0,80 a 1,00". */
 export function formatQualityBandRange(band: QualityBand): string {

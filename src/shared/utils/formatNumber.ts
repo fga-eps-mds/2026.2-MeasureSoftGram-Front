@@ -1,4 +1,5 @@
 import i18n from '../i18n/i18n';
+import { intlLocale } from '../i18n/dateLocale';
 
 /**
  * Formatação de números e texto dos tooltips e legendas dos dashboards. Fica sem dependências para poder ser usada
@@ -8,7 +9,7 @@ import i18n from '../i18n/i18n';
 /** 0,81 — duas casas, vírgula decimal. */
 export function formatDecimal(value: number | null | undefined): string {
   if (value === null || value === undefined) return i18n.t('entity.no-data');
-  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString(intlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** +0,04 ou −0,03, com o sinal de menos tipográfico. */

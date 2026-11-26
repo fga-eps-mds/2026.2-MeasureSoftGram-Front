@@ -11,6 +11,7 @@ import { CsvChart, CsvColumn } from '@utils/exportCsv';
 import { getQualityBand, QualityBand } from '@utils/qualityBands';
 import i18n from '../i18n/i18n';
 import { translatedColumns } from '../i18n/translatedRecord';
+import { intlLocale } from '../i18n/dateLocale';
 
 export const MATRIX_LEVELS: EntityMatrixLevel[] = ['characteristic', 'subcharacteristic', 'measure'];
 
@@ -44,9 +45,7 @@ export const CONTRIBUTION_LIMIT = 10;
 export const RANKING_LIMIT = 10;
 
 const decimal = (digits: number) =>
-  new Intl.NumberFormat('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-const TWO_DIGITS = decimal(2);
-const THREE_DIGITS = decimal(3);
+  new Intl.NumberFormat(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
 /**
  * "0,74": valores de 0 a 1 com duas casas, como no protótipo, cortados em vez de arredondados. O grau sai do valor
@@ -54,7 +53,7 @@ const THREE_DIGITS = decimal(3);
  */
 export function formatScore(value: number): string {
   // a folga evita que 0,29 (0,28999… no ponto flutuante) vire 0,28
-  return TWO_DIGITS.format(Math.floor(value * 100 + 1e-9) / 100);
+  return decimal(2).format(Math.floor(value * 100 + 1e-9) / 100);
 }
 
 function formatSigned(value: number, format: Intl.NumberFormat): string {
@@ -66,12 +65,12 @@ function formatSigned(value: number, format: Intl.NumberFormat): string {
 /** Variação em relação à release anterior, com sinal ("−0,29"); "—" sem os dois valores (CA8). */
 export function formatDelta(value: number | null, previousValue: number | null): string {
   if (value === null || previousValue === null) return '—';
-  return formatSigned(value - previousValue, TWO_DIGITS);
+  return formatSigned(value - previousValue, decimal(2));
 }
 
 /** Contribuição para a variação do TSQMI, com três casas e sinal ("−0,021"). */
 export function formatContribution(contribution: number): string {
-  return formatSigned(contribution, THREE_DIGITS);
+  return formatSigned(contribution, decimal(3));
 }
 
 export const cellId = (repositoryId: number, key: string) => `${repositoryId}:${key}`;

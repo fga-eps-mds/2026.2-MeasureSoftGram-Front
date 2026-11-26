@@ -1,5 +1,7 @@
 import { escapeHtml, formatDecimal, formatVariation } from '../formatNumber';
 import * as overview from '../formatOverviewCharts';
+import { formatQualityBandRange, QUALITY_BANDS } from '../qualityBands';
+import i18n from '../../i18n/i18n';
 
 describe('formatNumber', () => {
   it.each([
@@ -17,6 +19,17 @@ describe('formatNumber', () => {
     [0.001, '0,00'],
   ])('formatVariation(%p) = %s', (diff, expected) => {
     expect(formatVariation(diff)).toBe(expected);
+  });
+
+  describe('com a interface em inglês', () => {
+    beforeAll(() => i18n.changeLanguage('en'));
+    afterAll(() => i18n.changeLanguage('pt'));
+
+    it('formata os números no padrão do inglês', () => {
+      expect(formatDecimal(0.8123)).toBe('0.81');
+      expect(formatVariation(-0.031)).toBe('−0.03');
+      expect(formatQualityBandRange(QUALITY_BANDS[QUALITY_BANDS.length - 1])).toMatch(/^0\.\d{2} to 1\.00$/);
+    });
   });
 
   it('escapa os caracteres especiais de HTML', () => {

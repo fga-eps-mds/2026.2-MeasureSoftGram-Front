@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { DistributionSummary } from '@customTypes/product';
 import i18n from '../i18n/i18n';
-import { dateLocale } from '../i18n/dateLocale';
+import { dateLocale, intlLocale } from '../i18n/dateLocale';
 
 /** O que aparece no lugar de uma estatística que o Service devolve null. */
 export const MISSING_STATISTIC = '—';
@@ -17,12 +17,12 @@ export const MIN_ANALYSES_FOR_SKEWNESS = 3;
 export function formatStatistic(value: number | null | undefined): string {
   if (value === null || value === undefined) return MISSING_STATISTIC;
   const rounded = Math.abs(value) < 0.005 ? 0 : value;
-  return rounded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return rounded.toLocaleString(intlLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** Contagem com separador de milhar: 1.284. */
 export function formatCount(value: number): string {
-  return value.toLocaleString('pt-BR');
+  return value.toLocaleString(intlLocale());
 }
 
 export function formatAnalysisCount(count: number): string {

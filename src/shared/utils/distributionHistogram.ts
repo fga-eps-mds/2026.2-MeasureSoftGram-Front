@@ -1,5 +1,6 @@
 import { DistributionLevel } from '@customTypes/product';
 import i18n from '../i18n/i18n';
+import { intlLocale } from '../i18n/dateLocale';
 
 export interface HistogramBin {
   /** Início da faixa, inclusive. */
@@ -101,13 +102,13 @@ export function buildHistogram(values: number[], level: DistributionLevel, metri
 
 /** Valor no eixo: com vírgula, sem zeros à direita (0,1; 2,5; 1.200). */
 export function formatAxisValue(value: number): string {
-  return value.toLocaleString('pt-BR', { maximumFractionDigits: 6 });
+  return value.toLocaleString(intlLocale(), { maximumFractionDigits: 6 });
 }
 
 /** "0,30 a 0,40" no eixo de 0 a 1; "40 a 44" ou "7" numa métrica INT; "0,25 a 0,5" nas outras métricas. */
 export function formatBinLabel({ start, end }: HistogramBin, histogram: Pick<Histogram, 'unit' | 'integer'>): string {
   if (histogram.unit) {
-    const format = (value: number) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const format = (value: number) => value.toLocaleString(intlLocale(), { minimumFractionDigits: 2 });
     return i18n.t('range', { start: format(start), end: format(end) });
   }
   if (histogram.integer) {
