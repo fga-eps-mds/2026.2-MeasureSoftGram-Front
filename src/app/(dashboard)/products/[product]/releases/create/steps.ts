@@ -1,8 +1,9 @@
 export type StepId =
   | 'repositories'
   | 'releaseInfo'
-  | 'modelConfig'
+  | 'entities'
   | 'referenceValues'
+  | 'weights'
   | 'balance';
 
 export type StartingPoint = 'last' | 'default' | 'new';
@@ -15,8 +16,9 @@ export interface StepFlags {
 const STEP_ORDER: StepId[] = [
   'repositories',
   'releaseInfo',
-  'modelConfig',
+  'entities',
   'referenceValues',
+  'weights',
   'balance',
 ];
 
@@ -24,7 +26,8 @@ function isStepVisible(step: StepId, flags: StepFlags): boolean {
   const definesNewWeights = flags.startingPoint === 'new';
 
   switch (step) {
-    case 'modelConfig':
+    case 'entities':
+    case 'weights':
       return definesNewWeights;
     case 'referenceValues':
       return definesNewWeights && flags.changeRefValue;

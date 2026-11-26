@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react';
+import { toast } from 'react-toastify';
 import { balanceMatrixService } from '@services/balanceMatrix';
 import { useTranslation } from 'react-i18next';
 import { productQuery } from '@services/product';
@@ -531,15 +532,8 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    let nextButton = screen.getByText(/Next/i);
-    fireEvent.click(nextButton);
-
-    expect(await screen.findByText(t('defineCharacteristics'))).toBeInTheDocument();
-
-    nextButton = screen.getByText(/Next/i);
-    fireEvent.click(nextButton);
-
-    expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
+    await avancarAteOBalanceamento();
+    expect(screen.getByText(t('balanceCharacteristics'))).toBeInTheDocument();
   });
 
   it('should create release', async () => {
@@ -659,8 +653,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
 
     fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
 
@@ -782,18 +775,29 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const nextButton = screen.getByText(/Next/i);
-    fireEvent.click(nextButton);
-    fireEvent.click(nextButton);
+    await clickButtonAndWaitFor(t('next'), t('defineUsedCharacteristics'));
+    await clickButtonAndWaitFor(t('next'), t('weightMethodDescription'));
+    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
 
-    expect(await screen.findByText(t('defineCharacteristics'))).toBeInTheDocument();
+    // Soma das características diferente de 100: mensagem no grupo e Avançar bloqueado.
+    expect(screen.getByTestId('sum-error-characteristics')).toBeInTheDocument();
+    expect(screen.getByText(t('next'), { selector: 'button' })).toBeDisabled();
   });
 
-  const clickButtonAndWaitFor = async (buttonName: string, expectedText: string) => {
+  async function clickButtonAndWaitFor(buttonName: string, expectedText: string) {
     const Btn = await screen.findByText(buttonName, { selector: 'button' });
     fireEvent.click(Btn);
     expect(await screen.findByText(expectedText)).toBeInTheDocument();
-  };
+  }
+
+  /** Criar Release → Definir entidades → forma → porcentagens → Resumo → Balancear. */
+  async function avancarAteOBalanceamento() {
+    await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+    await clickButtonAndWaitFor('next', 'weightMethodDescription');
+    await clickButtonAndWaitFor('next', 'defineCharacteristics');
+    await clickButtonAndWaitFor('next', 'summaryTitle');
+    await clickButtonAndWaitFor('next', 'balanceGoal');
+  }
 
   it('should test back button', async () => {
     (productQuery.getProductDefaultPreConfig as jest.Mock).mockResolvedValue({
@@ -912,9 +916,11 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
+    await clickButtonAndWaitFor(t('back'), t('summaryTitle'));
     await clickButtonAndWaitFor(t('back'), t('defineCharacteristics'));
+    await clickButtonAndWaitFor(t('back'), t('weightMethodDescription'));
+    await clickButtonAndWaitFor(t('back'), t('defineUsedCharacteristics'));
     await clickButtonAndWaitFor(t('back'), t('basicConfig'));
   });
 
@@ -1035,8 +1041,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
 
     fireEvent.click(await screen.findByText(t('allowBalanceGoal')));
     expect(await screen.findByText(t("balanceGoal"))).toBeInTheDocument();
@@ -1158,8 +1163,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     // Avança passo a passo de forma estável
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
 
     // Clica no switch de permitir balanço dinâmico (abre o modal de confirmação)
     const switchBtn = await screen.findByText(t('allowBalanceGoal'));
@@ -1330,7 +1334,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(await screen.findByTestId("confirmBtnClick"));
 
     await waitFor(() => expect(screen.queryByTestId("confirmBtnClick")).not.toBeInTheDocument());
-    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
+    expect(screen.getByText(t("defineEntities"))).toBeInTheDocument();
   });
 
   it('should test return release date modal', async () => {
@@ -1364,7 +1368,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(await screen.findByTestId("dismissBtnClick"));
 
     await waitFor(() => expect(screen.queryByTestId("dismissBtnClick")).not.toBeInTheDocument());
-    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
+    expect(screen.getByText(t("defineEntities"))).toBeInTheDocument();
   });
 
   it('should test close release date modal', async () => {
@@ -1398,7 +1402,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(await screen.findByTestId("iconCloseDateModal"));
 
     await waitFor(() => expect(screen.queryByTestId("iconCloseDateModal")).not.toBeInTheDocument());
-    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
+    expect(screen.getByText(t("defineEntities"))).toBeInTheDocument();
   });
 
   it('dispara as 5 buscas iniciais em paralelo', async () => {
@@ -1459,7 +1463,7 @@ describe('ReleaseInfo Component', () => {
       const { t } = useTranslation('plan_release');
       await preencherReleaseEEscolher(t('startingPointLast'));
 
-      expect(screen.queryByText(t('defineConfiguration'))).not.toBeInTheDocument();
+      expect(screen.queryByText(t('defineEntities'))).not.toBeInTheDocument();
 
       fireEvent.click(await screen.findByText(t('next'), { selector: 'button' }));
       expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
@@ -1487,10 +1491,48 @@ describe('ReleaseInfo Component', () => {
     it('volta a mostrar a etapa de pesos ao trocar para definir novos pesos', async () => {
       const { t } = useTranslation('plan_release');
       await preencherReleaseEEscolher(t('startingPointLast'));
-      expect(screen.queryByText(t('defineConfiguration'))).not.toBeInTheDocument();
+      expect(screen.queryByText(t('defineEntities'))).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByLabelText(t('startingPointNew')));
-      expect(screen.getByText(t('defineConfiguration'))).toBeInTheDocument();
+      expect(screen.getByText(t('defineEntities'))).toBeInTheDocument();
+    });
+  });
+
+  describe('definir entidades e pesos (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+    });
+
+    async function abrirDefinirEntidades() {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+    }
+
+    it('EDITAR no resumo volta às porcentagens', async () => {
+      await abrirDefinirEntidades();
+      await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      await clickButtonAndWaitFor('next', 'defineCharacteristics');
+      await clickButtonAndWaitFor('next', 'summaryTitle');
+
+      fireEvent.click(within(screen.getByTestId('summary-group-characteristics')).getByText('edit'));
+      expect(await screen.findByText('defineCharacteristics')).toBeInTheDocument();
+    });
+
+    it('não avança com característica sem nenhuma subcaracterística marcada', async () => {
+      const toastError = jest.spyOn(toast, 'error');
+      await abrirDefinirEntidades();
+
+      const subcaracteristicas = within(document.getElementById('SubCarAccordion-maintainability') as HTMLElement);
+      subcaracteristicas.getAllByRole('checkbox').forEach(checkbox => fireEvent.click(checkbox));
+      fireEvent.click(screen.getByText('next', { selector: 'button' }));
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('entitiesEmptyGroupError', expect.anything()));
+      expect(screen.getByText('defineUsedCharacteristics')).toBeInTheDocument();
     });
   });
 });

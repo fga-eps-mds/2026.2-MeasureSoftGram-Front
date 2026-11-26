@@ -8,7 +8,8 @@ describe('steps do planejamento de release', () => {
     expect(getVisibleSteps(novosPesos)).toEqual([
       'repositories',
       'releaseInfo',
-      'modelConfig',
+      'entities',
+      'weights',
       'balance',
     ]);
   });
@@ -17,8 +18,9 @@ describe('steps do planejamento de release', () => {
     expect(getVisibleSteps(novosPesosComValoresDeReferencia)).toEqual([
       'repositories',
       'releaseInfo',
-      'modelConfig',
+      'entities',
       'referenceValues',
+      'weights',
       'balance',
     ]);
   });
@@ -32,13 +34,14 @@ describe('steps do planejamento de release', () => {
   });
 
   it('avança e volta pulando valores de referência quando desligada', () => {
-    expect(getNextStep('modelConfig', novosPesos)).toBe('balance');
-    expect(getPreviousStep('balance', novosPesos)).toBe('modelConfig');
+    expect(getNextStep('entities', novosPesos)).toBe('weights');
+    expect(getPreviousStep('weights', novosPesos)).toBe('entities');
   });
 
   it('avança e volta passando por valores de referência quando ligada', () => {
-    expect(getNextStep('modelConfig', novosPesosComValoresDeReferencia)).toBe('referenceValues');
-    expect(getPreviousStep('balance', novosPesosComValoresDeReferencia)).toBe('referenceValues');
+    expect(getNextStep('entities', novosPesosComValoresDeReferencia)).toBe('referenceValues');
+    expect(getNextStep('referenceValues', novosPesosComValoresDeReferencia)).toBe('weights');
+    expect(getPreviousStep('weights', novosPesosComValoresDeReferencia)).toBe('referenceValues');
   });
 
   it('não tem etapa antes da primeira nem depois da última', () => {
@@ -53,6 +56,6 @@ describe('steps do planejamento de release', () => {
 
   it('identifica a última etapa', () => {
     expect(isLastStep('balance', novosPesos)).toBe(true);
-    expect(isLastStep('modelConfig', novosPesos)).toBe(false);
+    expect(isLastStep('weights', novosPesos)).toBe(false);
   });
 });

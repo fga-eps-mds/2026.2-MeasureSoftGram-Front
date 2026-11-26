@@ -1,281 +1,178 @@
 import React from 'react';
-import { Accordion, AccordionSummary, FormControlLabel, Switch, Typography } from '@mui/material';
+import { Accordion, AccordionSummary, Box, Typography } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { Characteristic, PreConfigData } from '@customTypes/preConfig';
+import { Characteristic, PreConfigData, Subcharacteristic } from '@customTypes/preConfig';
+import MSGAlert from '../../../../../../../../components/idv/feedback';
 import SectionTooltip from '../SectionTooltip/SectionTooltip';
 import CheckboxSliderInput from '../CheckboxSliderInput/CheckboxSliderInput';
+import { InvalidGroup, findInvalidGroups } from '../../utils/weightGroups';
+import { sumErrorMessage } from '../../utils/groupLabels';
 
 interface ModelConfigFormProps {
   configPageData: PreConfigData;
-  setConfigPageData: any;
-  changeRefValue: boolean;
-  setChangeRefValue: any;
+  setConfigPageData: React.Dispatch<React.SetStateAction<PreConfigData | undefined>>;
 }
 
-export default function ModelConfigForm({ configPageData, setConfigPageData, changeRefValue, setChangeRefValue }: ModelConfigFormProps) {
+const accordionSx = {
+  boxShadow: 'inherit',
+  border: 0.5,
+  backgroundColor: 'transparent',
+  borderColor: '#00000040',
+  borderRadius: 3,
+  marginTop: 2,
+};
+
+const nestedAccordionSx = { ...accordionSx, marginTop: 0, margin: '0 1rem 1rem !important' };
+
+function readWeight(event: React.ChangeEvent<HTMLInputElement>, sliderValue: number): number {
+  const value = event?.target?.type === 'number' ? Number(event.target.value) : Number(sliderValue);
+  return Number.isNaN(value) ? 0 : Math.min(Math.max(value, 0), 100);
+}
+
+/**
+ * "Definir pesos" quantitativo: porcentagens das entidades escolhidas em
+ * "Definir entidades". A soma de cada grupo não é limitada aqui; se for
+ * diferente de 100, o grupo mostra a mensagem de erro e o Avançar fica bloqueado.
+ */
+export default function ModelConfigForm({ configPageData, setConfigPageData }: ModelConfigFormProps) {
   const { t } = useTranslation('plan_release');
 
-  function calculateNewWeight(event: React.ChangeEvent<HTMLInputElement>, inputValue: number, currentWeightSum: number): number {
-    const { type } = event.target;
-    let newWeight = type === 'checkbox' ? 0 : type === 'number' ? Number(event.target.value) : Number(inputValue);
+  const invalidGroups = findInvalidGroups(configPageData);
+  const errorFor = (path: string): InvalidGroup | undefined => invalidGroups.find(item => item.group.path === path);
 
-    if (currentWeightSum + newWeight > 100) {
-      newWeight = 100 - currentWeightSum;
-    }
+  const renderError = (path: string) => {
+    const invalid = errorFor(path);
+    if (!invalid) return null;
+    const { title, body } = sumErrorMessage(invalid.group, invalid.sum, t);
+    return (
+      <Box sx={{ my: 1.5 }} data-testid={`sum-error-${path}`}>
+        <MSGAlert severity="error" title={title}>{body}</MSGAlert>
+      </Box>
+    );
+  };
 
-    return newWeight;
-  }
-
-  function updateConfigPageData(
-    characteristicKey: string,
-    updateFunc: (characteristic: Characteristic) => Characteristic
-  ) {
-    setConfigPageData((prevData: { characteristics: Characteristic[] }) => ({
-      ...prevData,
-      characteristics: prevData.characteristics.map((characteristic: Characteristic) =>
-        characteristic.key === characteristicKey ? updateFunc(characteristic) : characteristic
-      ),
+  function updateCharacteristic(characteristicKey: string, update: (c: Characteristic) => Characteristic) {
+    setConfigPageData(prev => prev && ({
+      ...prev,
+      characteristics: prev.characteristics.map(c => (c.key === characteristicKey ? update(c) : c)),
     }));
   }
 
-  function handleCharacteristicChange(event: React.ChangeEvent<HTMLInputElement>, inputValue: number, characteristicKey: string) {
-    const { checked, type } = event.target;
-
-    const currentWeightSum = configPageData.characteristics.reduce((sum, characteristic) =>
-      characteristic.key !== characteristicKey ? sum + characteristic.weight : sum
-      , 0);
-
-    const newWeight = calculateNewWeight(event, inputValue, currentWeightSum);
-
-    updateConfigPageData(characteristicKey, (characteristic) => ({
-      ...characteristic,
-      weight: newWeight,
-      active: type === 'checkbox' ? checked : characteristic.active,
+  function updateSubcharacteristic(characteristicKey: string, subKey: string, update: (s: Subcharacteristic) => Subcharacteristic) {
+    updateCharacteristic(characteristicKey, c => ({
+      ...c,
+      subcharacteristics: c.subcharacteristics.map(s => (s.key === subKey ? update(s) : s)),
     }));
   }
 
-  function handleSubcharacteristicChange(event: React.ChangeEvent<HTMLInputElement>, inputValue: number,
-    characteristicKey: string, subcharacteristicKey: string) {
-    const { checked, type } = event.target;
+  function handleCharacteristicChange(event: React.ChangeEvent<HTMLInputElement>, value: number, characteristicKey: string) {
+    const weight = readWeight(event, value);
+    updateCharacteristic(characteristicKey, c => ({ ...c, weight }));
+  }
 
-    const alteredCharacteristic = configPageData.characteristics.find(c => c.key === characteristicKey);
-    const currentWeightSum = alteredCharacteristic?.subcharacteristics.reduce((sum, subcharacteristic) =>
-      subcharacteristic.key !== subcharacteristicKey ? sum + subcharacteristic.weight : sum
-      , 0) || 0;
+  function handleSubcharacteristicChange(event: React.ChangeEvent<HTMLInputElement>, value: number, characteristicKey: string, subKey: string) {
+    const weight = readWeight(event, value);
+    updateSubcharacteristic(characteristicKey, subKey, s => ({ ...s, weight }));
+  }
 
-    const newWeight = calculateNewWeight(event, inputValue, currentWeightSum);
-
-    updateConfigPageData(characteristicKey, (characteristic) => ({
-      ...characteristic,
-      subcharacteristics: characteristic.subcharacteristics.map((subcharacteristic) =>
-        subcharacteristic.key === subcharacteristicKey
-          ? {
-            ...subcharacteristic,
-            weight: newWeight,
-            active: type === 'checkbox' ? checked : subcharacteristic.active,
-          }
-          : subcharacteristic
-      ),
+  function handleMeasureChange(event: React.ChangeEvent<HTMLInputElement>, value: number, characteristicKey: string, subKey: string, measureKey: string) {
+    const weight = readWeight(event, value);
+    updateSubcharacteristic(characteristicKey, subKey, s => ({
+      ...s,
+      measures: s.measures.map(m => (m.key === measureKey ? { ...m, weight } : m)),
     }));
   }
 
-  function handleMeasureChange(event: React.ChangeEvent<HTMLInputElement>, inputValue: number,
-    characteristicKey: string, subcharacteristicKey: string, measureKey: string) {
-    const { checked, type } = event.target;
-
-    const alteredCharacteristic = configPageData.characteristics.find(c => c.key === characteristicKey);
-    const alteredSubcharacteristic = alteredCharacteristic?.subcharacteristics.find(s => s.key === subcharacteristicKey);
-    const currentWeightSum = alteredSubcharacteristic?.measures.reduce((sum, measure) =>
-      measure.key !== measureKey ? sum + measure.weight : sum
-      , 0) || 0;
-
-    const newWeight = calculateNewWeight(event, inputValue, currentWeightSum);
-
-    updateConfigPageData(characteristicKey, (characteristic) => ({
-      ...characteristic,
-      subcharacteristics: characteristic.subcharacteristics.map((subcharacteristic) =>
-        subcharacteristic.key === subcharacteristicKey
-          ? {
-            ...subcharacteristic,
-            measures: subcharacteristic.measures.map((measure) =>
-              measure.key === measureKey
-                ? {
-                  ...measure,
-                  weight: newWeight,
-                  active: type === 'checkbox' ? checked : measure.active,
-                }
-                : measure
-            ),
-          }
-          : subcharacteristic
-      ),
-    }));
-  }
+  const activeCharacteristics = configPageData?.characteristics?.filter(c => c.active) ?? [];
 
   return (
     <>
-      <SectionTooltip id='characteristicSection' text={t('defineCharacteristics')} tooltip={t('defineCharacteristicsTooltip')} />
-      <Accordion
-        key="CarAccordion"
-        square
-        sx={{
-          boxShadow: 'inherit',
-          border: 0.5,
-          backgroundColor: "transparent",
-          borderColor: "#00000040",
-          borderRadius: 3,
-          marginTop: 2
-        }}>
+      <SectionTooltip id="characteristicSection" text={t('defineCharacteristics')} tooltip={t('defineCharacteristicsTooltip')} />
+      {renderError('characteristics')}
+      <Accordion defaultExpanded square sx={accordionSx}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography>{t('characteristic')}</Typography>
         </AccordionSummary>
-        {
-          configPageData?.characteristics?.map((characteristic) => (
-            <CheckboxSliderInput
-              key={`characteristic-${characteristic.key}`}
-              label={t(`characteristics.${characteristic.key}`)}
-              labelKey={characteristic.key}
-              inputValue={characteristic.weight}
-              setInputValue={handleCharacteristicChange}
-              checkboxValue={characteristic.active}
-            />
-          ))
-        }
+        {activeCharacteristics.map(c => (
+          <CheckboxSliderInput
+            key={`characteristic-${c.key}`}
+            label={t(`characteristics.${c.key}`)}
+            labelKey={c.key}
+            inputValue={c.weight}
+            setInputValue={handleCharacteristicChange}
+            checkboxValue={c.active}
+            showCheckbox={false}
+          />
+        ))}
       </Accordion>
 
-      <SectionTooltip id='subcharacteristicSection' text={t('defineSubCharacteristics')} tooltip={t('defineSubCharacteristicsTooltip')} />
-      <Accordion
-        key="SubAccordion"
-        square
-        sx={{
-          boxShadow: 'inherit',
-          border: 0.5,
-          backgroundColor: "transparent",
-          borderColor: "#00000040",
-          borderRadius: 3,
-          marginTop: 2
-        }}>
+      <SectionTooltip id="subcharacteristicSection" text={t('defineSubCharacteristics')} tooltip={t('defineSubCharacteristicsTooltip')} />
+      <Accordion defaultExpanded square sx={accordionSx}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography>{t('subCharacteristic')}</Typography>
         </AccordionSummary>
-        {
-          configPageData?.characteristics?.filter(characteristic => characteristic.active === true)
-            .map((characteristic) => (
-              <Accordion
-                id={`SubCarAccordion-${characteristic.key}`}
-                key={`SubCarAccordion-${characteristic.key}`}
-                square
-                sx={{
-                  boxShadow: 'inherit',
-                  border: 0.5,
-                  backgroundColor: "transparent",
-                  borderColor: "#00000040",
-                  borderRadius: 3,
-                  margin: '0 1rem 1rem !important'
-                }}>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography>{t(`characteristics.${characteristic.key}`)}</Typography>
-                </AccordionSummary>
-                {
-                  characteristic.subcharacteristics?.map((subcharacteristic) => (
-                    <CheckboxSliderInput
-                      key={`subcharacteristics-${characteristic.key}-${subcharacteristic.key}`}
-                      label={t(`subCharacteristics.${subcharacteristic.key}`)}
-                      labelKey={subcharacteristic.key}
-                      secLabel={characteristic.key}
-                      inputValue={subcharacteristic.weight}
-                      setInputValue={handleSubcharacteristicChange}
-                      checkboxValue={subcharacteristic.active}
-                    />
-                  ))
-                }
-              </Accordion>
-            ))
-        }
+        {activeCharacteristics.map(c => (
+          <Accordion defaultExpanded id={`SubCarAccordion-${c.key}`} key={`SubCarAccordion-${c.key}`} square sx={nestedAccordionSx}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>{t(`characteristics.${c.key}`)}</Typography>
+            </AccordionSummary>
+            <Box sx={{ px: 2 }}>{renderError(`${c.key}/subcharacteristics`)}</Box>
+            {c.subcharacteristics.filter(s => s.active).map(s => (
+              <CheckboxSliderInput
+                key={`subcharacteristics-${c.key}-${s.key}`}
+                label={t(`subCharacteristics.${s.key}`)}
+                labelKey={s.key}
+                secLabel={c.key}
+                inputValue={s.weight}
+                setInputValue={handleSubcharacteristicChange}
+                checkboxValue={s.active}
+                showCheckbox={false}
+              />
+            ))}
+          </Accordion>
+        ))}
       </Accordion>
 
-      <SectionTooltip id='medidasSection' text={t("defineMeasures")} tooltip={t("defineMeasuresTooltip")} />
-      <FormControlLabel
-        sx={{
-          marginLeft: 0
-        }}
-        control={<Switch
-          checked={changeRefValue}
-          onChange={() => setChangeRefValue(!changeRefValue)}
-          color="primary" />}
-        label={t("changeRefValues")}
-        labelPlacement="start"
-      />
-      <Accordion
-        key="MedidasAccordion"
-        square
-        sx={{
-          boxShadow: 'inherit',
-          border: 0.5,
-          backgroundColor: "transparent",
-          borderColor: "#00000040",
-          borderRadius: 3,
-          marginTop: 2
-        }}>
+      <SectionTooltip id="medidasSection" text={t('defineMeasures')} tooltip={t('defineMeasuresTooltip')} />
+      <Accordion defaultExpanded square sx={accordionSx}>
         <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography>{t("measure")}</Typography>
+          <Typography>{t('measure')}</Typography>
         </AccordionSummary>
-        {
-          configPageData?.characteristics?.filter(characteristic => characteristic.active === true)
-            .map((characteristic) => (
+        {activeCharacteristics.map(c => (
+          <Accordion defaultExpanded key={`MeasureCarAccordion-${c.key}`} square sx={nestedAccordionSx}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>{t(`characteristics.${c.key}`)}</Typography>
+            </AccordionSummary>
+            {c.subcharacteristics.filter(s => s.active).map(s => (
               <Accordion
-                key={`SubCarAccordion-${characteristic.key}`}
+                defaultExpanded
+                id={`MetricSubCarAccordion-${s.key}`}
+                key={`MetricSubCarAccordion-${s.key}`}
                 square
-                sx={{
-                  boxShadow: 'inherit',
-                  border: 0.5,
-                  backgroundColor: "transparent",
-                  borderColor: "#00000040",
-                  borderRadius: 3,
-                  margin: '0 1rem 1rem !important'
-                }}>
+                sx={nestedAccordionSx}
+              >
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography>{t(`characteristics.${characteristic.key}`)}</Typography>
+                  <Typography>{t(`subCharacteristics.${s.key}`)}</Typography>
                 </AccordionSummary>
-                {
-                  characteristic.subcharacteristics?.filter(subcharacteristics => subcharacteristics.active === true)
-                    .map((subcharacteristic) => (
-                      <Accordion
-                        id={`MetricSubCarAccordion-${subcharacteristic.key}`}
-                        key={`MetricSubCarAccordion-${subcharacteristic.key}`}
-                        square
-                        sx={{
-                          boxShadow: 'inherit',
-                          border: 0.5,
-                          backgroundColor: "transparent",
-                          borderColor: "#00000040",
-                          borderRadius: 3,
-                          margin: '0 1rem 1rem !important'
-                        }}>
-                        <AccordionSummary expandIcon={<ExpandMore />}>
-                          <Typography>{t(`subCharacteristics.${subcharacteristic.key}`)}</Typography>
-                        </AccordionSummary>
-                        {
-                          subcharacteristic.measures?.map((measure) => (
-                            <CheckboxSliderInput
-                              key={`metric-${measure.key}-${subcharacteristic.key}-${characteristic.key}`}
-                              label={t(`measures.${measure.key}`)}
-                              labelKey={measure.key}
-                              secLabel={subcharacteristic.key}
-                              terLabel={characteristic.key}
-                              inputValue={measure.weight}
-                              setInputValue={handleMeasureChange}
-                              checkboxValue={measure.active}
-                            />
-                          ))
-                        }
-                      </Accordion>
-                    ))
-                }
+                <Box sx={{ px: 2 }}>{renderError(`${c.key}/${s.key}/measures`)}</Box>
+                {s.measures.filter(m => m.active).map(m => (
+                  <CheckboxSliderInput
+                    key={`metric-${m.key}-${s.key}-${c.key}`}
+                    label={t(`measures.${m.key}`)}
+                    labelKey={m.key}
+                    secLabel={s.key}
+                    terLabel={c.key}
+                    inputValue={m.weight}
+                    setInputValue={handleMeasureChange}
+                    checkboxValue={m.active}
+                    showCheckbox={false}
+                  />
+                ))}
               </Accordion>
-            ))
-        }
+            ))}
+          </Accordion>
+        ))}
       </Accordion>
     </>
   );

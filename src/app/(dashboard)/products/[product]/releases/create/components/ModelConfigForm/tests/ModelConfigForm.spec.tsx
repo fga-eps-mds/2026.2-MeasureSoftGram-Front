@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { PreConfigData } from '@customTypes/preConfig';
 import ModelConfigForm from '../ModelConfigForm';
@@ -16,17 +16,17 @@ const mockConfigPageData: PreConfigData = {
   characteristics: [
     {
       key: 'characteristic1',
-      weight: 50,
+      weight: 100,
       active: true,
       subcharacteristics: [
         {
           key: 'subCharacteristic1',
-          weight: 50,
+          weight: 100,
           active: true,
           measures: [
             {
               key: 'measure1',
-              weight: 50,
+              weight: 100,
               active: true,
               metrics: []
             },
@@ -40,11 +40,9 @@ const mockConfigPageData: PreConfigData = {
 
 describe('ModelConfigForm', () => {
   let mockSetConfigPageData: jest.Mock;
-  let mockSetChangeRefValue: jest.Mock;
 
   beforeEach(() => {
     mockSetConfigPageData = jest.fn();
-    mockSetChangeRefValue = jest.fn();
   });
 
   test('renders the component', () => {
@@ -52,8 +50,6 @@ describe('ModelConfigForm', () => {
       <ModelConfigForm
         configPageData={mockConfigPageData}
         setConfigPageData={mockSetConfigPageData}
-        changeRefValue={false}
-        setChangeRefValue={mockSetChangeRefValue}
       />
     );
 
@@ -73,8 +69,6 @@ describe('ModelConfigForm', () => {
       <ModelConfigForm
         configPageData={mockConfigPageData}
         setConfigPageData={mockSetConfigPageData}
-        changeRefValue={false}
-        setChangeRefValue={mockSetChangeRefValue}
       />
     );
 
@@ -91,8 +85,6 @@ describe('ModelConfigForm', () => {
       <ModelConfigForm
         configPageData={mockConfigPageData}
         setConfigPageData={mockSetConfigPageData}
-        changeRefValue={false}
-        setChangeRefValue={mockSetChangeRefValue}
       />
     );
 
@@ -109,8 +101,6 @@ describe('ModelConfigForm', () => {
       <ModelConfigForm
         configPageData={mockConfigPageData}
         setConfigPageData={mockSetConfigPageData}
-        changeRefValue={false}
-        setChangeRefValue={mockSetChangeRefValue}
       />
     );
 
@@ -122,19 +112,39 @@ describe('ModelConfigForm', () => {
     expect(mockSetConfigPageData).toHaveBeenCalled();
   });
 
-  test('calls setChangeRefValue when switch is toggled', () => {
-    render(
-      <ModelConfigForm
-        configPageData={mockConfigPageData}
-        setConfigPageData={mockSetConfigPageData}
-        changeRefValue={false}
-        setChangeRefValue={mockSetChangeRefValue}
-      />
-    );
+  test('não mostra checkbox: a seleção fica em Definir entidades', () => {
+    render(<ModelConfigForm configPageData={mockConfigPageData} setConfigPageData={mockSetConfigPageData} />);
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  });
 
-    // Simula a mudança no switch
-    fireEvent.click(screen.getByLabelText('changeRefValues'));
+  test('mostra o erro de soma no grupo e informa quantos pontos sobram', () => {
+    const acimaDe100: PreConfigData = {
+      characteristics: [
+        { ...mockConfigPageData.characteristics[0], weight: 60 },
+        { ...mockConfigPageData.characteristics[0], key: 'characteristic2', weight: 50 },
+      ],
+    };
+    render(<ModelConfigForm configPageData={acimaDe100} setConfigPageData={mockSetConfigPageData} />);
 
-    expect(mockSetChangeRefValue).toHaveBeenCalledWith(true);
+    const alerta = within(screen.getByTestId('sum-error-characteristics'));
+    expect(alerta.getByText('sumErrorCharacteristics')).toBeInTheDocument();
+    expect(alerta.getByText('sumErrorOver')).toBeInTheDocument();
+  });
+
+  test('mostra o erro de soma no grupo de medidas quando faltam pontos', () => {
+    const abaixoDe100: PreConfigData = {
+      characteristics: [{
+        ...mockConfigPageData.characteristics[0],
+        subcharacteristics: [{
+          ...mockConfigPageData.characteristics[0].subcharacteristics[0],
+          measures: [{ key: 'measure1', weight: 70, active: true, metrics: [] }],
+        }],
+      }],
+    };
+    render(<ModelConfigForm configPageData={abaixoDe100} setConfigPageData={mockSetConfigPageData} />);
+
+    expect(screen.queryByTestId('sum-error-characteristics')).not.toBeInTheDocument();
+    const alerta = within(screen.getByTestId('sum-error-characteristic1/subCharacteristic1/measures'));
+    expect(alerta.getByText('sumErrorUnder')).toBeInTheDocument();
   });
 });
