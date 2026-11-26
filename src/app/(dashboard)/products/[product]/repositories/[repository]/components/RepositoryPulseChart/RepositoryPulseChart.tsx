@@ -32,8 +32,11 @@ interface Props {
 /** Gráfico de pulso (metáfora do eletrocardiograma) de cada característica do repositório, como o pulso do produto. */
 export default function RepositoryPulseChart({ pulse, csv, bands }: Readonly<Props>) {
   const { terms } = useProviderTerms();
-  const { t } = useTranslation('dashboards');
-  const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS, bands), [pulse.rows, bands]);
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
+  const options = useMemo(() => formatPulseChartOptions(pulse.rows, PULSE_OPTIONS, bands), [pulse.rows, bands, language]);
   const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
   let status: 'loading' | 'error' | 'empty' | 'ready' = 'ready';

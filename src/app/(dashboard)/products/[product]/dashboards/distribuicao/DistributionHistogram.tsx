@@ -144,6 +144,9 @@ export default function DistributionHistogram({
   /** Régua do produto (US30.02); sem ela, a régua padrão. */
   bands: QualityBand[];
 }) {
+  const {
+    i18n: { language }
+  } = useTranslation('dashboards');
   const histogram = useMemo(
     () =>
       buildHistogram(
@@ -153,7 +156,7 @@ export default function DistributionHistogram({
       ),
     [entity]
   );
-  const option = useMemo(() => formatHistogramOptions(histogram, entity), [histogram, entity]);
+  const option = useMemo(() => formatHistogramOptions(histogram, entity), [histogram, entity, language]);
   const caption = histogram.unit
     ? i18n.t('dashboards:distribution.histogram.caption-unit')
     : i18n.t('dashboards:distribution.histogram.caption-metric', {

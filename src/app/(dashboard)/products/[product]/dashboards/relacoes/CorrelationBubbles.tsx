@@ -80,8 +80,11 @@ function BubbleLegend() {
  * coeficiente não significativo fica em círculo vazado.
  */
 export default function CorrelationBubbles({ correlation }: { correlation: RepositoryCorrelation }) {
-  const { t } = useTranslation('dashboards');
-  const option = useMemo(() => formatCorrelationBubbleOptions(correlation), [correlation]);
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
+  const option = useMemo(() => formatCorrelationBubbleOptions(correlation), [correlation, language]);
 
   return (
     <DashboardCard

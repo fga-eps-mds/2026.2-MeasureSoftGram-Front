@@ -77,7 +77,10 @@ interface Props {
 
 export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
   const { terms } = useProviderTerms();
-  const { t } = useTranslation('dashboards');
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
   const echartsRef = useRef<any>(null);
   const fontLoaded = useFontLoaded(PULSE_CANVAS_FONT);
 
@@ -112,7 +115,7 @@ export const PulseChart: React.FC<Props> = ({ organizationId, productId }) => {
         },
         bands
       ),
-    [filteredRepositories, bands]
+    [filteredRepositories, bands, language]
   );
 
   // Sem medição no período não há pulso para desenhar, mas a causa muda a instrução: o produto pode não ter

@@ -111,7 +111,10 @@ export default function DistributionBoxplot({
   /** O CSV do quadro, montado pela página; com ele, o cabeçalho ganha o botão "Exportar .csv". */
   csv?: CsvChart<BoxplotCsvRow>;
 }) {
-  const { t } = useTranslation('dashboards');
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
   const rows = useMemo(() => getLevelBoxplotRows(entity, childEntities), [entity, childEntities]);
   const option = useMemo(() => {
     // o eixo x é o mesmo eixo de valores do histograma: 0 a 1, ou a escala da métrica
@@ -121,7 +124,7 @@ export default function DistributionBoxplot({
       entity.metric_type
     );
     return formatLevelBoxplotOptions(rows, histogram);
-  }, [entity, rows]);
+  }, [entity, rows, language]);
   const hasMetricChildren = entity.level === 'measure' && childEntities.some((child) => child.level === 'metric');
 
   return (

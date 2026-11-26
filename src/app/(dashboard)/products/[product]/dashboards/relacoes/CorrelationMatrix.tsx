@@ -48,8 +48,11 @@ function ScaleLegend() {
  * com duas casas na cor da escala de −1 a +1 e os não significativos em itálico e opacos.
  */
 export default function CorrelationMatrix({ correlation }: { correlation: RepositoryCorrelation }) {
-  const { t } = useTranslation('dashboards');
-  const option = useMemo(() => formatCorrelationMatrixOptions(correlation), [correlation]);
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
+  const option = useMemo(() => formatCorrelationMatrixOptions(correlation), [correlation, language]);
   const noun = CORRELATION_LEVEL_PLURALS[correlation.level];
   const method = correlation.method ? METHOD_LABELS[correlation.method] : '';
 

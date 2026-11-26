@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import DashboardCard from '@components/DashboardCard';
 import ExportCsvButton from '@components/ExportCsvButton';
 import { DistributionEntity } from '@customTypes/product';
@@ -46,6 +47,9 @@ export default function DistributionDensity({
   /** Régua do produto (US30.02); sem ela, a régua padrão. */
   bands: QualityBand[];
 }) {
+  const {
+    i18n: { language }
+  } = useTranslation('dashboards');
   const { histogram, points } = useMemo(() => {
     const values = entity.analyses.map((analysis) => analysis.value);
     const axis = buildHistogram(values, entity.level, entity.metric_type);
@@ -56,7 +60,7 @@ export default function DistributionDensity({
   }, [entity]);
   const option = useMemo(
     () => points && formatDensityOptions(points, histogram, entity.summary.median, entity),
-    [points, histogram, entity]
+    [points, histogram, entity, language]
   );
 
   const exportButton = csv && <ExportCsvButton dashboard={DISTRIBUTION_CSV.dashboard} chart={csv} />;

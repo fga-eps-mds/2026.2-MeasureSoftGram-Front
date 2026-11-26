@@ -23,7 +23,10 @@ export default function DistributionScatter({
   /** O CSV do quadro, montado pela página; com ele, o cabeçalho ganha o botão "Exportar .csv". */
   csv?: CsvChart<ScatterCsvRow>;
 }) {
-  const { t } = useTranslation('dashboards');
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation('dashboards');
   const option = useMemo(() => {
     // o eixo y é o mesmo eixo de valores do histograma: 0 a 1, ou a escala da métrica
     const histogram = buildHistogram(
@@ -32,7 +35,7 @@ export default function DistributionScatter({
       entity.metric_type
     );
     return formatScatterOptions(entity, histogram);
-  }, [entity]);
+  }, [entity, language]);
 
   return (
     <DashboardCard
