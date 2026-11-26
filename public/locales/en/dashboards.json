@@ -135,11 +135,11 @@
       "estimated-density": "Estimated density",
       "no-outliers": "No outliers.",
       "outlier-at": "{{value}} on {{date}}",
-      "and-more": " and {{amount}} more",
       "outliers-count_one": "{{formatted}} outlier",
       "outliers-count_other": "{{formatted}} outliers",
       "outliers-count_zero": "no outliers",
-      "outliers-list": "{{label}}: {{list}}{{more}}.",
+      "outliers-list": "{{label}}: {{list}}.",
+      "outliers-list-more": "{{label}}: {{list}} and {{amount}} more.",
       "quartiles": "Q1 {{q1}}, median {{median}} and Q3 {{q3}}",
       "scatter-aria": "Scatter of {{name}} over time: {{amount}} from {{period}}. {{quartiles}}. {{outliers}}",
       "analysis": "Analysis",
@@ -149,9 +149,9 @@
       "median-line": "Median {{value}}",
       "outlier-tooltip-at": "<strong>{{value}}</strong> on {{date}}",
       "boxplot-row": "{{name}}: median {{median}}, Q1 {{q1}} and Q3 {{q3}}, {{outliers}}",
-      "children_one": " and of its child in the model",
-      "children_other": " and of its {{formatted}} children in the model",
-      "boxplot-aria": "Boxplot of {{name}}{{children}}, from {{min}} to {{max}}. {{rows}}."
+      "boxplot-aria": "Boxplot of {{name}}, from {{min}} to {{max}}. {{rows}}.",
+      "boxplot-aria-children_one": "Boxplot of {{name}} and of its child in the model, from {{min}} to {{max}}. {{rows}}.",
+      "boxplot-aria-children_other": "Boxplot of {{name}} and of its {{formatted}} children in the model, from {{min}} to {{max}}. {{rows}}."
     },
     "analysis-count_zero": "{{formatted}} analyses",
     "title": "5. Statistical Distribution",
@@ -179,9 +179,8 @@
       "description": "Analyses appear when the MeasureSoftGram Action or CLI runs on the {{repository}} between {{start}} and {{end}}, the release period. Choose another {{repository}} or set up the collection."
     },
     "subtitle": {
-      "before": "How the values of",
-      "fallback": "an entity of the model",
-      "after": "spread across its analyses"
+      "text": "How the values of <em>{{name}}</em> spread across its analyses",
+      "fallback": "an entity of the model"
     },
     "period-line": {
       "in-period": "{{amount}} in the period ({{period}})"
@@ -302,9 +301,8 @@
     "release-count_other": "{{count}} releases",
     "release-count_zero": "{{count}} releases",
     "subtitle": {
-      "before": "How the {{noun}} of",
-      "fallback": "a {{repository}}",
-      "after": "vary together across releases"
+      "text": "How the {{noun}} of <em>{{name}}</em> vary together across releases",
+      "fallback": "a {{repository}}"
     },
     "see-releases": "See analysis releases",
     "bubbles-title": "Correlation bubble matrix",
@@ -380,8 +378,8 @@
       "description": "Values appear when the MeasureSoftGram Action or CLI runs on the {{repositories}} between {{start}} and {{end}}, the release period."
     },
     "delta": {
-      "previous": " Δ is the variation compared to the previous release, {{release}}.",
-      "first": " {{release}} is the first release of the product: no variation to show."
+      "previous": "Δ is the variation compared to the previous release, {{release}}.",
+      "first": "{{release}} is the first release of the product: no variation to show."
     },
     "heatmap-description": "Rows from the worst to the best TSQMI. Each cell shows the normalized value [0, 1] and the grade; click a cell to see the entity composition in that {{repository}}.",
     "level-badge": "Level: {{level}}",
@@ -393,7 +391,7 @@
       "highlight-legend": "among the 3 largest contributions to the drop",
       "aria": "Heat map",
       "repository": "Repository",
-      "highlighted-cell": ", among the largest contributions to the drop"
+      "highlighted-cell": "{{label}}, among the largest contributions to the drop"
     },
     "detail": {
       "error": "Could not load the composition.",

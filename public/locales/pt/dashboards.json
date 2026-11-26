@@ -135,11 +135,11 @@
       "estimated-density": "Densidade estimada",
       "no-outliers": "Nenhum valor discrepante.",
       "outlier-at": "{{value}} em {{date}}",
-      "and-more": " e mais {{amount}}",
       "outliers-count_one": "{{formatted}} valor discrepante",
       "outliers-count_other": "{{formatted}} valores discrepantes",
       "outliers-count_zero": "nenhum valor discrepante",
-      "outliers-list": "{{label}}: {{list}}{{more}}.",
+      "outliers-list": "{{label}}: {{list}}.",
+      "outliers-list-more": "{{label}}: {{list}} e mais {{amount}}.",
       "quartiles": "Q1 {{q1}}, mediana {{median}} e Q3 {{q3}}",
       "scatter-aria": "Dispersão de {{name}} no tempo: {{amount}} de {{period}}. {{quartiles}}. {{outliers}}",
       "analysis": "Análise",
@@ -149,9 +149,9 @@
       "median-line": "Mediana {{value}}",
       "outlier-tooltip-at": "<strong>{{value}}</strong> em {{date}}",
       "boxplot-row": "{{name}}: mediana {{median}}, Q1 {{q1}} e Q3 {{q3}}, {{outliers}}",
-      "children_one": " e do filho no modelo",
-      "children_other": " e dos {{formatted}} filhos no modelo",
-      "boxplot-aria": "Boxplot de {{name}}{{children}}, de {{min}} a {{max}}. {{rows}}."
+      "boxplot-aria": "Boxplot de {{name}}, de {{min}} a {{max}}. {{rows}}.",
+      "boxplot-aria-children_one": "Boxplot de {{name}} e do filho no modelo, de {{min}} a {{max}}. {{rows}}.",
+      "boxplot-aria-children_other": "Boxplot de {{name}} e dos {{formatted}} filhos no modelo, de {{min}} a {{max}}. {{rows}}."
     },
     "analysis-count_zero": "{{formatted}} análises",
     "title": "5. Distribuição Estatística",
@@ -179,9 +179,8 @@
       "description": "As análises aparecem quando a Action ou a CLI do MeasureSoftGram roda no {{repository}} entre {{start}} e {{end}}, o período da release. Escolha outro {{repository}} ou configure a coleta."
     },
     "subtitle": {
-      "before": "Como os valores de",
-      "fallback": "uma entidade do modelo",
-      "after": "se espalham entre as suas análises"
+      "text": "Como os valores de <em>{{name}}</em> se espalham entre as suas análises",
+      "fallback": "uma entidade do modelo"
     },
     "period-line": {
       "in-period": "{{amount}} no período ({{period}})"
@@ -302,9 +301,8 @@
     "release-count_other": "{{count}} releases",
     "release-count_zero": "{{count}} releases",
     "subtitle": {
-      "before": "Como as {{noun}} de",
-      "fallback": "um {{repository}}",
-      "after": "variam juntas ao longo das releases"
+      "text": "Como as {{noun}} de <em>{{name}}</em> variam juntas ao longo das releases",
+      "fallback": "um {{repository}}"
     },
     "see-releases": "Ver releases da análise",
     "bubbles-title": "Matriz de bolhas das correlações",
@@ -380,8 +378,8 @@
       "description": "Os valores aparecem quando a Action ou a CLI do MeasureSoftGram roda nos {{repositories}} entre {{start}} e {{end}}, o período da release."
     },
     "delta": {
-      "previous": " Δ é a variação em relação à release anterior, {{release}}.",
-      "first": " {{release}} é a primeira release do produto: sem variação para mostrar."
+      "previous": "Δ é a variação em relação à release anterior, {{release}}.",
+      "first": "{{release}} é a primeira release do produto: sem variação para mostrar."
     },
     "heatmap-description": "Linhas do pior para o melhor TSQMI. Cada célula mostra o valor normalizado [0, 1] e o grau; clique numa célula para ver a composição da entidade naquele {{repository}}.",
     "level-badge": "Nível: {{level}}",
@@ -393,7 +391,7 @@
       "highlight-legend": "entre as 3 maiores contribuições para a queda",
       "aria": "Mapa de calor",
       "repository": "Repositório",
-      "highlighted-cell": ", entre as maiores contribuições para a queda"
+      "highlighted-cell": "{{label}}, entre as maiores contribuições para a queda"
     },
     "detail": {
       "error": "Não foi possível carregar a composição.",

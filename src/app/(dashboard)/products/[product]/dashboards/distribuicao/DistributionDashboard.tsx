@@ -25,7 +25,7 @@ import DistributionScatter, { scatterTitle } from './DistributionScatter';
 import DistributionSummary, { summaryTitle } from './DistributionSummary';
 import { ChartSkeleton, CollectionGuideLink, DistributionErrorCard, SummarySkeleton } from './DistributionStates';
 import { useDistributionDashboard } from './useDistributionDashboard';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import i18n from '../../../../../../shared/i18n/i18n';
 
 /** "17/08" de uma data da release, para a orientação do estado sem análise. */
@@ -223,8 +223,13 @@ const DistributionDashboard: React.FC = () => {
                 {t('distribution.title')}
               </Typography>
               <Typography color={DASHBOARD_COLORS.mutedText} data-testid="distribution-subtitle">
-                {t('distribution.subtitle.before')} <em>{entityName ?? t('distribution.subtitle.fallback')}</em>{' '}
-                {t('distribution.subtitle.after')}
+                <Trans
+                  t={t}
+                  i18n={i18n}
+                  i18nKey="distribution.subtitle.text"
+                  values={{ name: entityName ?? t('distribution.subtitle.fallback') }}
+                  components={{ em: <em /> }}
+                />
               </Typography>
             </Box>
             <ExportAllCsvButton dashboard={DISTRIBUTION_CSV.dashboard} charts={csvCharts} />

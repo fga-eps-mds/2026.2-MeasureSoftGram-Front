@@ -22,6 +22,7 @@ export const createMockedRoute = (
 global.fetch = jest.fn();
 
 jest.mock('react-i18next', () => ({
+  Trans: jest.requireActual('react-i18next').Trans,
   useTranslation: (namespace?: string | string[]) => ({
     t: jest.requireActual('../src/shared/i18n/i18n').default.getFixedT('pt', namespace),
     // Adicionamos o objeto i18n mockado aqui:

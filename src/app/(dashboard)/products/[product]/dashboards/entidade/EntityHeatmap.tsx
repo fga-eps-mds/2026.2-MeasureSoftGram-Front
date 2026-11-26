@@ -169,6 +169,8 @@ export function QualityGradeLegend({ bands }: Readonly<{ bands: QualityBand[] }>
  */
 export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands }: Readonly<Props>) {
   const { t } = useTranslation('dashboards');
+  const cellLabel = (label: string, isHighlighted: boolean) =>
+    isHighlighted ? t('entity.heatmap.highlighted-cell', { label }) : label;
   const rows = useMemo(() => sortRepositoriesByTsqmi(matrix.repositories), [matrix]);
   const groups = useMemo(() => getColumnGroups(matrix.columns), [matrix]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -281,9 +283,12 @@ export default function EntityHeatmap({ matrix, highlighted, onSelectCell, bands
                       <Box
                         component="button"
                         type="button"
-                        aria-label={`${repository.name} · ${column.name}: ${
-                          value === null ? noDataLabel() : `${formatScore(value)} (${band?.grade}, ${band?.label})`
-                        }${isHighlighted ? t('entity.heatmap.highlighted-cell') : ''}`}
+                        aria-label={cellLabel(
+                          `${repository.name} · ${column.name}: ${
+                            value === null ? noDataLabel() : `${formatScore(value)} (${band?.grade}, ${band?.label})`
+                          }`,
+                          isHighlighted
+                        )}
                         data-highlighted={isHighlighted || undefined}
                         onClick={() =>
                           onSelectCell({ repository: { id: repository.id, name: repository.name }, column, value })

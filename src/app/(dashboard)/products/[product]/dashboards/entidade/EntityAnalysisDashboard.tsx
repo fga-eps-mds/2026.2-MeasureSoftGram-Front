@@ -275,7 +275,7 @@ const EntityAnalysisDashboard: React.FC = () => {
           headerAction={csvCharts && <ExportCsvButton dashboard={ENTITY_CSV.dashboard} chart={csvCharts.heatmap} />}
         >
           <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-            {t('entity.heatmap-description', { repository: terms.repository })}
+            {t('entity.heatmap-description', { repository: terms.repository })}{' '}
             {deltaCaption}
           </Typography>
           <EntityHeatmap matrix={matrix} highlighted={highlighted} onSelectCell={setSelectedCell} bands={bands} />
@@ -305,7 +305,7 @@ const EntityAnalysisDashboard: React.FC = () => {
             }
           >
             <Typography fontSize="13px" color={DASHBOARD_COLORS.mutedText}>
-              {t('entity.ranking-description', { repository: terms.repository, noun: levelNoun(matrix.level) })}
+              {t('entity.ranking-description', { repository: terms.repository, noun: levelNoun(matrix.level) })}{' '}
               {deltaCaption}
             </Typography>
             <WorstPairsRanking pairs={worstPairs} bands={bands} />

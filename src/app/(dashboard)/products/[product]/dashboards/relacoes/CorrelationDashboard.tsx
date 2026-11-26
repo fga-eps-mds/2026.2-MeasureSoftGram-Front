@@ -24,7 +24,8 @@ import CorrelationFilters from './CorrelationFilters';
 import CorrelationMatrix, { matrixTitle } from './CorrelationMatrix';
 import CorrelationReleasesDialog from './CorrelationReleasesDialog';
 import { MIN_RELEASES, useCorrelationDashboard } from './useCorrelationDashboard';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
+import i18n from '../../../../../../shared/i18n/i18n';
 
 const SKELETON_ROWS = 4;
 
@@ -212,9 +213,16 @@ const CorrelationDashboard: React.FC = () => {
                 {t('correlation.title')}
               </Typography>
               <Typography color={DASHBOARD_COLORS.mutedText} data-testid="correlation-subtitle">
-                {t('correlation.subtitle.before', { noun })}{' '}
-                <em>{repository?.name ?? t('correlation.subtitle.fallback', { repository: terms.repository })}</em>{' '}
-                {t('correlation.subtitle.after')}
+                <Trans
+                  t={t}
+                  i18n={i18n}
+                  i18nKey="correlation.subtitle.text"
+                  values={{
+                    noun,
+                    name: repository?.name ?? t('correlation.subtitle.fallback', { repository: terms.repository })
+                  }}
+                  components={{ em: <em /> }}
+                />
               </Typography>
             </Box>
             <ExportAllCsvButton dashboard={CORRELATION_CSV.dashboard} charts={csvCharts} />

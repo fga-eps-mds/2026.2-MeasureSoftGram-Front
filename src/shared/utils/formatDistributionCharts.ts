@@ -329,12 +329,14 @@ function describeOutliers(outliers: DistributionAnalysis[]): string {
     })
   );
   const rest = outliers.length - listed.length;
-  const more = rest > 0 ? i18n.t('dashboards:distribution.chart.and-more', { amount: formatCount(rest) }) : '';
   const label = i18n.t('dashboards:distribution.chart.outliers-count', {
     count: outliers.length,
     formatted: formatCount(outliers.length)
   });
-  return i18n.t('dashboards:distribution.chart.outliers-list', { label, list: listed.join(', '), more });
+  const list = listed.join(', ');
+  return rest > 0
+    ? i18n.t('dashboards:distribution.chart.outliers-list-more', { label, list, amount: formatCount(rest) })
+    : i18n.t('dashboards:distribution.chart.outliers-list', { label, list });
 }
 
 /**
@@ -540,31 +542,34 @@ function describeBoxplotRow({ entity, stats }: LevelBoxplotRow): string {
  * getBoxplotStats, e os discrepantes do Service ficam em círculo vazado, numa série à parte. O grid tem margens fixas
  * em px e cada linha tem BOXPLOT_ROW_HEIGHT, para a tabela de percentis ao lado ficar alinhada às linhas.
  */
+function describeBoxplot(name: string, childCount: number, histogram: Histogram, rows: LevelBoxplotRow[]): string {
+  const values = {
+    name,
+    min: formatAxisValue(histogram.min),
+    max: formatAxisValue(histogram.max),
+    rows: rows.map(describeBoxplotRow).join('; ')
+  };
+  if (!childCount) return i18n.t('dashboards:distribution.chart.boxplot-aria', values);
+  return i18n.t('dashboards:distribution.chart.boxplot-aria-children', {
+    ...values,
+    count: childCount,
+    formatted: formatCount(childCount)
+  });
+}
+
 export function formatLevelBoxplotOptions(rows: LevelBoxplotRow[], histogram: Histogram) {
   const [chosen, ...children] = rows;
   const tolerance = (histogram.max - histogram.min) / OUTLIER_SPREAD;
   const outliers: LevelOutlierPoint[] = rows.flatMap((row) =>
     groupOutliers(row.stats.outliers, tolerance).map((group) => ({ ...group, row }))
   );
-  const childrenSentence = children.length
-    ? i18n.t('dashboards:distribution.chart.children', {
-        count: children.length,
-        formatted: formatCount(children.length)
-      })
-    : '';
 
   return {
     animation: false,
     aria: {
       enabled: true,
       label: {
-        description: i18n.t('dashboards:distribution.chart.boxplot-aria', {
-          name: chosen.entity.name,
-          children: childrenSentence,
-          min: formatAxisValue(histogram.min),
-          max: formatAxisValue(histogram.max),
-          rows: rows.map(describeBoxplotRow).join('; ')
-        })
+        description: describeBoxplot(chosen.entity.name, children.length, histogram, rows)
       }
     },
     tooltip: { trigger: 'item', confine: true },
