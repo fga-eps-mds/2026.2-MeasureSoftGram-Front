@@ -26,9 +26,11 @@ import { useProviderTerms } from '@hooks/useProviderTerms';
 import { StartingPoint, StepId, getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from './steps';
 import { WeightMethod, WeightsView, getNextWeightsView, getPreviousWeightsView } from './weightsFlow';
 import { WeightGroup, findEmptyGroups, findInvalidGroups, groupElementId, normalizeSingleEntityGroups } from './utils/weightGroups';
-
-// A comparação por pares (AHP) chega no próximo passo da US13.01.
-const QUALITATIVE_ENABLED = false;
+import PairwiseComparisonStep from './components/PairwiseComparisonStep/PairwiseComparisonStep';
+import { GroupBadge } from './components/WeightsSummary/WeightsSummary';
+import { formatDecimal } from './components/GroupPreview/GroupPreview';
+import { useAhpComparison } from './hooks/useAhpComparison';
+import { displayedCR } from './utils/ahp';
 
 function ReleaseCreation() {
   const { terms } = useProviderTerms();
@@ -41,7 +43,7 @@ function ReleaseCreation() {
   const [changeRefValue, setChangeRefValue] = useState<boolean>(false);
   const [startingPoint, setStartingPoint] = useState<StartingPoint>('new');
   const stepFlags = { changeRefValue, startingPoint };
-  const [weightMethod, setWeightMethod] = useState<WeightMethod>(QUALITATIVE_ENABLED ? 'ahp' : 'typed');
+  const [weightMethod, setWeightMethod] = useState<WeightMethod>('ahp');
   const [weightsView, setWeightsView] = useState<WeightsView>('method');
   const [dinamicBalance, setDinamicBalance] = useState<boolean>(false);
   const [defaultPageData, setConfigDefaultPageData] = useState<PreConfigData>();
@@ -54,6 +56,14 @@ function ReleaseCreation() {
 
   const router = useRouter();
   const routerParams: any = router.query;
+
+  const ahp = useAhpComparison({
+    organizationId,
+    productId,
+    configPageData,
+    setConfigPageData,
+    enabled: startingPoint === 'new',
+  });
 
   const { t } = useTranslation('plan_release');
 
@@ -273,14 +283,35 @@ function ReleaseCreation() {
   function renderWeightsView(): React.ReactNode {
     switch (weightsView) {
       case 'method':
-        return <WeightMethodSelector value={weightMethod} onChange={setWeightMethod} qualitativeEnabled={QUALITATIVE_ENABLED} />
+        return <WeightMethodSelector value={weightMethod} onChange={setWeightMethod} />
+      case 'groups':
+        return <PairwiseComparisonStep ahp={ahp} baselineConfig={defaultPageData} />
       case 'typed':
         return <ModelConfigForm configPageData={configPageData!} setConfigPageData={setConfigPageData} />
       case 'summary':
-        return <WeightsSummary configPageData={configPageData!} method={weightMethod} onEdit={handleEditGroup} />
+        return <WeightsSummary configPageData={configPageData!} method={weightMethod} onEdit={handleEditGroup} describeGroup={describeGroup} />
       default:
         return null;
     }
+  }
+
+  /** Selo do grupo no Resumo quando os pesos vieram da comparação. */
+  function describeGroup(group: WeightGroup): GroupBadge | undefined {
+    if (weightMethod !== 'ahp' || group.entities.length === 1) return undefined;
+
+    const preview = ahp.comparisons[group.path]?.preview;
+    if (!preview) return undefined;
+
+    const cr = formatDecimal(displayedCR(preview));
+    return ahp.statusOf(group) === 'accepted'
+      ? { label: t('badgeAhpAccepted', { cr }), tone: 'warning' }
+      : { label: t('badgeAhp', { cr }), tone: 'info' };
+  }
+
+  /** Troca de tela dentro de "Definir pesos"; ao chegar na comparação, escolhe o grupo. */
+  function showWeightsView(view: WeightsView, direction: 'forward' | 'back'): void {
+    if (view === 'groups') ahp.enter(direction);
+    setWeightsView(view);
   }
 
   /** Entra numa etapa; em "Definir pesos", voltando de uma etapa posterior, cai no Resumo. */
@@ -297,9 +328,11 @@ function ReleaseCreation() {
 
   function handlePreviousButtonClick(): void {
     if (activeStep === 'weights') {
+      if (weightsView === 'groups' && ahp.previous() === 'moved') return;
+
       const previousView = getPreviousWeightsView(weightsView, weightMethod);
       if (previousView) {
-        setWeightsView(previousView);
+        showWeightsView(previousView, 'back');
         return;
       }
     }
@@ -309,6 +342,12 @@ function ReleaseCreation() {
   }
 
   function handleEditGroup(group: WeightGroup): void {
+    if (weightMethod === 'ahp') {
+      ahp.goToGroup(group.path);
+      setWeightsView('groups');
+      return;
+    }
+
     setWeightsView('typed');
     requestAnimationFrame(() => {
       document.getElementById(groupElementId(group))?.scrollIntoView?.({ behavior: 'smooth' });
@@ -327,14 +366,23 @@ function ReleaseCreation() {
 
   function handleWeightsNext(): void {
     if (weightsView === 'typed' && findInvalidGroups(configPageData!).length > 0) return;
+    if (weightsView === 'groups' && ahp.next() !== 'leave') return;
 
     const nextView = getNextWeightsView(weightsView, weightMethod);
-    if (nextView) setWeightsView(nextView);
+    if (nextView) showWeightsView(nextView, 'forward');
     else goToNextStep();
   }
 
-  const isNextBlocked =
-    activeStep === 'weights' && weightsView === 'typed' && !!configPageData && findInvalidGroups(configPageData).length > 0;
+  const isTypedSumInvalid =
+    weightsView === 'typed' && !!configPageData && findInvalidGroups(configPageData).length > 0;
+  const isGroupPending = weightsView === 'groups' && !ahp.canAdvance;
+  const isNextBlocked = activeStep === 'weights' && (isTypedSumInvalid || isGroupPending);
+
+  function nextButtonLabel(): string {
+    if (isLastStep(activeStep, stepFlags)) return t('end');
+    if (activeStep === 'weights' && weightsView === 'groups' && !ahp.isLastGroup) return t('nextGroup');
+    return t('next');
+  }
 
   async function handleNextButtonClick(): Promise<void> {
     switch (activeStep) {
@@ -527,7 +575,7 @@ function ReleaseCreation() {
                 </Button>
               }
               <Button type="submit" variant="contained" disabled={isNextBlocked}>
-                {isLastStep(activeStep, stepFlags) ? t('end') : t('next')}
+                {nextButtonLabel()}
               </Button>
             </Box>
           </form>

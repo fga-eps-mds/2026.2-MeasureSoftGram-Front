@@ -4,6 +4,7 @@ import { balanceMatrixService } from '@services/balanceMatrix';
 import { useTranslation } from 'react-i18next';
 import { productQuery } from '@services/product';
 import { useRouter } from '@hooks/useRouter';
+import { ahpService } from '@services/ahp';
 import ReleaseCreation from '../ReleaseCreation';
 
 jest.mock('@hooks/useRouter', () => ({
@@ -21,6 +22,7 @@ jest.mock('react-i18next', () => ({
 jest.mock('@services/api');
 jest.mock('@services/product');
 jest.mock('@services/balanceMatrix');
+jest.mock('@services/ahp');
 
 const dateErrorMsg = "Já existe uma release neste período"
 const mockPush = jest.fn();
@@ -777,6 +779,7 @@ describe('ReleaseInfo Component', () => {
 
     await clickButtonAndWaitFor(t('next'), t('defineUsedCharacteristics'));
     await clickButtonAndWaitFor(t('next'), t('weightMethodDescription'));
+    fireEvent.click(screen.getByLabelText(t('methodQuantitative')));
     await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
 
     // Soma das características diferente de 100: mensagem no grupo e Avançar bloqueado.
@@ -790,10 +793,11 @@ describe('ReleaseInfo Component', () => {
     expect(await screen.findByText(expectedText)).toBeInTheDocument();
   }
 
-  /** Criar Release → Definir entidades → forma → porcentagens → Resumo → Balancear. */
+  /** Criar Release → Definir entidades → forma (quantitativa) → porcentagens → Resumo → Balancear. */
   async function avancarAteOBalanceamento() {
     await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
     await clickButtonAndWaitFor('next', 'weightMethodDescription');
+    fireEvent.click(screen.getByLabelText('methodQuantitative'));
     await clickButtonAndWaitFor('next', 'defineCharacteristics');
     await clickButtonAndWaitFor('next', 'summaryTitle');
     await clickButtonAndWaitFor('next', 'balanceGoal');
@@ -1516,6 +1520,7 @@ describe('ReleaseInfo Component', () => {
     it('EDITAR no resumo volta às porcentagens', async () => {
       await abrirDefinirEntidades();
       await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      fireEvent.click(screen.getByLabelText('methodQuantitative'));
       await clickButtonAndWaitFor('next', 'defineCharacteristics');
       await clickButtonAndWaitFor('next', 'summaryTitle');
 
@@ -1533,6 +1538,70 @@ describe('ReleaseInfo Component', () => {
 
       await waitFor(() => expect(toastError).toHaveBeenCalledWith('entitiesEmptyGroupError', expect.anything()));
       expect(screen.getByText('defineUsedCharacteristics')).toBeInTheDocument();
+    });
+  });
+
+  describe('pesos por comparação (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.postPreConfig as jest.Mock).mockClear();
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+      // Prévia com pesos iguais (o cálculo real é do Core; aqui só o contrato importa).
+      (ahpService.calculateGroup as jest.Mock).mockImplementation((_org: string, _prod: string, { entities }: { entities: string[] }) => {
+        const base = Math.floor(100 / entities.length);
+        const rest = 100 - base * entities.length;
+        const weights = Object.fromEntries(entities.map((entity, index) => [entity, base + (index < rest ? 1 : 0)]));
+        return Promise.resolve({
+          data: { priorities: {}, weights, consistency_ratio: entities.length > 2 ? 0 : null, consistent: true, cr_threshold: 0.1, conflict: null },
+        });
+      });
+    });
+
+    const nextButton = () => screen.getByText((content, element) =>
+      element?.tagName === 'BUTTON' && (content === 'next' || content === 'nextGroup'));
+
+    it('compara todos os grupos, mostra o resumo com os selos AHP e finaliza', async () => {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+      await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      expect(screen.getByLabelText('methodQualitative')).toBeChecked();
+      await clickButtonAndWaitFor('next', 'groupProgress');
+
+      for (let guard = 0; guard < 20 && !screen.queryByText('summaryTitle'); guard++) {
+        screen.queryAllByTestId(/^pair-[^]*$/)
+          .filter(element => !element.dataset.testid?.endsWith('-intensity-select'))
+          .forEach(pair => fireEvent.click(within(pair).getByLabelText('equallyImportant')));
+        await waitFor(() => expect(nextButton()).toBeEnabled());
+        await act(async () => {
+          fireEvent.click(nextButton());
+        });
+      }
+
+      expect(await screen.findByText('summaryTitle')).toBeInTheDocument();
+      expect(within(screen.getByTestId('summary-group-characteristics')).getByText('badgeAhp')).toBeInTheDocument();
+
+      await clickButtonAndWaitFor('next', 'balanceGoal');
+      fireEvent.click(await screen.findByText('end', { selector: 'button' }));
+      await waitFor(() => expect(productQuery.postPreConfig).toHaveBeenCalled());
+    });
+
+    it('bloqueia o Próximo grupo até o grupo estar respondido', async () => {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+      await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      await clickButtonAndWaitFor('next', 'groupProgress');
+
+      expect(nextButton()).toBeDisabled();
+      expect(nextButton()).toHaveTextContent('nextGroup');
+
+      await clickButtonAndWaitFor('back', 'weightMethodDescription');
     });
   });
 });

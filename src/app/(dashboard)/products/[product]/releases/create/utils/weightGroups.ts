@@ -107,6 +107,46 @@ export function normalizeSingleEntityGroups(config: PreConfigData): PreConfigDat
   };
 }
 
+/** Grava nos pesos da configuração os pesos de um grupo (ex.: os devolvidos pela prévia AHP). */
+export function applyGroupWeights(config: PreConfigData, group: WeightGroup, weights: Record<string, number>): PreConfigData {
+  const withWeights = <T extends { key: string; weight: number }>(items: T[]): T[] =>
+    items.map(item => (item.key in weights ? { ...item, weight: weights[item.key] } : item));
+
+  return {
+    ...config,
+    characteristics: group.level === 'characteristics'
+      ? withWeights(config.characteristics)
+      : config.characteristics.map(characteristic => {
+        if (characteristic.key !== group.characteristicKey) return characteristic;
+        if (group.level === 'subcharacteristics')
+          return { ...characteristic, subcharacteristics: withWeights(characteristic.subcharacteristics) };
+        return {
+          ...characteristic,
+          subcharacteristics: characteristic.subcharacteristics.map(sub =>
+            sub.key === group.subcharacteristicKey ? { ...sub, measures: withWeights(sub.measures) } : sub
+          ),
+        };
+      }),
+  };
+}
+
+/** Peso de cada entidade do grupo em outra configuração (ex.: o padrão, para o "Antes"). */
+export function weightsInConfig(config: PreConfigData | undefined, group: WeightGroup): Record<string, number> {
+  const other = config && buildWeightGroupsIncludingInactive(config).find(item => item.path === group.path);
+  return Object.fromEntries((other?.entities ?? []).map(entity => [entity.key, entity.weight]));
+}
+
+function buildWeightGroupsIncludingInactive(config: PreConfigData): WeightGroup[] {
+  const all = <T extends { active?: boolean }>(items: T[]) => items.map(item => ({ ...item, active: true }));
+  return buildWeightGroups({
+    ...config,
+    characteristics: all(config.characteristics).map(c => ({
+      ...c,
+      subcharacteristics: all(c.subcharacteristics).map(s => ({ ...s, measures: all(s.measures) })),
+    })),
+  });
+}
+
 /** id do elemento da tela de pesos onde o grupo é editado (para rolar até ele). */
 export function groupElementId(group: WeightGroup): string {
   switch (group.level) {

@@ -8,13 +8,28 @@ import { WeightGroup, buildWeightGroups } from '../../utils/weightGroups';
 import { entityName, groupTitle } from '../../utils/groupLabels';
 import { WeightMethod } from '../../weightsFlow';
 
+export type BadgeTone = 'neutral' | 'info' | 'warning';
+
+export interface GroupBadge {
+  label: string;
+  tone: BadgeTone;
+}
+
 interface WeightsSummaryProps {
   configPageData: PreConfigData;
   method: WeightMethod;
   onEdit: (group: WeightGroup) => void;
+  /** Como o grupo foi definido; sem isso, usa "Peso único" ou o selo da forma escolhida. */
+  describeGroup?: (group: WeightGroup) => GroupBadge | undefined;
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
+const BADGE_COLORS: Record<BadgeTone, { bg: string; fg: string }> = {
+  neutral: { bg: DASHBOARD_COLORS.gridLine, fg: DASHBOARD_COLORS.mutedText },
+  info: { bg: DASHBOARD_COLORS.infoBackground, fg: DASHBOARD_COLORS.primary },
+  warning: { bg: 'rgba(223, 142, 22, 0.15)', fg: '#C07910' },
+};
+
+function Badge({ tone, children }: { tone: BadgeTone; children: React.ReactNode }) {
   return (
     <Box
       component="span"
@@ -25,8 +40,8 @@ function Badge({ children }: { children: React.ReactNode }) {
         py: 0.25,
         borderRadius: 1,
         fontSize: 12,
-        bgcolor: DASHBOARD_COLORS.gridLine,
-        color: DASHBOARD_COLORS.mutedText,
+        bgcolor: BADGE_COLORS[tone].bg,
+        color: BADGE_COLORS[tone].fg,
       }}
     >
       {children}
@@ -35,12 +50,18 @@ function Badge({ children }: { children: React.ReactNode }) {
 }
 
 /** Tela 10/10q: um grupo por linha, com os pesos e como cada grupo foi definido. */
-export default function WeightsSummary({ configPageData, method, onEdit }: WeightsSummaryProps) {
+export default function WeightsSummary({ configPageData, method, onEdit, describeGroup }: WeightsSummaryProps) {
   const { t } = useTranslation('plan_release');
   const groups = buildWeightGroups(configPageData);
 
-  const badgeFor = (group: WeightGroup): string =>
-    group.entities.length === 1 ? t('badgeSingleWeight') : t(method === 'typed' ? 'badgeQuantitative' : 'badgeQualitative');
+  const badgeFor = (group: WeightGroup): GroupBadge => {
+    const described = describeGroup?.(group);
+    if (described) return described;
+    if (group.entities.length === 1) return { label: t('badgeSingleWeight'), tone: 'neutral' };
+    return method === 'typed'
+      ? { label: t('badgeQuantitative'), tone: 'neutral' }
+      : { label: t('badgeQualitative'), tone: 'info' };
+  };
 
   return (
     <>
@@ -61,7 +82,7 @@ export default function WeightsSummary({ configPageData, method, onEdit }: Weigh
             <Box flex={1} minWidth={0}>
               <Typography sx={{ color: DASHBOARD_COLORS.primary, fontWeight: 500 }}>
                 {index + 1}. {groupTitle(group, t)}
-                <Badge>{badgeFor(group)}</Badge>
+                <Badge tone={badgeFor(group).tone}>{badgeFor(group).label}</Badge>
               </Typography>
               <Typography variant="body2" sx={{ color: DASHBOARD_COLORS.mutedText, mt: 0.5 }}>
                 {group.entities.map(entity => `${entityName(group, entity.key, t)} ${entity.weight}`).join(' · ')}

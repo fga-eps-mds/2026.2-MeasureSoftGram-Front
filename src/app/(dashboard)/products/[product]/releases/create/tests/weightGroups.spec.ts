@@ -1,6 +1,8 @@
 import { PreConfigData } from '@customTypes/preConfig';
 import {
+  applyGroupWeights,
   buildWeightGroups,
+  weightsInConfig,
   findEmptyGroups,
   findInvalidGroups,
   groupElementId,
@@ -121,5 +123,35 @@ describe('groupElementId', () => {
     expect(groupElementId(characteristics)).toBe('characteristicSection');
     expect(groupElementId(reliabilitySubs)).toBe('SubCarAccordion-reliability');
     expect(groupElementId(testingStatus)).toBe('MetricSubCarAccordion-testing_status');
+  });
+});
+
+describe('applyGroupWeights', () => {
+  it('grava os pesos só nas entidades do grupo', () => {
+    const data = config();
+    const testingStatus = buildWeightGroups(data).find(group => group.path === 'reliability/testing_status/measures')!;
+
+    const updated = applyGroupWeights(data, testingStatus, { passed_tests: 65, test_builds: 7, test_coverage: 28 });
+
+    expect(updated.characteristics[0].subcharacteristics[0].measures.map(m => m.weight)).toEqual([65, 7, 28]);
+    expect(updated.characteristics[0].subcharacteristics[1].measures[0].weight).toBe(100);
+    expect(data.characteristics[0].subcharacteristics[0].measures[0].weight).toBe(33);
+  });
+
+  it('grava os pesos das características', () => {
+    const data = config();
+    const updated = applyGroupWeights(data, buildWeightGroups(data)[0], { reliability: 43, maintainability: 43, functional_suitability: 14 });
+    expect(updated.characteristics.map(c => c.weight)).toEqual([43, 43, 14]);
+  });
+});
+
+describe('weightsInConfig', () => {
+  it('lê os pesos do grupo em outra configuração (o "Antes")', () => {
+    const atual = config();
+    atual.characteristics[2].active = false;
+    const grupo = buildWeightGroups(atual)[0];
+
+    expect(weightsInConfig(config(), grupo)).toEqual({ reliability: 34, maintainability: 33, functional_suitability: 33 });
+    expect(weightsInConfig(undefined, grupo)).toEqual({});
   });
 });

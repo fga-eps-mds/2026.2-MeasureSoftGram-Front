@@ -3,11 +3,10 @@
  * em todas elas (protótipo US13.01).
  */
 export type WeightMethod = 'ahp' | 'typed';
-export type WeightsView = 'method' | 'typed' | 'summary';
+export type WeightsView = 'method' | 'groups' | 'typed' | 'summary';
 
 function viewsFor(method: WeightMethod): WeightsView[] {
-  // A comparação por pares (AHP) entra no lugar de "typed" no próximo passo.
-  return method === 'typed' ? ['method', 'typed', 'summary'] : ['method', 'summary'];
+  return method === 'typed' ? ['method', 'typed', 'summary'] : ['method', 'groups', 'summary'];
 }
 
 /** Próxima tela dentro da etapa; undefined quando a etapa termina. */
