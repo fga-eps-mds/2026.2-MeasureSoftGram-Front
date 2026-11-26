@@ -45,8 +45,8 @@ describe('Organizations Component', () => {
   const NAME_EXISTS_MESSAGE = 'toast.name-exists';
   const KEY_EXISTS_MESSAGE = 'toast.key-exists';
   const SERVER_ERROR_MESSAGE = 'server_down';
-  const CREATE_SUCCESS_MESSAGE = 'toast.sucess';
-  const EDIT_SUCCESS_MESSAGE = 'toast.sucess-edit';
+  const CREATE_SUCCESS_MESSAGE = 'toast.success';
+  const EDIT_SUCCESS_MESSAGE = 'toast.success-edit';
   const GENERIC_ERROR_MESSAGE = 'toast.error';
   const GENERIC_ERROR_EDIT_MESSAGE = 'toast.error-edit';
 
