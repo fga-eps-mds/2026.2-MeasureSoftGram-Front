@@ -17,7 +17,7 @@
     "name-exists": "A Product with this name already exists.",
     "success-edit": "Product updated successfully!",
     "error-edit": "Error updating the Product!",
-    "sucess": "Product created successfully!",
+    "success": "Product created successfully!",
     "error-create": "Error creating the Product!"
   }
 }

@@ -32,16 +32,16 @@ function CopyBadgeModal({ badgeUrl, badgeLabel = 'MeasureSoftGram' }: CopyBadgeM
     navigator.clipboard.writeText(badgeMarkdown)
       .then(() => {
         handleCloseModal();
-        toast.success(t('repository.badge-copied', 'Badge copiada com sucesso!'));
+        toast.success(t('repository.badge-copied'));
       })
       .catch(() => {
-        toast.error(t('repository.badge-copy-error', 'Falha ao copiar para a área de transferência.'));
+        toast.error(t('repository.badge-copy-error'));
       });
   }
 
   return (
     <>
-      <Tooltip title={t('repository.copy-badge', 'Copiar Badge')} placement="top">
+      <Tooltip title={t('repository.copy-badge')} placement="top">
         <IconButton onClick={handleOpenModal} size="small">
           <ContentCopyIcon fontSize="small" />
         </IconButton>
@@ -64,13 +64,13 @@ function CopyBadgeModal({ badgeUrl, badgeLabel = 'MeasureSoftGram' }: CopyBadgeM
           }}
         >
           <Typography variant="h6" gutterBottom>
-            {t('repository.copy-badge', 'Copiar Badge')}
+            {t('repository.copy-badge')}
           </Typography>
           {
             resolvedBadgeUrl ?
               <>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {t('repository.badge-instructions', 'Cole o código abaixo no README do seu repositório:')}
+                  {t('repository.badge-instructions')}
                 </Typography>
                 <Box
                   sx={{
@@ -99,20 +99,20 @@ function CopyBadgeModal({ badgeUrl, badgeLabel = 'MeasureSoftGram' }: CopyBadgeM
                     onClick={handleCloseModal}
                     variant='outlined'
                   >
-                    {t('repository.badge-cancel', 'Cancelar')}
+                    {t('repository.badge-cancel')}
                   </Button>
                   <Button
                     variant='contained'
                     onClick={copyToClipboard}
                     startIcon={<ContentCopyIcon />}
                   >
-                    {t('repository.badge-copy-btn', 'Copiar')}
+                    {t('repository.badge-copy-btn')}
                   </Button>
                 </Box>
               </>
               :
               <Alert sx={{ display: "flex", justifyContent: "center", textAlign: 'center' }} severity="error">
-                {t('repository.badge-error', 'Ocorreu um erro ao tentar carregar as informações.')}
+                {t('repository.badge-error')}
               </Alert>
           }
 

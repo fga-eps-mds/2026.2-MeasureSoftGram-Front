@@ -81,7 +81,7 @@ const ProductsCreation: React.FC = () => {
     try {
       const result = await createProduct(novoProduto);
       if (result.type === 'success') {
-        toast.success(t('toast.sucess'));
+        toast.success(t('toast.success'));
         syncCreatedSelection(result.value, finalOrgId);
         await loadAllProducts();
         router.push('/products');

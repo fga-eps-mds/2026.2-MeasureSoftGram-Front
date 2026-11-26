@@ -101,7 +101,7 @@ const Organizations: React.FC = () => {
     if (isEditMode && router.query.edit) {
       result = await updateOrganization(router.query.edit as string, novaOrganizacao);
       if (result.type === 'success') {
-        toast.success(t('toast.sucess-edit'));
+        toast.success(t('toast.success-edit'));
         setTimeout(() => {
           router.push('/home');
         }, 2000);
@@ -111,7 +111,7 @@ const Organizations: React.FC = () => {
     } else {
       result = await createOrganization(novaOrganizacao);
       if (result.type === 'success') {
-        toast.success(t('toast.sucess'));
+        toast.success(t('toast.success'));
         const createdOrg = result.value as any;
         if (createdOrg && createdOrg.id) {
           localStorage.setItem('selectedOrgId', JSON.stringify(createdOrg.id.toString()));

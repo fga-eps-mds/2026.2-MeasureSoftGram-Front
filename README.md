@@ -109,6 +109,21 @@ O dashboard "3. Estrutura das Medidas e Indicadores (Metamodelo)" exporta a árv
 
 Os gráficos de pulso (`formatProductPulseCsv` e `formatRepositoryPulseCsv`, em `src/shared/utils/formatPulseCsv.ts`) exportam as medições do período filtrado, em ordem de data, com o grau (A a E) da faixa do valor. O pulso do produto usa o botão dentro de `PulseChartFilters` (`exportAction`); o da tela do repositório fica no card e, junto com o `.zip` do topo, usa o mesmo `useRepositoryPulse`, que a página busca e passa ao card.
 
+## Traduções (i18n)
+
+A interface usa `i18next`/`react-i18next` com inglês como idioma-fonte. Os textos ficam em `public/locales/<idioma>/<namespace>.json` (`en` e `pt`), um arquivo por namespace do `useTranslation('<namespace>')`. O `pt` é traduzido no Weblate da Platform (profile `i18n`), que lê esses arquivos.
+
+O [`i18next-cli`](https://github.com/i18next/i18next-cli) mantém o `en` em dia com o código, conforme o `i18next.config.ts`:
+
+```bash
+pnpm i18n:extract   # adiciona ao en as chaves usadas no código que ainda não existem
+pnpm i18n:check     # falha (exit 1) e lista as chaves que faltam no en, sem gravar nada
+```
+
+- A extração só **adiciona** chaves. Chaves montadas em tempo de execução (``t(`status.${valor}`)``) não aparecem para o extrator, por isso nenhuma chave é removida automaticamente.
+- Chaves novas entram só no `en`. O `pt` não recebe texto vazio: a tradução é feita no Weblate e, enquanto falta, o i18next mostra o texto em inglês.
+- O `i18next-cli` exige Node 22.22.2+, 24.15+ ou 26+ (no Node 20 do projeto o `pnpm install` só avisa, mas o comando falha ao iniciar). Os comandos acima rodam na máquina de quem desenvolve; o build e os testes continuam no Node 20. Um job de CI que rode `pnpm i18n:check` precisa usar `actions/setup-node` com `node-version: 24`.
+
 ## Testes E2E
 
 Os testes de ponta a ponta usam o [Playwright](https://playwright.dev) só com Chromium e ficam em `e2e/**/*.e2e.ts`, fora do `src/` (o Jest, o `next lint` e o Sonar não os veem). Eles rodam contra a API simulada no navegador (`page.route` no `/bff/v1`), sem MSW: o build sobe sem `NEXT_PUBLIC_API_MOCKING` e uma chamada a `/bff/v1` sem handler faz o teste falhar. O que o servidor do Next pede ao Service por conta própria (validar o token da sessão, o client id do OAuth, trocar o code, encerrar a sessão) vai para um Service fake (`e2e/support/mock-service.mjs`), que o `webServer` sobe junto e o Next recebe como `SERVICE_URL`. Os testes com a tag `@oauth-servidor`, que trocam as respostas desse Service fake, ficam no projeto `oauth-servidor`, que roda um teste por vez.
