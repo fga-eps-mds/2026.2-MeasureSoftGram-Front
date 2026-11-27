@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useParams, usePathname, useRouter as useNextRouter, useSearchParams } from 'next/navigation';
 import { stripTrailingSlashes } from '../utils/stripTrailingSlashes';
+import { runGuardedNavigation } from '../utils/navigationGuard';
 
 type Query = Record<string, string | string[] | undefined>;
 
@@ -71,7 +72,8 @@ export function useRouter() {
 
   return useMemo(
     () => ({
-      push: router.push,
+      // Passa pela trava de navegação (ex.: "Sair sem salvar" do planejamento de release).
+      push: (...args: Parameters<typeof router.push>) => runGuardedNavigation(() => router.push(...args)),
       replace: router.replace,
       back: router.back,
       prefetch: router.prefetch,

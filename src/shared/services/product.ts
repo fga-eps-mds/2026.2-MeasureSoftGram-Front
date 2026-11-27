@@ -13,6 +13,7 @@ import {
   CorrelationLevel
 } from '@customTypes/product';
 import { PreConfigData, PreConfigRoot, ReleaseInfoForm } from '@customTypes/preConfig';
+import { AHPGroupComparison } from '@customTypes/ahp';
 import { ProductQualityBand, ProductQualityBands } from '@customTypes/qualityBands';
 
 import { AxiosError, AxiosRequestConfig } from 'axios';
@@ -70,7 +71,8 @@ class ProductQuery {
     return api.get<MeasuresHistory>(url);
   }
 
-  async postPreConfig(organizationId: string, productId: string, data: { name: string; data: PreConfigData }) {
+  /** `comparisons`: grupos definidos por comparação (US13.01), gravados com a configuração. */
+  async postPreConfig(organizationId: string, productId: string, data: { name: string; data: PreConfigData; comparisons?: AHPGroupComparison[] }) {
     return api.post(`/v1/organizations/${organizationId}/products/${productId}/create/release-config/`, data);
   }
 

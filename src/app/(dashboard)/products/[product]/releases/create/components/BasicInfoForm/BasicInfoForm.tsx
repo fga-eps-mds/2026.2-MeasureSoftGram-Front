@@ -1,157 +1,35 @@
-import React, { } from 'react';
-import { Accordion, AccordionSummary, Box, Checkbox, FormControlLabel, TextField, Typography } from '@mui/material';
-import { hexToRgb } from '@mui/material/styles';
-import { ExpandMore } from '@mui/icons-material';
-import { Timeline, TimelineSeparator, TimelineConnector, TimelineDot, TimelineItem, TimelineContent } from '@mui/lab';
-import { timelineItemClasses } from '@mui/lab/TimelineItem';
+import React from 'react';
+import { Box, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { FieldErrors, UseFormRegister, UseFormTrigger, UseFormWatch } from 'react-hook-form';
-import { PreConfigData, ReleaseInfoForm } from '@customTypes/preConfig';
+import { PreConfigData, PreConfigMeta, ReleaseInfoForm } from '@customTypes/preConfig';
 import SectionTooltip from '../SectionTooltip/SectionTooltip';
+import StartingPointSelector from '../StartingPointSelector/StartingPointSelector';
+import { StartingPoint } from '../../steps';
 
 interface BasicInfoFormProps {
   register: UseFormRegister<ReleaseInfoForm>;
   errors: FieldErrors<ReleaseInfoForm>;
   watch: UseFormWatch<ReleaseInfoForm>;
   trigger: UseFormTrigger<ReleaseInfoForm>;
-  followLastConfig: boolean;
-  setFollowLastConfig: any;
-  configPageData: PreConfigData;
+  startingPoint: StartingPoint;
+  setStartingPoint: (value: StartingPoint) => void;
+  lastConfigMeta?: PreConfigMeta;
+  lastConfigData?: PreConfigData;
+  defaultConfigData?: PreConfigData;
 }
 
-export default function BasicInfoForm({ configPageData, register, errors, followLastConfig, setFollowLastConfig, watch }: BasicInfoFormProps) {
+export default function BasicInfoForm({
+  register,
+  errors,
+  watch,
+  startingPoint,
+  setStartingPoint,
+  lastConfigMeta,
+  lastConfigData,
+  defaultConfigData,
+}: BasicInfoFormProps) {
   const { t } = useTranslation('plan_release');
-
-  const renderCurrentConfig = () => (
-    <Accordion defaultExpanded
-      square
-      sx={{
-        boxShadow: 'inherit',
-        border: 0.5,
-        backgroundColor: "transparent",
-        borderColor: "#00000040",
-        borderRadius: 3,
-        marginTop: 2
-      }}>
-      <AccordionSummary expandIcon={<ExpandMore />}>
-        <Typography>{t('generalCharacteristics')}</Typography>
-      </AccordionSummary>
-      <Timeline
-        key="0"
-        sx={{
-          [`& .${timelineItemClasses.root}:before`]: {
-            flex: 0,
-            padding: 0,
-          },
-          marginTop: 0
-        }}
-      >
-        {configPageData?.characteristics?.map((characteristic) => (
-          <Accordion
-            sx={{
-              boxShadow: 'inherit',
-              backgroundColor: "transparent",
-            }}
-            key={`ac-characteristic-${characteristic.key}`}>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <TimelineItem key={`characteristic-${characteristic.key}`}>
-                <TimelineSeparator>
-                  <TimelineDot color="secondary" />
-                  <TimelineConnector />
-                </TimelineSeparator>
-                <TimelineContent>
-                  <Typography variant="h6" component="span" color="primary">
-                    {t('characteristic')}: {t(`characteristics.${characteristic.key}`)}
-                  </Typography>
-                  <Typography>{t('weight')}: {characteristic.weight}</Typography>
-                </TimelineContent>
-              </TimelineItem>
-            </AccordionSummary>
-            <Timeline
-              key="1"
-              sx={{
-                [`& .${timelineItemClasses.root}:before`]: {
-                  flex: 0,
-                  padding: 0,
-                  marginLeft: 5,
-                },
-                marginTop: 0
-              }}
-            >
-              {characteristic.subcharacteristics?.map((subcharacteristic) => (
-                <TimelineItem key={`subcharacteristic-${characteristic.key}-${subcharacteristic.key}`}>
-                  <TimelineSeparator>
-                    <TimelineDot color="secondary" />
-                    <TimelineConnector />
-                  </TimelineSeparator>
-                  <TimelineContent>
-                    <Typography variant="h6" component="span" color={hexToRgb("#2484A5")}>
-                      {t('subCharacteristic')}: {t(`subCharacteristics.${subcharacteristic.key}`)}
-                    </Typography>
-                    <Typography>{t('weight')}: {subcharacteristic.weight}</Typography>
-                    <Timeline
-                      key="2"
-                      sx={{
-                        [`& .${timelineItemClasses.root}:before`]: {
-                          flex: 0,
-                          padding: 0,
-                        },
-                        marginTop: 0
-                      }}
-                    >
-                      {subcharacteristic.measures?.map((measure) => (
-                        <TimelineItem key={`measure-${characteristic.key}-${subcharacteristic.key}-${measure.key}`}>
-                          <TimelineSeparator>
-                            <TimelineDot color="secondary" />
-                            <TimelineConnector />
-                          </TimelineSeparator>
-                          <TimelineContent>
-                            <Typography variant="h6" component="span" color={hexToRgb("#5D698E")}>
-                              {t('measure')}: {t(`measures.${measure.key}`)}
-                            </Typography>
-                            <Typography>{t('weight')}: {measure.weight}</Typography>
-                            <Typography>
-                              min = {measure.min_threshold} | max = {measure.max_threshold}
-                            </Typography>
-
-                            {/* <Timeline
-                              key={"3"}
-                              sx={{
-                                [`& .${timelineItemClasses.root}:before`]: {
-                                  flex: 0,
-                                  padding: 0,
-                                },
-                                marginTop: 0
-                              }}
-                            >
-                              {measure.metrics?.map((metric, indexMet) => (
-                                <TimelineItem key={`metric-${measure.key}-${subcharacteristic.key}-${characteristic.key}-${indexMet}`}>
-                                  <TimelineSeparator>
-                                    <TimelineDot color="secondary" />
-                                    <TimelineConnector />
-                                  </TimelineSeparator>
-                                  <TimelineContent>
-                                    <Typography variant="h6" component="span" color={"primary"}>
-                                      Métrica: {metric.key}
-                                    </Typography>
-                                    <Typography>Peso: {metric.weight ?? 0}</Typography>
-                                  </TimelineContent>
-                                </TimelineItem>
-                              ))}
-                            </Timeline> */}
-                          </TimelineContent>
-                        </TimelineItem>
-                      ))}
-                    </Timeline>
-                  </TimelineContent>
-                </TimelineItem>
-              ))}
-            </Timeline>
-          </Accordion>
-        ))}
-      </Timeline>
-    </Accordion>
-  )
 
   return <>
     <SectionTooltip text={t('basicConfig')} tooltip={t('basicConfigTooltip')} />
@@ -220,10 +98,12 @@ export default function BasicInfoForm({ configPageData, register, errors, follow
         sx={{ flex: 1 }}
       />
     </Box>
-    <FormControlLabel control={<Checkbox
-      onClick={() => setFollowLastConfig(!followLastConfig)}
-      checked={followLastConfig ?? false}
-    />} label={t('followLastConfig')} />
-    {renderCurrentConfig()}
+    <StartingPointSelector
+      value={startingPoint}
+      onChange={setStartingPoint}
+      lastConfigMeta={lastConfigMeta}
+      lastConfigData={lastConfigData}
+      defaultConfigData={defaultConfigData}
+    />
   </>
 }

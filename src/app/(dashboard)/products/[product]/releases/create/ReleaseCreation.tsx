@@ -8,7 +8,7 @@ import { format, addDays } from 'date-fns';
 import { useRouter } from '@hooks/useRouter';
 import { useTranslation } from 'react-i18next';
 import { Change, ReleaseGoal } from '@customTypes/product';
-import { Characteristic, Measure, PreConfigData, ReleaseInfoForm, Subcharacteristic } from '@customTypes/preConfig';
+import { Characteristic, Measure, PreConfigData, PreConfigMeta, ReleaseInfoForm, Subcharacteristic } from '@customTypes/preConfig';
 import { productQuery } from '@services/product';
 import { balanceMatrixService } from '@services/balanceMatrix';
 import { toast } from 'react-toastify';
@@ -16,24 +16,41 @@ import ConfirmModal from '@components/ConfirmModal/ConfirmModal';
 import * as Styles from './styles';
 import BasicInfoForm from './components/BasicInfoForm/BasicInfoForm';
 import ModelConfigForm from './components/ModelConfigForm/ModelConfigForm';
+import EntitySelectionForm from './components/EntitySelectionForm/EntitySelectionForm';
+import WeightMethodSelector from './components/WeightMethodSelector/WeightMethodSelector';
+import WeightsSummary from './components/WeightsSummary/WeightsSummary';
 import ReferenceValuesForm from './components/ReferenceValuesForm/ReferenceValuesForm';
 import CharacteristicsBalanceForm from './components/CharacteristicsBalanceForm/CharacteristicsBalanceForm';
 import RepositorySelectionForm from './components/RepositorySelectionForm/RepositorySelectionForm';
 import { useProviderTerms } from '@hooks/useProviderTerms';
+import { StartingPoint, StepId, getNextStep, getPreviousStep, getVisibleSteps, isLastStep } from './steps';
+import { WeightMethod, WeightsView, getNextWeightsView, getPreviousWeightsView } from './weightsFlow';
+import { WeightGroup, findEmptyGroups, findInvalidGroups, groupElementId, normalizeSingleEntityGroups } from './utils/weightGroups';
+import PairwiseComparisonStep from './components/PairwiseComparisonStep/PairwiseComparisonStep';
+import { GroupBadge } from './components/WeightsSummary/WeightsSummary';
+import { formatDecimal } from './components/GroupPreview/GroupPreview';
+import { useAhpComparison } from './hooks/useAhpComparison';
+import { useLeaveGuard } from './hooks/useLeaveGuard';
+import { extractApiError } from '@utils/apiError';
+import { displayedCR } from './utils/ahp';
 
 function ReleaseCreation() {
   const { terms } = useProviderTerms();
   const [organizationId, setOrganizationId] = useState<string>("");
   const [productId, setProductId] = useState<string>("");
   const [productName, setProductName] = useState<string>("");
-  const [activeStep, setActiveStep] = useState(process.env.NODE_ENV === 'test' ? 1 : 0);
+  const [activeStep, setActiveStep] = useState<StepId>(process.env.NODE_ENV === 'test' ? 'releaseInfo' : 'repositories');
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showChangeDateModal, setShowChangeDateModal] = useState(false);
   const [changeRefValue, setChangeRefValue] = useState<boolean>(false);
-  const [followLastConfig, setFollowLastConfig] = useState<boolean>(false);
+  const [startingPoint, setStartingPoint] = useState<StartingPoint>('new');
+  const stepFlags = { changeRefValue, startingPoint };
+  const [weightMethod, setWeightMethod] = useState<WeightMethod>('ahp');
+  const [weightsView, setWeightsView] = useState<WeightsView>('method');
   const [dinamicBalance, setDinamicBalance] = useState<boolean>(false);
   const [defaultPageData, setConfigDefaultPageData] = useState<PreConfigData>();
   const [lastConfigPageData, setLastConfigPageData] = useState<PreConfigData>();
+  const [lastConfigMeta, setLastConfigMeta] = useState<PreConfigMeta>();
   const [configPageData, setConfigPageData] = useState<PreConfigData>();
   const [balanceMatrix, setBalanceMatrix] = useState<any>();
   const [releaseGoal, setReleaseGoal] = useState<any>();
@@ -41,6 +58,18 @@ function ReleaseCreation() {
 
   const router = useRouter();
   const routerParams: any = router.query;
+
+  // "Sair sem salvar": só depois que a pessoa começou o planejamento.
+  const [planningStarted, setPlanningStarted] = useState(false);
+  const leaveGuard = useLeaveGuard(planningStarted, router.push);
+
+  const ahp = useAhpComparison({
+    organizationId,
+    productId,
+    configPageData,
+    setConfigPageData,
+    enabled: startingPoint === 'new' && weightMethod === 'ahp' && activeStep === 'weights' && weightsView === 'groups',
+  });
 
   const { t } = useTranslation('plan_release');
 
@@ -96,8 +125,11 @@ function ReleaseCreation() {
           setConfigPageData(formatConfig(defaultData, currentReleaseGoal));
           setConfigDefaultPageData(formatConfig(defaultData, currentReleaseGoal));
 
-          if (currentResult.status === 'fulfilled') {
-            setLastConfigPageData(formatConfig(mergeWithDefault(currentResult.value.data.data, defaultData), currentReleaseGoal));
+          const currentConfig = currentResult.status === 'fulfilled' ? currentResult.value?.data : undefined;
+          if (currentConfig?.data) {
+            const { data: currentData, ...currentMeta } = currentConfig;
+            setLastConfigPageData(formatConfig(mergeWithDefault(currentData, defaultData), currentReleaseGoal));
+            setLastConfigMeta(currentMeta);
           }
         }
 
@@ -167,13 +199,15 @@ function ReleaseCreation() {
     return data;
   }
 
-  function handleSetFollowLastConfig(value: boolean) {
-    if (value)
-      setConfigPageData(lastConfigPageData!);
-    else
-      setConfigPageData(defaultPageData!);
+  function handleSetStartingPoint(value: StartingPoint) {
+    // "Definir novos pesos" começa pelas entidades do padrão (comentário do PO na #276).
+    setConfigPageData(value === 'last' ? lastConfigPageData! : defaultPageData!);
 
-    setFollowLastConfig(value)
+    // Valores de referência só são ajustados em Definir entidades, que os caminhos
+    // "Última" e "Padrão" não percorrem.
+    if (value !== 'new') setChangeRefValue(false);
+
+    setStartingPoint(value);
   }
 
   async function checkBasicValues() {
@@ -182,7 +216,7 @@ function ReleaseCreation() {
 
     try {
       await productQuery.getIsReleaseValid(organizationId, productId, getValues());
-      setActiveStep(activeStep + 1);
+      goToNextStep();
     } catch (error: any) {
       if (error?.response?.data?.detail === "Já existe uma release neste período") {
         setReleaseConflict(error?.response?.data?.release?.id)
@@ -225,105 +259,162 @@ function ReleaseCreation() {
 
   function renderStep(): React.ReactNode {
     switch (activeStep) {
-      case 0:
+      case 'repositories':
         return <RepositorySelectionForm organizationId={organizationId} productId={productId} watch={watch} setValue={setValue} />
-      case 1: 
-        return <BasicInfoForm configPageData={configPageData!} trigger={trigger} register={register} errors={errors} watch={watch} followLastConfig={followLastConfig} setFollowLastConfig={handleSetFollowLastConfig} />
-      case 2: 
-        return <ModelConfigForm changeRefValue={changeRefValue} setChangeRefValue={handleChangeRefValue} configPageData={configPageData!} setConfigPageData={setConfigPageData} />
-      case 3: 
+      case 'releaseInfo':
+        return <BasicInfoForm
+          trigger={trigger}
+          register={register}
+          errors={errors}
+          watch={watch}
+          startingPoint={startingPoint}
+          setStartingPoint={handleSetStartingPoint}
+          lastConfigMeta={lastConfigMeta}
+          lastConfigData={lastConfigPageData}
+          defaultConfigData={defaultPageData}
+        />
+      case 'entities':
+        return <EntitySelectionForm changeRefValue={changeRefValue} setChangeRefValue={handleChangeRefValue} configPageData={configPageData!} setConfigPageData={setConfigPageData} />
+      case 'weights':
+        return renderWeightsView();
+      case 'referenceValues':
         return <ReferenceValuesForm configPageData={configPageData!} defaultPageData={defaultPageData!} setConfigPageData={setConfigPageData} />
-      case 4: 
+      case 'balance':
         return <CharacteristicsBalanceForm characteristicRelations={balanceMatrix} configPageData={configPageData!} setConfigPageData={setConfigPageData} dinamicBalance={dinamicBalance} setDinamicBalance={handleChangeDinamicBalance} />
       default:
-        break
+        return null;
     }
+  }
+
+  function renderWeightsView(): React.ReactNode {
+    switch (weightsView) {
+      case 'method':
+        return <WeightMethodSelector value={weightMethod} onChange={setWeightMethod} />
+      case 'groups':
+        return <PairwiseComparisonStep ahp={ahp} baselineConfig={defaultPageData} />
+      case 'typed':
+        return <ModelConfigForm configPageData={configPageData!} setConfigPageData={setConfigPageData} />
+      case 'summary':
+        return <WeightsSummary configPageData={configPageData!} method={weightMethod} onEdit={handleEditGroup} describeGroup={describeGroup} />
+      default:
+        return null;
+    }
+  }
+
+  /** Selo do grupo no Resumo quando os pesos vieram da comparação. */
+  function describeGroup(group: WeightGroup): GroupBadge | undefined {
+    if (weightMethod !== 'ahp' || group.entities.length === 1) return undefined;
+
+    const preview = ahp.comparisons[group.path]?.preview;
+    if (!preview) return undefined;
+
+    const cr = formatDecimal(displayedCR(preview));
+    return ahp.statusOf(group) === 'accepted'
+      ? { label: t('badgeAhpAccepted', { cr }), tone: 'warning' }
+      : { label: t('badgeAhp', { cr }), tone: 'info' };
+  }
+
+  /** Troca de tela dentro de "Definir pesos"; ao chegar na comparação, escolhe o grupo. */
+  function showWeightsView(view: WeightsView, direction: 'forward' | 'back'): void {
+    if (view === 'groups') ahp.enter(direction);
+    setWeightsView(view);
+  }
+
+  /** Entra numa etapa; em "Definir pesos", voltando de uma etapa posterior, cai no Resumo. */
+  function enterStep(step: StepId, direction: 'forward' | 'back'): void {
+    if (step === 'weights')
+      setWeightsView(direction === 'back' ? 'summary' : 'method');
+    setActiveStep(step);
+  }
+
+  function goToNextStep(): void {
+    const next = getNextStep(activeStep, stepFlags);
+    if (next) enterStep(next, 'forward');
   }
 
   function handlePreviousButtonClick(): void {
-    if (activeStep === 4 && !changeRefValue)
-      setActiveStep(activeStep - 2);
-    else if (activeStep > 0)
-      setActiveStep(activeStep - 1);
+    if (activeStep === 'weights') {
+      if (weightsView === 'groups' && ahp.previous() === 'moved') return;
+
+      const previousView = getPreviousWeightsView(weightsView, weightMethod);
+      if (previousView) {
+        showWeightsView(previousView, 'back');
+        return;
+      }
+    }
+
+    const previous = getPreviousStep(activeStep, stepFlags);
+    if (previous) enterStep(previous, 'back');
   }
 
-  function findItemWithSumNotEqualTo100(items: { key: string; weight: number; active?: boolean }[]) {
-    return items.filter(item => item.active).reduce((sum, item) =>
-      sum + item.weight
-      , 0) !== 100
-      ? items.find(item => item.active)?.key
-      : null;
+  function handleEditGroup(group: WeightGroup): void {
+    if (weightMethod === 'ahp') {
+      ahp.goToGroup(group.path);
+      setWeightsView('groups');
+      return;
+    }
+
+    setWeightsView('typed');
+    requestAnimationFrame(() => {
+      document.getElementById(groupElementId(group))?.scrollIntoView?.({ behavior: 'smooth' });
+    });
   }
 
-  function isConfigDataWeightValid(): boolean {
-    const invalidCharacteristics = findItemWithSumNotEqualTo100(configPageData!.characteristics);
-
-    if (invalidCharacteristics && invalidCharacteristics?.length > 0) {
-      toast.error(t('invalidCharacteristicsError'), { autoClose: 10000 })
-      document.getElementById("characteristicSection")?.scrollIntoView({ behavior: "smooth" });
-      return false;
+  function handleEntitiesNext(): void {
+    if (findEmptyGroups(configPageData!).length > 0) {
+      toast.error(t('entitiesEmptyGroupError'), { autoClose: 10000 });
+      return;
     }
 
-    const invalidSubcharacteristics = configPageData!.characteristics
-      .filter(characteristic => characteristic.active)
-      .map(characteristic => {
-        const invalidKey = findItemWithSumNotEqualTo100(characteristic.subcharacteristics);
-        return invalidKey ? characteristic.key : null;
-      })
-      .filter(key => key !== null);
+    setConfigPageData(normalizeSingleEntityGroups(configPageData!));
+    goToNextStep();
+  }
 
+  function handleWeightsNext(): void {
+    if (weightsView === 'typed' && findInvalidGroups(configPageData!).length > 0) return;
+    if (weightsView === 'groups' && ahp.next() !== 'leave') return;
 
-    if (invalidSubcharacteristics && invalidSubcharacteristics?.length > 0) {
-      toast.error(t("invalidSubcharacteristicsError"), { autoClose: 10000 })
-      document.getElementById(`SubCarAccordion-${invalidSubcharacteristics[0]}`)?.scrollIntoView({ behavior: "smooth" });
-      return false;
-    }
+    const nextView = getNextWeightsView(weightsView, weightMethod);
+    if (nextView) showWeightsView(nextView, 'forward');
+    else goToNextStep();
+  }
 
-    const invalidMeasures = configPageData!.characteristics
-      .filter(characteristic => characteristic.active)
-      .flatMap(characteristic =>
-        characteristic.subcharacteristics
-          .filter(subcharacteristic => subcharacteristic.active)
-          .map(subcharacteristic => {
-            const invalidMeasureKey = findItemWithSumNotEqualTo100(subcharacteristic.measures);
-            return invalidMeasureKey ? subcharacteristic.key : null; // Retorna o nome da subcaracterística se inválido
-          })
-      )
-      .filter(key => key !== null);
+  const isTypedSumInvalid =
+    weightsView === 'typed' && !!configPageData && findInvalidGroups(configPageData).length > 0;
+  const isGroupPending = weightsView === 'groups' && !ahp.canAdvance;
+  const isNextBlocked = activeStep === 'weights' && (isTypedSumInvalid || isGroupPending);
 
-    if (invalidMeasures && invalidMeasures?.length > 0) {
-      toast.error(t('invalidMeasuresError'), { autoClose: 10000 })
-      document.getElementById(`MetricSubCarAccordion-${invalidMeasures[0]}`)?.scrollIntoView({ behavior: "smooth" });
-      return false;
-    }
-
-    return true;
+  function nextButtonLabel(): string {
+    if (isLastStep(activeStep, stepFlags)) return t('end');
+    if (activeStep === 'weights' && weightsView === 'groups' && !ahp.isLastGroup) return t('nextGroup');
+    return t('next');
   }
 
   async function handleNextButtonClick(): Promise<void> {
+    setPlanningStarted(true);
     switch (activeStep) {
-      case 0: {
+      case 'repositories': {
         const selectedRepos = getValues('repositories_ids');
         if (!selectedRepos || selectedRepos.length === 0) {
           toast.error(t(`Selecione pelo menos um ${terms.repository} para a release.`), { autoClose: 6000 });
           break;
         }
-        setActiveStep(activeStep + 1);
+        goToNextStep();
         break;
       }
-      case 1:
+      case 'releaseInfo':
         await checkBasicValues();
         break;
-      case 2:
-        if (!isConfigDataWeightValid()) break;
-
-        if (!changeRefValue) setActiveStep(activeStep + 2);
-        else setActiveStep(activeStep + 1);
+      case 'entities':
+        handleEntitiesNext();
         break;
-      case 3:
-        setActiveStep(activeStep + 1);
+      case 'weights':
+        handleWeightsNext();
         break;
-      case 4:
+      case 'referenceValues':
+        goToNextStep();
+        break;
+      case 'balance':
         void submitRelease();
         break;
       default:
@@ -331,13 +422,49 @@ function ReleaseCreation() {
     }
   }
 
+  /**
+   * Pelo breadcrumb dá para chegar ao balanceamento com pesos incompletos (ex.:
+   * entidades mudaram depois da comparação). Leva de volta ao que falta.
+   */
+  function ensureWeightsReady(): boolean {
+    if (startingPoint !== 'new') return true;
+
+    if (weightMethod === 'ahp' && ahp.pendingGroups.length > 0) {
+      toast.error(t('submitPendingComparisons'), { autoClose: 10000 });
+      ahp.goToGroup(ahp.pendingGroups[0].path);
+      setWeightsView('groups');
+      setActiveStep('weights');
+      return false;
+    }
+
+    if (weightMethod === 'typed' && findInvalidGroups(configPageData!).length > 0) {
+      toast.error(t('submitInvalidWeights'), { autoClose: 10000 });
+      setWeightsView('typed');
+      setActiveStep('weights');
+      return false;
+    }
+
+    return true;
+  }
+
   async function submitRelease() {
+    if (!ensureWeightsReady()) return;
+
     const goalChanges = generateChanges();
     const release = getValues();
     const finalConfig = cleanConfigData();
+    const comparisons = startingPoint === 'new' && weightMethod === 'ahp' ? ahp.comparisonsPayload() : [];
 
     try {
-      await productQuery.postPreConfig(organizationId, productId, { name: productName, data: finalConfig });
+      // Com "Última configuração" a release usa a configuração atual do produto
+      // (a mais recente até o fim da release). Regravá-la criaria uma cópia sem o
+      // registro das comparações AHP da original.
+      if (startingPoint !== 'last')
+        await productQuery.postPreConfig(organizationId, productId, {
+          name: productName,
+          data: finalConfig,
+          ...(comparisons.length > 0 ? { comparisons } : {}),
+        });
 
       const productGoalResult = await productQuery.createProductGoal(organizationId, productId, goalChanges);
 
@@ -346,9 +473,10 @@ function ReleaseCreation() {
       await productQuery.createProductRelease(organizationId, productId, release);
 
       toast.success(t('releaseCreated'), { autoClose: 6000 });
+      leaveGuard.allowLeave();
       router.push(`/products/${router.query.product}/releases/`);
     } catch (error: any) {
-      toast.error(`${error.response?.data?.message ?? error}`, { autoClose: 10000 });
+      toast.error(extractApiError(error), { autoClose: 10000 });
     }
 
   }
@@ -412,7 +540,7 @@ function ReleaseCreation() {
   }
 
   function handleModalBtnClick() {
-    if (activeStep === 2)
+    if (activeStep === 'entities')
       handleChangeRefValue(true);
     else
       handleChangeDinamicBalance(true)
@@ -420,8 +548,27 @@ function ReleaseCreation() {
     setShowConfirmationModal(false)
   }
 
-  function renderBreadcrumb(label: string, step: number): any {
-    if (step === 3 && !changeRefValue) return
+  function getStepLabel(step: StepId): string {
+    switch (step) {
+      case 'repositories':
+        return `Selecionar ${terms.Repositories}`;
+      case 'releaseInfo':
+        return t('createRelease');
+      case 'entities':
+        return t('defineEntities');
+      case 'weights':
+        return t('defineWeights');
+      case 'referenceValues':
+        return t('changeRefValue');
+      case 'balance':
+        return t('balanceCharacteristics');
+      default:
+        return '';
+    }
+  }
+
+  function renderBreadcrumb(step: StepId): React.ReactNode {
+    const isFirstStepActive = activeStep === 'repositories';
 
     return <Button
       key={step}
@@ -431,11 +578,11 @@ function ReleaseCreation() {
         color: activeStep === step ? "text.primary" : "text.secondary",
         fontWeight: activeStep === step ? '800' : 'normal',
         textTransform: 'none',
-        pointerEvents: activeStep === 0 ? "none" : "auto"
+        pointerEvents: isFirstStepActive ? "none" : "auto"
       }}
-      onClick={() => activeStep === 0 ? {} : setActiveStep(step)}
+      onClick={() => isFirstStepActive ? {} : enterStep(step, 'forward')}
     >
-      {label}
+      {getStepLabel(step)}
     </Button>
   }
 
@@ -447,13 +594,7 @@ function ReleaseCreation() {
           separator={<Box component="span" sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }} />}
           sx={{ fontSize: '14px' }}
         >
-          {[
-            { label: `Selecionar ${terms.Repositories}`, step: 0 },
-            { label: t('createRelease'), step: 1 },
-            { label: t('defineConfiguration'), step: 2 },
-            { label: t('changeRefValue'), step: 3 },
-            { label: t('balanceCharacteristics'), step: 4 },
-          ].map(({ label, step }) => renderBreadcrumb(label, step))}
+          {getVisibleSteps(stepFlags).map(renderBreadcrumb)}
         </Breadcrumbs>
       </Styles.Header>
       <Styles.Body>
@@ -464,17 +605,17 @@ function ReleaseCreation() {
               sx={{
                 display: 'grid',
                 columnGap: 2,
-                gridTemplateColumns: activeStep !== 0 ? 'repeat(2, 1fr)' : "none",
+                gridTemplateColumns: activeStep !== 'repositories' ? 'repeat(2, 1fr)' : "none",
                 marginTop: 2
               }}
             >
-              {activeStep !== 0 &&
+              {activeStep !== 'repositories' &&
                 <Button onClick={() => handlePreviousButtonClick()} variant="outlined">
                   {t('back')}
                 </Button>
               }
-              <Button type="submit" variant="contained">
-                {activeStep < 4 ? t('next') : t('end')}
+              <Button type="submit" variant="contained" disabled={isNextBlocked}>
+                {nextButtonLabel()}
               </Button>
             </Box>
           </form>
@@ -491,15 +632,24 @@ function ReleaseCreation() {
       />
       <ConfirmModal
         setIsModalOpen={setShowConfirmationModal}
-        text={activeStep === 2 ? t('alertRefValue') : t('alertDinamicBalance')}
+        text={activeStep === 'entities' ? t('alertRefValue') : t('alertDinamicBalance')}
         btnConfirmText={t('continue')}
         btnDismissText={t('back')}
         isModalOpen={showConfirmationModal}
         handleDismissBtnClick={() => {
           setShowConfirmationModal(false)
-          activeStep === 2 ? setChangeRefValue(false) : setDinamicBalance(false)
+          activeStep === 'entities' ? setChangeRefValue(false) : setDinamicBalance(false)
         }}
         handleConfirmBtnClick={handleModalBtnClick} />
+      <ConfirmModal
+        setIsModalOpen={(open: boolean) => { if (!open) leaveGuard.cancelLeave(); }}
+        text={t('leaveWithoutSavingText')}
+        btnConfirmText={t('leaveWithoutSaving')}
+        btnDismissText={t('back')}
+        isModalOpen={leaveGuard.isLeaveConfirmOpen}
+        handleConfirmBtnClick={leaveGuard.confirmLeave}
+        handleDismissBtnClick={leaveGuard.cancelLeave}
+      />
     </>
   );
 }

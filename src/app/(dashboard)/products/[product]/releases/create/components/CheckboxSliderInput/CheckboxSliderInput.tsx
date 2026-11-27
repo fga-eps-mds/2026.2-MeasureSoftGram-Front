@@ -12,9 +12,11 @@ interface CheckboxSliderInputProps {
   terLabel?: string;
   maxValue?: number;
   minValue?: number;
+  /** false: só o nome da entidade, sem checkbox (a seleção fica em "Definir entidades"). */
+  showCheckbox?: boolean;
 }
 
-export default function CheckboxSliderInput({ label, labelKey = label, secLabel, terLabel, inputValue, setInputValue, checkboxValue, maxValue = 100, minValue = 0 }: CheckboxSliderInputProps) {
+export default function CheckboxSliderInput({ label, labelKey = label, secLabel, terLabel, inputValue, setInputValue, checkboxValue, maxValue = 100, minValue = 0, showCheckbox = true }: CheckboxSliderInputProps) {
   const [numericValue, setNumericValue] = useState<number>(0);
 
   useEffect(() => {
@@ -34,16 +36,20 @@ export default function CheckboxSliderInput({ label, labelKey = label, secLabel,
 
   return (
     <Grid container sx={{ paddingX: 2 }} gap={2} marginBottom='10px'>
-      <Grid item md={5}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              onChange={(event) => handleValueChange(event, 0)}
-              checked={checkboxValue ?? false}
-            />
-          }
-          label={<Typography>{label}</Typography>}
-        />
+      <Grid item md={5} display="flex" alignItems="center">
+        {showCheckbox ? (
+          <FormControlLabel
+            control={
+              <Checkbox
+                onChange={(event) => handleValueChange(event, 0)}
+                checked={checkboxValue ?? false}
+              />
+            }
+            label={<Typography>{label}</Typography>}
+          />
+        ) : (
+          <Typography>{label}</Typography>
+        )}
       </Grid>
       <Grid item md={4} display="flex" alignItems="center">
         <StyledSlider

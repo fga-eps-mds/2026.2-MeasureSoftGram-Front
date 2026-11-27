@@ -5,6 +5,10 @@
         "description": "Swagger dos endpoints da API do measuresoftgram",
         "version": "v1"
     },
+    "host": "localhost",
+    "schemes": [
+        "http"
+    ],
     "basePath": "/api/v1",
     "consumes": [
         "application/json"
@@ -886,6 +890,87 @@
                     "description": "A unique integer value identifying this product.",
                     "required": true,
                     "type": "integer"
+                }
+            ]
+        },
+        "/organizations/{organization_pk}/products/{product_pk}/ahp/calculate/": {
+            "post": {
+                "operationId": "organizations_products_ahp_calculate_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AHPGroupCalculateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/AHPGroupCalculateResponse"
+                        }
+                    }
+                },
+                "tags": [
+                    "organizations"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "organization_pk",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "name": "product_pk",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/organizations/{organization_pk}/products/{product_pk}/ahp/scale/": {
+            "get": {
+                "operationId": "organizations_products_ahp_scale_list",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/AHPScaleResponse"
+                        }
+                    }
+                },
+                "tags": [
+                    "organizations"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "organization_pk",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "name": "product_pk",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
                 }
             ]
         },
@@ -4409,6 +4494,165 @@
                 }
             }
         },
+        "AHPAnswer": {
+            "required": [
+                "a",
+                "b",
+                "intensity"
+            ],
+            "type": "object",
+            "properties": {
+                "a": {
+                    "title": "A",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "b": {
+                    "title": "B",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "preferred": {
+                    "title": "Preferred",
+                    "type": "string",
+                    "minLength": 1,
+                    "x-nullable": true
+                },
+                "intensity": {
+                    "title": "Intensity",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "AHPGroupCalculateRequest": {
+            "required": [
+                "entities",
+                "answers"
+            ],
+            "type": "object",
+            "properties": {
+                "entities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AHPAnswer"
+                    }
+                }
+            }
+        },
+        "AHPConflict": {
+            "required": [
+                "a",
+                "b",
+                "answer",
+                "suggested",
+                "suggested_ratio"
+            ],
+            "type": "object",
+            "properties": {
+                "a": {
+                    "title": "A",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "b": {
+                    "title": "B",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "answer": {
+                    "$ref": "#/definitions/AHPAnswer"
+                },
+                "suggested": {
+                    "$ref": "#/definitions/AHPAnswer"
+                },
+                "suggested_ratio": {
+                    "title": "Suggested ratio",
+                    "type": "number"
+                }
+            },
+            "x-nullable": true
+        },
+        "AHPGroupCalculateResponse": {
+            "required": [
+                "priorities",
+                "weights",
+                "consistency_ratio",
+                "consistent",
+                "cr_threshold",
+                "conflict"
+            ],
+            "type": "object",
+            "properties": {
+                "priorities": {
+                    "title": "Priorities",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "weights": {
+                    "title": "Weights",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "consistency_ratio": {
+                    "title": "Consistency ratio",
+                    "type": "number",
+                    "x-nullable": true
+                },
+                "consistent": {
+                    "title": "Consistent",
+                    "type": "boolean"
+                },
+                "cr_threshold": {
+                    "title": "Cr threshold",
+                    "type": "number"
+                },
+                "conflict": {
+                    "$ref": "#/definitions/AHPConflict",
+                    "x-nullable": true
+                }
+            }
+        },
+        "AHPScaleResponse": {
+            "required": [
+                "scale",
+                "phrases",
+                "cr_threshold"
+            ],
+            "type": "object",
+            "properties": {
+                "scale": {
+                    "title": "Scale",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "phrases": {
+                    "title": "Phrases",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "cr_threshold": {
+                    "title": "Cr threshold",
+                    "type": "number"
+                }
+            }
+        },
         "AllGoals": {
             "type": "object",
             "properties": {
@@ -4959,6 +5203,39 @@
                 }
             }
         },
+        "AHPGroupComparisonInput": {
+            "required": [
+                "group_path",
+                "entities",
+                "answers"
+            ],
+            "type": "object",
+            "properties": {
+                "group_path": {
+                    "title": "Group path",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "entities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AHPAnswer"
+                    }
+                },
+                "accepted_inconsistent": {
+                    "title": "Accepted inconsistent",
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        },
         "ReleaseConfiguration": {
             "required": [
                 "data"
@@ -4990,6 +5267,12 @@
                     "title": "Created config",
                     "type": "boolean",
                     "readOnly": true
+                },
+                "comparisons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AHPGroupComparisonInput"
+                    }
                 }
             }
         },

@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { useParams, usePathname, useRouter as useNextRouter, useSearchParams } from 'next/navigation';
+import { setNavigationGuard } from '../../utils/navigationGuard';
 
 jest.mock('next/navigation', () => ({
   useParams: jest.fn(),
@@ -119,10 +120,22 @@ describe('hooks/useRouter', () => {
         asPath: '/products/1-2-x/releases?tab=1',
         query: { product: '1-2-x', tab: '1' },
         isReady: true,
-        push: nextRouter.push,
         replace: nextRouter.replace,
         back: nextRouter.back
       });
+
+      result.current.push('/home');
+      expect(nextRouter.push).toHaveBeenCalledWith('/home');
+    });
+
+    it('push passa pela trava de navegação', () => {
+      mockUrl({ path: '/home/' });
+      const remove = setNavigationGuard(() => true);
+      nextRouter.push.mockClear();
+
+      renderHook(() => useRouter()).result.current.push('/config');
+      expect(nextRouter.push).not.toHaveBeenCalled();
+      remove();
     });
 
     it('asPath fica sem "?" quando não há query', () => {

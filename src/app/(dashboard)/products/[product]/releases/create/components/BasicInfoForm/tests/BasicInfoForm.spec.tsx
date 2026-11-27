@@ -53,33 +53,38 @@ const mockConfigPageData: PreConfigData = {
 };
 
 const mockErrors = {};
-const mockFollowLastConfig = false;
-const setMockFollowLastConfig = jest.fn();
+const setMockStartingPoint = jest.fn();
+
+function FormHarness() {
+  const methods = useForm<ReleaseInfoForm>({
+    mode: "all",
+    defaultValues: {
+      end_at: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+      start_at: format(new Date(), 'yyyy-MM-dd'),
+      goal: 0,
+      release_name: '',
+      description: '',
+    }
+  });
+
+  return (
+    <BasicInfoForm
+      register={methods.register}
+      errors={mockErrors}
+      startingPoint="new"
+      setStartingPoint={setMockStartingPoint}
+      defaultConfigData={mockConfigPageData}
+      watch={methods.watch}
+      trigger={methods.trigger}
+    />
+  );
+}
+
+const renderForm = () => render(<FormHarness />);
 
 describe('BasicInfoForm', () => {
   it('should render the form fields and sections correctly', () => {
-    const methods = useForm<ReleaseInfoForm>({
-      mode: "all",
-      defaultValues: {
-        end_at: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
-        start_at: format(new Date(), 'yyyy-MM-dd'),
-        goal: 0,
-        release_name: '',
-        description: '',
-      }
-    });
-
-    const { getByTestId } = render(
-      <BasicInfoForm
-        configPageData={mockConfigPageData}
-        register={methods.register}
-        errors={mockErrors}
-        followLastConfig={mockFollowLastConfig}
-        setFollowLastConfig={setMockFollowLastConfig}
-        watch={methods.watch}
-        trigger={methods.trigger}
-      />
-    );
+    const { getByTestId } = renderForm();
 
     expect(getByTestId('apelido-release')).toBeInTheDocument();
     expect(getByTestId('descricao-release')).toBeInTheDocument();
@@ -87,65 +92,14 @@ describe('BasicInfoForm', () => {
     expect(getByTestId('fim-release')).toBeInTheDocument();
   });
 
-  it('should handle changes to the followLastConfig checkbox', () => {
-    const methods = useForm<ReleaseInfoForm>({
-      mode: "all",
-      defaultValues: {
-        end_at: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
-        start_at: format(new Date(), 'yyyy-MM-dd'),
-        goal: 0,
-        release_name: '',
-        description: '',
-      }
-    });
-
-    const { getByLabelText } = render(
-      <BasicInfoForm
-        configPageData={mockConfigPageData}
-        register={methods.register}
-        errors={mockErrors}
-        followLastConfig={mockFollowLastConfig}
-        setFollowLastConfig={setMockFollowLastConfig}
-        watch={methods.watch}
-        trigger={methods.trigger}
-      />
-    );
+  it('mostra o ponto de partida da configuração e avisa a escolha', () => {
+    const { getByLabelText, getByText } = renderForm();
     const { t } = useTranslation('plan_release');
 
-    const checkbox = getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    expect(getByText(t('startingPoint'))).toBeInTheDocument();
+    expect(getByLabelText(t('startingPointNew'))).toBeChecked();
 
-    expect(setMockFollowLastConfig).toHaveBeenCalledWith(true);
-  });
-
-  it('should display the correct characteristic and subcharacteristic data', () => {
-    const methods = useForm<ReleaseInfoForm>({
-      mode: "all",
-      defaultValues: {
-        end_at: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
-        start_at: format(new Date(), 'yyyy-MM-dd'),
-        goal: 0,
-        release_name: '',
-        description: '',
-      }
-    });
-
-    const { getByText } = render(
-      <BasicInfoForm
-        configPageData={mockConfigPageData}
-        register={methods.register}
-        errors={mockErrors}
-        followLastConfig={mockFollowLastConfig}
-        setFollowLastConfig={setMockFollowLastConfig}
-        watch={methods.watch}
-        trigger={methods.trigger}
-      />
-    );
-
-
-    expect(getByText('weight: 50')).toBeInTheDocument();
-    expect(getByText('weight: 30')).toBeInTheDocument();
-    expect(getByText('weight: 10')).toBeInTheDocument();
-    expect(getByText('min = 0 | max = 100')).toBeInTheDocument();
+    fireEvent.click(getByLabelText(t('startingPointDefault')));
+    expect(setMockStartingPoint).toHaveBeenCalledWith('default');
   });
 });

@@ -1,8 +1,11 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react';
+import { toast } from 'react-toastify';
 import { balanceMatrixService } from '@services/balanceMatrix';
 import { useTranslation } from 'react-i18next';
 import { productQuery } from '@services/product';
 import { useRouter } from '@hooks/useRouter';
+import { ahpService } from '@services/ahp';
+import { runGuardedNavigation } from '@utils/navigationGuard';
 import ReleaseCreation from '../ReleaseCreation';
 
 jest.mock('@hooks/useRouter', () => ({
@@ -20,6 +23,7 @@ jest.mock('react-i18next', () => ({
 jest.mock('@services/api');
 jest.mock('@services/product');
 jest.mock('@services/balanceMatrix');
+jest.mock('@services/ahp');
 
 const dateErrorMsg = "Já existe uma release neste período"
 const mockPush = jest.fn();
@@ -529,18 +533,10 @@ describe('ReleaseInfo Component', () => {
     const releaseNameInput = screen.getByTestId('apelido-release') as HTMLInputElement;
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    let nextButton = screen.getByText(/Next/i);
-    fireEvent.click(nextButton);
-
-    expect(await screen.findByText(t('defineCharacteristics'))).toBeInTheDocument();
-
-    nextButton = screen.getByText(/Next/i);
-    fireEvent.click(nextButton);
-
-    expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
+    await avancarAteOBalanceamento();
+    expect(screen.getByText(t('balanceCharacteristics'))).toBeInTheDocument();
   });
 
   it('should create release', async () => {
@@ -658,11 +654,9 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
 
     fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
 
@@ -784,18 +778,31 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const nextButton = screen.getByText(/Next/i);
-    fireEvent.click(nextButton);
-    fireEvent.click(nextButton);
+    await clickButtonAndWaitFor(t('next'), t('defineUsedCharacteristics'));
+    await clickButtonAndWaitFor(t('next'), t('weightMethodDescription'));
+    fireEvent.click(screen.getByLabelText(t('methodQuantitative')));
+    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
 
-    expect(await screen.findByText(t('defineCharacteristics'))).toBeInTheDocument();
+    // Soma das características diferente de 100: mensagem no grupo e Avançar bloqueado.
+    expect(screen.getByTestId('sum-error-characteristics')).toBeInTheDocument();
+    expect(screen.getByText(t('next'), { selector: 'button' })).toBeDisabled();
   });
 
-  const clickButtonAndWaitFor = async (buttonName: string, expectedText: string) => {
+  async function clickButtonAndWaitFor(buttonName: string, expectedText: string) {
     const Btn = await screen.findByText(buttonName, { selector: 'button' });
     fireEvent.click(Btn);
     expect(await screen.findByText(expectedText)).toBeInTheDocument();
-  };
+  }
+
+  /** Criar Release → Definir entidades → forma (quantitativa) → porcentagens → Resumo → Balancear. */
+  async function avancarAteOBalanceamento() {
+    await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+    await clickButtonAndWaitFor('next', 'weightMethodDescription');
+    fireEvent.click(screen.getByLabelText('methodQuantitative'));
+    await clickButtonAndWaitFor('next', 'defineCharacteristics');
+    await clickButtonAndWaitFor('next', 'summaryTitle');
+    await clickButtonAndWaitFor('next', 'balanceGoal');
+  }
 
   it('should test back button', async () => {
     (productQuery.getProductDefaultPreConfig as jest.Mock).mockResolvedValue({
@@ -912,12 +919,13 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
+    await clickButtonAndWaitFor(t('back'), t('summaryTitle'));
     await clickButtonAndWaitFor(t('back'), t('defineCharacteristics'));
+    await clickButtonAndWaitFor(t('back'), t('weightMethodDescription'));
+    await clickButtonAndWaitFor(t('back'), t('defineUsedCharacteristics'));
     await clickButtonAndWaitFor(t('back'), t('basicConfig'));
   });
 
@@ -1036,11 +1044,9 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
 
     fireEvent.click(await screen.findByText(t('allowBalanceGoal')));
     expect(await screen.findByText(t("balanceGoal"))).toBeInTheDocument();
@@ -1159,12 +1165,10 @@ describe('ReleaseInfo Component', () => {
     const releaseNameInput = screen.getByTestId('apelido-release') as HTMLInputElement;
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     // Avança passo a passo de forma estável
-    await clickButtonAndWaitFor(t('next'), t('defineCharacteristics'));
-    await clickButtonAndWaitFor(t('next'), t('balanceGoal'));
+    await avancarAteOBalanceamento();
 
     // Clica no switch de permitir balanço dinâmico (abre o modal de confirmação)
     const switchBtn = await screen.findByText(t('allowBalanceGoal'));
@@ -1292,8 +1296,7 @@ describe('ReleaseInfo Component', () => {
 
     fireEvent.change(releaseNameInput, { target: { value: "Nome Teste" } });
 
-    const checkbox = screen.getByLabelText(t('followLastConfig')) as HTMLInputElement;
-    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByLabelText(t('startingPointNew')));
 
     const nextButton = screen.getByText(/Next/i);
 
@@ -1336,7 +1339,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(await screen.findByTestId("confirmBtnClick"));
 
     await waitFor(() => expect(screen.queryByTestId("confirmBtnClick")).not.toBeInTheDocument());
-    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
+    expect(screen.getByText(t("defineEntities"))).toBeInTheDocument();
   });
 
   it('should test return release date modal', async () => {
@@ -1370,7 +1373,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(await screen.findByTestId("dismissBtnClick"));
 
     await waitFor(() => expect(screen.queryByTestId("dismissBtnClick")).not.toBeInTheDocument());
-    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
+    expect(screen.getByText(t("defineEntities"))).toBeInTheDocument();
   });
 
   it('should test close release date modal', async () => {
@@ -1404,7 +1407,7 @@ describe('ReleaseInfo Component', () => {
     fireEvent.click(await screen.findByTestId("iconCloseDateModal"));
 
     await waitFor(() => expect(screen.queryByTestId("iconCloseDateModal")).not.toBeInTheDocument());
-    expect(screen.getByText(t("defineConfiguration"))).toBeInTheDocument();
+    expect(screen.getByText(t("defineEntities"))).toBeInTheDocument();
   });
 
   it('dispara as 5 buscas iniciais em paralelo', async () => {
@@ -1441,5 +1444,239 @@ describe('ReleaseInfo Component', () => {
     expect(screen.getByText(t('planRelease'))).toBeInTheDocument();
     expect(productQuery.getProductDefaultPreConfig).toHaveBeenCalledTimes(1);
     expect(balanceMatrixService.getBalanceMatrix).toHaveBeenCalledTimes(1);
+  });
+
+  describe('ponto de partida da configuração (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.postPreConfig as jest.Mock).mockClear();
+      (productQuery.createProductRelease as jest.Mock).mockClear();
+      // Testes anteriores deixam getIsReleaseValid rejeitando (conflito de datas).
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+    });
+
+    async function preencherReleaseEEscolher(opcao: string) {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      fireEvent.click(screen.getByLabelText(opcao));
+    }
+
+    it('com a última configuração vai direto ao balanceamento e não regrava a configuração', async () => {
+      const { t } = useTranslation('plan_release');
+      await preencherReleaseEEscolher(t('startingPointLast'));
+
+      expect(screen.queryByText(t('defineEntities'))).not.toBeInTheDocument();
+
+      fireEvent.click(await screen.findByText(t('next'), { selector: 'button' }));
+      expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
+
+      fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
+      await waitFor(() => expect(productQuery.createProductRelease).toHaveBeenCalled());
+      expect(productQuery.postPreConfig).not.toHaveBeenCalled();
+    });
+
+    it('com o padrão vai direto ao balanceamento e grava a configuração padrão', async () => {
+      const { t } = useTranslation('plan_release');
+      await preencherReleaseEEscolher(t('startingPointDefault'));
+
+      fireEvent.click(await screen.findByText(t('next'), { selector: 'button' }));
+      expect(await screen.findByText(t('balanceGoal'))).toBeInTheDocument();
+
+      fireEvent.click(await screen.findByText(t('end'), { selector: 'button' }));
+      await waitFor(() => expect(productQuery.createProductRelease).toHaveBeenCalled());
+      expect(productQuery.postPreConfig).toHaveBeenCalledWith('org', '123', expect.objectContaining({
+        name: 'prod',
+        data: expect.objectContaining({ characteristics: expect.any(Array) }),
+      }));
+    });
+
+    it('volta a mostrar a etapa de pesos ao trocar para definir novos pesos', async () => {
+      const { t } = useTranslation('plan_release');
+      await preencherReleaseEEscolher(t('startingPointLast'));
+      expect(screen.queryByText(t('defineEntities'))).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByLabelText(t('startingPointNew')));
+      expect(screen.getByText(t('defineEntities'))).toBeInTheDocument();
+    });
+  });
+
+  describe('definir entidades e pesos (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+    });
+
+    async function abrirDefinirEntidades() {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+    }
+
+    it('EDITAR no resumo volta às porcentagens', async () => {
+      await abrirDefinirEntidades();
+      await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      fireEvent.click(screen.getByLabelText('methodQuantitative'));
+      await clickButtonAndWaitFor('next', 'defineCharacteristics');
+      await clickButtonAndWaitFor('next', 'summaryTitle');
+
+      fireEvent.click(within(screen.getByTestId('summary-group-characteristics')).getByText('edit'));
+      expect(await screen.findByText('defineCharacteristics')).toBeInTheDocument();
+    });
+
+    it('não avança com característica sem nenhuma subcaracterística marcada', async () => {
+      const toastError = jest.spyOn(toast, 'error');
+      await abrirDefinirEntidades();
+
+      const subcaracteristicas = within(document.getElementById('SubCarAccordion-maintainability') as HTMLElement);
+      subcaracteristicas.getAllByRole('checkbox').forEach(checkbox => fireEvent.click(checkbox));
+      fireEvent.click(screen.getByText('next', { selector: 'button' }));
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('entitiesEmptyGroupError', expect.anything()));
+      expect(screen.getByText('defineUsedCharacteristics')).toBeInTheDocument();
+    });
+  });
+
+  describe('pesos por comparação (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.postPreConfig as jest.Mock).mockClear();
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+      // Prévia com pesos iguais (o cálculo real é do Core; aqui só o contrato importa).
+      (ahpService.calculateGroup as jest.Mock).mockImplementation((_org: string, _prod: string, { entities }: { entities: string[] }) => {
+        const base = Math.floor(100 / entities.length);
+        const rest = 100 - base * entities.length;
+        const weights = Object.fromEntries(entities.map((entity, index) => [entity, base + (index < rest ? 1 : 0)]));
+        return Promise.resolve({
+          data: { priorities: {}, weights, consistency_ratio: entities.length > 2 ? 0 : null, consistent: true, cr_threshold: 0.1, conflict: null },
+        });
+      });
+    });
+
+    const nextButton = () => screen.getByText((content, element) =>
+      element?.tagName === 'BUTTON' && (content === 'next' || content === 'nextGroup'));
+
+    it('compara todos os grupos, mostra o resumo com os selos AHP e finaliza', async () => {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+      await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      expect(screen.getByLabelText('methodQualitative')).toBeChecked();
+      await clickButtonAndWaitFor('next', 'groupProgress');
+
+      for (let guard = 0; guard < 20 && !screen.queryByText('summaryTitle'); guard++) {
+        screen.queryAllByTestId(/^pair-[^]*$/)
+          .filter(element => !element.dataset.testid?.endsWith('-intensity-select'))
+          .forEach(pair => fireEvent.click(within(pair).getByLabelText('equallyImportant')));
+        await waitFor(() => expect(nextButton()).toBeEnabled());
+        await act(async () => {
+          fireEvent.click(nextButton());
+        });
+      }
+
+      expect(await screen.findByText('summaryTitle')).toBeInTheDocument();
+      expect(within(screen.getByTestId('summary-group-characteristics')).getByText('badgeAhp')).toBeInTheDocument();
+
+      await clickButtonAndWaitFor('next', 'balanceGoal');
+      fireEvent.click(await screen.findByText('end', { selector: 'button' }));
+      await waitFor(() => expect(productQuery.postPreConfig).toHaveBeenCalled());
+
+      // As comparações vão junto com a configuração, uma por grupo de 2+ entidades.
+      const [, , payload] = (productQuery.postPreConfig as jest.Mock).mock.calls[0];
+      expect(payload.comparisons.length).toBeGreaterThan(0);
+      expect(payload.comparisons[0]).toEqual(expect.objectContaining({
+        group_path: 'characteristics',
+        accepted_inconsistent: false,
+        entities: payload.data.characteristics.map((c: { key: string }) => c.key),
+      }));
+      payload.comparisons.forEach((comparison: { entities: string[]; answers: unknown[] }) => {
+        const n = comparison.entities.length;
+        expect(comparison.answers).toHaveLength((n * (n - 1)) / 2);
+      });
+    });
+
+    it('bloqueia o Próximo grupo até o grupo estar respondido', async () => {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+      await clickButtonAndWaitFor('next', 'weightMethodDescription');
+      await clickButtonAndWaitFor('next', 'groupProgress');
+
+      expect(nextButton()).toBeDisabled();
+      expect(nextButton()).toHaveTextContent('nextGroup');
+
+      await clickButtonAndWaitFor('back', 'weightMethodDescription');
+    });
+  });
+
+  describe('sair sem salvar e erros ao gravar (US13.01)', () => {
+    beforeEach(() => {
+      (productQuery.postPreConfig as jest.Mock).mockClear();
+      (productQuery.getIsReleaseValid as jest.Mock).mockResolvedValue({
+        data: { "message": "Parametros válidos para criação de Release" },
+      });
+    });
+
+    it('depois de começar o planejamento, pede confirmação para sair e não grava nada', async () => {
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+
+      const navigate = jest.fn();
+      act(() => runGuardedNavigation(navigate));
+
+      expect(await screen.findByText('leaveWithoutSavingText')).toBeInTheDocument();
+      expect(navigate).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByText('leaveWithoutSaving'));
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(productQuery.postPreConfig).not.toHaveBeenCalled();
+    });
+
+    it('mostra a mensagem do Service quando ele recusa a configuração', async () => {
+      const toastError = jest.spyOn(toast, 'error');
+      (productQuery.postPreConfig as jest.Mock).mockRejectedValueOnce({
+        response: { data: { non_field_errors: ['The sum of weights of characteristics is not 100'] } },
+      });
+
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      fireEvent.click(screen.getByLabelText('startingPointDefault'));
+      await clickButtonAndWaitFor('next', 'balanceGoal');
+      fireEvent.click(await screen.findByText('end', { selector: 'button' }));
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('The sum of weights of characteristics is not 100', expect.anything()));
+    });
+
+    it('não grava se faltam comparações e volta para o grupo pendente', async () => {
+      const toastError = jest.spyOn(toast, 'error');
+      await act(async () => {
+        render(<ReleaseCreation />);
+      });
+      fireEvent.change(screen.getByTestId('apelido-release'), { target: { value: 'Nome Teste' } });
+      await clickButtonAndWaitFor('next', 'defineUsedCharacteristics');
+
+      // Pelo breadcrumb dá para pular a comparação.
+      fireEvent.click(screen.getByText('balanceCharacteristics', { selector: 'button' }));
+      fireEvent.click(await screen.findByText('end', { selector: 'button' }));
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('submitPendingComparisons', expect.anything()));
+      expect(await screen.findByText('groupProgress')).toBeInTheDocument();
+      expect(productQuery.postPreConfig).not.toHaveBeenCalled();
+    });
   });
 });
