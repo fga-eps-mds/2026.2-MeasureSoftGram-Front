@@ -74,6 +74,29 @@ jobs:
 
   # Ramo que não depende de lint nem de teste: a validação de que a imagem continua empacotando. O cache fica em
   # mode=max; a QA-16a mediu mode=min e ele saiu pior (job de 4m07s contra 3m43s).
+  i18n:
+    name: Template de traduções
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Conferir chaves do i18next no template en
+        run: pnpm i18n:check
+
   empacotamento:
     name: Build da imagem Docker
     runs-on: ubuntu-latest
