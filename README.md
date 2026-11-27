@@ -125,7 +125,8 @@ pnpm i18n:check     # falha (exit 1) e lista as chaves que faltam no en, sem gra
 - Fora de componentes React (formatadores de gráfico e de CSV, serviços), use a instância de `src/shared/i18n/i18n.ts` (`i18n.t('dashboards:chave')`). Constantes com texto (rótulos de níveis, colunas de CSV) usam `translatedRecord`/`translatedColumns`, que traduzem na hora da leitura e acompanham a troca de idioma.
 - Mensagens que atravessam uma recarga (o flash do login e do logout) guardam a chave, e o `FlashMessage` traduz no idioma salvo.
 - Os testes do Jest rodam em português: o `tests/jestSetup.ts` carrega o `pt` e o mock do `react-i18next` traduz de verdade, então as asserções usam o texto que a pessoa vê, como nos E2E.
-- O `i18next-cli` exige Node 22.22.2+, 24.15+ ou 26+ (no Node 20 do projeto o `pnpm install` só avisa, mas o comando falha ao iniciar). Os comandos acima rodam na máquina de quem desenvolve; o build e os testes continuam no Node 20. Um job de CI que rode `pnpm i18n:check` precisa usar `actions/setup-node` com `node-version: 24`.
+- O `i18next-cli` exige Node 22.22.2+, 24.15+ ou 26+ (no Node 20 do projeto o `pnpm install` só avisa, mas o comando falha ao iniciar). Os comandos acima rodam na máquina de quem desenvolve; o build e os testes continuam no Node 20. Os jobs de CI que rodam o `i18next-cli` usam Node 24.
+- O job **Template de traduções** do `test.yml` roda `pnpm i18n:check` e falha se faltar chave no `en`. A cada push no `develop`, o workflow `i18n.yml` roda `pnpm i18n:extract` e abre (ou atualiza) o PR `i18n/template` com as chaves novas; o Weblate devolve as traduções pelo PR `weblate/translations`.
 
 ## Testes E2E
 
