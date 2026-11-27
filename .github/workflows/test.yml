@@ -2,9 +2,10 @@ name: Rodar Testes
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, weblate/translations]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 # Dois jobs em paralelo, e não um em série, por causa do portão M8 (mediana do test.yml <= 5 min). A medição da
 # QA-16a (TASK33.04.03, issue #271 do DOC) sobre 55 execuções mostrou o job único em 6m56s de mediana, dos quais
